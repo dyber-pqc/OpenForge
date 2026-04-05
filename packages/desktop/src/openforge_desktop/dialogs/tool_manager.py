@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import QSettings, Qt, Slot
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QDialog,
@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QProgressBar,
     QPushButton,
-    QSettings,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
