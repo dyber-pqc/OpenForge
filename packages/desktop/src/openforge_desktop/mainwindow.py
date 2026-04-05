@@ -24,6 +24,7 @@ from openforge_desktop.panels.hierarchy import HierarchyPanel
 from openforge_desktop.panels.layout import LayoutPanel
 from openforge_desktop.panels.properties import PropertiesPanel
 from openforge_desktop.panels.reports import ReportsPanel
+from openforge_desktop.panels.testbench import TestbenchPanel
 from openforge_desktop.panels.waveform import WaveformPanel
 
 
@@ -438,6 +439,61 @@ QGroupBox::title {
     color: #89b4fa;
 }
 
+/* ── Table Widget ─────────────────────────────────────────────────── */
+QTableWidget {
+    background-color: #1e1e2e;
+    border: none;
+    gridline-color: #313244;
+    font-size: 13px;
+}
+
+QTableWidget::item {
+    padding: 3px 6px;
+}
+
+QTableWidget::item:selected {
+    background-color: #45475a;
+    color: #cdd6f4;
+}
+
+/* ── Check Box ────────────────────────────────────────────────────── */
+QCheckBox {
+    color: #cdd6f4;
+    spacing: 6px;
+    font-size: 12px;
+}
+
+QCheckBox::indicator {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #45475a;
+    border-radius: 3px;
+    background-color: #313244;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #89b4fa;
+    border-color: #89b4fa;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #89b4fa;
+}
+
+/* ── Spin Box ─────────────────────────────────────────────────────── */
+QSpinBox {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+QSpinBox:focus {
+    border-color: #89b4fa;
+}
+
 /* ── Progress Bar ──────────────────────────────────────────────────── */
 QProgressBar {
     background-color: #313244;
@@ -510,6 +566,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction("Toggle &Layout Viewer", self._toggle_layout)
         view_menu.addAction("Toggle &Waveform Viewer", self._toggle_waveform)
         view_menu.addAction("Toggle &Reports", self._toggle_reports)
+        view_menu.addAction("Toggle &Testbenches", self._toggle_testbench)
         view_menu.addAction("Toggle Project &Explorer", self._toggle_project_explorer)
         view_menu.addSeparator()
         view_menu.addAction("&Reset Layout", self._reset_layout)
@@ -527,7 +584,10 @@ class MainWindow(QMainWindow):
         # Verify
         verify_menu: QMenu = mb.addMenu("V&erify")
         verify_menu.addAction(
-            "Run &Simulation...", self._on_run_sim, QKeySequence("F5")
+            "Run &Tests", self._on_run_tests, QKeySequence("F5")
+        )
+        verify_menu.addAction(
+            "Run &Simulation...", self._on_run_sim, QKeySequence("Ctrl+F5")
         )
         verify_menu.addAction("Run &Formal Verification...", self._stub)
         verify_menu.addSeparator()
@@ -634,7 +694,14 @@ class MainWindow(QMainWindow):
         self.tabifyDockWidget(self._console, self._waveform)
         self._console.raise_()
 
-        # Bottom: Reports (tabbed with console and waveform)
+        # Bottom: Testbench Manager (tabbed with console and waveform)
+        self._testbench = TestbenchPanel("Testbenches", self)
+        self._testbench.setObjectName("testbench_dock")
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._testbench)
+        self.tabifyDockWidget(self._console, self._testbench)
+        self._testbench.open_file_requested.connect(self._on_open_test_file)
+
+        # Bottom: Reports (tabbed with console, testbench, and waveform)
         self._reports = ReportsPanel("Reports", self)
         self._reports.setObjectName("reports_dock")
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._reports)
@@ -694,17 +761,48 @@ class MainWindow(QMainWindow):
     def _on_find_replace(self) -> None:
         self._editor.show_search(replace=True)
 
+    def _on_new_project(self) -> None:
+        dlg = NewProjectDialog(self)
+        if dlg.exec() == NewProjectDialog.DialogCode.Accepted:
+            name, path, template, pdk = dlg.result_data()
+            self._console.append_success(
+                f"Created project '{name}' at {path} "
+                f"(template={template}, pdk={pdk})"
+            )
+            self.statusBar().showMessage(f"Project '{name}' created", 5000)
+
+    def _on_settings(self) -> None:
+        dlg = SettingsDialog(self)
+        if dlg.exec() == SettingsDialog.DialogCode.Accepted:
+            self._console.append_info("Settings saved")
+            self.statusBar().showMessage("Settings updated", 3000)
+
     def _on_run_sim(self) -> None:
         self._console.append_info("Starting simulation...")
         self.statusBar().showMessage("Simulation running...", 0)
+        # Show the console dock so the user sees output
+        self._console.setVisible(True)
+        self._console.raise_()
+        # Update reports with placeholder results
+        self._reports.update_results({
+            "steps": [
+                {"name": "Compile", "status": "Running", "duration": "..."},
+                {"name": "Elaborate", "status": "Pending", "duration": "-"},
+                {"name": "Simulate", "status": "Pending", "duration": "-"},
+            ],
+        })
 
     def _on_synthesize(self) -> None:
         self._console.append_info("Starting synthesis...")
         self.statusBar().showMessage("Synthesis running...", 0)
+        self._console.setVisible(True)
+        self._console.raise_()
 
     def _on_verify(self) -> None:
         self._console.append_info("Starting verification...")
         self.statusBar().showMessage("Verification running...", 0)
+        self._console.setVisible(True)
+        self._console.raise_()
 
     # ── View toggle helpers ────────────────────────────────────────
 
@@ -717,10 +815,27 @@ class MainWindow(QMainWindow):
     def _toggle_properties(self) -> None:
         self._properties.setVisible(not self._properties.isVisible())
 
+    def _toggle_layout(self) -> None:
+        self._layout_viewer.setVisible(not self._layout_viewer.isVisible())
+
+    def _toggle_waveform(self) -> None:
+        self._waveform.setVisible(not self._waveform.isVisible())
+
+    def _toggle_reports(self) -> None:
+        self._reports.setVisible(not self._reports.isVisible())
+
     def _toggle_project_explorer(self) -> None:
         self._project_explorer.setVisible(not self._project_explorer.isVisible())
 
     def _reset_layout(self) -> None:
-        for dock in (self._hierarchy, self._project_explorer, self._console, self._properties):
+        for dock in (
+            self._hierarchy,
+            self._project_explorer,
+            self._console,
+            self._properties,
+            self._layout_viewer,
+            self._waveform,
+            self._reports,
+        ):
             dock.setVisible(True)
         self.statusBar().showMessage("Layout reset", 3000)

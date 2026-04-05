@@ -5,6 +5,7 @@ members = [
     "tools/openforge-sca",
     "tools/openforge-entropy",
     "tools/openforge-lint",
+    "tools/openforge-wave",
 ]
 
 [workspace.package]

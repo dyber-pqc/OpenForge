@@ -1,0 +1,25 @@
+[package]
+name = "openforge-wave"
+description = "High-performance VCD and FST waveform parser for OpenForge EDA"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+memmap2 = "0.9"
+byteorder = "1"
+
+[lib]
+name = "openforge_wave"
+path = "src/lib.rs"
+
+[[bin]]
+name = "openforge-wave"
+path = "src/main.rs"
