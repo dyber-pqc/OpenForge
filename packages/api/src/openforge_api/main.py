@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from openforge_api import __version__
-from openforge_api.routes import projects, verification
+from openforge_api.routes import projects, verification, ws
 
 app = FastAPI(
     title="OpenForge EDA API",
@@ -27,6 +27,7 @@ app.add_middleware(
 # ---- Routers ----
 app.include_router(projects.router, prefix="/projects", tags=["projects"])
 app.include_router(verification.router, prefix="/verify", tags=["verification"])
+app.include_router(ws.router, tags=["websocket"])
 
 # TODO: Include synthesis router once implemented
 # from openforge_api.routes import synthesis

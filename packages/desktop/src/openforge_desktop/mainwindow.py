@@ -16,9 +16,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from openforge_desktop.dialogs.new_project import NewProjectDialog
+from openforge_desktop.dialogs.settings import SettingsDialog
 from openforge_desktop.panels.console import ConsolePanel
 from openforge_desktop.panels.editor import EditorPanel
 from openforge_desktop.panels.hierarchy import HierarchyPanel
+from openforge_desktop.panels.layout import LayoutPanel
+from openforge_desktop.panels.properties import PropertiesPanel
+from openforge_desktop.panels.reports import ReportsPanel
+from openforge_desktop.panels.waveform import WaveformPanel
 
 
 # ---------------------------------------------------------------------------
@@ -501,13 +507,18 @@ class MainWindow(QMainWindow):
         view_menu.addAction("Toggle &Hierarchy", self._toggle_hierarchy)
         view_menu.addAction("Toggle &Console", self._toggle_console)
         view_menu.addAction("Toggle &Properties", self._toggle_properties)
+        view_menu.addAction("Toggle &Layout Viewer", self._toggle_layout)
+        view_menu.addAction("Toggle &Waveform Viewer", self._toggle_waveform)
+        view_menu.addAction("Toggle &Reports", self._toggle_reports)
         view_menu.addAction("Toggle Project &Explorer", self._toggle_project_explorer)
         view_menu.addSeparator()
         view_menu.addAction("&Reset Layout", self._reset_layout)
 
         # Project
         project_menu: QMenu = mb.addMenu("&Project")
-        project_menu.addAction("&New Project...", self._stub)
+        project_menu.addAction(
+            "&New Project...", self._on_new_project, QKeySequence("Ctrl+Shift+N")
+        )
         project_menu.addAction("&Open Project...", self._stub)
         project_menu.addSeparator()
         project_menu.addAction("Project &Settings...", self._stub)
@@ -515,7 +526,9 @@ class MainWindow(QMainWindow):
 
         # Verify
         verify_menu: QMenu = mb.addMenu("V&erify")
-        verify_menu.addAction("Run &Simulation...", self._on_run_sim)
+        verify_menu.addAction(
+            "Run &Simulation...", self._on_run_sim, QKeySequence("F5")
+        )
         verify_menu.addAction("Run &Formal Verification...", self._stub)
         verify_menu.addSeparator()
         verify_menu.addAction("&Constant-Time Check...", self._stub)
@@ -524,7 +537,9 @@ class MainWindow(QMainWindow):
 
         # Synthesize
         synth_menu: QMenu = mb.addMenu("&Synthesize")
-        synth_menu.addAction("Run &Synthesis...", self._on_synthesize)
+        synth_menu.addAction(
+            "Run &Synthesis...", self._on_synthesize, QKeySequence("F6")
+        )
         synth_menu.addAction("&Implementation...", self._stub)
         synth_menu.addSeparator()
         synth_menu.addAction("Generate &Bitstream...", self._stub)
@@ -540,7 +555,9 @@ class MainWindow(QMainWindow):
         # Tools
         tools_menu: QMenu = mb.addMenu("&Tools")
         tools_menu.addAction("&Tool Manager...", self._stub)
-        tools_menu.addAction("&Settings...", self._stub)
+        tools_menu.addAction(
+            "&Settings...", self._on_settings, QKeySequence("Ctrl+,")
+        )
         tools_menu.addSeparator()
         tools_menu.addAction("&Terminal", self._stub, QKeySequence("Ctrl+`"))
 
@@ -610,11 +627,30 @@ class MainWindow(QMainWindow):
         self._console.setObjectName("console_dock")
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._console)
 
+        # Bottom: Waveform Viewer (tabbed with console)
+        self._waveform = WaveformPanel("Waveform Viewer", self)
+        self._waveform.setObjectName("waveform_dock")
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._waveform)
+        self.tabifyDockWidget(self._console, self._waveform)
+        self._console.raise_()
+
+        # Bottom: Reports (tabbed with console and waveform)
+        self._reports = ReportsPanel("Reports", self)
+        self._reports.setObjectName("reports_dock")
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._reports)
+        self.tabifyDockWidget(self._waveform, self._reports)
+
         # Right: Properties
-        self._properties = QDockWidget("Properties", self)
+        self._properties = PropertiesPanel("Properties", self)
         self._properties.setObjectName("properties_dock")
-        self._properties.setWidget(QLabel("  No selection"))
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._properties)
+
+        # Right: Layout Viewer (tabbed with properties)
+        self._layout_viewer = LayoutPanel("Layout Viewer", self)
+        self._layout_viewer.setObjectName("layout_dock")
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._layout_viewer)
+        self.tabifyDockWidget(self._properties, self._layout_viewer)
+        self._properties.raise_()
 
     # ── State persistence ──────────────────────────────────────────
 
