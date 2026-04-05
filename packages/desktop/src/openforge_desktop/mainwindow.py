@@ -22,9 +22,12 @@ from openforge_desktop.panels.console import ConsolePanel
 from openforge_desktop.panels.editor import EditorPanel
 from openforge_desktop.panels.hierarchy import HierarchyPanel
 from openforge_desktop.panels.layout import LayoutPanel
+from openforge_desktop.panels.physical import PhysicalDesignPanel
 from openforge_desktop.panels.properties import PropertiesPanel
 from openforge_desktop.panels.reports import ReportsPanel
+from openforge_desktop.panels.synthesis import SynthesisPanel
 from openforge_desktop.panels.testbench import TestbenchPanel
+from openforge_desktop.panels.timing import TimingPanel
 from openforge_desktop.panels.waveform import WaveformPanel
 
 
@@ -568,6 +571,9 @@ class MainWindow(QMainWindow):
         view_menu.addAction("Toggle &Reports", self._toggle_reports)
         view_menu.addAction("Toggle &Testbenches", self._toggle_testbench)
         view_menu.addAction("Toggle Project &Explorer", self._toggle_project_explorer)
+        view_menu.addAction("Toggle &Synthesis Results", self._toggle_synthesis)
+        view_menu.addAction("Toggle Ti&ming Analysis", self._toggle_timing)
+        view_menu.addAction("Toggle Physical &Design", self._toggle_physical_design)
         view_menu.addSeparator()
         view_menu.addAction("&Reset Layout", self._reset_layout)
 
@@ -606,7 +612,9 @@ class MainWindow(QMainWindow):
 
         # Analyze
         analyze_menu: QMenu = mb.addMenu("&Analyze")
-        analyze_menu.addAction("Timing &Analysis...", self._stub)
+        analyze_menu.addAction(
+            "Timing &Analysis...", self._on_timing_analysis, QKeySequence("F7")
+        )
         analyze_menu.addAction("&Power Analysis...", self._stub)
         analyze_menu.addAction("&Area Report...", self._stub)
         analyze_menu.addSeparator()
@@ -712,11 +720,23 @@ class MainWindow(QMainWindow):
         self._properties.setObjectName("properties_dock")
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._properties)
 
+        # Right: Synthesis Results (tabbed with properties)
+        self._synthesis = SynthesisPanel("Synthesis", self)
+        self._synthesis.setObjectName("synthesis_dock")
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._synthesis)
+        self.tabifyDockWidget(self._properties, self._synthesis)
+
+        # Right: Physical Design (tabbed with properties and synthesis)
+        self._physical_design = PhysicalDesignPanel("Physical Design", self)
+        self._physical_design.setObjectName("physical_design_dock")
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._physical_design)
+        self.tabifyDockWidget(self._synthesis, self._physical_design)
+
         # Right: Layout Viewer (tabbed with properties)
         self._layout_viewer = LayoutPanel("Layout Viewer", self)
         self._layout_viewer.setObjectName("layout_dock")
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._layout_viewer)
-        self.tabifyDockWidget(self._properties, self._layout_viewer)
+        self.tabifyDockWidget(self._physical_design, self._layout_viewer)
         self._properties.raise_()
 
     # ── State persistence ──────────────────────────────────────────
@@ -777,6 +797,17 @@ class MainWindow(QMainWindow):
             self._console.append_info("Settings saved")
             self.statusBar().showMessage("Settings updated", 3000)
 
+    def _on_run_tests(self) -> None:
+        self._console.append_info("Running selected tests...")
+        self.statusBar().showMessage("Running tests...", 0)
+        self._testbench.setVisible(True)
+        self._testbench.raise_()
+        self._testbench.run_selected_tests()
+
+    def _on_open_test_file(self, path_str: str) -> None:
+        from pathlib import Path
+        self._editor.open_file(Path(path_str))
+
     def _on_run_sim(self) -> None:
         self._console.append_info("Starting simulation...")
         self.statusBar().showMessage("Simulation running...", 0)
@@ -824,6 +855,9 @@ class MainWindow(QMainWindow):
     def _toggle_reports(self) -> None:
         self._reports.setVisible(not self._reports.isVisible())
 
+    def _toggle_testbench(self) -> None:
+        self._testbench.setVisible(not self._testbench.isVisible())
+
     def _toggle_project_explorer(self) -> None:
         self._project_explorer.setVisible(not self._project_explorer.isVisible())
 
@@ -832,6 +866,7 @@ class MainWindow(QMainWindow):
             self._hierarchy,
             self._project_explorer,
             self._console,
+            self._testbench,
             self._properties,
             self._layout_viewer,
             self._waveform,
