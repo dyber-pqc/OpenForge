@@ -1,0 +1,96 @@
+# OpenForge EDA Project Configuration
+# See documentation at https://docs.openforge.dev/config
+
+project:
+  name: "my-crypto-accelerator"
+  top_module: "accelerator_top"
+  target_pdk: "sky130"
+
+design:
+  sources:
+    - src/rtl/*.v
+    - src/rtl/*.sv
+  includes:
+    - src/include/
+  constraints:
+    - constraints/timing.sdc
+
+verification:
+  simulation:
+    tool: verilator
+    testbenches:
+      - tb/ntt_tb.py
+      - tb/top_tb.py
+    coverage:
+      line: true
+      toggle: true
+      fsm: true
+
+  formal:
+    tool: symbiyosys
+    properties:
+      - formal/ntt_properties.sv
+      - formal/fsm_properties.sv
+    engines:
+      - smtbmc: boolector
+      - prove: abc
+    depth: 100
+
+  crypto_verification:
+    constant_time:
+      enabled: true
+      secrets:
+        - "key_reg"
+        - "seed"
+      public:
+        - "ciphertext"
+        - "public_key"
+
+    side_channel:
+      enabled: true
+      power_model: hamming_distance
+      tvla_threshold: 4.5
+      num_traces: 10000
+
+    entropy_analysis:
+      enabled: true
+      sources:
+        - signal: "qrng_out"
+          min_entropy: 0.99
+      sinks:
+        - signal: "key_gen_seed"
+          required_entropy: 256
+
+    fips_compliance:
+      enabled: true
+      level: "140-3 Level 2"
+      checks:
+        - key_zeroization
+        - self_test_coverage
+        - error_handling
+        - rng_health_tests
+
+    ntt_validation:
+      enabled: true
+      standard: "FIPS-203"
+      exhaustive_test: true
+
+analysis:
+  timing:
+    tool: opensta
+    clock_period: "5.0ns"
+
+  power:
+    tool: openroad
+    activity_file: sim/activity.saif
+
+ci_integration:
+  github_actions: true
+  on_push:
+    - lint
+    - simulation
+  on_pr:
+    - full_verification
+  nightly:
+    - crypto_verification
+    - exhaustive_ntt

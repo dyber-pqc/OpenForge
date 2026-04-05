@@ -1,0 +1,1 @@
+"""OpenForge report generation."""

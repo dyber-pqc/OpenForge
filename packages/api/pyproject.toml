@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openforge-api"
+version = "0.1.0"
+description = "OpenForge EDA REST API server"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "openforge-core",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "celery>=5.4",
+    "redis>=5.0",
+]
+
+[project.scripts]
+openforge-api = "openforge_api.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openforge_api"]

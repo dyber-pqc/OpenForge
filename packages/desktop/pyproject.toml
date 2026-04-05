@@ -1,0 +1,28 @@
+[project]
+name = "openforge-desktop"
+version = "0.1.0"
+description = "OpenForge EDA desktop GUI application"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Dyber Inc.", email = "engineering@dyber.io" }]
+dependencies = [
+    "openforge-core",
+    "PySide6>=6.7",
+    "QScintilla>=2.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+openforge-desktop = "openforge_desktop.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openforge_desktop"]

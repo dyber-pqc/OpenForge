@@ -1,0 +1,20 @@
+# Simple counter example project
+project:
+  name: "simple-counter"
+  top_module: "counter"
+  target_pdk: "sky130"
+
+design:
+  sources:
+    - src/counter.v
+  constraints:
+    - constraints/timing.sdc
+
+verification:
+  simulation:
+    tool: verilator
+    testbenches:
+      - tb/counter_tb.py
+    coverage:
+      line: true
+      toggle: true

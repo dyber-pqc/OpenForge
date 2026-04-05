@@ -1,0 +1,21 @@
+[package]
+name = "openforge-sca"
+description = "Side-channel analysis simulator for cryptographic RTL"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+rayon = { workspace = true }
+
+[[bin]]
+name = "openforge-sca"
+path = "src/main.rs"

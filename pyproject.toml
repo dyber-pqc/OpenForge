@@ -1,0 +1,35 @@
+[project]
+name = "openforge-workspace"
+version = "0.1.0"
+description = "OpenForge EDA - Cloud-native cryptographic hardware verification platform"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "Dyber Inc.", email = "engineering@dyber.io" },
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/core",
+    "packages/cli",
+    "packages/api",
+    "packages/desktop",
+    "packages/crypto",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["openforge", "openforge_cli", "openforge_api", "openforge_desktop", "openforge_crypto"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

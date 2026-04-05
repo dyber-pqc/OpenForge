@@ -1,0 +1,21 @@
+[options]
+mode prove
+depth 100
+
+[engines]
+# Use multiple engines for robustness
+smtbmc boolector
+abc pdr
+
+[script]
+# Read design
+read_verilog -formal ${DESIGN_FILES}
+
+# Load crypto property library
+read_verilog -formal ${OPENFORGE_ROOT}/share/formal/crypto_properties.sv
+
+# Synthesize with formal flag
+prep -top ${TOP_MODULE}
+
+[files]
+${DESIGN_FILES}

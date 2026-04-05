@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+.venv/
+venv/
+env/
+
+# Rust
+/target/
+tools/*/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node/Svelte
+node_modules/
+packages/web/.svelte-kit/
+packages/web/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+docker/.env
+
+# OpenForge runtime
+*.vcd
+*.fst
+*.lxt2
+*.saif
+*.sdf
+*.spef
+*.gds
+*.oas
+*.log
+reports/
+.openforge/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Environment
+.env
+.env.local
+.env.production
