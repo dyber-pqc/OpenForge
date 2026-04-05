@@ -1033,6 +1033,57 @@ class SynthesisPanel(QDockWidget):
         if netlist:
             self._schematic.load_netlist(netlist)
 
+    def update_from_synthesis_result(self, result: "SynthesisResult") -> None:
+        """Convert a core ``SynthesisResult`` to the panel display format.
+
+        Parameters
+        ----------
+        result:
+            A ``SynthesisResult`` from
+            ``openforge.synthesis.runner``.
+        """
+        # Build cell rows from cell_usage dict
+        cells = [
+            {
+                "name": name,
+                "count": count,
+                "area": 0.0,
+                "leakage": 0.0,
+                "function": "",
+                "library": "",
+            }
+            for name, count in result.cell_usage.items()
+        ]
+
+        # Build resource summary
+        resources = [
+            {"type": "Total Gates", "count": result.gate_count, "area": result.area_um2, "color": _CLR_BLUE},
+        ]
+
+        # Estimate timing target from timing estimate
+        target_mhz = 0.0
+        wns_ns = 0.0
+        if result.timing_estimate_ns > 0:
+            target_mhz = 1000.0 / result.timing_estimate_ns
+            wns_ns = result.timing_estimate_ns * 0.05  # rough positive slack estimate
+
+        # Collect messages from warnings/errors
+        messages = []
+        for w in result.warnings:
+            messages.append({"severity": "Warning", "code": "", "message": w, "file": "", "line": 0})
+        for e in result.errors:
+            messages.append({"severity": "Error", "code": "", "message": e, "file": "", "line": 0})
+
+        data = {
+            "resources": resources,
+            "cells": cells,
+            "stage": "complete" if result.success else 0,
+            "target_mhz": target_mhz,
+            "wns_ns": wns_ns,
+            "messages": messages,
+        }
+        self.update_results(data)
+
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""
         self.update_results({

@@ -1343,13 +1343,57 @@ class WaveformPanel(QDockWidget):
     # ── Public API ────────────────────────────────────────────────────
 
     def load_vcd(self, path: str) -> None:
-        """Load a VCD file and display its signals.
+        """Load a VCD/FST file and display its signals."""
+        from openforge.waveform.loader import load_waveform, SignalType
+        from pathlib import Path
 
-        Currently a stub -- actual VCD parsing is not yet implemented.
-        """
+        file_path = Path(path)
+        if not file_path.exists():
+            return
+
+        try:
+            data = load_waveform(file_path)
+        except Exception:
+            # Parsing failed -- leave the viewer in its current state
+            return
+
         self.clear()
-        self._loaded_file = path
-        self._status_file.setText(path.split("/")[-1].split("\\")[-1])
+
+        for sig in data.signals:
+            values = [vc.value for vc in sig.changes]
+            timestamps = [float(vc.time * data.timescale_magnitude) for vc in sig.changes]
+
+            if not values or not timestamps:
+                continue
+
+            # Determine signal kind
+            if sig.signal_type == SignalType.REAL:
+                self.add_analog_signal(
+                    name=sig.full_name,
+                    values=values,
+                    timestamps=timestamps,
+                    group=sig.scope,
+                )
+            elif sig.width > 1:
+                self.add_signal(
+                    name=sig.full_name,
+                    values=values,
+                    timestamps=timestamps,
+                    kind=SignalKind.BUS,
+                    group=sig.scope,
+                )
+            else:
+                self.add_signal(
+                    name=sig.full_name,
+                    values=values,
+                    timestamps=timestamps,
+                    kind=SignalKind.SINGLE_BIT,
+                    group=sig.scope,
+                )
+
+        # Update status
+        self._loaded_file = str(file_path)
+        self._status_file.setText(file_path.name)
 
     def add_signal(
         self,

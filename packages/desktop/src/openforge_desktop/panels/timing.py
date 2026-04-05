@@ -833,6 +833,85 @@ class TimingPanel(QDockWidget):
         if exceptions:
             self._constraints_tab.set_exceptions(exceptions)
 
+    def update_from_timing_result(self, result: "TimingResult") -> None:
+        """Convert a core ``TimingResult`` to the panel display format.
+
+        Parameters
+        ----------
+        result:
+            A ``TimingResult`` from ``openforge.physical.timing``.
+        """
+        # Build path dicts from TimingPath objects
+        paths = []
+        for p in result.paths:
+            stages = [
+                {
+                    "cell": s.cell_name,
+                    "type": s.cell_type,
+                    "delay": s.delay_ns,
+                    "arrival": s.arrival_ns,
+                    "transition": "",
+                }
+                for s in p.stages
+            ]
+            paths.append({
+                "slack": p.slack_ns,
+                "start": p.start_point,
+                "end": p.end_point,
+                "delay": p.delay_ns,
+                "levels": len(p.stages),
+                "clock": "",
+                "stages": stages,
+            })
+
+        # Build clock domain list from clocks dict
+        clocks = []
+        clock_names = []
+        for clk_name, clk_info in result.clocks.items():
+            clock_names.append(clk_name)
+            period = clk_info.get("period", 0.0)
+            freq = 1000.0 / period if period > 0 else 0.0
+            clocks.append({
+                "name": clk_name,
+                "period": period,
+                "frequency": freq,
+                "wns": clk_info.get("wns", 0.0),
+                "tns": clk_info.get("tns", 0.0),
+                "endpoints": int(clk_info.get("endpoints", 0)),
+            })
+
+        # Build histogram from path slacks
+        if paths:
+            slack_values = [p["slack"] for p in paths]
+            min_s = min(slack_values)
+            max_s = max(slack_values)
+            bin_width = max((max_s - min_s) / 12.0, 0.1)
+            histogram = []
+            for i in range(12):
+                lo = min_s + i * bin_width
+                hi = lo + bin_width
+                count = sum(1 for s in slack_values if lo <= s < hi)
+                histogram.append((lo, hi, count))
+        else:
+            histogram = []
+
+        # Separate setup/hold WNS/TNS (TimingResult stores aggregate)
+        data = {
+            "wns_setup": result.wns,
+            "tns_setup": result.tns,
+            "wns_hold": 0.0,
+            "tns_hold": 0.0,
+            "clocks": clocks,
+            "clock_names": clock_names,
+            "histogram": histogram,
+            "paths": paths,
+            "coverage": {
+                "covered": result.num_endpoints,
+                "total": result.num_endpoints,
+            },
+        }
+        self.update_results(data)
+
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""
         self.update_results({

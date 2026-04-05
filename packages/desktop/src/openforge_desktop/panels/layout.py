@@ -35,6 +35,7 @@ LAYER_COLORS: Final[dict[str, str]] = {
     "Diffusion": "#74c7ec",  # sapphire
     "NWell": "#585b70",    # overlay0
     "PWell": "#45475a",    # surface1
+    "placement": "#b4befe",  # lavender -- placed cells
 }
 
 _GRID_COLOR: Final[str] = "#313244"
@@ -206,13 +207,59 @@ class LayoutPanel(QDockWidget):
     # ── Public API ─────────────────────────────────────────────────
 
     def load_def(self, def_file: str) -> None:
-        """Load a DEF file and render its contents.
+        """Load a DEF file and render its physical design contents."""
+        from openforge.parsers.def_parser import DEFParser
+        from pathlib import Path
 
-        This is currently a placeholder -- actual DEF parsing is not yet
-        implemented.  A future version will use the OpenForge DEF parser.
-        """
+        parser = DEFParser()
+        data = parser.parse(Path(def_file))
+
         self.clear()
-        # TODO: integrate DEF parser here
+
+        # Scale from DEF units to scene coordinates
+        scale = 1.0 / max(data.units / 100, 1)
+
+        # Draw die area
+        if data.die_area and data.die_area != (0, 0, 0, 0):
+            x0, y0, x1, y1 = data.die_area
+            die_color = QColor("#585b70")  # surface2
+            die_pen = QPen(die_color, 2.0)
+            die_pen.setCosmetic(True)
+            die_brush = QBrush(QColor(88, 91, 112, 20))
+            self._scene.addRect(
+                QRectF(
+                    x0 * scale, y0 * scale,
+                    (x1 - x0) * scale, (y1 - y0) * scale,
+                ),
+                die_pen, die_brush,
+            )
+            # Adjust scene rect to die area with margin
+            margin = max((x1 - x0), (y1 - y0)) * scale * 0.05
+            self._scene.setSceneRect(
+                x0 * scale - margin, y0 * scale - margin,
+                (x1 - x0) * scale + 2 * margin,
+                (y1 - y0) * scale + 2 * margin,
+            )
+
+        # Draw placed components
+        for comp in data.components:
+            if comp.placed or comp.fixed:
+                self.add_cell(
+                    comp.name,
+                    comp.x * scale, comp.y * scale,
+                    10, 10,
+                    "placement",
+                )
+
+        # Draw routed nets
+        for net in data.nets:
+            for seg in net.routed_segments:
+                if len(seg.points) >= 2:
+                    points = [(p[0] * scale, p[1] * scale) for p in seg.points]
+                    layer = seg.layer if seg.layer else "Metal1"
+                    self.add_net(points, layer)
+
+        self._zoom_fit()
 
     def add_cell(
         self,

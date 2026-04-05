@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont
@@ -162,6 +162,114 @@ class PropertiesPanel(QDockWidget):
         self._add_row("Dynamic Power", "-")
         self._add_row("Leakage Power", "-")
         self._add_row("Total Power", "-")
+
+    def show_from_netlist_cell(
+        self,
+        cell_name: str,
+        netlist_data: "Any",
+    ) -> None:
+        """Display properties for a cell from a Yosys/gate-level netlist.
+
+        Parameters
+        ----------
+        cell_name:
+            Instance name of the cell to display.
+        netlist_data:
+            A ``NetlistParser`` (``packages/core/src/openforge/synthesis/netlist.py``)
+            or any object whose ``.cells`` attribute is iterable over
+            objects with ``name``, ``type``, ``connections``, and ``parameters``.
+        """
+        self._title_label.setText(f"  Cell: {cell_name}")
+        self._table.setRowCount(0)
+
+        # Find the cell across all modules
+        target = None
+        for cell in netlist_data.cells:
+            if cell.name == cell_name:
+                target = cell
+                break
+
+        if target is None:
+            self._add_section("Cell Info")
+            self._add_row("Name", cell_name)
+            self._add_row("Status", "Not found in netlist")
+            return
+
+        self._add_section("Cell Info")
+        self._add_row("Instance", target.name)
+        self._add_row("Cell Type", target.type)
+
+        # Port connections
+        if target.connections:
+            self._add_section("Port Connections")
+            for port_name, bits in target.connections.items():
+                bit_str = ", ".join(str(b) for b in bits) if bits else "-"
+                self._add_row(port_name, bit_str)
+
+        # Parameters
+        if target.parameters:
+            self._add_section("Parameters")
+            for pname, pval in target.parameters.items():
+                self._add_row(pname, str(pval))
+
+        # Attributes (may contain timing info)
+        if hasattr(target, "attributes") and target.attributes:
+            self._add_section("Attributes")
+            for aname, aval in target.attributes.items():
+                self._add_row(aname, str(aval))
+
+    def show_from_vcd_signal(
+        self,
+        signal_name: str,
+        waveform_data: "Any",
+    ) -> None:
+        """Display properties for a signal from loaded VCD waveform data.
+
+        Parameters
+        ----------
+        signal_name:
+            Full hierarchical name of the signal.
+        waveform_data:
+            A ``WaveformData`` object from ``openforge.waveform.loader``.
+        """
+        self._title_label.setText(f"  Signal: {signal_name}")
+        self._table.setRowCount(0)
+
+        sig = waveform_data.get_signal(signal_name)
+        if sig is None:
+            self._add_section("Signal Info")
+            self._add_row("Name", signal_name)
+            self._add_row("Status", "Not found in waveform data")
+            return
+
+        self._add_section("Signal Info")
+        self._add_row("Name", sig.full_name)
+        self._add_row("Width", str(sig.width))
+        self._add_row("Type", sig.signal_type.value)
+        self._add_row("Scope", sig.scope if sig.scope else "(top)")
+
+        # Current value (last recorded)
+        if sig.changes:
+            self._add_row("Last Value", sig.changes[-1].value)
+
+        # Toggle count: number of value changes
+        toggle_count = max(len(sig.changes) - 1, 0)
+        self._add_section("Activity")
+        self._add_row("Toggle Count", str(toggle_count))
+
+        if sig.changes:
+            first_t = sig.changes[0].time
+            last_t = sig.changes[-1].time
+            ts_mag = waveform_data.timescale_magnitude
+            ts_unit = waveform_data.timescale_unit.value
+            self._add_row(
+                "First Transition",
+                f"{first_t * ts_mag} {ts_unit}",
+            )
+            self._add_row(
+                "Last Transition",
+                f"{last_t * ts_mag} {ts_unit}",
+            )
 
     def clear(self) -> None:
         """Reset the properties panel to its empty state."""

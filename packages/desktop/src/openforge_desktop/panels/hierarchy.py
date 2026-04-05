@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import json
+import re
+from pathlib import Path
+
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PySide6.QtWidgets import QDockWidget, QTreeView, QVBoxLayout, QWidget
 
@@ -41,10 +45,11 @@ class HierarchyModel(QAbstractItemModel):
 
     _COLUMNS: tuple[str, ...] = ("Name", "Type")
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, *, placeholder: bool = True) -> None:
         super().__init__(parent)
         self._root = _HierarchyNode("<root>", "root")
-        self._build_placeholder()
+        if placeholder:
+            self._build_placeholder()
 
     # ── Placeholder data ───────────────────────────────────────────
 
@@ -167,3 +172,115 @@ class HierarchyPanel(QDockWidget):
     @property
     def tree(self) -> QTreeView:
         return self._tree
+
+    # ── Real data loading ─────────────────────────────────────────
+
+    _VERILOG_KEYWORDS: frozenset[str] = frozenset({
+        "module", "endmodule", "input", "output", "inout", "wire",
+        "reg", "assign", "always", "initial", "parameter",
+        "localparam", "generate", "genvar", "begin", "end", "if",
+        "else", "case", "for", "while", "function", "task",
+    })
+
+    def load_from_sources(self, source_files: list[Path]) -> None:
+        """Build the hierarchy tree from Verilog/SystemVerilog source files.
+
+        Scans each file for ``module`` declarations and cell
+        instantiations, then assembles a tree with top-level modules
+        at the root and instantiated sub-modules as children.
+        """
+        # module_name -> list of (instance_type, instance_name)
+        module_instances: dict[str, list[tuple[str, str]]] = {}
+        all_modules: set[str] = set()
+        instantiated_modules: set[str] = set()
+
+        for src in source_files:
+            if not src.exists():
+                continue
+            text = src.read_text(encoding="utf-8", errors="replace")
+            # Find module declarations
+            mod_names = re.findall(r"\bmodule\s+(\w+)", text)
+            all_modules.update(mod_names)
+
+            # Split text into per-module blocks for instance detection
+            blocks = re.split(r"\bmodule\b", text)
+            for i, block in enumerate(blocks[1:], 1):
+                name_match = re.match(r"\s*(\w+)", block)
+                if not name_match:
+                    continue
+                mod_name = name_match.group(1)
+                # Find instantiations: <type> <name> (
+                insts = re.findall(r"(\w+)\s+(\w+)\s*\(", block)
+                filtered = [
+                    (itype, iname)
+                    for itype, iname in insts
+                    if itype not in self._VERILOG_KEYWORDS
+                ]
+                module_instances.setdefault(mod_name, []).extend(filtered)
+                for itype, _ in filtered:
+                    instantiated_modules.add(itype)
+
+        # Top modules are declared but never instantiated
+        top_modules = all_modules - instantiated_modules
+        if not top_modules:
+            top_modules = all_modules  # fallback -- show everything
+
+        root = _HierarchyNode("<root>", "root")
+
+        def _build_subtree(mod_name: str, visited: set[str]) -> _HierarchyNode:
+            node = _HierarchyNode(mod_name, "module")
+            if mod_name in visited:
+                return node  # prevent cycles
+            visited.add(mod_name)
+            for itype, iname in module_instances.get(mod_name, []):
+                child = _build_subtree(itype, visited)
+                child.name = f"{iname} ({itype})" if itype != iname else iname
+                child.kind = "instance"
+                node.append_child(child)
+            visited.discard(mod_name)
+            return node
+
+        for top in sorted(top_modules):
+            root.append_child(_build_subtree(top, set()))
+
+        self._model.set_root(root)
+        self._tree.expandAll()
+
+    def load_from_json_netlist(self, json_path: Path) -> None:
+        """Build the hierarchy tree from a Yosys JSON netlist.
+
+        Walks ``data["modules"]`` and each module's ``cells`` dict to
+        construct the tree.
+        """
+        if not json_path.exists():
+            return
+
+        data = json.loads(json_path.read_text(encoding="utf-8"))
+        modules = data.get("modules", {})
+
+        root = _HierarchyNode("<root>", "root")
+
+        for mod_name, mod_data in modules.items():
+            mod_node = _HierarchyNode(mod_name, "module")
+            cells = mod_data.get("cells", {})
+            # Count instances per cell type
+            type_counts: dict[str, int] = {}
+            for cell_data in cells.values():
+                ctype = cell_data.get("type", "unknown")
+                type_counts[ctype] = type_counts.get(ctype, 0) + 1
+
+            for cell_name, cell_data in cells.items():
+                ctype = cell_data.get("type", "unknown")
+                count = type_counts.get(ctype, 1)
+                label = f"{cell_name} [{ctype}]"
+                child = _HierarchyNode(label, f"cell ({count}x {ctype})")
+                mod_node.append_child(child)
+
+            root.append_child(mod_node)
+
+        self._model.set_root(root)
+        self._tree.expandAll()
+
+    def clear(self) -> None:
+        """Reset to an empty tree with no placeholder data."""
+        self._model.clear()
