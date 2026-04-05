@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=OpenForge EDA
+Comment=Cryptographic hardware verification platform
+GenericName=EDA Tool
+Exec=openforge-desktop %F
+Icon=openforge-eda
+Terminal=false
+Categories=Development;Electronics;Engineering;Science;
+Keywords=EDA;FPGA;ASIC;Verilog;VHDL;verification;cryptography;
+MimeType=text/x-verilog;text/x-systemverilog;text/x-vhdl;application/x-yaml;
+StartupNotify=true
+StartupWMClass=openforge-desktop

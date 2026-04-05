@@ -1,0 +1,153 @@
+version: "3.9"
+
+# OpenForge EDA - Production Docker Compose Stack
+# Runs the full platform: API, web frontend, workers, and infrastructure
+
+services:
+  # ── Application Services ────────────────────────────────────────────
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/api/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://openforge:${POSTGRES_PASSWORD}@postgres:5432/openforge
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-openforge}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-openforge_prod}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web:
+    build:
+      context: ../packages/web
+      dockerfile: ../../docker/web/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      API_URL: http://api:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/worker/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://openforge:${POSTGRES_PASSWORD}@postgres:5432/openforge
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+
+  # ── EDA Tool Containers ─────────────────────────────────────────────
+
+  verilator:
+    image: hdlc/sim:latest
+    volumes:
+      - workspaces:/workspaces
+    command: ["sleep", "infinity"]
+    restart: unless-stopped
+
+  yosys:
+    image: hdlc/yosys:latest
+    volumes:
+      - workspaces:/workspaces
+    command: ["sleep", "infinity"]
+    restart: unless-stopped
+
+  formal:
+    image: hdlc/formal:latest
+    volumes:
+      - workspaces:/workspaces
+    command: ["sleep", "infinity"]
+    restart: unless-stopped
+
+  openroad:
+    image: openroad/flow:latest
+    volumes:
+      - workspaces:/workspaces
+    command: ["sleep", "infinity"]
+    restart: unless-stopped
+
+  # ── Infrastructure ──────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: openforge
+      POSTGRES_USER: openforge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openforge_prod}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openforge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-openforge}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-openforge_prod}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_DB: openforge_metrics
+      POSTGRES_USER: openforge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openforge_prod}
+    ports:
+      - "5433:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  timescale_data:
+  workspaces:

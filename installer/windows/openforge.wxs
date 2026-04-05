@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  OpenForge EDA - Windows Installer (WiX v3)
+  Manufacturer: Dyber Inc.
+  License: GPL-3.0-or-later
+
+  Build with:
+    candle.exe openforge.wxs -out openforge.wixobj
+    light.exe openforge.wixobj -out OpenForge-EDA-$(VERSION).msi -ext WixUIExtension -ext WixUtilExtension
+-->
+
+<?define ProductName    = "OpenForge EDA" ?>
+<?define ProductVersion = "0.1.0" ?>
+<?define Manufacturer   = "Dyber Inc." ?>
+<?define UpgradeCode    = "8A3F4E72-1B9D-4C5A-A8E6-7D2F3B1C9E4A" ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.Manufacturer)"
+           Language="1033"
+           Codepage="1252"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <Package Id="*"
+             Description="$(var.ProductName) Installer"
+             Manufacturer="$(var.Manufacturer)"
+             InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Platform="x64" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed."
+                  AllowSameVersionUpgrades="yes" />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- ================================================================== -->
+    <!-- Launch conditions                                                   -->
+    <!-- ================================================================== -->
+    <Condition Message="$(var.ProductName) requires Windows 10 or later.">
+      <![CDATA[Installed OR VersionNT >= 603]]>
+    </Condition>
+
+    <!-- Check for Python 3.12+ unless bundled runtime is selected -->
+    <Property Id="PYTHON312FOUND" Secure="yes">
+      <RegistrySearch Id="PythonRegistry"
+                      Root="HKLM"
+                      Key="SOFTWARE\Python\PythonCore\3.12\InstallPath"
+                      Type="raw" />
+    </Property>
+
+    <!-- ================================================================== -->
+    <!-- Properties                                                          -->
+    <!-- ================================================================== -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <Property Id="ARPPRODUCTICON" Value="OpenForgeIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/dyber-pqc/OpenForge" />
+    <Property Id="ARPURLINFOABOUT" Value="https://dyber.io" />
+
+    <!-- ================================================================== -->
+    <!-- Directory structure                                                 -->
+    <!-- ================================================================== -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="OpenForge EDA">
+          <Directory Id="DIR_Python" Name="python" />
+          <Directory Id="DIR_Bin" Name="bin" />
+          <Directory Id="DIR_Lib" Name="lib" />
+          <Directory Id="DIR_PDK" Name="pdk" />
+          <Directory Id="DIR_Web" Name="web" />
+          <Directory Id="DIR_Doc" Name="doc" />
+        </Directory>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="DIR_StartMenu" Name="OpenForge EDA" />
+      </Directory>
+
+      <Directory Id="DesktopFolder" />
+    </Directory>
+
+    <!-- ================================================================== -->
+    <!-- Icon                                                                -->
+    <!-- ================================================================== -->
+    <Icon Id="OpenForgeIcon" SourceFile="assets\openforge.ico" />
+
+    <!-- ================================================================== -->
+    <!-- Component Group: Core Python packages                               -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="CG_Core" Directory="DIR_Lib">
+      <Component Id="C_CoreWheel" Guid="A1B2C3D4-0001-4000-8000-000000000001" Win64="yes">
+        <File Id="F_CoreWheel" Source="staging\lib\openforge_core-0.1.0-py3-none-any.whl"
+              Name="openforge_core-0.1.0-py3-none-any.whl" KeyPath="yes" />
+      </Component>
+      <Component Id="C_CryptoWheel" Guid="A1B2C3D4-0002-4000-8000-000000000002" Win64="yes">
+        <File Id="F_CryptoWheel" Source="staging\lib\openforge_crypto-0.1.0-py3-none-any.whl"
+              Name="openforge_crypto-0.1.0-py3-none-any.whl" KeyPath="yes" />
+      </Component>
+      <Component Id="C_ApiWheel" Guid="A1B2C3D4-0003-4000-8000-000000000003" Win64="yes">
+        <File Id="F_ApiWheel" Source="staging\lib\openforge_api-0.1.0-py3-none-any.whl"
+              Name="openforge_api-0.1.0-py3-none-any.whl" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Component Group: Desktop (Qt/PySide6 application)                   -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="CG_Desktop" Directory="DIR_Lib">
+      <Component Id="C_DesktopWheel" Guid="A1B2C3D4-0010-4000-8000-000000000010" Win64="yes">
+        <File Id="F_DesktopWheel" Source="staging\lib\openforge_desktop-0.1.0-py3-none-any.whl"
+              Name="openforge_desktop-0.1.0-py3-none-any.whl" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Component Group: CLI tools                                          -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="CG_CLI" Directory="DIR_Bin">
+      <Component Id="C_CliWheel" Guid="A1B2C3D4-0020-4000-8000-000000000020" Win64="yes">
+        <File Id="F_CliWheel" Source="staging\lib\openforge_cli-0.1.0-py3-none-any.whl"
+              Name="openforge_cli-0.1.0-py3-none-any.whl" KeyPath="yes" />
+      </Component>
+      <Component Id="C_CliLauncher" Guid="A1B2C3D4-0021-4000-8000-000000000021" Win64="yes">
+        <File Id="F_CliLauncher" Source="staging\bin\openforge.exe"
+              Name="openforge.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Component Group: Rust tools                                         -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="CG_RustTools" Directory="DIR_Bin">
+      <Component Id="C_RustCT" Guid="A1B2C3D4-0030-4000-8000-000000000030" Win64="yes">
+        <File Id="F_RustCT" Source="staging\bin\openforge-ct.exe"
+              Name="openforge-ct.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="C_RustSCA" Guid="A1B2C3D4-0031-4000-8000-000000000031" Win64="yes">
+        <File Id="F_RustSCA" Source="staging\bin\openforge-sca.exe"
+              Name="openforge-sca.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="C_RustEntropy" Guid="A1B2C3D4-0032-4000-8000-000000000032" Win64="yes">
+        <File Id="F_RustEntropy" Source="staging\bin\openforge-entropy.exe"
+              Name="openforge-entropy.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="C_RustLint" Guid="A1B2C3D4-0033-4000-8000-000000000033" Win64="yes">
+        <File Id="F_RustLint" Source="staging\bin\openforge-lint.exe"
+              Name="openforge-lint.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="C_RustWave" Guid="A1B2C3D4-0034-4000-8000-000000000034" Win64="yes">
+        <File Id="F_RustWave" Source="staging\bin\openforge-wave.exe"
+              Name="openforge-wave.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Component Group: PDK files (optional)                               -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="CG_PDK" Directory="DIR_PDK">
+      <Component Id="C_PDKReadme" Guid="A1B2C3D4-0040-4000-8000-000000000040" Win64="yes">
+        <File Id="F_PDKReadme" Source="staging\pdk\README.txt"
+              Name="README.txt" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Component: PATH environment variable                                -->
+    <!-- ================================================================== -->
+    <Component Id="C_PathEnv" Directory="DIR_Bin" Guid="A1B2C3D4-0050-4000-8000-000000000050" Win64="yes">
+      <CreateFolder />
+      <Environment Id="E_Path" Name="PATH" Value="[DIR_Bin]"
+                   Permanent="no" Part="last" Action="set" System="yes" />
+    </Component>
+
+    <!-- ================================================================== -->
+    <!-- Component: Shortcuts                                                -->
+    <!-- ================================================================== -->
+    <Component Id="C_DesktopShortcut" Directory="DesktopFolder"
+               Guid="A1B2C3D4-0060-4000-8000-000000000060" Win64="yes">
+      <Shortcut Id="S_Desktop"
+                Name="OpenForge EDA"
+                Description="OpenForge EDA Desktop Application"
+                Target="[DIR_Bin]openforge.exe"
+                Arguments="desktop"
+                WorkingDirectory="INSTALLDIR"
+                Icon="OpenForgeIcon" />
+      <RegistryValue Root="HKCU" Key="Software\DyberInc\OpenForge"
+                     Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="C_StartMenuShortcuts" Directory="DIR_StartMenu"
+               Guid="A1B2C3D4-0061-4000-8000-000000000061" Win64="yes">
+      <Shortcut Id="S_StartDesktop"
+                Name="OpenForge EDA"
+                Description="OpenForge EDA Desktop Application"
+                Target="[DIR_Bin]openforge.exe"
+                Arguments="desktop"
+                WorkingDirectory="INSTALLDIR"
+                Icon="OpenForgeIcon" />
+      <Shortcut Id="S_StartCLI"
+                Name="OpenForge CLI"
+                Description="OpenForge EDA Command Line"
+                Target="[DIR_Bin]openforge.exe"
+                WorkingDirectory="INSTALLDIR" />
+      <Shortcut Id="S_Uninstall"
+                Name="Uninstall OpenForge EDA"
+                Target="[SystemFolder]msiexec.exe"
+                Arguments="/x [ProductCode]" />
+      <RemoveFolder Id="RF_StartMenu" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\DyberInc\OpenForge"
+                     Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- ================================================================== -->
+    <!-- Component: File associations                                        -->
+    <!-- ================================================================== -->
+    <Component Id="C_FileAssoc" Directory="INSTALLDIR"
+               Guid="A1B2C3D4-0070-4000-8000-000000000070" Win64="yes">
+      <CreateFolder />
+      <RegistryValue Root="HKCU" Key="Software\DyberInc\OpenForge"
+                     Name="FileAssoc" Type="integer" Value="1" KeyPath="yes" />
+
+      <!-- .yaml OpenForge config association -->
+      <ProgId Id="OpenForge.Config" Description="OpenForge Configuration File" Icon="OpenForgeIcon">
+        <Extension Id="ofcfg" ContentType="application/x-openforge-config">
+          <Verb Id="open_ofcfg" Command="Open with OpenForge" TargetFile="F_CliLauncher"
+                Argument='open "%1"' />
+        </Extension>
+      </ProgId>
+
+      <!-- Verilog file association -->
+      <ProgId Id="OpenForge.Verilog" Description="Verilog Source File" Icon="OpenForgeIcon">
+        <Extension Id="v" ContentType="text/x-verilog">
+          <Verb Id="open_v" Command="Open with OpenForge" TargetFile="F_CliLauncher"
+                Argument='open "%1"' />
+        </Extension>
+      </ProgId>
+
+      <!-- SystemVerilog file association -->
+      <ProgId Id="OpenForge.SystemVerilog" Description="SystemVerilog Source File" Icon="OpenForgeIcon">
+        <Extension Id="sv" ContentType="text/x-systemverilog">
+          <Verb Id="open_sv" Command="Open with OpenForge" TargetFile="F_CliLauncher"
+                Argument='open "%1"' />
+        </Extension>
+      </ProgId>
+
+      <!-- VHDL file association -->
+      <ProgId Id="OpenForge.VHDL" Description="VHDL Source File" Icon="OpenForgeIcon">
+        <Extension Id="vhd" ContentType="text/x-vhdl">
+          <Verb Id="open_vhd" Command="Open with OpenForge" TargetFile="F_CliLauncher"
+                Argument='open "%1"' />
+        </Extension>
+      </ProgId>
+    </Component>
+
+    <!-- ================================================================== -->
+    <!-- License                                                             -->
+    <!-- ================================================================== -->
+    <WixVariable Id="WixUILicenseRtf" Value="assets\LICENSE.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="assets\dialog.bmp" />
+
+    <!-- ================================================================== -->
+    <!-- Feature tree                                                        -->
+    <!-- ================================================================== -->
+    <Feature Id="F_Core" Title="Core Libraries" Description="OpenForge core Python packages (required)."
+             Level="1" Absent="disallow" AllowAdvertise="no">
+      <ComponentGroupRef Id="CG_Core" />
+    </Feature>
+
+    <Feature Id="F_Desktop" Title="Desktop Application"
+             Description="Qt-based desktop GUI for visual design and verification."
+             Level="1" AllowAdvertise="no">
+      <ComponentGroupRef Id="CG_Desktop" />
+      <ComponentRef Id="C_DesktopShortcut" />
+      <ComponentRef Id="C_StartMenuShortcuts" />
+      <ComponentRef Id="C_FileAssoc" />
+    </Feature>
+
+    <Feature Id="F_CLI" Title="Command-Line Tools"
+             Description="OpenForge CLI and Rust performance tools."
+             Level="1" AllowAdvertise="no">
+      <ComponentGroupRef Id="CG_CLI" />
+      <ComponentGroupRef Id="CG_RustTools" />
+      <ComponentRef Id="C_PathEnv" />
+    </Feature>
+
+    <Feature Id="F_RustTools" Title="Rust Accelerator Tools"
+             Description="High-performance Rust-based analysis tools (CT, SCA, Entropy, Lint, Wave)."
+             Level="1" AllowAdvertise="no">
+      <ComponentGroupRef Id="CG_RustTools" />
+    </Feature>
+
+    <Feature Id="F_PDK" Title="Process Design Kits"
+             Description="Optional PDK files for target technologies."
+             Level="2" AllowAdvertise="no">
+      <ComponentGroupRef Id="CG_PDK" />
+    </Feature>
+
+    <!-- ================================================================== -->
+    <!-- UI sequence                                                         -->
+    <!-- ================================================================== -->
+    <UIRef Id="WixUI_FeatureTree" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+  </Product>
+</Wix>

@@ -1,0 +1,48 @@
+Source: openforge-eda
+Section: electronics
+Priority: optional
+Maintainer: Dyber Inc. <engineering@dyber.io>
+Build-Depends: debhelper-compat (= 13),
+               python3 (>= 3.12),
+               python3-pip,
+               python3-venv,
+               python3-setuptools,
+               cargo,
+               rustc,
+               nodejs (>= 20),
+               npm
+Standards-Version: 4.6.2
+Homepage: https://github.com/dyber-pqc/OpenForge
+Vcs-Git: https://github.com/dyber-pqc/OpenForge.git
+Vcs-Browser: https://github.com/dyber-pqc/OpenForge
+Rules-Requires-Root: no
+
+Package: openforge-eda
+Architecture: amd64
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         python3 (>= 3.12),
+         python3-pip,
+         python3-pyside6 (>= 6.7) | python3-pyside6.qtwidgets,
+         python3-pydantic (>= 2.0),
+         python3-yaml,
+         python3-networkx,
+         python3-jinja2
+Recommends: docker.io,
+            python3-numpy,
+            python3-scipy
+Suggests: openforge-eda-pdk
+Description: Cloud-native cryptographic hardware verification platform
+ OpenForge EDA is an open-source electronic design automation platform
+ focused on cryptographic hardware verification. It provides:
+ .
+  - Desktop GUI application (Qt/PySide6) with integrated code editor
+  - Command-line interface for scripted workflows
+  - REST API for CI/CD integration
+  - High-performance Rust analysis tools (constant-time verification,
+    side-channel analysis, entropy analysis, HDL linting, waveform viewing)
+  - DAG-based verification flow engine
+  - Docker-based EDA tool orchestration
+ .
+ This package contains the complete OpenForge EDA toolchain including
+ Python packages, Rust binaries, and the desktop application.

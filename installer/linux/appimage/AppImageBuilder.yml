@@ -1,0 +1,150 @@
+# OpenForge EDA - AppImage Builder Configuration
+# Build with: appimage-builder --recipe AppImageBuilder.yml
+# Requires: appimage-builder (pip install appimage-builder)
+
+version: 1
+script:
+  - rm -rf AppDir || true
+  - mkdir -p AppDir/usr/bin
+  - mkdir -p AppDir/usr/lib/openforge
+  - mkdir -p AppDir/usr/share/openforge/web
+  - mkdir -p AppDir/usr/share/applications
+  - mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+  - mkdir -p AppDir/usr/share/metainfo
+
+  # Install Python into AppDir
+  - python3.12 -m venv AppDir/usr/lib/openforge/venv --copies
+
+  # Install OpenForge Python packages
+  - AppDir/usr/lib/openforge/venv/bin/pip install --upgrade pip
+  - AppDir/usr/lib/openforge/venv/bin/pip install
+      ../../packages/core
+      ../../packages/cli
+      ../../packages/api
+      ../../packages/desktop
+      ../../packages/crypto
+      PySide6>=6.7
+      QScintilla>=2.14
+
+  # Create CLI wrapper
+  - |
+    cat > AppDir/usr/bin/openforge << 'EOF'
+    #!/bin/sh
+    HERE="$(dirname "$(readlink -f "$0")")"
+    export PYTHONPATH="${HERE}/../lib/openforge/venv/lib/python3.12/site-packages:${PYTHONPATH}"
+    exec "${HERE}/../lib/openforge/venv/bin/python" -m openforge_cli.main "$@"
+    EOF
+  - chmod +x AppDir/usr/bin/openforge
+
+  # Create desktop launcher
+  - |
+    cat > AppDir/usr/bin/openforge-desktop << 'EOF'
+    #!/bin/sh
+    HERE="$(dirname "$(readlink -f "$0")")"
+    export PYTHONPATH="${HERE}/../lib/openforge/venv/lib/python3.12/site-packages:${PYTHONPATH}"
+    export QT_QPA_PLATFORM_PLUGIN_PATH="${HERE}/../lib/openforge/venv/lib/python3.12/site-packages/PySide6/Qt/plugins/platforms"
+    exec "${HERE}/../lib/openforge/venv/bin/python" -m openforge_desktop.main "$@"
+    EOF
+  - chmod +x AppDir/usr/bin/openforge-desktop
+
+  # Copy Rust binaries
+  - |
+    for tool in openforge-ct openforge-sca openforge-entropy openforge-lint openforge-wave; do
+      if [ -f "../../target/release/${tool}" ]; then
+        cp "../../target/release/${tool}" AppDir/usr/bin/
+      fi
+    done
+
+  # Copy web assets
+  - |
+    if [ -d "../../packages/web/build" ]; then
+      cp -r ../../packages/web/build/* AppDir/usr/share/openforge/web/
+    fi
+
+  # Desktop integration
+  - cp ../openforge-eda.desktop AppDir/usr/share/applications/
+  - |
+    if [ -f "../../assets/openforge-256.png" ]; then
+      cp ../../assets/openforge-256.png AppDir/usr/share/icons/hicolor/256x256/apps/openforge-eda.png
+    fi
+
+  # AppStream metadata
+  - |
+    cat > AppDir/usr/share/metainfo/io.dyber.openforge.appdata.xml << 'EOF'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <component type="desktop-application">
+      <id>io.dyber.openforge</id>
+      <name>OpenForge EDA</name>
+      <summary>Cryptographic hardware verification platform</summary>
+      <metadata_license>GPL-3.0-or-later</metadata_license>
+      <project_license>GPL-3.0-or-later</project_license>
+      <description>
+        <p>OpenForge EDA is an open-source electronic design automation platform
+        focused on cryptographic hardware verification.</p>
+      </description>
+      <url type="homepage">https://github.com/dyber-pqc/OpenForge</url>
+      <provides>
+        <binary>openforge</binary>
+        <binary>openforge-desktop</binary>
+      </provides>
+    </component>
+    EOF
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: io.dyber.openforge
+    name: OpenForge EDA
+    icon: openforge-eda
+    version: 0.1.0
+    exec: usr/bin/openforge-desktop
+    exec_args: "$@"
+
+  runtime:
+    env:
+      PYTHONHOME: '${APPDIR}/usr/lib/openforge/venv'
+      PYTHONPATH: '${APPDIR}/usr/lib/openforge/venv/lib/python3.12/site-packages'
+      PATH: '${APPDIR}/usr/bin:${PATH}'
+      QT_PLUGIN_PATH: '${APPDIR}/usr/lib/openforge/venv/lib/python3.12/site-packages/PySide6/Qt/plugins'
+      QT_QPA_PLATFORM_PLUGIN_PATH: '${APPDIR}/usr/lib/openforge/venv/lib/python3.12/site-packages/PySide6/Qt/plugins/platforms'
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ jammy main universe'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C'
+    include:
+      - python3.12
+      - python3.12-venv
+      - libgl1
+      - libglib2.0-0
+      - libfontconfig1
+      - libxcb-xinerama0
+      - libxcb-cursor0
+      - libxkbcommon0
+      - libdbus-1-3
+      - libegl1
+      - libxcb-icccm4
+      - libxcb-image0
+      - libxcb-keysyms1
+      - libxcb-randr0
+      - libxcb-render-util0
+      - libxcb-shape0
+    exclude:
+      - perl
+      - perl-base
+
+  files:
+    include:
+      - usr/lib/openforge/**
+      - usr/bin/openforge*
+      - usr/share/openforge/**
+    exclude:
+      - usr/share/doc
+      - usr/share/man
+
+AppImage:
+  arch: x86_64
+  comp: gzip
+  update-information: 'gh-releases-zsync|dyber-pqc|OpenForge|latest|OpenForge-EDA-*x86_64.AppImage.zsync'

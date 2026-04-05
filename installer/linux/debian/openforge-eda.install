@@ -1,0 +1,22 @@
+# OpenForge EDA - Debian install file mapping
+#
+# Python virtual environment with all OpenForge packages
+usr/lib/openforge/venv usr/lib/openforge/
+
+# CLI and desktop wrapper scripts
+usr/bin/openforge
+usr/bin/openforge-desktop
+
+# Rust tool binaries
+usr/bin/openforge-ct
+usr/bin/openforge-sca
+usr/bin/openforge-entropy
+usr/bin/openforge-lint
+usr/bin/openforge-wave
+
+# Web frontend assets
+usr/share/openforge/web usr/share/openforge/
+
+# Desktop integration
+usr/share/applications/openforge-eda.desktop
+usr/share/icons/hicolor/256x256/apps/openforge-eda.png

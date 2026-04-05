@@ -7,7 +7,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from openforge_api import __version__
-from openforge_api.routes import projects, verification, ws
+from openforge_api.routes import (
+    analysis,
+    crypto,
+    files,
+    projects,
+    synthesis,
+    tools,
+    verification,
+    waveforms,
+    ws,
+)
 
 app = FastAPI(
     title="OpenForge EDA API",
@@ -27,15 +37,13 @@ app.add_middleware(
 # ---- Routers ----
 app.include_router(projects.router, prefix="/projects", tags=["projects"])
 app.include_router(verification.router, prefix="/verify", tags=["verification"])
+app.include_router(synthesis.router, prefix="/synth", tags=["synthesis"])
+app.include_router(analysis.router, prefix="/analyze", tags=["analysis"])
+app.include_router(waveforms.router, prefix="/waveforms", tags=["waveforms"])
+app.include_router(crypto.router, prefix="/crypto", tags=["crypto"])
+app.include_router(files.router, prefix="/files", tags=["files"])
+app.include_router(tools.router, prefix="/tools", tags=["tools"])
 app.include_router(ws.router, tags=["websocket"])
-
-# TODO: Include synthesis router once implemented
-# from openforge_api.routes import synthesis
-# app.include_router(synthesis.router, prefix="/synth", tags=["synthesis"])
-
-# TODO: Include waveforms router once implemented
-# from openforge_api.routes import waveforms
-# app.include_router(waveforms.router, prefix="/waveforms", tags=["waveforms"])
 
 
 @app.get("/health", tags=["system"])

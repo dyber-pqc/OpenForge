@@ -1,0 +1,82 @@
+{% set version = "0.1.0" %}
+
+package:
+  name: openforge
+  version: {{ version }}
+
+source:
+  path: ../..
+
+build:
+  number: 0
+  script: bash build.sh  # [unix]
+  script: bld.bat        # [win]
+  entry_points:
+    - openforge = openforge_cli.main:app
+    - openforge-desktop = openforge_desktop.main:main
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - {{ compiler('rust') }}
+    - nodejs >=20
+    - npm
+
+  host:
+    - python >=3.12
+    - pip
+    - hatchling
+    - rust >=1.75
+    - cargo
+
+  run:
+    - python >=3.12
+    - pydantic >=2.0
+    - pyyaml >=6.0
+    - jinja2 >=3.1
+    - networkx >=3.0
+    - rich >=13.0
+    - typer >=0.12
+    - docker-py >=7.0
+    - pyside6 >=6.7
+    - numpy
+    - scipy
+    - fastapi >=0.110
+    - uvicorn >=0.29
+
+test:
+  imports:
+    - openforge
+    - openforge.config
+    - openforge.engine
+    - openforge.flow
+    - openforge_cli
+    - openforge_desktop
+    - openforge_crypto
+
+  commands:
+    - openforge --help
+    - openforge-ct --help    # [unix]
+    - openforge-ct.exe --help  # [win]
+    - openforge-sca --help   # [unix]
+    - openforge-lint --help  # [unix]
+
+  requires:
+    - pytest
+
+about:
+  home: https://github.com/dyber-pqc/OpenForge
+  license: GPL-3.0-or-later
+  license_file: LICENSE
+  summary: Cloud-native cryptographic hardware verification platform
+  description: |
+    OpenForge EDA is an open-source electronic design automation platform
+    focused on cryptographic hardware verification. It provides desktop GUI,
+    CLI, REST API, and high-performance Rust analysis tools.
+  dev_url: https://github.com/dyber-pqc/OpenForge
+  doc_url: https://github.com/dyber-pqc/OpenForge/wiki
+
+extra:
+  recipe-maintainers:
+    - dyber-pqc

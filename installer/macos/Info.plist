@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>OpenForge EDA</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>OpenForge EDA</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>io.dyber.openforge</string>
+
+    <key>CFBundleVersion</key>
+    <string>0.1.0</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleSignature</key>
+    <string>OFGE</string>
+
+    <key>CFBundleExecutable</key>
+    <string>openforge-launcher</string>
+
+    <key>CFBundleIconFile</key>
+    <string>openforge.icns</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.developer-tools</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright 2024-2026 Dyber Inc. Licensed under GPL-3.0-or-later.</string>
+
+    <key>NSRequiresAquaSystemAppearance</key>
+    <false/>
+
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>OpenForge Configuration</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>yaml</string>
+                <string>yml</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeIconFile</key>
+            <string>openforge-config.icns</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.yaml</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Verilog Source</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>v</string>
+                <string>sv</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.verilog-source</string>
+                <string>public.systemverilog-source</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>VHDL Source</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>vhd</string>
+                <string>vhdl</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.vhdl-source</string>
+            </array>
+        </dict>
+    </array>
+
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>public.verilog-source</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.source-code</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>Verilog Source File</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>v</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>public.systemverilog-source</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.source-code</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>SystemVerilog Source File</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>sv</string>
+                </array>
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>

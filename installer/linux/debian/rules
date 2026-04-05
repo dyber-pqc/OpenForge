@@ -1,0 +1,93 @@
+#!/usr/bin/make -f
+
+# OpenForge EDA Debian build rules
+
+export DH_VERBOSE = 1
+export PYBUILD_NAME = openforge
+export CARGO_HOME = $(CURDIR)/debian/.cargo
+
+DESTDIR = $(CURDIR)/debian/openforge-eda
+PREFIX  = /usr
+BINDIR  = $(PREFIX)/bin
+LIBDIR  = $(PREFIX)/lib/openforge
+DATADIR = $(PREFIX)/share/openforge
+DOCDIR  = $(PREFIX)/share/doc/openforge-eda
+
+%:
+	dh $@ --buildsystem=pybuild
+
+override_dh_auto_configure:
+	# No special configure step needed
+
+override_dh_auto_build:
+	# Build Python packages
+	python3 -m pip wheel --no-deps --wheel-dir $(CURDIR)/dist \
+		$(CURDIR)/packages/core \
+		$(CURDIR)/packages/cli \
+		$(CURDIR)/packages/api \
+		$(CURDIR)/packages/desktop \
+		$(CURDIR)/packages/crypto
+
+	# Build Rust tools
+	mkdir -p $(CARGO_HOME)
+	cargo build --release --manifest-path $(CURDIR)/Cargo.toml
+
+	# Build web frontend
+	cd $(CURDIR)/packages/web && npm ci && npm run build
+
+override_dh_auto_install:
+	# Install Python wheels into a virtual environment
+	python3 -m venv $(DESTDIR)$(LIBDIR)/venv --system-site-packages
+	$(DESTDIR)$(LIBDIR)/venv/bin/pip install --no-deps $(CURDIR)/dist/*.whl
+
+	# Install CLI wrapper
+	mkdir -p $(DESTDIR)$(BINDIR)
+	printf '#!/bin/sh\nexec $(LIBDIR)/venv/bin/openforge "$$@"\n' \
+		> $(DESTDIR)$(BINDIR)/openforge
+	chmod 755 $(DESTDIR)$(BINDIR)/openforge
+
+	# Install desktop launcher wrapper
+	printf '#!/bin/sh\nexec $(LIBDIR)/venv/bin/openforge-desktop "$$@"\n' \
+		> $(DESTDIR)$(BINDIR)/openforge-desktop
+	chmod 755 $(DESTDIR)$(BINDIR)/openforge-desktop
+
+	# Install Rust binaries
+	for tool in openforge-ct openforge-sca openforge-entropy openforge-lint openforge-wave; do \
+		if [ -f $(CURDIR)/target/release/$$tool ]; then \
+			install -Dm755 $(CURDIR)/target/release/$$tool $(DESTDIR)$(BINDIR)/$$tool; \
+		fi; \
+	done
+
+	# Install web assets
+	mkdir -p $(DESTDIR)$(DATADIR)/web
+	if [ -d $(CURDIR)/packages/web/build ]; then \
+		cp -r $(CURDIR)/packages/web/build/* $(DESTDIR)$(DATADIR)/web/; \
+	fi
+
+	# Install desktop file and icon
+	mkdir -p $(DESTDIR)$(PREFIX)/share/applications
+	install -Dm644 $(CURDIR)/installer/linux/openforge-eda.desktop \
+		$(DESTDIR)$(PREFIX)/share/applications/openforge-eda.desktop
+	mkdir -p $(DESTDIR)$(PREFIX)/share/icons/hicolor/256x256/apps
+	if [ -f $(CURDIR)/assets/openforge-256.png ]; then \
+		install -Dm644 $(CURDIR)/assets/openforge-256.png \
+			$(DESTDIR)$(PREFIX)/share/icons/hicolor/256x256/apps/openforge-eda.png; \
+	fi
+
+	# Install license
+	mkdir -p $(DESTDIR)$(DOCDIR)
+	install -Dm644 $(CURDIR)/LICENSE $(DESTDIR)$(DOCDIR)/copyright || true
+
+override_dh_auto_test:
+	# Run Python unit tests
+	cd $(CURDIR) && python3 -m pytest tests/unit/ -v --tb=short || true
+	# Run Rust tests
+	cargo test --manifest-path $(CURDIR)/Cargo.toml || true
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf $(CURDIR)/dist
+	rm -rf $(CURDIR)/target
+	rm -rf $(CARGO_HOME)
+	rm -rf $(CURDIR)/packages/web/node_modules
+	rm -rf $(CURDIR)/packages/web/build

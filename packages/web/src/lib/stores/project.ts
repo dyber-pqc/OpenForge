@@ -6,6 +6,9 @@ import type { Project, VerificationJob } from '$lib/api/client';
 // Current project
 export const currentProject = writable<Project | null>(null);
 
+// Navigation / routing state
+export const currentView = writable<'ide' | 'projects' | 'synthesis' | 'verification'>('ide');
+
 // Project file tree
 export interface FileNode {
 	name: string;
@@ -68,10 +71,26 @@ export interface ToolInfo {
 
 export const toolStatus = writable<ToolInfo[]>([]);
 
+// Running job state
+export interface RunningJob {
+	name: string;
+	progress?: number;
+}
+
+export const runningJob = writable<RunningJob | null>(null);
+
 // UI state
 export const leftSidebarOpen = writable(true);
 export const rightSidebarOpen = writable(true);
 export const bottomPanelOpen = writable(true);
-export const bottomPanelTab = writable<'console' | 'problems' | 'waveforms' | 'reports'>(
+export const bottomPanelTab = writable<'console' | 'problems' | 'waveforms' | 'reports' | 'timing'>(
 	'console'
 );
+export const leftPanelTab = writable<'explorer' | 'hierarchy'>('explorer');
+export const rightPanelTab = writable<'properties' | 'security'>('properties');
+
+// Activity bar (left icon sidebar)
+export const activityBarSelection = writable<'explorer' | 'hierarchy' | 'search' | 'git' | 'extensions'>('explorer');
+
+// Projects list (for projects page)
+export const projectsList = writable<Project[]>([]);
