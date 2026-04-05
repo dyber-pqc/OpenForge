@@ -25,6 +25,7 @@ from openforge_desktop.panels.layout import LayoutPanel
 from openforge_desktop.panels.physical import PhysicalDesignPanel
 from openforge_desktop.panels.properties import PropertiesPanel
 from openforge_desktop.panels.reports import ReportsPanel
+from openforge_desktop.panels.security import SecurityPanel
 from openforge_desktop.panels.synthesis import SynthesisPanel
 from openforge_desktop.panels.testbench import TestbenchPanel
 from openforge_desktop.panels.timing import TimingPanel
@@ -574,6 +575,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction("Toggle &Synthesis Results", self._toggle_synthesis)
         view_menu.addAction("Toggle Ti&ming Analysis", self._toggle_timing)
         view_menu.addAction("Toggle Physical &Design", self._toggle_physical_design)
+        view_menu.addAction("Toggle S&ecurity Panel", self._toggle_security)
         view_menu.addSeparator()
         view_menu.addAction("&Reset Layout", self._reset_layout)
 
@@ -596,6 +598,10 @@ class MainWindow(QMainWindow):
             "Run &Simulation...", self._on_run_sim, QKeySequence("Ctrl+F5")
         )
         verify_menu.addAction("Run &Formal Verification...", self._stub)
+        verify_menu.addSeparator()
+        verify_menu.addAction(
+            "&Security Analysis...", self._on_security_analysis, QKeySequence("F8")
+        )
         verify_menu.addSeparator()
         verify_menu.addAction("&Constant-Time Check...", self._stub)
         verify_menu.addAction("Side-&Channel Analysis...", self._stub)
@@ -715,6 +721,12 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._reports)
         self.tabifyDockWidget(self._waveform, self._reports)
 
+        # Bottom: Timing Analysis (tabbed with console, waveform, reports)
+        self._timing = TimingPanel("Timing Analysis", self)
+        self._timing.setObjectName("timing_dock")
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._timing)
+        self.tabifyDockWidget(self._reports, self._timing)
+
         # Right: Properties
         self._properties = PropertiesPanel("Properties", self)
         self._properties.setObjectName("properties_dock")
@@ -731,6 +743,12 @@ class MainWindow(QMainWindow):
         self._physical_design.setObjectName("physical_design_dock")
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._physical_design)
         self.tabifyDockWidget(self._synthesis, self._physical_design)
+
+        # Right: Security (tabbed with synthesis)
+        self._security = SecurityPanel("Security", self)
+        self._security.setObjectName("security_dock")
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._security)
+        self.tabifyDockWidget(self._synthesis, self._security)
 
         # Right: Layout Viewer (tabbed with properties)
         self._layout_viewer = LayoutPanel("Layout Viewer", self)
@@ -828,6 +846,25 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Synthesis running...", 0)
         self._console.setVisible(True)
         self._console.raise_()
+        # Show and populate the synthesis panel with demo data
+        self._synthesis.setVisible(True)
+        self._synthesis.raise_()
+        self._synthesis.show_demo_data()
+
+    def _on_timing_analysis(self) -> None:
+        self._console.append_info("Running timing analysis...")
+        self.statusBar().showMessage("Timing analysis running...", 0)
+        # Show and populate the timing panel with demo data
+        self._timing.setVisible(True)
+        self._timing.raise_()
+        self._timing.show_demo_data()
+
+    def _on_security_analysis(self) -> None:
+        self._console.append_info("Running security analysis...")
+        self.statusBar().showMessage("Security analysis running...", 0)
+        self._security.setVisible(True)
+        self._security.raise_()
+        self._security.show_demo_data()
 
     def _on_verify(self) -> None:
         self._console.append_info("Starting verification...")
@@ -861,6 +898,18 @@ class MainWindow(QMainWindow):
     def _toggle_project_explorer(self) -> None:
         self._project_explorer.setVisible(not self._project_explorer.isVisible())
 
+    def _toggle_synthesis(self) -> None:
+        self._synthesis.setVisible(not self._synthesis.isVisible())
+
+    def _toggle_timing(self) -> None:
+        self._timing.setVisible(not self._timing.isVisible())
+
+    def _toggle_physical_design(self) -> None:
+        self._physical_design.setVisible(not self._physical_design.isVisible())
+
+    def _toggle_security(self) -> None:
+        self._security.setVisible(not self._security.isVisible())
+
     def _reset_layout(self) -> None:
         for dock in (
             self._hierarchy,
@@ -871,6 +920,10 @@ class MainWindow(QMainWindow):
             self._layout_viewer,
             self._waveform,
             self._reports,
+            self._synthesis,
+            self._timing,
+            self._physical_design,
+            self._security,
         ):
             dock.setVisible(True)
         self.statusBar().showMessage("Layout reset", 3000)
