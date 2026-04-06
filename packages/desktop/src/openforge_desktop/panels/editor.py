@@ -295,7 +295,8 @@ class _CodeEditor(QPlainTextEdit):
     def _highlight_current_line(self):
         selections = []
         if not self.isReadOnly():
-            selection = QPlainTextEdit.ExtraSelection()
+            from PySide6.QtWidgets import QTextEdit
+            selection = QTextEdit.ExtraSelection()
             selection.format.setBackground(QColor(_LINE_BG))
             selection.format.setProperty(QTextCharFormat.Property.FullWidthSelection, True)
             selection.cursor = self.textCursor()

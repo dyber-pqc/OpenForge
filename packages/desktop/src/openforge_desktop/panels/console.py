@@ -104,11 +104,16 @@ class ConsolePanel(QDockWidget):
         """Append a debug message (gray)."""
         self._append_styled("DEBUG", message, _CLR_DEBUG)
 
-    def append_text(self, text: str, color: str = _CLR_DEFAULT) -> None:
-        """Append plain text with an optional colour override."""
+    def append_text(self, text: str, color: str | None = None) -> None:
+        """Append plain text. Uses palette text color by default (theme-aware)."""
         cursor = self._output.textCursor()
         cursor.movePosition(cursor.MoveOperation.End)
-        cursor.insertText(text, _make_format(color))
+        if color:
+            cursor.insertText(text, _make_format(color))
+        else:
+            # Use default text format (inherits from widget palette -- works in both themes)
+            fmt = QTextCharFormat()
+            cursor.insertText(text, fmt)
         self._output.setTextCursor(cursor)
         self._output.ensureCursorVisible()
 

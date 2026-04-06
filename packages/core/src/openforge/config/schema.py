@@ -183,13 +183,35 @@ class CIConfig(BaseModel):
 # Top-level config
 # ---------------------------------------------------------------------------
 
+class VerificationConfig(BaseModel):
+    """Verification settings grouped under the ``verification:`` key."""
+
+    simulation: SimulationConfig | None = None
+    formal: FormalConfig | None = None
+    crypto_verification: CryptoVerificationConfig | None = None
+
+
+class AnalysisConfig(BaseModel):
+    """Analysis settings grouped under the ``analysis:`` key."""
+
+    timing: TimingConfig | None = None
+    power: PowerConfig | None = None
+
+
 class OpenForgeConfig(BaseModel):
     """Root configuration model parsed from ``openforge.yaml``."""
 
-    model_config = {"extra": "forbid"}
+    model_config = {"extra": "allow"}
 
     project: ProjectConfig = Field(default_factory=ProjectConfig)
     design: DesignConfig = Field(default_factory=DesignConfig)
+
+    # Grouped keys (from openforge.yaml structure)
+    verification: VerificationConfig | None = None
+    analysis: AnalysisConfig | None = None
+    ci_integration: CIConfig | None = None
+
+    # Also accept flat keys for convenience
     simulation: SimulationConfig | None = None
     formal: FormalConfig | None = None
     crypto: CryptoVerificationConfig | None = None
