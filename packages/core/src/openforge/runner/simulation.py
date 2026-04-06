@@ -217,25 +217,30 @@ class SimulationRunner:
         top = top_module or self._config.project.top_module
         out_dir = Path(output_dir) if output_dir else self._project_path / "sim_build"
         out_dir.mkdir(parents=True, exist_ok=True)
+        # Use relative output dir for Docker compatibility
+        try:
+            rel_out_dir = out_dir.relative_to(self._project_path)
+        except ValueError:
+            rel_out_dir = out_dir
 
-        resolved_sources = list(sources) or self._config.design.sources
-        resolved_includes = list(includes) or self._config.design.includes
+        resolved_sources = [Path(s).as_posix() for s in (sources or self._config.design.sources)]
+        resolved_includes = [Path(i).as_posix() for i in (includes or self._config.design.includes)]
 
         start = time.monotonic()
 
         if tool == SimulationTool.VERILATOR:
             return self._compile_verilator(
-                resolved_sources, top, out_dir, resolved_includes,
+                resolved_sources, top, rel_out_dir, resolved_includes,
                 trace, coverage, timeout, on_output,
             )
         elif tool == SimulationTool.ICARUS:
             return self._compile_icarus(
-                resolved_sources, top, out_dir, resolved_includes,
+                resolved_sources, top, rel_out_dir, resolved_includes,
                 timeout, on_output,
             )
         elif tool == SimulationTool.GHDL:
             return self._compile_ghdl(
-                resolved_sources, top, out_dir, timeout, on_output,
+                resolved_sources, top, rel_out_dir, timeout, on_output,
             )
         else:
             return CompileResult(
