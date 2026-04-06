@@ -1,0 +1,10 @@
+read_verilog H:\openforge\examples\simple-counter\src\counter.v
+hierarchy -top counter -check
+proc; opt; memory; opt; fsm; opt
+techmap; opt
+dfflibmap -liberty H:\openforge\share\pdk\sky130\lib\sky130_fd_sc_hd__tt_025C_1v80.lib
+abc -liberty H:\openforge\share\pdk\sky130\lib\sky130_fd_sc_hd__tt_025C_1v80.lib
+opt_clean
+write_verilog H:\openforge\examples\simple-counter\openlane_build\synthesis\netlist.v
+write_json H:\openforge\examples\simple-counter\openlane_build\synthesis\netlist.json
+stat -liberty H:\openforge\share\pdk\sky130\lib\sky130_fd_sc_hd__tt_025C_1v80.lib
