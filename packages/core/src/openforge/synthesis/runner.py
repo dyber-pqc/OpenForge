@@ -143,12 +143,27 @@ def _resolve_liberty(
         if lib:
             return lib
 
-    # Fallback: check if well-known Liberty file exists on disk
+    # Fallback: search well-known locations for Liberty file
     default_name = _PDK_LIBERTY.get(pdk_name)
     if default_name:
-        p = Path(default_name)
-        if p.exists():
-            return p
+        # Search paths (in priority order)
+        search_dirs = [
+            Path.cwd(),
+            Path(__file__).resolve().parents[5] / "share" / "pdk" / pdk_name / "lib",  # repo share/pdk/
+            Path.home() / ".openforge" / "pdks" / pdk_name,
+        ]
+        for search_dir in search_dirs:
+            p = search_dir / default_name
+            if p.exists():
+                return p
+
+        # Also try globbing for any .lib file in the PDK dir
+        pdk_lib_dir = Path(__file__).resolve().parents[5] / "share" / "pdk" / pdk_name / "lib"
+        if pdk_lib_dir.exists():
+            libs = sorted(pdk_lib_dir.glob("*.lib"))
+            if libs:
+                return libs[0]
+
     return None
 
 
@@ -243,6 +258,17 @@ class SynthesisRunner:
         if liberty is None:
             # Fall back to generic synthesis without technology mapping
             liberty = ""
+        elif liberty:
+            # Copy Liberty file into project build dir for Docker access
+            import shutil
+            local_lib = out_dir / liberty.name
+            if not local_lib.exists() or local_lib.stat().st_size != liberty.stat().st_size:
+                shutil.copy2(liberty, local_lib)
+            # Use the local copy (relative path for Docker)
+            try:
+                liberty = local_lib.relative_to(self._project_path)
+            except ValueError:
+                liberty = local_lib
 
         # Compute delay target from frequency
         target_delay_ps: float | None = None
