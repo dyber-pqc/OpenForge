@@ -7,17 +7,17 @@ import subprocess
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, Qt, QSize, QUrl, Slot
-from PySide6.QtGui import QDesktopServices, QFileSystemModel, QKeySequence
+from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QDockWidget,
     QFileDialog,
+    QFileSystemModel,
     QLabel,
     QMainWindow,
     QMenu,
     QMenuBar,
     QMessageBox,
-    QShortcut,
     QStatusBar,
     QToolBar,
     QTreeView,
