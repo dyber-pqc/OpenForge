@@ -175,9 +175,10 @@ class SimulationWorker(QThread):
                 )
                 return
 
-            # Step 2: Simulate
+            # Step 2: Simulate (pass the same top module used for compile)
             sim_result = runner.simulate(
                 tool=tool,
+                binary_or_top=self._top_module,
                 on_output=_on_output,
             )
 
