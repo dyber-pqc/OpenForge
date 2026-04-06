@@ -248,13 +248,6 @@ QTabBar::tab:hover:!selected {
     color: #cdd6f4;
 }
 
-QTabBar::close-button {
-    width: 12px;
-    height: 12px;
-    subcontrol-position: right;
-    padding: 2px;
-}
-
 /* ── Tree View (Hierarchy, Project Explorer) ───────────────────────── */
 QTreeView {
     background-color: #1e1e2e;
@@ -731,13 +724,6 @@ QTabBar::tab:selected {
 QTabBar::tab:hover:!selected {
     background-color: #e9ecef;
     color: #212529;
-}
-
-QTabBar::close-button {
-    width: 12px;
-    height: 12px;
-    subcontrol-position: right;
-    padding: 2px;
 }
 
 /* ── Tree View (Hierarchy, Project Explorer) ───────────────────────── */

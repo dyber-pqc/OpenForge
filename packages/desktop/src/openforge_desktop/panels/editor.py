@@ -327,6 +327,9 @@ class EditorPanel(QWidget):
         self._tabs.setMovable(True)
         self._tabs.setDocumentMode(True)
         self._tabs.tabCloseRequested.connect(self._close_tab)
+        # Right-click on tab bar for context menu
+        self._tabs.tabBar().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._tabs.tabBar().customContextMenuRequested.connect(self._on_tab_context_menu)
         layout.addWidget(self._tabs)
 
         # File path tracking
@@ -456,6 +459,51 @@ class EditorPanel(QWidget):
     def _current_editor(self) -> _CodeEditor | None:
         widget = self._tabs.currentWidget()
         return widget if isinstance(widget, _CodeEditor) else None
+
+    def _on_tab_context_menu(self, position) -> None:
+        """Right-click context menu on editor tabs."""
+        from PySide6.QtWidgets import QMenu, QApplication
+        tab_bar = self._tabs.tabBar()
+        idx = tab_bar.tabAt(position)
+        if idx < 0:
+            return
+
+        menu = QMenu(self)
+        menu.addAction("Close", lambda: self._close_tab(idx))
+        menu.addAction("Close Others", lambda: self._close_others(idx))
+        menu.addAction("Close All", lambda: self._close_all())
+        menu.addSeparator()
+
+        path = self._file_paths.get(idx)
+        if path:
+            menu.addAction("Copy Path", lambda: QApplication.clipboard().setText(str(path)))
+            menu.addAction("Copy Name", lambda: QApplication.clipboard().setText(path.name))
+            menu.addSeparator()
+            menu.addAction("Reveal in Explorer", lambda: self._reveal_in_explorer(path))
+
+        menu.exec(tab_bar.mapToGlobal(position))
+
+    def _close_others(self, keep_idx: int) -> None:
+        """Close all tabs except the one at keep_idx."""
+        for i in range(self._tabs.count() - 1, -1, -1):
+            if i != keep_idx:
+                self._close_tab(i)
+
+    def _close_all(self) -> None:
+        """Close all tabs."""
+        while self._tabs.count() > 0:
+            self._close_tab(0)
+
+    def _reveal_in_explorer(self, path: Path) -> None:
+        """Open the file's containing folder in the system file explorer."""
+        import subprocess, sys
+        folder = str(path.parent)
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", "/select,", str(path)])
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", "-R", str(path)])
+        else:
+            subprocess.Popen(["xdg-open", folder])
 
 
 # ── Search bar ───────────────────────────────────────────────────────────
