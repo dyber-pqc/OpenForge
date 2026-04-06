@@ -78,50 +78,6 @@ class ToolEngine(ABC):
     # Execution helpers
     # ------------------------------------------------------------------
 
-    def run(
-        self,
-        args: Sequence[str],
-        *,
-        cwd: str | PathLike[str] | None = None,
-        env: Mapping[str, str] | None = None,
-        timeout: float | None = None,
-    ) -> ToolResult:
-        """Execute the tool synchronously and return a :class:`ToolResult`."""
-        cmd = self._build_command(args, cwd=cwd)
-        work_dir = str(cwd) if cwd else None
-        start = time.monotonic()
-
-        try:
-            proc = subprocess.run(
-                cmd,
-                cwd=work_dir if self.backend == ExecutionBackend.NATIVE else None,
-                env=dict(env) if env else None,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-            )
-            return ToolResult(
-                returncode=proc.returncode,
-                stdout=proc.stdout,
-                stderr=proc.stderr,
-                duration=time.monotonic() - start,
-                command=cmd,
-            )
-        except subprocess.TimeoutExpired:
-            return ToolResult(
-                returncode=-1,
-                stderr=f"Process timed out after {timeout}s",
-                duration=time.monotonic() - start,
-                command=cmd,
-            )
-        except FileNotFoundError:
-            return ToolResult(
-                returncode=-1,
-                stderr=f"Tool binary not found: {cmd[0]}",
-                duration=time.monotonic() - start,
-                command=cmd,
-            )
-
     async def run_async(
         self,
         args: Sequence[str],
@@ -179,6 +135,8 @@ class ToolEngine(ABC):
             docker_cmd: list[str] = ["docker", "run", "--rm"]
             if cwd:
                 vol = str(Path(cwd).resolve())
+                # Convert Windows backslashes to forward slashes for Docker
+                vol = vol.replace("\\", "/")
                 docker_cmd += ["-v", f"{vol}:/work", "-w", "/work"]
             docker_cmd.append(self.docker_image)
             docker_cmd.append(self.binary)
@@ -186,6 +144,62 @@ class ToolEngine(ABC):
             return docker_cmd
 
         return [self.binary, *args]
+
+    def run(
+        self,
+        args: Sequence[str],
+        *,
+        cwd: str | PathLike[str] | None = None,
+        env: Mapping[str, str] | None = None,
+        timeout: float | None = None,
+    ) -> ToolResult:
+        """Execute the tool synchronously and return a :class:`ToolResult`.
+
+        On Windows with MSYS/Git Bash, sets MSYS_NO_PATHCONV=1 to
+        prevent path mangling when using Docker.
+        """
+        cmd = self._build_command(args, cwd=cwd)
+        work_dir = str(cwd) if cwd else None
+        start = time.monotonic()
+
+        # Merge environment: inherit OS env + user overrides + MSYS fix
+        import os
+        run_env = dict(os.environ)
+        if env:
+            run_env.update(env)
+        if self.backend == ExecutionBackend.DOCKER:
+            run_env["MSYS_NO_PATHCONV"] = "1"
+
+        try:
+            proc = subprocess.run(
+                cmd,
+                cwd=work_dir if self.backend == ExecutionBackend.NATIVE else None,
+                env=run_env,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+            return ToolResult(
+                returncode=proc.returncode,
+                stdout=proc.stdout,
+                stderr=proc.stderr,
+                duration=time.monotonic() - start,
+                command=cmd,
+            )
+        except subprocess.TimeoutExpired:
+            return ToolResult(
+                returncode=-1,
+                stderr=f"Process timed out after {timeout}s",
+                duration=time.monotonic() - start,
+                command=cmd,
+            )
+        except FileNotFoundError:
+            return ToolResult(
+                returncode=-1,
+                stderr=f"Tool binary not found: {cmd[0]}",
+                duration=time.monotonic() - start,
+                command=cmd,
+            )
 
     def _which(self) -> str | None:
         """Locate the binary on ``$PATH``, or *None*."""

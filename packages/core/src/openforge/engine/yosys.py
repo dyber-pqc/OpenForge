@@ -105,13 +105,15 @@ class YosysEngine(ToolEngine):
         # -- Read sources --------------------------------------------------
         for src in sources:
             p = Path(src)
+            # Use POSIX paths (forward slashes) for Docker compatibility
+            src_str = p.as_posix()
             match p.suffix:
                 case ".sv" | ".svh":
-                    script_lines.append(f"read_verilog -sv {p}")
+                    script_lines.append(f"read_verilog -sv {src_str}")
                 case ".vhd" | ".vhdl":
-                    script_lines.append(f"read_vhdl {p}")
+                    script_lines.append(f"read_vhdl {src_str}")
                 case _:
-                    script_lines.append(f"read_verilog {p}")
+                    script_lines.append(f"read_verilog {src_str}")
 
         # -- Elaborate -----------------------------------------------------
         script_lines.append(f"hierarchy -top {top_module}")
