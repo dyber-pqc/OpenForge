@@ -11,18 +11,20 @@ module counter(clk, rst_n, enable, count, overflow);
   wire _04_;
   wire _05_;
   wire _06_;
-  (* force_downto = 32'd1 *)
-  (* src = "src/counter.v:18.22-18.34|/usr/local/bin/../share/yosys/techmap.v:270.23-270.24" *)
-  wire [7:0] _07_;
-  (* force_downto = 32'd1 *)
-  (* src = "src/counter.v:18.22-18.34|/usr/local/bin/../share/yosys/techmap.v:270.26-270.27" *)
-  wire [7:0] _08_;
+  wire _07_;
+  wire _08_;
+  wire _09_;
+  wire _10_;
+  wire _11_;
+  wire _12_;
+  wire _13_;
+  wire _14_;
   (* src = "src/counter.v:5.29-5.32" *)
   input clk;
   wire clk;
   (* src = "src/counter.v:8.29-8.34" *)
   output [7:0] count;
-  reg [7:0] count;
+  wire [7:0] count;
   (* src = "src/counter.v:7.29-7.35" *)
   input enable;
   wire enable;
@@ -32,54 +34,148 @@ module counter(clk, rst_n, enable, count, overflow);
   (* src = "src/counter.v:6.29-6.34" *)
   input rst_n;
   wire rst_n;
-  assign _07_[0] = ~count[0];
-  assign _00_ = count[0] & count[1];
-  assign _01_ = count[2] & _00_;
-  assign _02_ = count[3] & _01_;
-  assign _03_ = count[4] & _02_;
-  assign _04_ = count[5] & _03_;
-  assign _05_ = count[6] & _04_;
-  assign _06_ = count[7] & _05_;
-  assign overflow = enable & _06_;
-  assign _08_[1] = count[0] ^ count[1];
-  assign _08_[2] = count[2] ^ _00_;
-  assign _08_[3] = count[3] ^ _01_;
-  assign _08_[4] = count[4] ^ _02_;
-  assign _08_[5] = count[5] ^ _03_;
-  assign _08_[6] = count[6] ^ _04_;
-  assign _08_[7] = count[7] ^ _05_;
+  sky130_fd_sc_hd__nand2_1 _15_ (
+    .A(count[0]),
+    .B(enable),
+    .Y(_08_)
+  );
+  sky130_fd_sc_hd__xor2_1 _16_ (
+    .A(count[0]),
+    .B(enable),
+    .X(_00_)
+  );
+  sky130_fd_sc_hd__xnor2_1 _17_ (
+    .A(count[1]),
+    .B(_08_),
+    .Y(_01_)
+  );
+  sky130_fd_sc_hd__and4_1 _18_ (
+    .A(count[0]),
+    .B(enable),
+    .C(count[1]),
+    .D(count[2]),
+    .X(_09_)
+  );
+  sky130_fd_sc_hd__a31oi_1 _19_ (
+    .A1(count[0]),
+    .A2(enable),
+    .A3(count[1]),
+    .B1(count[2]),
+    .Y(_10_)
+  );
+  sky130_fd_sc_hd__nor2_1 _20_ (
+    .A(_09_),
+    .B(_10_),
+    .Y(_02_)
+  );
+  sky130_fd_sc_hd__nand2_1 _21_ (
+    .A(count[3]),
+    .B(_09_),
+    .Y(_11_)
+  );
+  sky130_fd_sc_hd__xor2_1 _22_ (
+    .A(count[3]),
+    .B(_09_),
+    .X(_03_)
+  );
+  sky130_fd_sc_hd__xnor2_1 _23_ (
+    .A(count[4]),
+    .B(_11_),
+    .Y(_04_)
+  );
+  sky130_fd_sc_hd__nand4_1 _24_ (
+    .A(count[3]),
+    .B(count[4]),
+    .C(count[5]),
+    .D(_09_),
+    .Y(_12_)
+  );
+  sky130_fd_sc_hd__a31oi_1 _25_ (
+    .A1(count[3]),
+    .A2(count[4]),
+    .A3(_09_),
+    .B1(count[5]),
+    .Y(_13_)
+  );
+  sky130_fd_sc_hd__lpflow_isobufsrc_1 _26_ (
+    .A(_12_),
+    .SLEEP(_13_),
+    .X(_05_)
+  );
+  sky130_fd_sc_hd__lpflow_isobufsrc_1 _27_ (
+    .A(count[6]),
+    .SLEEP(_12_),
+    .X(_14_)
+  );
+  sky130_fd_sc_hd__xnor2_1 _28_ (
+    .A(count[6]),
+    .B(_12_),
+    .Y(_06_)
+  );
+  sky130_fd_sc_hd__and2_0 _29_ (
+    .A(count[7]),
+    .B(_14_),
+    .X(overflow)
+  );
+  sky130_fd_sc_hd__xor2_1 _30_ (
+    .A(count[7]),
+    .B(_14_),
+    .X(_07_)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[0] <= 1'h0;
-    else if (enable) count[0] <= _07_[0];
+  sky130_fd_sc_hd__dfrtp_1 _31_ (
+    .CLK(clk),
+    .D(_00_),
+    .Q(count[0]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[1] <= 1'h0;
-    else if (enable) count[1] <= _08_[1];
+  sky130_fd_sc_hd__dfrtp_1 _32_ (
+    .CLK(clk),
+    .D(_01_),
+    .Q(count[1]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[2] <= 1'h0;
-    else if (enable) count[2] <= _08_[2];
+  sky130_fd_sc_hd__dfrtp_1 _33_ (
+    .CLK(clk),
+    .D(_02_),
+    .Q(count[2]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[3] <= 1'h0;
-    else if (enable) count[3] <= _08_[3];
+  sky130_fd_sc_hd__dfrtp_1 _34_ (
+    .CLK(clk),
+    .D(_03_),
+    .Q(count[3]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[4] <= 1'h0;
-    else if (enable) count[4] <= _08_[4];
+  sky130_fd_sc_hd__dfrtp_1 _35_ (
+    .CLK(clk),
+    .D(_04_),
+    .Q(count[4]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[5] <= 1'h0;
-    else if (enable) count[5] <= _08_[5];
+  sky130_fd_sc_hd__dfrtp_1 _36_ (
+    .CLK(clk),
+    .D(_05_),
+    .Q(count[5]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[6] <= 1'h0;
-    else if (enable) count[6] <= _08_[6];
+  sky130_fd_sc_hd__dfrtp_1 _37_ (
+    .CLK(clk),
+    .D(_06_),
+    .Q(count[6]),
+    .RESET_B(rst_n)
+  );
   (* src = "src/counter.v:14.5-20.8" *)
-  always @(posedge clk, negedge rst_n)
-    if (!rst_n) count[7] <= 1'h0;
-    else if (enable) count[7] <= _08_[7];
-  assign _07_[7:1] = count[7:1];
-  assign _08_[0] = _07_[0];
+  sky130_fd_sc_hd__dfrtp_1 _38_ (
+    .CLK(clk),
+    .D(_07_),
+    .Q(count[7]),
+    .RESET_B(rst_n)
+  );
 endmodule
