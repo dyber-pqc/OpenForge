@@ -185,7 +185,12 @@ class _LineNumberArea(QWidget):
 class _CodeEditor(QPlainTextEdit):
     """QPlainTextEdit with line numbers, current-line highlight, and syntax highlighting."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    # Signal emitted when cursor position changes: (line, col)
+    cursor_position_changed = Signal(int, int)
+    # Signal emitted when document is modified
+    modification_changed = Signal(bool)
+
+    def __init__(self, parent: QWidget | None = None, verilog: bool = True) -> None:
         super().__init__(parent)
 
         font = _make_font()
@@ -208,16 +213,34 @@ class _CodeEditor(QPlainTextEdit):
             }}
         """)
 
+        # Ensure caret is visible against dark background
+        self.setCursorWidth(2)
+
         # Line number area
         self._line_area = _LineNumberArea(self)
         self.blockCountChanged.connect(self._update_line_area_width)
         self.updateRequest.connect(self._update_line_area)
         self.cursorPositionChanged.connect(self._highlight_current_line)
+        self.cursorPositionChanged.connect(self._emit_cursor_pos)
         self._update_line_area_width(0)
         self._highlight_current_line()
 
-        # Syntax highlighter
-        self._highlighter = VerilogHighlighter(self.document())
+        # Syntax highlighter (only for Verilog/SV files)
+        self._highlighter: VerilogHighlighter | None = None
+        if verilog:
+            self._highlighter = VerilogHighlighter(self.document())
+
+        # Track modification
+        self.document().modificationChanged.connect(self._on_modification_changed)
+
+    def _emit_cursor_pos(self) -> None:
+        cursor = self.textCursor()
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber() + 1
+        self.cursor_position_changed.emit(line, col)
+
+    def _on_modification_changed(self, changed: bool) -> None:
+        self.modification_changed.emit(changed)
 
     def line_number_area_size(self):
         digits = max(1, len(str(self.blockCount())))
@@ -286,6 +309,12 @@ class _CodeEditor(QPlainTextEdit):
 class EditorPanel(QWidget):
     """Central editor panel with tabbed interface for source files."""
 
+    # Signal emitted when cursor position changes: (line, col)
+    cursor_position_changed = Signal(int, int)
+
+    # Verilog/SystemVerilog file extensions
+    _VERILOG_EXTS: set[str] = {".v", ".sv", ".svh", ".vh"}
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
@@ -307,26 +336,66 @@ class EditorPanel(QWidget):
         self._search_bar.setVisible(False)
         layout.addWidget(self._search_bar)
 
-    def new_file(self, content: str = "", title: str = "untitled") -> QWidget:
+    @staticmethod
+    def _is_verilog(path: Path | None) -> bool:
+        """Return True if the path is a Verilog/SystemVerilog file."""
+        if path is None:
+            return True  # default for new files
+        return path.suffix.lower() in EditorPanel._VERILOG_EXTS
+
+    def new_file(
+        self, content: str = "", title: str = "untitled", path: Path | None = None,
+    ) -> QWidget:
         """Create a new editor tab."""
-        editor = _CodeEditor()
+        use_verilog = self._is_verilog(path)
+        editor = _CodeEditor(verilog=use_verilog)
         editor.setPlainText(content)
+        # Reset modification state after initial content load
+        editor.document().setModified(False)
         idx = self._tabs.addTab(editor, title)
-        self._file_paths[idx] = None
+        self._file_paths[idx] = path
+
+        # Connect cursor position signal
+        editor.cursor_position_changed.connect(
+            lambda line, col: self.cursor_position_changed.emit(line, col),
+        )
+
+        # Connect modification tracking to update tab title with asterisk
+        def _on_mod_changed(modified: bool, ed: QWidget = editor) -> None:
+            tab_idx = self._tabs.indexOf(ed)
+            if tab_idx < 0:
+                return
+            base_title = self._tabs.tabText(tab_idx).rstrip(" *")
+            if modified:
+                self._tabs.setTabText(tab_idx, base_title + " *")
+            else:
+                self._tabs.setTabText(tab_idx, base_title)
+
+        editor.modification_changed.connect(_on_mod_changed)
+
         self._tabs.setCurrentIndex(idx)
         return editor
 
     def open_file(self, path: Path) -> QWidget:
-        """Open a file in a new editor tab."""
+        """Open a file in a new editor tab.
+
+        If the file is already open, switch to its tab.
+        """
+        # Check if already open
+        for idx, p in self._file_paths.items():
+            if p is not None and p.resolve() == path.resolve():
+                self._tabs.setCurrentIndex(idx)
+                return self._tabs.widget(idx)
+
         text = path.read_text(encoding="utf-8", errors="replace")
-        editor = self.new_file(text, path.name)
+        editor = self.new_file(text, path.name, path=path)
         idx = self._tabs.currentIndex()
         self._file_paths[idx] = path
         return editor
 
-    def open_file_dialog(self) -> None:
+    def open_file_dialog(self, start_dir: str = "") -> None:
         path_str, _ = QFileDialog.getOpenFileName(
-            self, "Open Source File", "",
+            self, "Open Source File", start_dir,
             "Verilog (*.v *.sv *.vh *.svh);;VHDL (*.vhd *.vhdl);;All (*)",
         )
         if path_str:
@@ -343,6 +412,7 @@ class EditorPanel(QWidget):
         editor = self._tabs.widget(idx)
         if isinstance(editor, _CodeEditor):
             path.write_text(editor.toPlainText(), encoding="utf-8")
+            editor.document().setModified(False)
 
     def save_current_as(self) -> None:
         idx = self._tabs.currentIndex()
@@ -357,6 +427,7 @@ class EditorPanel(QWidget):
             editor = self._tabs.widget(idx)
             if isinstance(editor, _CodeEditor):
                 path.write_text(editor.toPlainText(), encoding="utf-8")
+                editor.document().setModified(False)
             self._file_paths[idx] = path
             self._tabs.setTabText(idx, path.name)
 
@@ -371,8 +442,15 @@ class EditorPanel(QWidget):
         self._search_bar.focus_search()
 
     def _close_tab(self, index: int) -> None:
-        self._file_paths.pop(index, None)
         self._tabs.removeTab(index)
+        # Re-index file paths: shift all indices above the removed one
+        new_paths: dict[int, Path | None] = {}
+        for old_idx, p in self._file_paths.items():
+            if old_idx == index:
+                continue
+            new_idx = old_idx if old_idx < index else old_idx - 1
+            new_paths[new_idx] = p
+        self._file_paths = new_paths
 
     def _current_editor(self) -> _CodeEditor | None:
         widget = self._tabs.currentWidget()
