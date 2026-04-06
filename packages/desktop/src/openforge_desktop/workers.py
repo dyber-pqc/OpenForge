@@ -380,12 +380,25 @@ class ToolCheckWorker(QThread):
         from openforge.engine.klayout import KLayoutEngine
         from openforge.engine.cocotb import CocotbEngine
 
-        from openforge.engine.base import ExecutionBackend
+        # First, quickly check which Docker images are available locally
+        docker_images: set[str] = set()
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                docker_images = set(result.stdout.strip().splitlines())
+        except Exception:
+            pass
 
+        # Map: tool name -> (engine_cls, docker_image, tools_in_image)
         engines: list[tuple[str, Any, str]] = [
             ("Verilator", VerilatorEngine, "hdlc/sim:latest"),
             ("Icarus Verilog", IcarusEngine, "hdlc/sim:latest"),
             ("GHDL", GHDLEngine, "hdlc/ghdl:latest"),
+            ("cocotb", CocotbEngine, ""),
             ("Yosys", YosysEngine, "hdlc/yosys:latest"),
             ("SymbiYosys", SymbiYosysEngine, "hdlc/formal:latest"),
             ("OpenSTA", OpenSTAEngine, "openroad/opensta:latest"),
@@ -394,28 +407,21 @@ class ToolCheckWorker(QThread):
             ("Netgen", NetgenEngine, "efabless/netgen:latest"),
             ("Verible", VeribleEngine, "chipsalliance/verible:latest"),
             ("KLayout", KLayoutEngine, "klayout/klayout:latest"),
-            ("cocotb", CocotbEngine, ""),
         ]
 
         for name, engine_cls, docker_img in engines:
             if self._cancelled:
                 break
             try:
-                # First try native
+                # Try native first (fast -- just checks PATH)
                 engine = engine_cls()
                 installed = engine.check_installed()
                 ver = engine.version() if installed else ""
 
-                # If native not found, try Docker
-                if not installed and docker_img:
-                    docker_engine = engine_cls(backend=ExecutionBackend.DOCKER)
-                    docker_engine.docker_image = docker_img
-                    try:
-                        installed = docker_engine.check_installed()
-                        if installed:
-                            ver = docker_engine.version() + " (Docker)"
-                    except Exception:
-                        pass
+                # If native not found, check if Docker image exists locally
+                if not installed and docker_img and docker_img in docker_images:
+                    installed = True
+                    ver = f"via Docker ({docker_img.split(':')[0].split('/')[-1]})"
             except Exception:
                 installed = False
                 ver = ""
