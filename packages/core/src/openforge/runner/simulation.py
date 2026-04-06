@@ -414,7 +414,18 @@ class SimulationRunner:
             )
         elif tool == SimulationTool.ICARUS:
             top = self._config.project.top_module
-            vvp = binary_or_top or str(sim_dir / f"{top}.vvp")
+            if binary_or_top:
+                vvp = str(binary_or_top)
+                # If just a name (no path sep, no .vvp), resolve to sim_build
+                if "/" not in vvp and "\\" not in vvp and not vvp.endswith(".vvp"):
+                    vvp = str(sim_dir / f"{vvp}.vvp")
+            else:
+                vvp = str(sim_dir / f"{top}.vvp")
+            # Use relative POSIX path for Docker compatibility
+            try:
+                vvp = Path(vvp).relative_to(self._project_path).as_posix()
+            except ValueError:
+                vvp = Path(vvp).as_posix()
             return self._simulate_icarus(
                 vvp, resolved_plusargs, effective_timeout, on_output,
             )

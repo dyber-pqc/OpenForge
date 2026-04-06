@@ -1,0 +1,25 @@
+
+16. Printing statistics.
+
+=== ntt_butterfly ===
+
+   Number of wires:               1450
+   Number of wire bits:           1745
+   Number of public wires:          12
+   Number of public wire bits:     101
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               1538
+     $_ANDNOT_                      33
+     $_AND_                        334
+     $_DFF_PN0_                     62
+     $_MUX_                          8
+     $_NAND_                       519
+     $_NOR_                         44
+     $_NOT_                          5
+     $_ORNOT_                       41
+     $_OR_                          72
+     $_XNOR_                       126
+     $_XOR_                        294
+
