@@ -249,7 +249,8 @@ QTabBar::tab:hover:!selected {
 }
 
 QTabBar::close-button {
-    image: none;
+    width: 12px;
+    height: 12px;
     subcontrol-position: right;
     padding: 2px;
 }
@@ -733,7 +734,8 @@ QTabBar::tab:hover:!selected {
 }
 
 QTabBar::close-button {
-    image: none;
+    width: 12px;
+    height: 12px;
     subcontrol-position: right;
     padding: 2px;
 }
@@ -1798,7 +1800,7 @@ class MainWindow(QMainWindow):
         self._sim_worker = SimulationWorker(
             project_path=mgr.project_path,  # type: ignore[arg-type]
             config=mgr.config,
-            source_files=[str(s) for s in mgr.source_files()],
+            source_files=[str(s.relative_to(mgr.project_path)) for s in mgr.source_files()],
             top_module=mgr.top_module(),
             tool=tool,
             parent=self,
@@ -1884,7 +1886,7 @@ class MainWindow(QMainWindow):
         self._synth_worker = SynthesisWorker(
             project_path=mgr.project_path,  # type: ignore[arg-type]
             config=mgr.config,
-            source_files=[str(s) for s in mgr.source_files()],
+            source_files=[str(s.relative_to(mgr.project_path)) for s in mgr.source_files()],
             top_module=mgr.top_module(),
             pdk=mgr.target_pdk(),
             output_dir=mgr.build_dir() / "synth",
@@ -1963,7 +1965,7 @@ class MainWindow(QMainWindow):
             depth = mgr.config.formal.depth
 
         self._formal_worker = FormalWorker(
-            source_files=[str(s) for s in mgr.source_files()],
+            source_files=[str(s.relative_to(mgr.project_path)) for s in mgr.source_files()],
             top_module=mgr.top_module(),
             properties=properties,
             depth=depth,
