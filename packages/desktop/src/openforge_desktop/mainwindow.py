@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, Qt, QSize, QUrl, Slot
@@ -1060,8 +1061,8 @@ class MainWindow(QMainWindow):
         self._restore_state()
         self._apply_theme()
 
-        # Set default root path for project explorer (home dir)
-        default_root = str(Path.home())
+        # Set default root path for project explorer (CWD, not home)
+        default_root = str(Path.cwd())
         self._fs_model.setRootPath(default_root)
         self._project_tree.setRootIndex(self._fs_model.index(default_root))
 
@@ -1244,6 +1245,8 @@ class MainWindow(QMainWindow):
         self._project_tree.setColumnHidden(2, True)
         self._project_tree.setColumnHidden(3, True)
         self._project_tree.doubleClicked.connect(self._on_project_tree_double_click)
+        self._project_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._project_tree.customContextMenuRequested.connect(self._on_project_tree_context_menu)
         self._project_explorer.setWidget(self._project_tree)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._project_explorer)
 
@@ -1652,6 +1655,103 @@ class MainWindow(QMainWindow):
                 ".json": "JSON", ".md": "Markdown", ".txt": "Plain Text",
             }
             self._status_filetype.setText(ftypes.get(suffix, "Plain Text"))
+
+    def _on_project_tree_context_menu(self, position) -> None:
+        """Show right-click context menu for the project file tree."""
+        index = self._project_tree.indexAt(position)
+        file_path = self._fs_model.filePath(index) if index.isValid() else None
+        is_file = Path(file_path).is_file() if file_path else False
+        is_dir = Path(file_path).is_dir() if file_path else False
+
+        menu = QMenu(self)
+
+        if is_file:
+            menu.addAction("Open in Editor", lambda: self._editor.open_file(Path(file_path)))
+            menu.addSeparator()
+            suffix = Path(file_path).suffix.lower()
+            if suffix in (".v", ".sv", ".svh", ".vh"):
+                menu.addAction("Lint This File", lambda: self._lint_single_file(file_path))
+                menu.addAction("Set as Top Module", lambda: self._console.append_info(f"Set top module from: {file_path}"))
+            if suffix in (".vcd", ".fst"):
+                menu.addAction("Open in Waveform Viewer", lambda: self._open_waveform(file_path))
+            if suffix in (".def",):
+                menu.addAction("Open in Layout Viewer", lambda: self._open_layout(file_path))
+            menu.addSeparator()
+            menu.addAction("Copy Path", lambda: QApplication.clipboard().setText(file_path))
+            menu.addAction("Copy Name", lambda: QApplication.clipboard().setText(Path(file_path).name))
+            menu.addSeparator()
+            menu.addAction("Rename...", lambda: self._console.append_info("Rename not yet implemented"))
+            menu.addAction("Delete", lambda: self._delete_file(file_path))
+        elif is_dir:
+            menu.addAction("New File...", lambda: self._new_file_in_dir(file_path))
+            menu.addAction("New Folder...", lambda: self._new_folder_in_dir(file_path))
+            menu.addSeparator()
+            menu.addAction("Open as Project", lambda: self._project_mgr.open_project(Path(file_path)))
+            menu.addSeparator()
+            menu.addAction("Copy Path", lambda: QApplication.clipboard().setText(file_path))
+            menu.addAction("Open in Terminal", lambda: subprocess.Popen(
+                ["cmd", "/k", f"cd /d {file_path}"] if sys.platform == "win32" else ["xterm"],
+                cwd=file_path,
+            ))
+        else:
+            menu.addAction("New File...", lambda: self._console.append_info("Select a directory first"))
+            menu.addAction("Open Project...", self._on_open_project)
+
+        menu.addSeparator()
+        menu.addAction("Refresh", lambda: self._fs_model.setRootPath(self._fs_model.rootPath()))
+
+        menu.exec(self._project_tree.viewport().mapToGlobal(position))
+
+    def _lint_single_file(self, path: str) -> None:
+        """Lint a single file and show results in console."""
+        self._console.append_info(f"Linting: {Path(path).name}")
+        worker = LintWorker([path], str(Path(path).parent))
+        worker.output_line.connect(self._console.append_text)
+        worker.finished.connect(lambda r: self._console.append_success(f"Lint complete"))
+        worker.error.connect(self._console.append_error)
+        self._lint_worker = worker
+        worker.start()
+
+    def _open_waveform(self, path: str) -> None:
+        """Open a waveform file in the viewer."""
+        self._waveform.setVisible(True)
+        self._waveform.raise_()
+        self._waveform.load_vcd(path)
+        self._console.append_info(f"Loaded waveform: {Path(path).name}")
+
+    def _open_layout(self, path: str) -> None:
+        """Open a DEF file in the layout viewer."""
+        self._layout_viewer.setVisible(True)
+        self._layout_viewer.raise_()
+        self._layout_viewer.load_def(path)
+        self._console.append_info(f"Loaded layout: {Path(path).name}")
+
+    def _delete_file(self, path: str) -> None:
+        """Delete a file with confirmation."""
+        reply = QMessageBox.question(
+            self, "Delete File",
+            f"Are you sure you want to delete:\n{Path(path).name}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            Path(path).unlink()
+            self._console.append_info(f"Deleted: {path}")
+
+    def _new_file_in_dir(self, dir_path: str) -> None:
+        """Create a new file in a directory."""
+        from PySide6.QtWidgets import QInputDialog
+        name, ok = QInputDialog.getText(self, "New File", "File name:")
+        if ok and name:
+            new_path = Path(dir_path) / name
+            new_path.write_text("", encoding="utf-8")
+            self._editor.open_file(new_path)
+
+    def _new_folder_in_dir(self, dir_path: str) -> None:
+        """Create a new folder."""
+        from PySide6.QtWidgets import QInputDialog
+        name, ok = QInputDialog.getText(self, "New Folder", "Folder name:")
+        if ok and name:
+            (Path(dir_path) / name).mkdir(parents=True, exist_ok=True)
 
     # -- Settings ---------------------------------------------------
 
