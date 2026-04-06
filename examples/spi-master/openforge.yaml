@@ -1,0 +1,20 @@
+# SPI Master Controller example project
+project:
+  name: "spi-master"
+  top_module: "spi_master"
+  target_pdk: "sky130"
+
+design:
+  sources:
+    - src/spi_master.v
+  constraints:
+    - constraints/timing.sdc
+
+verification:
+  simulation:
+    tool: icarus
+    testbenches:
+      - tb/spi_master_tb.v
+    coverage:
+      line: true
+      toggle: true

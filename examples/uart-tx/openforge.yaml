@@ -1,0 +1,20 @@
+# UART Transmitter example project
+project:
+  name: "uart-tx"
+  top_module: "uart_tx"
+  target_pdk: "sky130"
+
+design:
+  sources:
+    - src/uart_tx.v
+  constraints:
+    - constraints/timing.sdc
+
+verification:
+  simulation:
+    tool: icarus
+    testbenches:
+      - tb/uart_tx_tb.v
+    coverage:
+      line: true
+      toggle: true

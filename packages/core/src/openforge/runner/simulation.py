@@ -298,7 +298,7 @@ class SimulationRunner:
         result = engine.compile(
             sources,
             top_module=top_module,
-            output=str(output_file),
+            output=output_file.as_posix(),  # POSIX path for Docker
             includes=includes,
             cwd=str(self._project_path),
             timeout=timeout,

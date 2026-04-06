@@ -1,0 +1,14 @@
+read_verilog src/spi_master.v
+hierarchy -top spi_master -check
+proc; opt
+memory; opt
+fsm; opt
+techmap; opt
+dfflibmap -liberty synth_build/sky130_fd_sc_hd__tt_025C_1v80.lib
+abc -liberty synth_build/sky130_fd_sc_hd__tt_025C_1v80.lib -script "+strash; dch; map; topo; buffer"
+opt_clean
+write_verilog synth_build/netlist.v
+write_json synth_build/netlist.json
+write_blif synth_build/netlist.blif
+tee -o synth_build/stats.txt stat -liberty synth_build/sky130_fd_sc_hd__tt_025C_1v80.lib
+stat

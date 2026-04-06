@@ -2,7 +2,7 @@
 
 (* dynports =  1  *)
 (* top =  1  *)
-(* src = "src/counter.v:2.1-22.10" *)
+(* src = "src/counter.v:4.1-24.10" *)
 module counter(clk, rst_n, enable, count, overflow);
   wire _00_;
   wire _01_;
@@ -25,19 +25,19 @@ module counter(clk, rst_n, enable, count, overflow);
   wire _18_;
   wire _19_;
   wire _20_;
-  (* src = "src/counter.v:5.29-5.32" *)
+  (* src = "src/counter.v:7.29-7.32" *)
   input clk;
   wire clk;
-  (* src = "src/counter.v:8.29-8.34" *)
+  (* src = "src/counter.v:10.29-10.34" *)
   output [7:0] count;
   wire [7:0] count;
-  (* src = "src/counter.v:7.29-7.35" *)
+  (* src = "src/counter.v:9.29-9.35" *)
   input enable;
   wire enable;
-  (* src = "src/counter.v:9.29-9.37" *)
+  (* src = "src/counter.v:11.29-11.37" *)
   output overflow;
   wire overflow;
-  (* src = "src/counter.v:6.29-6.34" *)
+  (* src = "src/counter.v:8.29-8.34" *)
   input rst_n;
   wire rst_n;
   sky130_fd_sc_hd__xor2_1 _21_ (
@@ -165,56 +165,56 @@ module counter(clk, rst_n, enable, count, overflow);
     .B(_20_),
     .Y(_07_)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _43_ (
     .CLK(clk),
     .D(_00_),
     .Q(count[0]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _44_ (
     .CLK(clk),
     .D(_01_),
     .Q(count[1]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _45_ (
     .CLK(clk),
     .D(_02_),
     .Q(count[2]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _46_ (
     .CLK(clk),
     .D(_03_),
     .Q(count[3]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _47_ (
     .CLK(clk),
     .D(_04_),
     .Q(count[4]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _48_ (
     .CLK(clk),
     .D(_05_),
     .Q(count[5]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _49_ (
     .CLK(clk),
     .D(_06_),
     .Q(count[6]),
     .RESET_B(rst_n)
   );
-  (* src = "src/counter.v:14.5-20.8" *)
+  (* src = "src/counter.v:16.5-22.8" *)
   sky130_fd_sc_hd__dfrtp_1 _50_ (
     .CLK(clk),
     .D(_07_),

@@ -5,7 +5,7 @@
       "attributes": {
         "dynports": "00000000000000000000000000000001",
         "top": "00000000000000000000000000000001",
-        "src": "src/counter.v:2.1-22.10"
+        "src": "src/counter.v:4.1-24.10"
       },
       "parameter_default_values": {
         "WIDTH": "00000000000000000000000000001000"
@@ -340,7 +340,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -355,7 +355,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -370,7 +370,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -385,7 +385,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -400,7 +400,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -415,7 +415,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -430,7 +430,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -445,7 +445,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "src/counter.v:14.5-20.8"
+            "src": "src/counter.v:16.5-22.8"
           },
           "connections": {
             "CLK": [ 2 ],
@@ -586,35 +586,35 @@
           "hide_name": 0,
           "bits": [ 2 ],
           "attributes": {
-            "src": "src/counter.v:5.29-5.32"
+            "src": "src/counter.v:7.29-7.32"
           }
         },
         "count": {
           "hide_name": 0,
           "bits": [ 5, 6, 7, 8, 9, 10, 11, 12 ],
           "attributes": {
-            "src": "src/counter.v:8.29-8.34"
+            "src": "src/counter.v:10.29-10.34"
           }
         },
         "enable": {
           "hide_name": 0,
           "bits": [ 4 ],
           "attributes": {
-            "src": "src/counter.v:7.29-7.35"
+            "src": "src/counter.v:9.29-9.35"
           }
         },
         "overflow": {
           "hide_name": 0,
           "bits": [ 13 ],
           "attributes": {
-            "src": "src/counter.v:9.29-9.37"
+            "src": "src/counter.v:11.29-11.37"
           }
         },
         "rst_n": {
           "hide_name": 0,
           "bits": [ 3 ],
           "attributes": {
-            "src": "src/counter.v:6.29-6.34"
+            "src": "src/counter.v:8.29-8.34"
           }
         }
       }

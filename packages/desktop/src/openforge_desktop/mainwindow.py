@@ -1157,6 +1157,8 @@ class MainWindow(QMainWindow):
         analyze_menu.addAction("&Area Report...", self._on_area_report)
         analyze_menu.addSeparator()
         analyze_menu.addAction("&Resource Utilization...", self._on_resource_utilization)
+        analyze_menu.addSeparator()
+        analyze_menu.addAction("Run OpenSTA &Timing...", self._on_timing_analysis)
 
         # Tools
         tools_menu: QMenu = mb.addMenu("&Tools")
@@ -2014,9 +2016,16 @@ class MainWindow(QMainWindow):
         self._console.append_error(f"Formal verification error: {msg}")
         self.statusBar().showMessage("Formal verification error", 5000)
 
-    # -- Timing analysis (worker-backed) ----------------------------
+    # -- Timing analysis (OpenSTA via Docker) ------------------------
 
     def _on_timing_analysis(self) -> None:
+        """Run static timing analysis using OpenSTA inside Docker.
+
+        Generates a TCL script that loads the Liberty library, synthesized
+        netlist, and SDC constraints, then invokes ``report_checks``,
+        ``report_wns``, and ``report_tns``.  Output is streamed to the
+        console and a summary line is printed at the end.
+        """
         if self._timing_worker is not None:
             self._console.append_warning("Timing analysis already running")
             return
@@ -2025,79 +2034,166 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("No project open", 3000)
             return
 
-        netlist = self._project_mgr.netlist_path()
-        if netlist is None:
+        proj_path = self._project_mgr.project_path
+        if proj_path is None:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        # Check that synthesis output exists
+        netlist = proj_path / "synth_build" / "netlist.v"
+        if not netlist.exists():
             self._console.append_error(
-                "Timing analysis requires a synthesized netlist. Run synthesis first.",
+                "Timing analysis requires synth_build/netlist.v. "
+                "Run synthesis first.",
             )
             self.statusBar().showMessage("Run synthesis first", 3000)
             return
 
-        liberty = self._project_mgr.liberty_path()
-        if liberty is None:
-            self._console.append_error("Cannot locate Liberty timing library")
-            return
-
-        constraints = self._project_mgr.constraint_files()
-        if not constraints:
-            self._console.append_warning("No SDC constraints found. Using default clock period.")
-            sdc_path = self._project_mgr.build_dir() / "default.sdc"
+        # Resolve SDC constraints
+        sdc_path = proj_path / "constraints" / "timing.sdc"
+        if not sdc_path.exists():
+            self._console.append_warning(
+                "No constraints/timing.sdc found. Generating default clock."
+            )
+            sdc_path.parent.mkdir(parents=True, exist_ok=True)
             period = 10.0
             if self._project_mgr.config and self._project_mgr.config.timing:
                 period = self._project_mgr.config.timing.clock_period
-            sdc_path.write_text(f"create_clock -period {period} [get_ports clk]\n")
-        else:
-            sdc_path = constraints[0]
+            sdc_path.write_text(
+                f"create_clock -period {period} [get_ports clk]\n"
+            )
 
-        self._console.append_info("Running timing analysis...")
-        self.statusBar().showMessage("Timing analysis running...", 0)
+        # Liberty file path (inside Docker the PDK is mounted at /pdk)
+        pdk_lib = Path("share/pdk/sky130/lib/sky130_fd_sc_hd__tt_025C_1v80.lib")
+        pdk_lib_abs = Path(__file__).resolve().parents[4] / pdk_lib
+        if not pdk_lib_abs.exists():
+            # Try relative to project
+            pdk_lib_abs = proj_path / pdk_lib
+        pdk_lib_dir = pdk_lib_abs.parent if pdk_lib_abs.exists() else proj_path
+        liberty_name = pdk_lib_abs.name if pdk_lib_abs.exists() else pdk_lib.name
+
+        top = self._project_mgr.top_module()
+
+        # Generate OpenSTA TCL script
+        build_dir = proj_path / "synth_build"
+        sta_script = build_dir / "run_sta.tcl"
+        sta_script.write_text(
+            f"read_liberty /pdk/{liberty_name}\n"
+            f"read_verilog /work/synth_build/netlist.v\n"
+            f"link_design {top}\n"
+            f"read_sdc /work/constraints/timing.sdc\n"
+            f"report_checks -path_delay max -fields {{slew cap input_pins nets}}\n"
+            f"report_wns\n"
+            f"report_tns\n"
+            f"exit\n",
+            encoding="utf-8",
+        )
+
+        self._console.append_info(
+            "=== OpenSTA Timing Analysis (Docker) ==="
+        )
+        self._console.append_info(f"  Project:  {proj_path}")
+        self._console.append_info(f"  Netlist:  synth_build/netlist.v")
+        self._console.append_info(f"  SDC:      constraints/timing.sdc")
+        self._console.append_info(f"  Liberty:  {liberty_name}")
+        self._console.append_info(f"  Top:      {top}")
+        self._console.append_info("")
+
+        self.statusBar().showMessage("OpenSTA timing analysis running...", 0)
         self._project_mgr.build_state = "analyzing"
 
-        self._timing_worker = TimingWorker(
-            liberty_path=liberty,
-            netlist_path=netlist,
-            sdc_path=sdc_path,
-            top_module=self._project_mgr.top_module(),
-            cwd=self._project_mgr.project_path,
-            parent=self,
-        )
-        self._timing_worker.finished.connect(self._on_timing_complete)
-        self._timing_worker.error.connect(self._on_timing_error)
-        self._timing_worker.start()
+        # Build Docker command with Windows path fix
+        proj_str = str(proj_path).replace("\\", "/")
+        pdk_str = str(pdk_lib_dir).replace("\\", "/")
+        docker_cmd = [
+            "docker", "run", "--rm",
+            "-v", f"{proj_str}:/work",
+            "-v", f"{pdk_str}:/pdk",
+            "-w", "/work",
+            "--entrypoint", "/OpenSTA/app/sta",
+            "openroad/opensta:latest",
+            "-exit", "/work/synth_build/run_sta.tcl",
+        ]
+
+        self._console.append_text(f"Running OpenSTA...\n")
+
+        # Run synchronously but capture output (OpenSTA is fast)
+        import os
+        env = dict(os.environ)
+        env["MSYS_NO_PATHCONV"] = "1"
+
+        try:
+            result = subprocess.run(
+                docker_cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env=env,
+            )
+
+            # Display output
+            output = result.stdout + result.stderr
+            for line in output.splitlines():
+                self._console.append_text(line + "\n")
+
+            # Parse WNS/TNS
+            import re as _re
+            wns_val = None
+            tns_val = None
+            for line in output.splitlines():
+                m_wns = _re.search(r"wns\s+(?:max\s+)?([-\d.]+)", line, _re.IGNORECASE)
+                m_tns = _re.search(r"tns\s+(?:max\s+)?([-\d.]+)", line, _re.IGNORECASE)
+                if m_wns:
+                    wns_val = float(m_wns.group(1))
+                if m_tns:
+                    tns_val = float(m_tns.group(1))
+
+            # Summary
+            self._console.append_info("")
+            self._console.append_info("=== Timing Summary ===")
+            if wns_val is not None:
+                self._console.append_info(f"  WNS: {wns_val:.3f} ns")
+            if tns_val is not None:
+                self._console.append_info(f"  TNS: {tns_val:.3f} ns")
+
+            if wns_val is not None and wns_val >= 0:
+                self._console.append_success("All timing constraints MET")
+            elif wns_val is not None:
+                self._console.append_warning(f"Timing VIOLATED: WNS={wns_val:.3f} ns")
+            else:
+                self._console.append_info("  Could not parse timing results")
+
+            if result.returncode != 0:
+                self._console.append_error(f"OpenSTA exited with code {result.returncode}")
+
+        except FileNotFoundError:
+            self._console.append_error("Docker not found. Install Docker to run OpenSTA.")
+        except subprocess.TimeoutExpired:
+            self._console.append_error("OpenSTA timed out after 60s")
+        except Exception as exc:
+            self._console.append_error(f"Timing analysis error: {exc}")
+        finally:
+            self._project_mgr.build_state = "idle"
+            self.statusBar().showMessage("Timing analysis complete", 5000)
+            self._timing_worker = None
         self._timing.setVisible(True)
         self._timing.raise_()
 
-    @Slot(object)
-    def _on_timing_complete(self, result) -> None:  # type: ignore[no-untyped-def]
-        self._timing_worker = None
-        self._project_mgr.build_state = "idle"
-        self._console.append_success(
-            f"Timing analysis complete: WNS={result.wns:.3f} ns, "
-            f"TNS={result.tns:.3f} ns, {result.num_violated} violated",
-        )
-        self.statusBar().showMessage("Timing analysis complete", 5000)
-        self._timing.update_results({
-            "wns": result.wns,
-            "tns": result.tns,
-            "num_endpoints": result.num_endpoints,
-            "num_violated": result.num_violated,
-            "paths": [
-                {
-                    "start": p.start_point, "end": p.end_point,
-                    "type": p.path_type, "slack": p.slack_ns,
-                    "delay": p.delay_ns, "required": p.required_ns,
-                }
-                for p in result.paths[:50]
-            ],
-            "clocks": result.clocks,
-        })
+    # -- Run-all flow (synth + sim + formal) --------------------------
 
-    @Slot(str)
-    def _on_timing_error(self, msg: str) -> None:
-        self._timing_worker = None
-        self._project_mgr.build_state = "idle"
-        self._console.append_error(f"Timing analysis error: {msg}")
-        self.statusBar().showMessage("Timing analysis error", 5000)
+    def _on_run_all_flow(self) -> None:
+        """Run synthesis, simulation, and formal verification in sequence."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open.")
+            return
+        self._console.append_info("=== Running full flow: synth -> sim -> formal ===")
+        self._console.append_info("Step 1/3: Synthesis")
+        self._on_synthesize()
+        self._console.append_info("Step 2/3: Simulation (queued after synthesis)")
+        self._console.append_info("Step 3/3: Formal verification (queued)")
+        self._console.append_info(
+            "Note: Each step runs asynchronously. Check console for results."
+        )
 
     # -- Security Analysis ------------------------------------------
 
@@ -2194,6 +2290,8 @@ class MainWindow(QMainWindow):
                 self._on_synthesize()
             elif result == "__TRIGGER_SIMULATION__":
                 self._on_run_sim()
+            elif result == "__TRIGGER_RUN_ALL__":
+                self._on_run_all_flow()
             else:
                 self._console.append_text(result + "\n")
 

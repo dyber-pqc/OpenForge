@@ -58,6 +58,8 @@ class ConsolePanel(QDockWidget):
         font = QFont("JetBrains Mono", 11)
         font.setStyleHint(QFont.StyleHint.Monospace)
         self._output.setFont(font)
+        self._output.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._output.customContextMenuRequested.connect(self._on_context_menu)
         layout.addWidget(self._output, stretch=1)
 
         # Command input row
@@ -139,6 +141,60 @@ class ConsolePanel(QDockWidget):
 
         self._output.setTextCursor(cursor)
         self._output.ensureCursorVisible()
+
+    def _on_context_menu(self, position) -> None:
+        """Right-click context menu for the console output."""
+        from PySide6.QtWidgets import QMenu, QApplication
+
+        menu = QMenu(self)
+
+        # Standard text operations
+        menu.addAction("Copy", lambda: self._output.copy())
+        menu.addAction("Select All", lambda: self._output.selectAll())
+        menu.addSeparator()
+
+        # Console operations
+        menu.addAction("Clear Console", self.clear)
+        menu.addSeparator()
+
+        # Quick commands
+        cmd_menu = menu.addMenu("Run Command")
+        for cmd, desc in [
+            ("help", "Show help"),
+            ("synth", "Run synthesis"),
+            ("sim", "Run simulation"),
+            ("timing", "Run timing analysis"),
+            ("tools", "Show tool status"),
+            ("report_utilization", "Show cell usage"),
+        ]:
+            cmd_menu.addAction(f"{desc} ({cmd})", lambda c=cmd: self._run_quick_command(c))
+
+        menu.addSeparator()
+
+        # Save log
+        menu.addAction("Save Log to File...", self._save_log)
+        menu.addAction("Copy All to Clipboard", lambda: QApplication.clipboard().setText(
+            self._output.toPlainText()
+        ))
+
+        menu.exec(self._output.mapToGlobal(position))
+
+    def _run_quick_command(self, cmd: str) -> None:
+        """Execute a command as if typed in the input."""
+        self.append_text(f"> {cmd}\n", _CLR_INFO)
+        self.command_entered.emit(cmd)
+
+    def _save_log(self) -> None:
+        """Save console log to a file."""
+        from PySide6.QtWidgets import QFileDialog
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Console Log", "console.log",
+            "Log Files (*.log *.txt);;All Files (*)"
+        )
+        if path:
+            from pathlib import Path
+            Path(path).write_text(self._output.toPlainText(), encoding="utf-8")
+            self.append_info(f"Log saved to: {path}")
 
     def _on_command_entered(self) -> None:
         text = self._input.text().strip()

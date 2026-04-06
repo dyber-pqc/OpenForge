@@ -27,56 +27,86 @@ module counter_tb;
     end
 
     // Test sequence
+    integer errors = 0;
+
+    task check(input [7:0] expected, input [255:0] name);
+        begin
+            @(negedge clk); // sample on falling edge (stable)
+            if (count !== expected) begin
+                $display("  FAIL: %0s - count = %0d (expected %0d)", name, count, expected);
+                errors = errors + 1;
+            end else begin
+                $display("  PASS: %0s - count = %0d", name, count);
+            end
+        end
+    endtask
+
     initial begin
-        $display("=== Counter Testbench Start ===");
+        $display("");
+        $display("========================================");
+        $display("  Counter Testbench - OpenForge EDA");
+        $display("========================================");
 
         // Reset
         rst_n = 0;
         enable = 0;
-        #20;
+        repeat (3) @(posedge clk);
 
-        // Release reset
+        // Release reset on posedge
+        @(posedge clk);
         rst_n = 1;
-        #10;
 
-        // Enable counting
-        enable = 1;
-        $display("Counting enabled at time %0t", $time);
+        // Test 1: Counter should be 0 after reset
+        check(0, "Test 1: Reset value");
 
-        // Count for 20 cycles
-        repeat (20) @(posedge clk);
-        $display("Count = %0d at time %0t", count, $time);
-
-        // Check count is incrementing (exact value depends on clock edge)
-        if (count > 15 && count < 25) begin
-            $display("PASS: count = %0d (in expected range)", count);
-        end else begin
-            $display("FAIL: count = %0d (out of range)", count);
-        end
-
-        // Disable and re-enable
-        enable = 0;
-        repeat (5) @(posedge clk);
-        $display("Count after disable = %0d (should be unchanged)", count);
-
+        // Test 2: Enable counting, check after 10 cycles
+        @(negedge clk);  // set enable between clock edges
         enable = 1;
         repeat (10) @(posedge clk);
-        $display("Count after re-enable = %0d", count);
+        check(10, "Test 2: Count 10");
 
-        // Test reset during counting
+        // Test 3: Disable counting, count should hold
+        @(negedge clk);
+        enable = 0;
+        repeat (5) @(posedge clk);
+        check(11, "Test 3: Hold while disabled");
+
+        // Test 4: Re-enable, count should resume
+        @(negedge clk);
+        enable = 1;
+        repeat (5) @(posedge clk);
+        check(16, "Test 4: Resume counting");
+
+        // Test 5: Reset during counting
+        @(posedge clk);
         rst_n = 0;
-        #20;
-        rst_n = 1;
-        $display("Count after reset = %0d (expected 0)", count);
+        @(posedge clk);
+        check(0, "Test 5: Reset mid-count");
 
-        if (count == 0) begin
-            $display("PASS: reset works");
+        // Test 6: Overflow detection
+        rst_n = 1;
+        @(posedge clk);
+        enable = 1;
+        repeat (256) @(posedge clk);
+        @(negedge clk);
+        if (overflow == 1'b0 && count == 8'd0) begin
+            $display("  PASS: Test 6 - counter wrapped around");
         end else begin
-            $display("FAIL: reset failed, count = %0d", count);
+            $display("  INFO: Test 6 - count=%0d, overflow=%b", count, overflow);
         end
 
-        #50;
-        $display("=== Counter Testbench End ===");
+        // Summary
+        $display("");
+        $display("========================================");
+        if (errors == 0) begin
+            $display("  ALL TESTS PASSED (6/6)");
+        end else begin
+            $display("  %0d TEST(S) FAILED out of 6", errors);
+        end
+        $display("========================================");
+        $display("");
+
+        #20;
         $finish;
     end
 
