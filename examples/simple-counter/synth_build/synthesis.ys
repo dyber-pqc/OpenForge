@@ -1,0 +1,13 @@
+read_verilog src/counter.v
+hierarchy -top counter -check
+proc; opt
+memory; opt
+fsm; opt
+techmap; opt
+abc
+opt_clean
+write_verilog synth_build/netlist.v
+write_json synth_build/netlist.json
+write_blif synth_build/netlist.blif
+tee -o synth_build/stats.txt stat
+stat

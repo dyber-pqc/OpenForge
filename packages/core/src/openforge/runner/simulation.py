@@ -12,11 +12,21 @@ from typing import Any, Sequence
 
 from openforge.config.loader import load_config
 from openforge.config.schema import OpenForgeConfig, SimulationTool
+from openforge.engine.base import ExecutionBackend
 from openforge.engine.cocotb import CocotbEngine
 from openforge.engine.ghdl import GHDLEngine
 from openforge.engine.icarus import IcarusEngine
 from openforge.engine.verilator import VerilatorEngine
 from openforge.runner.process import ProcessResult, ProcessRunner
+
+
+def _auto_engine(cls, docker_image: str = ""):
+    """Create an engine, falling back to Docker if native binary not found."""
+    engine = cls()
+    if not engine.check_installed() and docker_image:
+        engine = cls(backend=ExecutionBackend.DOCKER)
+        engine.docker_image = docker_image
+    return engine
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +256,7 @@ class SimulationRunner:
         timeout: float | None,
         on_output: Callable[[str], None] | None,
     ) -> CompileResult:
-        engine = VerilatorEngine()
+        engine = _auto_engine(VerilatorEngine, "hdlc/sim:latest")
         result = engine.compile(
             sources,
             top_module=top_module,
@@ -278,7 +288,7 @@ class SimulationRunner:
         timeout: float | None,
         on_output: Callable[[str], None] | None,
     ) -> CompileResult:
-        engine = IcarusEngine()
+        engine = _auto_engine(IcarusEngine, "hdlc/sim:latest")
         output_file = output_dir / f"{top_module}.vvp"
         result = engine.compile(
             sources,
@@ -308,7 +318,7 @@ class SimulationRunner:
         timeout: float | None,
         on_output: Callable[[str], None] | None,
     ) -> CompileResult:
-        engine = GHDLEngine()
+        engine = _auto_engine(GHDLEngine, "hdlc/ghdl:latest")
         # GHDL has a two-step process: analyze + elaborate
         analyze_result = engine.analyze(
             sources,
@@ -427,7 +437,7 @@ class SimulationRunner:
         wave_format: str,
         on_output: Callable[[str], None] | None,
     ) -> SimResult:
-        engine = VerilatorEngine()
+        engine = _auto_engine(VerilatorEngine, "hdlc/sim:latest")
         result = engine.simulate(
             binary,
             plusargs=plusargs,
@@ -457,7 +467,7 @@ class SimulationRunner:
         timeout: float,
         on_output: Callable[[str], None] | None,
     ) -> SimResult:
-        engine = IcarusEngine()
+        engine = _auto_engine(IcarusEngine, "hdlc/sim:latest")
         result = engine.simulate(
             vvp_file,
             plusargs=plusargs,
@@ -485,7 +495,7 @@ class SimulationRunner:
         wave_format: str,
         on_output: Callable[[str], None] | None,
     ) -> SimResult:
-        engine = GHDLEngine()
+        engine = _auto_engine(GHDLEngine, "hdlc/ghdl:latest")
         wave_ext = "ghw" if wave_format == "ghw" else "vcd"
         wave_path = self._project_path / f"dump.{wave_ext}"
 

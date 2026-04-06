@@ -121,13 +121,15 @@ def generate_synth_script(
     # ---- Stage 1: Read sources -------------------------------------------
     for src in sources:
         p = Path(src)
+        # Use POSIX paths for Docker compatibility
+        src_posix = p.as_posix()
         match p.suffix:
             case ".sv" | ".svh":
-                lines.append(f"read_verilog -sv {p}")
+                lines.append(f"read_verilog -sv {src_posix}")
             case ".vhd" | ".vhdl":
-                lines.append(f"read_vhdl {p}")
+                lines.append(f"read_vhdl {src_posix}")
             case _:
-                lines.append(f"read_verilog {p}")
+                lines.append(f"read_verilog {src_posix}")
 
     # ---- Stage 2: Hierarchy elaboration ----------------------------------
     lines.append(f"hierarchy -top {top} -check")
@@ -147,24 +149,29 @@ def generate_synth_script(
     # ---- Stage 5: Technology mapping -------------------------------------
     lines.append("techmap; opt")
 
-    # ---- Stage 6: Sequential mapping (DFF) -------------------------------
-    lines.append(f"dfflibmap -liberty {lib}")
-
-    # ---- Stage 7: Combinational mapping (ABC) ----------------------------
-    abc_recipe = generate_abc_script(opt_pass, target_delay_ps, liberty)
-    delay_flag = f" -D {int(target_delay_ps)}" if target_delay_ps else ""
-    lines.append(f'abc -liberty {lib}{delay_flag} -script "+{abc_recipe}"')
+    # ---- Stage 6 & 7: Liberty-based mapping (if Liberty file available) --
+    if lib:
+        lines.append(f"dfflibmap -liberty {Path(lib).as_posix()}")
+        abc_recipe = generate_abc_script(opt_pass, target_delay_ps, liberty)
+        delay_flag = f" -D {int(target_delay_ps)}" if target_delay_ps else ""
+        lines.append(f'abc -liberty {Path(lib).as_posix()}{delay_flag} -script "+{abc_recipe}"')
+    else:
+        # Generic synthesis without technology library
+        lines.append("abc")
 
     # ---- Stage 8: Cleanup ------------------------------------------------
     lines.append("opt_clean")
 
     # ---- Stage 9: Write outputs ------------------------------------------
-    lines.append(f"write_verilog {out / 'netlist.v'}")
-    lines.append(f"write_json {out / 'netlist.json'}")
-    lines.append(f"write_blif {out / 'netlist.blif'}")
+    lines.append(f"write_verilog {(out / 'netlist.v').as_posix()}")
+    lines.append(f"write_json {(out / 'netlist.json').as_posix()}")
+    lines.append(f"write_blif {(out / 'netlist.blif').as_posix()}")
 
     # ---- Stage 10: Statistics --------------------------------------------
-    lines.append(f"tee -o {out / 'stats.txt'} stat -liberty {lib}")
-    lines.append(f"stat -liberty {lib}")
+    if lib:
+        lines.append(f"tee -o {(out / 'stats.txt').as_posix()} stat -liberty {Path(lib).as_posix()}")
+    else:
+        lines.append(f"tee -o {(out / 'stats.txt').as_posix()} stat")
+    lines.append("stat")
 
     return "\n".join(lines) + "\n"

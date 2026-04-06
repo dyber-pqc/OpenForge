@@ -143,10 +143,12 @@ def _resolve_liberty(
         if lib:
             return lib
 
-    # Fallback: return a relative path using the well-known name
+    # Fallback: check if well-known Liberty file exists on disk
     default_name = _PDK_LIBERTY.get(pdk_name)
     if default_name:
-        return Path(default_name)
+        p = Path(default_name)
+        if p.exists():
+            return p
     return None
 
 
@@ -174,7 +176,11 @@ class SynthesisRunner:
             search_dir=self._project_path,
         )
         self._pdk_manager = pdk_manager
+        # Auto-detect: use Docker backend if native Yosys not installed
         self._yosys = YosysEngine()
+        if not self._yosys.check_installed():
+            from openforge.engine.base import ExecutionBackend
+            self._yosys = YosysEngine(backend=ExecutionBackend.DOCKER)
 
     @property
     def project_path(self) -> Path:
@@ -232,14 +238,11 @@ class SynthesisRunner:
         out_dir = Path(output_dir) if output_dir else self._project_path / "synth_build"
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        # Resolve liberty file
+        # Resolve liberty file (optional -- generic synthesis if not found)
         liberty = _resolve_liberty(pdk, self._pdk_manager)
         if liberty is None:
-            return SynthesisResult(
-                success=False,
-                errors=[f"Cannot locate Liberty file for PDK '{pdk}'"],
-                log=f"Error: no Liberty library found for PDK '{pdk}'",
-            )
+            # Fall back to generic synthesis without technology mapping
+            liberty = ""
 
         # Compute delay target from frequency
         target_delay_ps: float | None = None
@@ -247,12 +250,16 @@ class SynthesisRunner:
             period_ns = 1000.0 / target_frequency  # MHz -> ns
             target_delay_ps = period_ns * 1000.0    # ns -> ps
 
-        # Generate the Yosys script
+        # Generate the Yosys script (use relative output dir for Docker compat)
+        try:
+            rel_out = out_dir.relative_to(self._project_path)
+        except ValueError:
+            rel_out = out_dir
         script = generate_synth_script(
             sources=sources,
             top=top_module,
             liberty=liberty,
-            output_dir=out_dir,
+            output_dir=rel_out,
             opt_pass=opt_pass,
             target_delay_ps=target_delay_ps,
             flatten=flatten,
@@ -263,9 +270,16 @@ class SynthesisRunner:
         script_path = out_dir / "synthesis.ys"
         script_path.write_text(script)
 
+        # Use relative path for Docker compatibility
+        try:
+            rel_script = script_path.relative_to(self._project_path)
+        except ValueError:
+            rel_script = script_path
+        script_arg = rel_script.as_posix()
+
         start = time.monotonic()
         result = self._yosys.run_script(
-            script_path,
+            script_arg,
             cwd=str(self._project_path),
             timeout=timeout,
         )

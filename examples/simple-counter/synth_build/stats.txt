@@ -1,0 +1,18 @@
+
+16. Printing statistics.
+
+=== counter ===
+
+   Number of wires:                 14
+   Number of wire bits:             35
+   Number of public wires:           5
+   Number of public wire bits:      12
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 24
+     $_AND_                          8
+     $_DFFE_PN0P_                    8
+     $_NOT_                          1
+     $_XOR_                          7
+
