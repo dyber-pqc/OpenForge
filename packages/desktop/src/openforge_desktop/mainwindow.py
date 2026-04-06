@@ -1779,15 +1779,39 @@ class MainWindow(QMainWindow):
         self._project_mgr.build_state = "simulating"
 
         mgr = self._project_mgr
-        tool = "verilator"
-        if mgr.config and mgr.config.simulation:
+        # Default to Icarus (more forgiving) unless config says otherwise
+        tool = "icarus"
+        if mgr.config and mgr.config.verification and mgr.config.verification.simulation:
+            tool = mgr.config.verification.simulation.tool.value
+        elif mgr.config and mgr.config.simulation:
             tool = mgr.config.simulation.tool.value
+
+        # Collect all source + testbench files
+        all_sources = [str(s.relative_to(mgr.project_path)) for s in mgr.source_files()]
+        # Add testbench files from tb/ directory
+        if mgr.project_path:
+            tb_dir = mgr.project_path / "tb"
+            if tb_dir.exists():
+                for tb_file in sorted(tb_dir.glob("*.v")) + sorted(tb_dir.glob("*.sv")):
+                    rel = str(tb_file.relative_to(mgr.project_path))
+                    if rel not in all_sources:
+                        all_sources.append(rel)
+
+        # For Icarus, use the testbench module as top (not the DUT)
+        sim_top = mgr.top_module()
+        if tool == "icarus" and all_sources:
+            # Find testbench module name (usually *_tb)
+            for src in all_sources:
+                name = Path(src).stem
+                if name.endswith("_tb") or name.startswith("tb_"):
+                    sim_top = name
+                    break
 
         self._sim_worker = SimulationWorker(
             project_path=mgr.project_path,  # type: ignore[arg-type]
             config=mgr.config,
-            source_files=[str(s.relative_to(mgr.project_path)) for s in mgr.source_files()],
-            top_module=mgr.top_module(),
+            source_files=all_sources,
+            top_module=sim_top,
             tool=tool,
             parent=self,
         )

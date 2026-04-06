@@ -12,7 +12,7 @@ design:
 
 verification:
   simulation:
-    tool: verilator
+    tool: icarus
     testbenches:
       - tb/counter_tb.py
     coverage:

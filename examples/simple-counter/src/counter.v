@@ -1,4 +1,6 @@
 // Simple 8-bit counter - OpenForge example design
+`timescale 1ns / 1ps
+
 module counter #(
     parameter WIDTH = 8
 ) (
