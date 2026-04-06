@@ -380,27 +380,42 @@ class ToolCheckWorker(QThread):
         from openforge.engine.klayout import KLayoutEngine
         from openforge.engine.cocotb import CocotbEngine
 
-        engines: list[tuple[str, Any]] = [
-            ("Verilator", VerilatorEngine()),
-            ("Icarus Verilog", IcarusEngine()),
-            ("GHDL", GHDLEngine()),
-            ("Yosys", YosysEngine()),
-            ("SymbiYosys", SymbiYosysEngine()),
-            ("OpenSTA", OpenSTAEngine()),
-            ("OpenROAD", OpenROADEngine()),
-            ("Magic", MagicEngine()),
-            ("Netgen", NetgenEngine()),
-            ("Verible", VeribleEngine()),
-            ("KLayout", KLayoutEngine()),
-            ("cocotb", CocotbEngine()),
+        from openforge.engine.base import ExecutionBackend
+
+        engines: list[tuple[str, Any, str]] = [
+            ("Verilator", VerilatorEngine, "hdlc/sim:latest"),
+            ("Icarus Verilog", IcarusEngine, "hdlc/sim:latest"),
+            ("GHDL", GHDLEngine, "hdlc/ghdl:latest"),
+            ("Yosys", YosysEngine, "hdlc/yosys:latest"),
+            ("SymbiYosys", SymbiYosysEngine, "hdlc/formal:latest"),
+            ("OpenSTA", OpenSTAEngine, "openroad/opensta:latest"),
+            ("OpenROAD", OpenROADEngine, "openroad/flow:latest"),
+            ("Magic", MagicEngine, "efabless/magic:latest"),
+            ("Netgen", NetgenEngine, "efabless/netgen:latest"),
+            ("Verible", VeribleEngine, "chipsalliance/verible:latest"),
+            ("KLayout", KLayoutEngine, "klayout/klayout:latest"),
+            ("cocotb", CocotbEngine, ""),
         ]
 
-        for name, engine in engines:
+        for name, engine_cls, docker_img in engines:
             if self._cancelled:
                 break
             try:
+                # First try native
+                engine = engine_cls()
                 installed = engine.check_installed()
                 ver = engine.version() if installed else ""
+
+                # If native not found, try Docker
+                if not installed and docker_img:
+                    docker_engine = engine_cls(backend=ExecutionBackend.DOCKER)
+                    docker_engine.docker_image = docker_img
+                    try:
+                        installed = docker_engine.check_installed()
+                        if installed:
+                            ver = docker_engine.version() + " (Docker)"
+                    except Exception:
+                        pass
             except Exception:
                 installed = False
                 ver = ""
