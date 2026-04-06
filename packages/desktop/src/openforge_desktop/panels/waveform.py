@@ -1563,10 +1563,17 @@ class WaveformPanel(QDockWidget):
 
     def _load_config(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Waveform Config", "",
-            "Waveform Config (*.wcfg)"
+            self, "Load Waveform", "",
+            "Waveform Files (*.vcd *.fst *.wcfg);;VCD Files (*.vcd);;FST Files (*.fst);;Config Files (*.wcfg);;All Files (*)"
         )
-        if path:
+        if not path:
+            return
+
+        if path.endswith(".vcd") or path.endswith(".fst"):
+            self.load_vcd(path)
+            return
+
+        if path.endswith(".wcfg"):
             import json
             with open(path) as f:
                 cfg = json.load(f)

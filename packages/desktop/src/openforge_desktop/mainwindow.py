@@ -1853,6 +1853,7 @@ class MainWindow(QMainWindow):
                 self._console.append_info(f"Waveform: {result.wave_file}")
                 self._waveform.setVisible(True)
                 self._waveform.raise_()
+                self._waveform.load_vcd(str(result.wave_file))
         else:
             self._console.append_error("Simulation failed")
             self.statusBar().showMessage("Simulation failed", 5000)
