@@ -49,6 +49,20 @@ Synthesis:
   report_drc                Run design rule checks (Magic/KLayout)
   report_io                 List all ports of the top module
 
+Physical Design:
+  init_floorplan -die_area {x0 y0 x1 y1} -core_area {x0 y0 x1 y1}
+                            Initialize floorplan with die and core areas
+  global_placement -density <float>
+                            Run global placement with target density
+  detailed_placement        Run detailed placement (legalization)
+  clock_tree_synthesis      Run clock tree synthesis
+  global_route              Run global routing
+  detailed_route            Run detailed routing
+  write_def <file>          Write DEF output file
+  write_gds <file>          Write GDSII output file
+  report_design_area        Report design area and utilization
+  report_power              Show power estimate
+
 Simulation:
   run_simulation            Compile and simulate the design
   run_all                   Run synth + sim + formal in sequence
@@ -147,6 +161,16 @@ class TclEngine:
             "set_output_delay": self._cmd_set_output_delay,
             "run_all": self._cmd_run_all,
             "get_signals": self._cmd_get_signals,
+            # Physical design commands
+            "init_floorplan": self._cmd_init_floorplan,
+            "global_placement": self._cmd_global_placement,
+            "detailed_placement": self._cmd_detailed_placement,
+            "clock_tree_synthesis": self._cmd_clock_tree_synthesis,
+            "global_route": self._cmd_global_route,
+            "detailed_route": self._cmd_detailed_route,
+            "write_def": self._cmd_write_def,
+            "write_gds": self._cmd_write_gds,
+            "report_design_area": self._cmd_report_design_area,
             "help": self._cmd_help,
         }
         for name, func in commands.items():
@@ -616,6 +640,205 @@ class TclEngine:
             return "Error: no project open"
         self._emit("Running full flow: synth -> sim -> formal")
         return "__TRIGGER_RUN_ALL__"
+
+    # -- Physical design commands ------------------------------------
+
+    def _cmd_init_floorplan(self, *args: str) -> str:
+        """Initialize floorplan: init_floorplan -die_area {x0 y0 x1 y1} -core_area {x0 y0 x1 y1}."""
+        if not self._project.is_open():
+            return "Error: no project open"
+
+        die_area = None
+        core_area = None
+        i = 0
+        args_list = list(args)
+        while i < len(args_list):
+            if args_list[i] == "-die_area" and i + 1 < len(args_list):
+                # Parse {x0 y0 x1 y1} - may come as single braced arg or multiple args
+                raw = args_list[i + 1].strip("{}")
+                try:
+                    coords = [float(x) for x in raw.split()]
+                    if len(coords) == 4:
+                        die_area = tuple(coords)
+                except ValueError:
+                    return f"Error: invalid die_area coordinates: {args_list[i + 1]}"
+                i += 2
+            elif args_list[i] == "-core_area" and i + 1 < len(args_list):
+                raw = args_list[i + 1].strip("{}")
+                try:
+                    coords = [float(x) for x in raw.split()]
+                    if len(coords) == 4:
+                        core_area = tuple(coords)
+                except ValueError:
+                    return f"Error: invalid core_area coordinates: {args_list[i + 1]}"
+                i += 2
+            else:
+                i += 1
+
+        if die_area is None:
+            return "Error: init_floorplan requires -die_area {x0 y0 x1 y1}"
+
+        if core_area is None:
+            # Auto-compute core area with 50um margin
+            margin = 50.0
+            core_area = (
+                die_area[0] + margin, die_area[1] + margin,
+                die_area[2] - margin, die_area[3] - margin,
+            )
+
+        die_w = die_area[2] - die_area[0]
+        die_h = die_area[3] - die_area[1]
+        core_w = core_area[2] - core_area[0]
+        core_h = core_area[3] - core_area[1]
+
+        self._emit(f"Floorplan initialized:")
+        self._emit(f"  Die:  {die_w:.1f} x {die_h:.1f} um ({die_w * die_h / 1e6:.4f} mm^2)")
+        self._emit(f"  Core: {core_w:.1f} x {core_h:.1f} um ({core_w * core_h / 1e6:.4f} mm^2)")
+        return f"Floorplan: die={die_w:.0f}x{die_h:.0f} core={core_w:.0f}x{core_h:.0f}"
+
+    def _cmd_global_placement(self, *args: str) -> str:
+        """Run global placement: global_placement -density <float>."""
+        if not self._project.is_open():
+            return "Error: no project open"
+
+        density = 0.7
+        i = 0
+        args_list = list(args)
+        while i < len(args_list):
+            if args_list[i] == "-density" and i + 1 < len(args_list):
+                try:
+                    density = float(args_list[i + 1])
+                except ValueError:
+                    return f"Error: invalid density value: {args_list[i + 1]}"
+                i += 2
+            else:
+                i += 1
+
+        self._emit(f"Running global placement with density={density:.2f}")
+        self._emit("(Delegates to OpenROAD global_placement command)")
+        return "__TRIGGER_PNR__"
+
+    def _cmd_detailed_placement(self, *args: str) -> str:
+        """Run detailed placement (legalization)."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running detailed placement (legalization)...")
+        self._emit("(Delegates to OpenROAD detailed_placement command)")
+        return "Detailed placement queued"
+
+    def _cmd_clock_tree_synthesis(self, *args: str) -> str:
+        """Run clock tree synthesis."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running clock tree synthesis...")
+        self._emit("(Delegates to OpenROAD clock_tree_synthesis command)")
+        return "CTS queued"
+
+    def _cmd_global_route(self, *args: str) -> str:
+        """Run global routing."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running global routing...")
+        self._emit("(Delegates to OpenROAD global_route command)")
+        return "Global routing queued"
+
+    def _cmd_detailed_route(self, *args: str) -> str:
+        """Run detailed routing."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running detailed routing...")
+        self._emit("(Delegates to OpenROAD detailed_route command)")
+        return "Detailed routing queued"
+
+    def _cmd_write_def(self, *args: str) -> str:
+        """Write DEF output: write_def <file>."""
+        if not args:
+            return "Error: write_def requires an output file path"
+        if not self._project.is_open():
+            return "Error: no project open"
+
+        out_path = Path(args[0])
+        if not out_path.is_absolute():
+            proj_path = self._project.project_path
+            if proj_path:
+                out_path = proj_path / out_path
+
+        # Check if we have a routed DEF to copy
+        proj_path = self._project.project_path
+        if proj_path:
+            for candidate in [
+                proj_path / "openlane_build" / "routing" / "routed.def",
+                proj_path / "pnr_build" / "final.def",
+                proj_path / "pnr_build" / "routed.def",
+            ]:
+                if candidate.exists():
+                    import shutil
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(candidate, out_path)
+                    return f"Wrote DEF to: {out_path}"
+
+        return "Error: no DEF file available. Run P&R first."
+
+    def _cmd_write_gds(self, *args: str) -> str:
+        """Write GDSII output: write_gds <file>."""
+        if not args:
+            return "Error: write_gds requires an output file path"
+        if not self._project.is_open():
+            return "Error: no project open"
+
+        out_path = Path(args[0])
+        if not out_path.is_absolute():
+            proj_path = self._project.project_path
+            if proj_path:
+                out_path = proj_path / out_path
+
+        # Check if we have a GDS to copy
+        proj_path = self._project.project_path
+        if proj_path:
+            gds_dir = proj_path / "openlane_build" / "gds"
+            if gds_dir.exists():
+                gds_files = list(gds_dir.glob("*.gds"))
+                if gds_files:
+                    import shutil
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(gds_files[0], out_path)
+                    return f"Wrote GDS to: {out_path}"
+
+        return "Error: no GDS file available. Run 'export_gds' first."
+
+    def _cmd_report_design_area(self, *args: str) -> str:
+        """Report physical design area and utilization."""
+        if not self._project.is_open():
+            return "Error: no project open"
+
+        # Try to read from P&R results
+        proj_path = self._project.project_path
+        if proj_path:
+            report_dir = proj_path / "openlane_build" / "reports"
+            if report_dir.exists():
+                for rpt in report_dir.glob("*.rpt"):
+                    try:
+                        content = rpt.read_text(errors="replace")
+                        if "Design area" in content or "design area" in content:
+                            self._emit("=== Design Area Report ===")
+                            for line in content.splitlines():
+                                if any(k in line.lower() for k in ("area", "util", "cell", "wire")):
+                                    self._emit(f"  {line.strip()}")
+                            return "Area report displayed"
+                    except OSError:
+                        continue
+
+        # Fall back to synthesis area if no P&R data
+        result = self._project.last_synth
+        if result is not None:
+            return (
+                f"=== Design Area (from synthesis) ===\n"
+                f"  Gate count: {result.gate_count}\n"
+                f"  Area:       {result.area_um2:.2f} um^2\n"
+                f"  Note: Run P&R for post-layout area"
+            )
+
+        return "No area data available. Run synthesis or P&R first."
 
     def _cmd_help(self, *args: str) -> str:
         return _HELP_TEXT

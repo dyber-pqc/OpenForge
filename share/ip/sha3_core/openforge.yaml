@@ -1,0 +1,33 @@
+project:
+  name: sha3_256
+  description: SHA3-256 Hash Core with Keccak-f[1600] Permutation
+  version: "1.0.0"
+  category: crypto
+
+sources:
+  - src/sha3_256.v
+
+top_module: sha3_256
+
+tool: icarus
+target_pdk: sky130
+
+simulation:
+  tool: icarus
+  top_module: sha3_256
+  timescale: "1ns/1ps"
+
+synthesis:
+  tool: yosys
+  target: sky130
+  flatten: true
+
+interface:
+  type: valid-ready
+  description: "Streaming 64-bit input with msg_last, 256-bit hash output"
+
+performance:
+  permutation_cycles: 24
+  rate_bits: 1088
+  output_bits: 256
+  throughput: "1088 bits per 24+absorb cycles"

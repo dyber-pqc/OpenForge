@@ -1,0 +1,37 @@
+project:
+  name: fifo_sync
+  description: Synchronous FIFO with Register-Based Storage
+  version: "1.0.0"
+  category: infrastructure
+
+sources:
+  - src/fifo_sync.v
+
+top_module: fifo_sync
+
+parameters:
+  WIDTH:
+    type: integer
+    default: 8
+    description: "Data width in bits"
+  DEPTH:
+    type: integer
+    default: 16
+    description: "FIFO depth (number of entries)"
+
+tool: icarus
+target_pdk: sky130
+
+simulation:
+  tool: icarus
+  top_module: fifo_sync
+  timescale: "1ns/1ps"
+
+synthesis:
+  tool: yosys
+  target: sky130
+  flatten: true
+
+interface:
+  type: simple
+  description: "wr_en/rd_en with full/empty/count status"

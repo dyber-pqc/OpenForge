@@ -1,0 +1,49 @@
+project:
+  name: axi_lite_xbar
+  description: AXI4-Lite Crossbar Interconnect (1 Master, N Slaves)
+  version: "1.0.0"
+  category: infrastructure
+
+sources:
+  - src/axi_lite_xbar.v
+
+top_module: axi_lite_xbar
+
+parameters:
+  NUM_SLAVES:
+    type: integer
+    default: 4
+    description: "Number of slave ports (2-8)"
+  ADDR_WIDTH:
+    type: integer
+    default: 32
+    description: "Address bus width"
+  DATA_WIDTH:
+    type: integer
+    default: 32
+    description: "Data bus width"
+  BASE_ADDR:
+    type: packed_array
+    description: "Packed base addresses per slave"
+  ADDR_MASK:
+    type: packed_array
+    description: "Packed address masks per slave"
+
+tool: icarus
+target_pdk: sky130
+
+simulation:
+  tool: icarus
+  top_module: axi_lite_xbar
+  timescale: "1ns/1ps"
+
+synthesis:
+  tool: yosys
+  target: sky130
+  flatten: true
+
+interface:
+  type: axi4-lite
+  description: "1 master AXI4-Lite port, N slave AXI4-Lite ports"
+  data_width: 32
+  addr_width: 32

@@ -6,9 +6,10 @@ All widgets use the Catppuccin Mocha dark theme for a professional EDA aesthetic
 
 from __future__ import annotations
 
-from typing import Final
+from pathlib import Path
+from typing import Any, Callable, Final
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, QThread, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -808,6 +809,135 @@ class PhysicalDesignPanel(QDockWidget):
         if lvs:
             self._drc_lvs.set_lvs_results(lvs)
 
+    # ── OpenLane integration ─────────────────────────────────────────
+
+    def run_openlane_flow(
+        self,
+        project_path: Path,
+        config: Any = None,
+        on_output: Callable[[str], None] | None = None,
+    ) -> None:
+        """Launch the OpenLane RTL-to-GDSII flow on a background thread.
+
+        Updates the pipeline widget, progress bar, and log in real time
+        as each step completes.
+        """
+        # Reset UI
+        self._flow.pipeline.reset()
+        self._flow.clear_log()
+        self._flow.progress.setValue(0)
+        self._flow.progress.setFormat("Starting...")
+        self._tabs.setCurrentWidget(self._flow)
+
+        # Stage name -> pipeline index mapping
+        stage_map: dict[str, int] = {
+            "synthesis": 0,
+            "floorplan": 0,
+            "placement": 1,
+            "cts": 2,
+            "routing": 3,
+            "drc": 4,
+            "lvs": 4,
+            "gds_export": 4,
+            "signoff_timing": 4,
+        }
+
+        total_steps = 8  # approximate step count
+
+        def _on_step_output(line: str) -> None:
+            self._flow.append_log(line)
+            if on_output:
+                on_output(line)
+
+        # Create and start the worker
+        self._pnr_worker = _OpenLaneWorker(project_path, config, self)
+        self._pnr_worker.output_line.connect(
+            lambda line: self._flow.append_log(line)
+        )
+        if on_output:
+            self._pnr_worker.output_line.connect(on_output)
+
+        self._pnr_worker.step_started.connect(
+            lambda step: self._on_step_started(step, stage_map, total_steps)
+        )
+        self._pnr_worker.step_completed.connect(
+            lambda step, dur: self._on_step_completed(step, dur, stage_map, total_steps)
+        )
+        self._pnr_worker.finished_result.connect(self._on_flow_finished)
+        self._pnr_worker.error.connect(
+            lambda msg: self._flow.append_log(f"ERROR: {msg}")
+        )
+        self._pnr_worker.start()
+
+    def _on_step_started(
+        self, step: str, stage_map: dict[str, int], total: int,
+    ) -> None:
+        idx = stage_map.get(step, -1)
+        if idx >= 0:
+            self._flow.pipeline.set_status(idx, "running", "...")
+        self._flow.progress.setFormat(f"Running: {step}")
+
+    def _on_step_completed(
+        self, step: str, duration: float,
+        stage_map: dict[str, int], total: int,
+    ) -> None:
+        idx = stage_map.get(step, -1)
+        dur_str = f"{duration:.1f}s" if duration < 60 else f"{duration / 60:.1f}m"
+        if idx >= 0:
+            self._flow.pipeline.set_status(idx, "done", dur_str)
+
+        # Update progress bar
+        completed = sum(
+            1 for s in _PD_STAGES
+            if self._flow.pipeline._statuses[_PD_STAGES.index(s)] == "done"
+        ) if hasattr(self._flow.pipeline, '_statuses') else 0
+        pct = int(completed / len(_PD_STAGES) * 100)
+        self._flow.progress.setValue(pct)
+
+    def _on_flow_finished(self, result: Any) -> None:
+        """Handle completed OpenLane flow -- populate statistics."""
+        if result is None:
+            self._flow.progress.setFormat("Failed")
+            return
+
+        if result.success:
+            self._flow.progress.setValue(100)
+            self._flow.progress.setFormat("Complete")
+        else:
+            self._flow.progress.setFormat(f"Failed at: {result.failed_step}")
+
+        # Populate statistics tab with real results
+        self.update_results({
+            "stage_statuses": [
+                ("done" if s.lower() in [c.lower() for c in result.completed_steps] else "idle", "--")
+                for s in _PD_STAGES
+            ],
+            "area": [
+                {"name": "Total Design", "area": result.area_um2},
+            ],
+            "routing_stats": [
+                {"metric": "Total Wirelength", "value": f"{result.wirelength_um:,.0f} um"},
+                {"metric": "WNS", "value": f"{result.wns:.3f} ns"},
+                {"metric": "TNS", "value": f"{result.tns:.3f} ns"},
+            ],
+            "power": [
+                {"name": "Total", "power": result.power_mw},
+            ],
+            "drc_total": result.drc_violations,
+            "drc_critical": 0,
+            "lvs_results": [
+                {
+                    "check": "Circuit Match",
+                    "status": "Match" if result.lvs_match else "Mismatch",
+                    "details": "Circuits match" if result.lvs_match else "Circuits do not match",
+                },
+            ],
+        })
+
+        # Append summary to log
+        self._flow.append_log("")
+        self._flow.append_log(result.log)
+
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""
         import random
@@ -859,3 +989,95 @@ class PhysicalDesignPanel(QDockWidget):
                 {"check": "Open Circuits", "status": "Fail", "details": "2 open nets: VDD_core, net_1234"},
             ],
         })
+
+
+# ── OpenLane Background Worker ─────────────────────────────────────────────
+
+
+class _OpenLaneWorker(QThread):
+    """Run the OpenLane RTL-to-GDSII flow on a background thread."""
+
+    output_line = Signal(str)
+    step_started = Signal(str)       # step name
+    step_completed = Signal(str, float)  # step name, duration
+    finished_result = Signal(object)  # OpenLaneResult
+    error = Signal(str)
+
+    def __init__(
+        self,
+        project_path: Path,
+        config: Any = None,
+        parent: Any = None,
+    ) -> None:
+        super().__init__(parent)
+        self._project_path = project_path
+        self._config = config
+
+    def run(self) -> None:
+        try:
+            from openforge.physical.openlane import FlowStep, OpenLaneRunner
+
+            runner = OpenLaneRunner(
+                self._project_path,
+                self._config,
+            )
+
+            # Track step transitions
+            current_step: list[str] = [""]
+            import time
+            step_start: list[float] = [time.monotonic()]
+
+            def on_output(line: str) -> None:
+                self.output_line.emit(line)
+
+            def on_step(step: FlowStep, status: str) -> None:
+                step_name = step.name.lower()
+                if "starting" in status.lower() or "running" in status.lower():
+                    if current_step[0]:
+                        elapsed = time.monotonic() - step_start[0]
+                        self.step_completed.emit(current_step[0], elapsed)
+                    current_step[0] = step_name
+                    step_start[0] = time.monotonic()
+                    self.step_started.emit(step_name)
+
+            runner.set_callbacks(on_output=on_output, on_step=on_step)
+
+            # Gather source files
+            sources: list[str] = []
+            src_dir = self._project_path / "src"
+            if src_dir.exists():
+                for ext in ("*.v", "*.sv"):
+                    sources.extend(str(f) for f in src_dir.glob(ext))
+            rtl_dir = self._project_path / "rtl"
+            if rtl_dir.exists():
+                for ext in ("*.v", "*.sv"):
+                    sources.extend(str(f) for f in rtl_dir.glob(ext))
+
+            if not sources:
+                self.error.emit("No RTL source files found in src/ or rtl/")
+                self.finished_result.emit(None)
+                return
+
+            # Determine top module
+            top = "top"
+            if self._config and hasattr(self._config, "project"):
+                top = self._config.project.top_module or "top"
+
+            result = runner.run_full_flow(
+                sources=sources,
+                top_module=top,
+                clock_period_ns=10.0,
+                core_utilization=0.5,
+            )
+
+            # Emit final step completion
+            if current_step[0]:
+                elapsed = time.monotonic() - step_start[0]
+                self.step_completed.emit(current_step[0], elapsed)
+
+            self.finished_result.emit(result)
+
+        except Exception as exc:
+            import traceback
+            self.error.emit(f"{exc}\n{traceback.format_exc()}")
+            self.finished_result.emit(None)

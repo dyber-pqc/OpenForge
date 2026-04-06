@@ -1,0 +1,50 @@
+project:
+  name: ntt_unit
+  description: Number Theoretic Transform Unit for ML-KEM/Kyber
+  version: "1.0.0"
+  category: crypto
+
+sources:
+  - src/ntt_unit.v
+
+top_module: ntt_unit
+
+parameters:
+  Q:
+    type: integer
+    default: 3329
+    description: "Prime modulus (3329 for Kyber/ML-KEM)"
+  N:
+    type: integer
+    default: 256
+    description: "Polynomial degree"
+  WIDTH:
+    type: integer
+    default: 12
+    description: "Coefficient bit width"
+  LOG_N:
+    type: integer
+    default: 8
+    description: "log2(N)"
+
+tool: icarus
+target_pdk: sky130
+
+simulation:
+  tool: icarus
+  top_module: ntt_unit
+  timescale: "1ns/1ps"
+
+synthesis:
+  tool: yosys
+  target: sky130
+  flatten: true
+
+interface:
+  type: valid-ready
+  description: "Sequential coefficient I/O with start/busy/done control"
+
+performance:
+  forward_ntt_cycles: "N/2 * log2(N) + 2*N (load + compute + output)"
+  modulus: 3329
+  polynomial_degree: 256

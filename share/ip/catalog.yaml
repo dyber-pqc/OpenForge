@@ -1,0 +1,113 @@
+catalog:
+  - name: aes_core
+    description: AES-128 Encryption/Decryption with AXI4-Lite Interface
+    category: Crypto
+    interface: AXI4-Lite
+    area_estimate: "5000-8000 gates"
+    path: aes_core/src/aes_core.v
+    top_module: aes_core
+    parameters:
+      - name: PIPELINE_MODE
+        default: 0
+        description: "0=iterative (10 cycles), 1=pipelined (11 cycles)"
+    features:
+      - "FIPS 197 compliant AES-128"
+      - "Full S-Box, ShiftRows, MixColumns, AddRoundKey"
+      - "10-round key expansion (on-the-fly)"
+      - "AXI4-Lite register interface for key/data/status"
+    target_pdk: sky130
+    license: Apache-2.0
+
+  - name: sha3_256
+    description: SHA3-256 Hash Core with Keccak-f[1600] Permutation
+    category: Crypto
+    interface: Valid/Ready Handshake
+    area_estimate: "8000-12000 gates"
+    path: sha3_core/src/sha3_256.v
+    top_module: sha3_256
+    parameters: []
+    features:
+      - "FIPS 202 compliant SHA3-256"
+      - "24-round Keccak-f[1600] permutation"
+      - "1088-bit rate (SHA3-256)"
+      - "Streaming 64-bit input with msg_last"
+      - "Internal SHA3 padding (0x06...0x80)"
+    target_pdk: sky130
+    license: Apache-2.0
+
+  - name: ntt_unit
+    description: Number Theoretic Transform Unit for ML-KEM/Kyber
+    category: Crypto
+    interface: Valid/Ready with Start/Done Control
+    area_estimate: "3000-5000 gates"
+    path: ntt_unit/src/ntt_unit.v
+    top_module: ntt_unit
+    parameters:
+      - name: Q
+        default: 3329
+        description: "Prime modulus"
+      - name: N
+        default: 256
+        description: "Polynomial degree"
+      - name: WIDTH
+        default: 12
+        description: "Coefficient bit width"
+      - name: LOG_N
+        default: 8
+        description: "log2(N)"
+    features:
+      - "Cooley-Tukey butterfly with twiddle ROM"
+      - "Forward and inverse NTT (mode select)"
+      - "Modular arithmetic (Barrett-style reduction)"
+      - "In-place computation with coefficient RAM"
+      - "Default config: Kyber Q=3329, N=256"
+    target_pdk: sky130
+    license: Apache-2.0
+
+  - name: fifo_sync
+    description: Synchronous FIFO with Register-Based Storage
+    category: Infrastructure
+    interface: Simple (wr_en/rd_en)
+    area_estimate: "200-500 gates (default 8x16)"
+    path: fifo_sync/src/fifo_sync.v
+    top_module: fifo_sync
+    parameters:
+      - name: WIDTH
+        default: 8
+        description: "Data width in bits"
+      - name: DEPTH
+        default: 16
+        description: "FIFO depth (entries)"
+    features:
+      - "Parameterized width and depth"
+      - "Overflow/underflow protection"
+      - "Zero read latency (combinational output)"
+      - "Full/empty/count status"
+      - "Register-based (no BRAM inference)"
+    target_pdk: sky130
+    license: Apache-2.0
+
+  - name: axi_lite_xbar
+    description: AXI4-Lite Crossbar Interconnect (1 Master, N Slaves)
+    category: Infrastructure
+    interface: AXI4-Lite
+    area_estimate: "2000-4000 gates"
+    path: axi_interconnect/src/axi_lite_xbar.v
+    top_module: axi_lite_xbar
+    parameters:
+      - name: NUM_SLAVES
+        default: 4
+        description: "Number of slave ports"
+      - name: ADDR_WIDTH
+        default: 32
+        description: "Address width"
+      - name: DATA_WIDTH
+        default: 32
+        description: "Data width"
+    features:
+      - "Address-based routing with configurable base/mask"
+      - "DECERR for unmapped addresses"
+      - "Independent read/write channel FSMs"
+      - "Priority-encoded slave selection"
+    target_pdk: sky130
+    license: Apache-2.0

@@ -1463,6 +1463,277 @@ class MainWindow(QMainWindow):
         )
         self.statusBar().showMessage("Bitstream requires vendor tools", 5000)
 
+    # -- Physical design console commands ------------------------------
+
+    def _on_pnr_flow(self) -> None:
+        """Run full place-and-route flow (floorplan + place + CTS + route)."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        # Check for synthesis output
+        netlist = proj_path / "synth_build" / "netlist.v"
+        if not netlist.exists():
+            netlist = proj_path / "openlane_build" / "synthesis" / "netlist.v"
+        if not netlist.exists():
+            self._console.append_error(
+                "No synthesis netlist found. Run 'synth' first."
+            )
+            return
+
+        self._console.append_info("=== Starting RTL-to-GDSII P&R Flow ===")
+        self._console.append_info(f"  Project: {proj_path}")
+        self._console.append_info(f"  Netlist: {netlist}")
+        self._console.append_info("  Steps: Floorplan -> Place -> CTS -> Route")
+        self._console.append_info("")
+
+        self._physical_design.setVisible(True)
+        self._physical_design.raise_()
+
+        # Launch via the physical design panel
+        self._physical_design.run_openlane_flow(
+            project_path=proj_path,
+            config=self._project_mgr.config,
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        self.statusBar().showMessage("P&R flow started", 3000)
+
+    def _on_floorplan(self) -> None:
+        """Run floorplan generation only."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        netlist = proj_path / "synth_build" / "netlist.v"
+        if not netlist.exists():
+            self._console.append_error(
+                "No synthesis netlist found. Run 'synth' first."
+            )
+            return
+
+        self._console.append_info("=== Running Floorplan ===")
+        from openforge.physical.openlane import OpenLaneRunner
+        runner = OpenLaneRunner(proj_path, self._project_mgr.config)
+        runner.set_callbacks(
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        sdc = proj_path / "constraints" / "timing.sdc"
+        result = runner.run_step(
+            "floorplan",
+            netlist=str(netlist),
+            sdc=str(sdc) if sdc.exists() else None,
+            top_module=self._project_mgr.top_module() if hasattr(self._project_mgr, "top_module") else "top",
+        )
+        if result.success:
+            self._console.append_success(f"Floorplan complete. DEF: {result.def_path}")
+        else:
+            self._console.append_error("Floorplan failed. Check log for details.")
+        self._console.append_info(f"  Area: {result.area_um2:.1f} um^2")
+
+    def _on_placement(self) -> None:
+        """Run placement only."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        # Look for floorplan DEF
+        def_path = proj_path / "openlane_build" / "floorplan" / "floorplan.def"
+        if not def_path.exists():
+            def_path = proj_path / "pnr_build" / "floorplan.def"
+        if not def_path.exists():
+            self._console.append_error(
+                "No floorplan DEF found. Run 'floorplan' first."
+            )
+            return
+
+        self._console.append_info("=== Running Placement ===")
+        from openforge.physical.runner import PhysicalDesignRunner
+        runner = PhysicalDesignRunner(proj_path, self._project_mgr.config)
+        result = runner.run_placement(
+            str(def_path),
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        if result.success:
+            self._console.append_success(f"Placement complete. DEF: {result.def_path}")
+        else:
+            self._console.append_error("Placement failed. Check log for details.")
+
+    def _on_routing(self) -> None:
+        """Run routing only."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        # Look for placed DEF
+        def_path = proj_path / "pnr_build" / "placed.def"
+        if not def_path.exists():
+            def_path = proj_path / "openlane_build" / "routing" / "routed.def"
+        if not def_path.exists():
+            self._console.append_error(
+                "No placed DEF found. Run 'place' first."
+            )
+            return
+
+        self._console.append_info("=== Running Routing ===")
+        from openforge.physical.runner import PhysicalDesignRunner
+        runner = PhysicalDesignRunner(proj_path, self._project_mgr.config)
+        result = runner.run_routing(
+            str(def_path),
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        if result.success:
+            self._console.append_success(
+                f"Routing complete. DEF: {result.def_path}\n"
+                f"  DRC violations: {result.drc_violations}\n"
+                f"  WNS: {result.timing_wns:.3f} ns  TNS: {result.timing_tns:.3f} ns"
+            )
+        else:
+            self._console.append_error("Routing failed. Check log for details.")
+
+    def _on_run_drc(self) -> None:
+        """Run DRC check on latest layout."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        # Find routed DEF
+        def_path = proj_path / "openlane_build" / "routing" / "routed.def"
+        if not def_path.exists():
+            def_path = proj_path / "pnr_build" / "routed.def"
+        if not def_path.exists():
+            def_path = proj_path / "pnr_build" / "final.def"
+        if not def_path.exists():
+            self._console.append_error(
+                "No routed DEF found. Run 'pnr' or 'route' first."
+            )
+            return
+
+        self._console.append_info("=== Running DRC ===")
+        from openforge.physical.openlane import OpenLaneRunner
+        runner = OpenLaneRunner(proj_path, self._project_mgr.config)
+        runner.set_callbacks(
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        result = runner.run_step("drc", def_input=str(def_path))
+        if result.drc_violations == 0:
+            self._console.append_success("DRC Clean -- no violations found")
+        else:
+            self._console.append_error(f"DRC: {result.drc_violations} violation(s) found")
+
+    def _on_run_lvs(self) -> None:
+        """Run LVS check."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        def_path = proj_path / "openlane_build" / "routing" / "routed.def"
+        if not def_path.exists():
+            def_path = proj_path / "pnr_build" / "routed.def"
+        netlist = proj_path / "openlane_build" / "synthesis" / "netlist.v"
+        if not netlist.exists():
+            netlist = proj_path / "synth_build" / "netlist.v"
+
+        if not def_path.exists() or not netlist.exists():
+            self._console.append_error(
+                "LVS requires routed DEF and synthesis netlist. "
+                "Run 'pnr' first."
+            )
+            return
+
+        self._console.append_info("=== Running LVS ===")
+        from openforge.physical.openlane import OpenLaneRunner
+        runner = OpenLaneRunner(proj_path, self._project_mgr.config)
+        runner.set_callbacks(
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        result = runner.run_step(
+            "lvs", def_input=str(def_path), netlist=str(netlist),
+        )
+        if result.success:
+            self._console.append_success("LVS Clean -- circuits match")
+        else:
+            self._console.append_error("LVS MISMATCH -- circuits do not match")
+
+    def _on_export_gds(self) -> None:
+        """Export GDSII layout."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        proj_path = self._project_mgr.project_path
+        if not proj_path:
+            self._console.append_error("Cannot determine project path.")
+            return
+
+        def_path = proj_path / "openlane_build" / "routing" / "routed.def"
+        if not def_path.exists():
+            def_path = proj_path / "pnr_build" / "routed.def"
+        if not def_path.exists():
+            self._console.append_error(
+                "No routed DEF found. Run 'pnr' first."
+            )
+            return
+
+        top = self._project_mgr.top_module() if hasattr(self._project_mgr, "top_module") else "top"
+        self._console.append_info(f"=== Exporting GDSII for {top} ===")
+        from openforge.physical.openlane import OpenLaneRunner
+        runner = OpenLaneRunner(proj_path, self._project_mgr.config)
+        runner.set_callbacks(
+            on_output=lambda line: self._console.append_text(line + "\n"),
+        )
+        result = runner.run_step(
+            "gds_export", def_input=str(def_path), top_module=top,
+        )
+        if result.gds_path:
+            self._console.append_success(f"GDS exported: {result.gds_path}")
+        else:
+            self._console.append_error("GDS export failed. Check log for details.")
+
+    def _on_signoff(self) -> None:
+        """Run full signoff: DRC + LVS + timing."""
+        if not self._project_mgr.is_open():
+            self._console.append_error("No project open. Open a project first.")
+            return
+
+        self._console.append_info("=== Running Full Signoff ===")
+        self._console.append_info("Step 1/3: DRC")
+        self._on_run_drc()
+        self._console.append_info("Step 2/3: LVS")
+        self._on_run_lvs()
+        self._console.append_info("Step 3/3: Timing Analysis")
+        self._on_timing_analysis()
+        self._console.append_info("=== Signoff Complete ===")
+
     # -- Stub replacements: Analyze menu ----------------------------
 
     def _on_power_analysis(self) -> None:
@@ -2267,6 +2538,16 @@ class MainWindow(QMainWindow):
             "timing": self._on_timing_analysis,
             "clear": self._console.clear,
             "tools": self._on_tool_manager,
+            # Physical design commands
+            "pnr": self._on_pnr_flow,
+            "place_route": self._on_pnr_flow,
+            "floorplan": self._on_floorplan,
+            "place": self._on_placement,
+            "route": self._on_routing,
+            "drc": self._on_run_drc,
+            "lvs": self._on_run_lvs,
+            "export_gds": self._on_export_gds,
+            "signoff": self._on_signoff,
         }
 
         if cmd == "help":
@@ -2292,6 +2573,8 @@ class MainWindow(QMainWindow):
                 self._on_run_sim()
             elif result == "__TRIGGER_RUN_ALL__":
                 self._on_run_all_flow()
+            elif result == "__TRIGGER_PNR__":
+                self._on_pnr_flow()
             else:
                 self._console.append_text(result + "\n")
 

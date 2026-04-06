@@ -1,0 +1,57 @@
+project:
+  name: aes_core
+  description: AES-128 Encryption Core with AXI4-Lite Slave Interface
+  version: "1.0.0"
+  category: crypto
+
+sources:
+  - src/aes_core.v
+
+top_module: aes_core
+
+parameters:
+  PIPELINE_MODE:
+    type: integer
+    default: 0
+    description: "0=iterative (10 cycles/block), 1=pipelined (11 cycle latency)"
+
+tool: icarus
+target_pdk: sky130
+
+simulation:
+  tool: icarus
+  top_module: aes_core
+  timescale: "1ns/1ps"
+
+synthesis:
+  tool: yosys
+  target: sky130
+  constraints: constraints/timing.sdc
+  flatten: true
+
+interface:
+  type: axi4-lite
+  data_width: 32
+  addr_width: 6
+
+registers:
+  - name: KEY
+    offset: 0x00
+    width: 128
+    access: RW
+    description: "AES-128 encryption key (4x32-bit words)"
+  - name: DATA_IN
+    offset: 0x10
+    width: 128
+    access: RW
+    description: "Plaintext input (4x32-bit words)"
+  - name: DATA_OUT
+    offset: 0x20
+    width: 128
+    access: RO
+    description: "Ciphertext output (4x32-bit words)"
+  - name: STATUS
+    offset: 0x30
+    width: 32
+    access: RO
+    description: "bit0=busy, bit1=done"
