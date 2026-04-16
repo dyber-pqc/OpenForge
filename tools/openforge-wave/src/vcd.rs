@@ -93,9 +93,9 @@ impl VcdParser {
 
         // Split magnitude from unit.
         let (mag_str, unit_str) = split_magnitude_unit(combined);
-        let magnitude: u64 = mag_str.parse().map_err(|_| {
-            self.err(format!("invalid timescale magnitude: '{mag_str}'"))
-        })?;
+        let magnitude: u64 = mag_str
+            .parse()
+            .map_err(|_| self.err(format!("invalid timescale magnitude: '{mag_str}'")))?;
         let unit = parse_time_unit(unit_str)
             .ok_or_else(|| self.err(format!("unknown time unit: '{unit_str}'")))?;
 
@@ -172,11 +172,11 @@ impl VcdParser {
             // Real value: r/R
             b'r' | b'R' => {
                 let rest = &line[1..];
-                let (val_str, id_code) = split_value_id(rest)
-                    .ok_or_else(|| self.err("malformed real value change"))?;
-                let f: f64 = val_str.parse().map_err(|_| {
-                    self.err(format!("invalid real value: '{val_str}'"))
-                })?;
+                let (val_str, id_code) =
+                    split_value_id(rest).ok_or_else(|| self.err("malformed real value change"))?;
+                let f: f64 = val_str
+                    .parse()
+                    .map_err(|_| self.err(format!("invalid real value: '{val_str}'")))?;
                 self.record_change(id_code, Value::Real(f));
             }
             // String value: s/S
@@ -212,11 +212,7 @@ impl VcdParser {
         let mut signals = Vec::with_capacity(self.var_order.len());
         for id in &self.var_order {
             if let Some(def) = self.vars.get(id) {
-                let values = self
-                    .changes
-                    .get(id)
-                    .cloned()
-                    .unwrap_or_default();
+                let values = self.changes.get(id).cloned().unwrap_or_default();
                 signals.push(Signal {
                     name: def.full_name.clone(),
                     width: def.width,
@@ -384,9 +380,7 @@ fn parse_value_section_line(parser: &mut VcdParser, line: &str) -> Result<()> {
 
 /// Split a combined magnitude+unit string like "1ns" into ("1", "ns").
 fn split_magnitude_unit(s: &str) -> (&str, &str) {
-    let idx = s
-        .find(|c: char| c.is_alphabetic())
-        .unwrap_or(s.len());
+    let idx = s.find(|c: char| c.is_alphabetic()).unwrap_or(s.len());
     (&s[..idx], &s[idx..])
 }
 

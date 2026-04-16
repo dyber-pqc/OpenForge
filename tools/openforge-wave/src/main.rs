@@ -78,10 +78,7 @@ fn cmd_info(file: &PathBuf) -> Result<()> {
     println!("{:<40} {:>6} {:>10}", "Signal", "Width", "Type");
     println!("{}", "-".repeat(58));
     for sig in &waveform.signals {
-        println!(
-            "{:<40} {:>6} {:>10?}",
-            sig.name, sig.width, sig.signal_type
-        );
+        println!("{:<40} {:>6} {:>10?}", sig.name, sig.width, sig.signal_type);
     }
 
     Ok(())
@@ -102,7 +99,10 @@ fn cmd_dump(file: &PathBuf, signal_name: &str, start: u64, end: Option<u64>) -> 
             )
         })?;
 
-    println!("Signal: {} (width={}, type={:?})", signal.name, signal.width, signal.signal_type);
+    println!(
+        "Signal: {} (width={}, type={:?})",
+        signal.name, signal.width, signal.signal_type
+    );
     println!(
         "Time range: {} -- {} (timescale: {} {})",
         start, end, waveform.timescale.magnitude, waveform.timescale.unit

@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use sv_parser::{parse_sv, SyntaxTree, RefNode};
+use sv_parser::{parse_sv, RefNode, SyntaxTree};
 use tracing::{debug, info, warn};
 
 // ── Assignment graph ─────────────────────────────────────────────────────
@@ -91,7 +91,8 @@ fn parse_file(path: &str) -> anyhow::Result<DesignInfo> {
 
     // sv-parser needs a defines map and include paths
     let defines = HashMap::new();
-    let includes: Vec<std::path::PathBuf> = vec![file_path.parent().unwrap_or(Path::new(".")).to_path_buf()];
+    let includes: Vec<std::path::PathBuf> =
+        vec![file_path.parent().unwrap_or(Path::new(".")).to_path_buf()];
 
     let result = parse_sv(path, &defines, &includes, false, false);
     let (tree, _) = match result {
@@ -134,12 +135,7 @@ fn parse_file(path: &str) -> anyhow::Result<DesignInfo> {
 }
 
 /// Extract assignments from a continuous-assign statement.
-fn process_continuous_assign(
-    tree: &SyntaxTree,
-    node: &RefNode,
-    file: &str,
-    info: &mut DesignInfo,
-) {
+fn process_continuous_assign(tree: &SyntaxTree, node: &RefNode, file: &str, info: &mut DesignInfo) {
     // A continuous assign can contain multiple comma-separated assignments.
     // Each `NetAssignment` has a `net_lvalue` and an expression.
     let mut current_lhs: Option<String> = None;
@@ -201,12 +197,7 @@ fn process_continuous_assign(
 ///
 /// Inside always blocks we look for `BlockingAssignment` and
 /// `NonblockingAssignment` nodes to build dataflow edges.
-fn process_always_block(
-    tree: &SyntaxTree,
-    node: &RefNode,
-    file: &str,
-    info: &mut DesignInfo,
-) {
+fn process_always_block(tree: &SyntaxTree, node: &RefNode, file: &str, info: &mut DesignInfo) {
     for child in node {
         match &child {
             RefNode::BlockingAssignment(_) | RefNode::NonblockingAssignment(_) => {
@@ -271,11 +262,7 @@ fn extract_procedural_assignment(
 
 /// Extract port connections from module instantiations for hierarchical
 /// taint propagation.
-fn process_module_instantiation(
-    tree: &SyntaxTree,
-    node: &RefNode,
-    info: &mut DesignInfo,
-) {
+fn process_module_instantiation(tree: &SyntaxTree, node: &RefNode, info: &mut DesignInfo) {
     let mut module_name: Option<String> = None;
 
     for child in node {
@@ -330,10 +317,7 @@ fn process_module_instantiation(
 ///   the generic RHS identifier collection)
 /// - Concatenation and bit-select (captured by identifier collection)
 /// - Module port connections (hierarchical propagation)
-pub fn propagate(
-    tainted: &mut HashSet<String>,
-    source_files: &[String],
-) -> anyhow::Result<()> {
+pub fn propagate(tainted: &mut HashSet<String>, source_files: &[String]) -> anyhow::Result<()> {
     // Phase 1: Parse all source files and collect assignments
     let mut all_assignments: Vec<Assignment> = Vec::new();
     let mut all_port_conns: Vec<PortConnection> = Vec::new();

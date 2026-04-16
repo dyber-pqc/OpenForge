@@ -49,7 +49,7 @@ fn extract_location(tree: &SyntaxTree, node: &RefNode, file: &str) -> SourceLoca
             // sv_parser::Locate has line/column
             return SourceLocation {
                 file: file.to_string(),
-                line: loc.offset,  // byte offset as approximate line
+                line: loc.offset, // byte offset as approximate line
                 column: 0,
             };
         }
@@ -98,18 +98,14 @@ impl ConditionKind {
 
     fn description(self, signal: &str) -> String {
         match self {
-            Self::IfCondition => format!(
-                "If/else condition depends on tainted signal '{signal}'"
-            ),
-            Self::CaseSelector => format!(
-                "Case selector depends on tainted signal '{signal}'"
-            ),
-            Self::TernaryCondition => format!(
-                "Ternary condition depends on tainted signal '{signal}'"
-            ),
-            Self::ArrayIndex => format!(
-                "Array/memory index derived from tainted signal '{signal}'"
-            ),
+            Self::IfCondition => format!("If/else condition depends on tainted signal '{signal}'"),
+            Self::CaseSelector => format!("Case selector depends on tainted signal '{signal}'"),
+            Self::TernaryCondition => {
+                format!("Ternary condition depends on tainted signal '{signal}'")
+            }
+            Self::ArrayIndex => {
+                format!("Array/memory index derived from tainted signal '{signal}'")
+            }
             Self::DivisionOp => format!(
                 "Division operand depends on tainted signal '{signal}' (data-dependent timing)"
             ),
@@ -264,11 +260,7 @@ fn process_case_selector(
 
 /// Find all array index expressions (e.g., `mem[idx]`) and record the
 /// index identifiers.
-fn collect_array_indices(
-    tree: &SyntaxTree,
-    file: &str,
-    conditions: &mut Vec<ConditionInfo>,
-) {
+fn collect_array_indices(tree: &SyntaxTree, file: &str, conditions: &mut Vec<ConditionInfo>) {
     for node in tree {
         // sv-parser represents bit-select / part-select / array indexing
         // via `SelectExpression` or `ConstantBitSelect` etc.
@@ -355,8 +347,10 @@ pub fn check(
         }
 
         let defines = HashMap::new();
-        let includes: Vec<std::path::PathBuf> =
-            vec![Path::new(file).parent().unwrap_or(Path::new(".")).to_path_buf()];
+        let includes: Vec<std::path::PathBuf> = vec![Path::new(file)
+            .parent()
+            .unwrap_or(Path::new("."))
+            .to_path_buf()];
 
         let (tree, _) = match parse_sv(file, &defines, &includes, false, false) {
             Ok(r) => r,
@@ -374,20 +368,16 @@ pub fn check(
                     let violation = match cond.kind {
                         ConditionKind::IfCondition
                         | ConditionKind::CaseSelector
-                        | ConditionKind::TernaryCondition => {
-                            CTViolation::TaintedBranch {
-                                signal: signal.clone(),
-                                location: cond.location.clone(),
-                                description: cond.kind.description(signal),
-                            }
-                        }
-                        ConditionKind::ArrayIndex => {
-                            CTViolation::TaintedAddress {
-                                signal: signal.clone(),
-                                memory: "inferred".to_string(),
-                                location: cond.location.clone(),
-                            }
-                        }
+                        | ConditionKind::TernaryCondition => CTViolation::TaintedBranch {
+                            signal: signal.clone(),
+                            location: cond.location.clone(),
+                            description: cond.kind.description(signal),
+                        },
+                        ConditionKind::ArrayIndex => CTViolation::TaintedAddress {
+                            signal: signal.clone(),
+                            memory: "inferred".to_string(),
+                            location: cond.location.clone(),
+                        },
                         ConditionKind::DivisionOp | ConditionKind::ModuloOp => {
                             CTViolation::VariableTimingOp {
                                 operation: if matches!(cond.kind, ConditionKind::DivisionOp) {

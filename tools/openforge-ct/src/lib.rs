@@ -8,9 +8,9 @@
 //! - Memory access patterns don't depend on secrets (tainted addresses)
 //! - No variable-timing operations on secret data (div, mod on tainted operands)
 
-pub mod taint;
 pub mod control_flow;
 pub mod formal_gen;
+pub mod taint;
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -112,14 +112,38 @@ impl CTAnalyzer {
 impl std::fmt::Display for CTViolation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CTViolation::TaintedBranch { signal, location, description } => {
-                write!(f, "TAINTED_BRANCH: {} at {}:{} - {}", signal, location.file, location.line, description)
+            CTViolation::TaintedBranch {
+                signal,
+                location,
+                description,
+            } => {
+                write!(
+                    f,
+                    "TAINTED_BRANCH: {} at {}:{} - {}",
+                    signal, location.file, location.line, description
+                )
             }
-            CTViolation::TaintedAddress { signal, memory, location } => {
-                write!(f, "TAINTED_ADDR: {} -> {} at {}:{}", signal, memory, location.file, location.line)
+            CTViolation::TaintedAddress {
+                signal,
+                memory,
+                location,
+            } => {
+                write!(
+                    f,
+                    "TAINTED_ADDR: {} -> {} at {}:{}",
+                    signal, memory, location.file, location.line
+                )
             }
-            CTViolation::VariableTimingOp { operation, operand, location } => {
-                write!(f, "VAR_TIMING: {} on {} at {}:{}", operation, operand, location.file, location.line)
+            CTViolation::VariableTimingOp {
+                operation,
+                operand,
+                location,
+            } => {
+                write!(
+                    f,
+                    "VAR_TIMING: {} on {} at {}:{}",
+                    operation, operand, location.file, location.line
+                )
             }
         }
     }

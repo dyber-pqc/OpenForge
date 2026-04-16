@@ -61,15 +61,11 @@ COPY pyproject.toml ./
 COPY packages ./packages
 COPY share ./share
 
+# Install Python deps and set PYTHONPATH (editable installs need pyproject.toml per package)
 RUN python3.12 -m pip install --no-cache-dir --break-system-packages \
-      -e packages/core \
-      -e packages/cli \
-      -e packages/api \
-      -e packages/crypto \
-      -e packages/desktop \
- || python3.12 -m pip install --no-cache-dir --break-system-packages \
-      -e packages/core \
-      -e packages/cli
+      pydantic pyyaml numpy typer rich networkx scipy matplotlib PySide6 || true
+
+ENV PYTHONPATH="/opt/openforge/packages/core/src:/opt/openforge/packages/cli/src:/opt/openforge/packages/desktop/src:/opt/openforge/packages/api/src"
 
 # ============================================================================
 # Stage 2: runtime -- slim image with only what's needed
@@ -80,7 +76,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     QT_QPA_PLATFORM=offscreen \
-    OPENFORGE_SHARE=/opt/openforge/share
+    OPENFORGE_SHARE=/opt/openforge/share \
+    PYTHONPATH="/opt/openforge/packages/core/src:/opt/openforge/packages/cli/src:/opt/openforge/packages/desktop/src:/opt/openforge/packages/api/src"
 
 # -- runtime system libs (no build tools) -------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \

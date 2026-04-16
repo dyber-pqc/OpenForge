@@ -53,11 +53,14 @@ fn main() -> anyhow::Result<()> {
 
     match cli.format.as_str() {
         "json" => {
-            println!("{}", serde_json::to_string_pretty(&serde_json::json!({
-                "violations": report.violations.len(),
-                "tainted_signals": report.tainted_signals.len(),
-                "formal_properties": report.formal_properties.len(),
-            }))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "violations": report.violations.len(),
+                    "tainted_signals": report.tainted_signals.len(),
+                    "formal_properties": report.formal_properties.len(),
+                }))?
+            );
         }
         _ => {
             println!("OpenForge Constant-Time Analysis Report");
@@ -76,7 +79,10 @@ fn main() -> anyhow::Result<()> {
             }
 
             if cli.formal {
-                println!("\nGenerated {} formal properties", report.formal_properties.len());
+                println!(
+                    "\nGenerated {} formal properties",
+                    report.formal_properties.len()
+                );
                 if let Some(output) = &cli.formal_output {
                     let content = report.formal_properties.join("\n\n");
                     std::fs::write(output, content)?;
