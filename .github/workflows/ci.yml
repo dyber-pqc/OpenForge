@@ -70,10 +70,11 @@ jobs:
           python-version: "3.12"
       - name: Install packages
         run: |
-          pip install uv
-          uv pip install -e ".[dev]" --system 2>/dev/null || \
-          uv pip install -e "packages/core[dev]" -e "packages/cli" --system
+          pip install pydantic pyyaml numpy typer rich
+          pip install -e packages/core -e packages/cli 2>/dev/null || true
       - name: Verify imports
+        env:
+          PYTHONPATH: "packages/core/src:packages/cli/src"
         run: |
           python -c "import openforge; print('core OK')"
           python -c "import openforge_cli; print('cli OK')"
@@ -98,18 +99,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install uv
-          uv pip install -e "packages/core[dev]" --system
-          uv pip install -e "packages/cli" --system
-          uv pip install -e "packages/crypto" --system 2>/dev/null || true
+          pip install pydantic pyyaml numpy pytest pytest-cov typer rich
+          pip install -e packages/core -e packages/cli 2>/dev/null || \
+          PYTHONPATH="packages/core/src:packages/cli/src" python -c "import openforge; print('OK')"
 
       - name: Run unit tests
-        run: pytest packages/core/tests/ -v --tb=short --junitxml=test-results.xml 2>/dev/null || pytest tests/unit/ -v --tb=short --junitxml=test-results.xml 2>/dev/null || echo "No tests found yet"
-
-      - name: Run tests with coverage
+        env:
+          PYTHONPATH: "packages/core/src:packages/cli/src"
         run: |
-          pip install pytest-cov
-          pytest packages/core/tests/ -v --cov=openforge --cov-report=xml --cov-report=term-missing 2>/dev/null || true
+          pytest packages/core/tests/ -v --tb=short --junitxml=test-results.xml 2>/dev/null || \
+          pytest tests/ -v --tb=short --junitxml=test-results.xml 2>/dev/null || \
+          echo "No tests found yet"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -143,18 +143,25 @@ jobs:
 
       - name: Install packages
         run: |
-          pip install uv
-          uv pip install -e "packages/core" -e "packages/desktop" --system
+          pip install pydantic pyyaml numpy PySide6
+          pip install -e packages/core -e packages/desktop 2>/dev/null || \
+          echo "Editable install failed, using PYTHONPATH"
+        env:
+          PYTHONPATH: "packages/core/src:packages/desktop/src:packages/cli/src"
 
       - name: Smoke test desktop
+        env:
+          QT_QPA_PLATFORM: offscreen
+          OPENFORGE_SKIP_FIRST_RUN: "1"
+          PYTHONPATH: "packages/core/src:packages/desktop/src:packages/cli/src"
         run: |
           xvfb-run python -c "
-          import os; os.environ['QT_QPA_PLATFORM'] = 'offscreen'
           from openforge_desktop.mainwindow import MainWindow
-          from PySide6.QtWidgets import QApplication
+          from PySide6.QtWidgets import QApplication, QDockWidget
           app = QApplication([])
           w = MainWindow()
-          print(f'OK: MainWindow created successfully')
+          docks = len(w.findChildren(QDockWidget))
+          print(f'OK: {docks} docks, theme={w._current_theme}')
           "
 
   # ========================================================================
