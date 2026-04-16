@@ -7,7 +7,10 @@ All widgets use the Catppuccin Mocha dark theme for a professional EDA aesthetic
 from __future__ import annotations
 
 import math
-from typing import Final
+from typing import Final, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openforge.physical.sta_parser import StaReport
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -150,8 +153,9 @@ class _SlackHistogram(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setMinimumHeight(160)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMinimumHeight(120)
+        self.setMaximumHeight(200)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._bins: list[tuple[float, float, int]] = []  # (bin_start, bin_end, count)
 
     def set_data(self, bins: list[tuple[float, float, int]]) -> None:
@@ -748,15 +752,139 @@ class TimingPanel(QDockWidget):
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self._tabs = QTabWidget()
+        self._tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self._tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background-color: {_BG};
+            }}
+            QTabBar::tab {{
+                background-color: {_SURFACE0};
+                color: {_SUBTEXT};
+                border: none;
+                padding: 6px 16px;
+                font-size: 11px;
+                margin-right: 1px;
+                min-width: 60px;
+            }}
+            QTabBar::tab:selected {{
+                background-color: {_BG};
+                color: {_TEXT};
+                border-bottom: 2px solid {_CLR_BLUE};
+            }}
+            QTabBar::tab:hover:!selected {{
+                background-color: {_SURFACE1};
+                color: {_TEXT};
+            }}
+            QGroupBox {{
+                background-color: {_MANTLE};
+                border: 1px solid {_SURFACE0};
+                border-radius: 4px;
+                margin-top: 14px;
+                padding: 10px 8px 8px 8px;
+                font-size: 11px;
+                font-weight: bold;
+                color: {_CLR_BLUE};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 2px 8px;
+            }}
+            QPushButton {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 4px;
+                padding: 4px 12px;
+                font-size: 11px;
+            }}
+            QPushButton:hover {{
+                background-color: {_SURFACE1};
+                border-color: {_CLR_BLUE};
+            }}
+            QPushButton:pressed {{
+                background-color: {_SURFACE2};
+            }}
+            QPushButton:checked {{
+                background-color: {_CLR_BLUE};
+                color: {_CRUST};
+                border-color: {_CLR_BLUE};
+            }}
+            QLineEdit, QComboBox, QSpinBox {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 3px;
+                padding: 3px 6px;
+                font-size: 11px;
+            }}
+            QLineEdit:focus, QComboBox:focus, QSpinBox:focus {{
+                border-color: {_CLR_BLUE};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                selection-background-color: {_SURFACE1};
+                border: 1px solid {_SURFACE1};
+            }}
+            QLabel {{
+                color: {_TEXT};
+                font-size: 11px;
+            }}
+            QProgressBar {{
+                background-color: {_SURFACE0};
+                border: none;
+                border-radius: 3px;
+                text-align: center;
+                color: {_TEXT};
+                font-size: 10px;
+                max-height: 18px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {_CLR_BLUE};
+                border-radius: 3px;
+            }}
+            QSplitter::handle {{
+                background-color: {_SURFACE0};
+                height: 2px;
+                width: 2px;
+            }}
+            QHeaderView::section {{
+                background-color: {_MANTLE};
+                color: {_SUBTEXT};
+                border: none;
+                border-right: 1px solid {_SURFACE0};
+                border-bottom: 1px solid {_SURFACE0};
+                padding: 4px 6px;
+                font-size: 11px;
+                font-weight: bold;
+            }}
+        """)
         self._summary_tab = _SummaryTab()
         self._paths_tab = _PathsTab()
         self._detail_tab = _PathDetailTab()
         self._constraints_tab = _ConstraintsTab()
 
-        self._tabs.addTab(self._summary_tab, "Summary")
-        self._tabs.addTab(self._paths_tab, "Paths")
-        self._tabs.addTab(self._detail_tab, "Path Detail")
-        self._tabs.addTab(self._constraints_tab, "Constraints")
+        # Wrap each tab in a scroll area so content scrolls when dock is short
+        from PySide6.QtWidgets import QScrollArea
+        def _scrollable(widget: QWidget) -> QScrollArea:
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setWidget(widget)
+            return scroll
+
+        self._tabs.addTab(_scrollable(self._summary_tab), "Summary")
+        self._tabs.addTab(_scrollable(self._paths_tab), "Paths")
+        self._tabs.addTab(_scrollable(self._detail_tab), "Path Detail")
+        self._tabs.addTab(_scrollable(self._constraints_tab), "Constraints")
 
         self.setWidget(self._tabs)
 
@@ -768,6 +896,11 @@ class TimingPanel(QDockWidget):
         self._tabs.setCurrentWidget(self._detail_tab)
 
     # ── Public API ────────────────────────────────────────────────────
+
+    def set_theme(self, dark: bool) -> None:
+        """Switch panel QSS between dark and light themes."""
+        from openforge_desktop.panels._theme import panel_tab_qss
+        self._tabs.setStyleSheet(panel_tab_qss(dark))
 
     @property
     def summary(self) -> _SummaryTab:
@@ -911,6 +1044,112 @@ class TimingPanel(QDockWidget):
             },
         }
         self.update_results(data)
+
+    def update_from_sta_report(self, report: "StaReport") -> None:
+        """Update all displays from a real :class:`StaReport`.
+
+        This is the preferred entry point now that ``sta_parser`` produces
+        structured timing data. It populates the summary tiles, the per-clock
+        table, the slack histogram, and the paths tab from the parsed report.
+        """
+        # ----- summary tiles ---------------------------------------------
+        self._summary_tab.set_summary(
+            wns_setup=report.wns,
+            tns_setup=report.tns,
+            wns_hold=report.whs,
+            tns_hold=report.ths,
+        )
+
+        # ----- per-clock table -------------------------------------------
+        clock_rows: list[dict] = []
+        clock_names: list[str] = []
+        for clock_name, paths in report.paths_by_clock().items():
+            setups = [p for p in paths if p.path_type == "max"]
+            worst_setup = min((p.slack_ns for p in setups), default=0.0)
+            tns = sum(p.slack_ns for p in setups if p.slack_ns < 0)
+            clock_info = report.get_clock(clock_name)
+            period = clock_info.period_ns if clock_info else 10.0
+            freq = 1000.0 / period if period > 0 else 0.0
+            clock_rows.append(
+                {
+                    "name": clock_name,
+                    "period": period,
+                    "frequency": freq,
+                    "wns": worst_setup,
+                    "tns": tns,
+                    "endpoints": len({p.endpoint for p in paths if p.endpoint}),
+                }
+            )
+            clock_names.append(clock_name)
+        if clock_rows:
+            self._summary_tab.set_clocks(clock_rows)
+
+        # ----- slack histogram -------------------------------------------
+        bins: list[tuple[float, float, int]] = []
+        if report.paths:
+            slacks = [p.slack_ns for p in report.paths]
+            s_min, s_max = min(slacks), max(slacks)
+            n_bins = 20
+            if s_max <= s_min:
+                bins = [(s_min - 0.5, s_max + 0.5, len(slacks))]
+            else:
+                bin_w = (s_max - s_min) / n_bins
+                for i in range(n_bins):
+                    lo = s_min + i * bin_w
+                    hi = lo + bin_w
+                    if i == n_bins - 1:
+                        count = sum(1 for s in slacks if lo <= s <= hi)
+                    else:
+                        count = sum(1 for s in slacks if lo <= s < hi)
+                    bins.append((lo, hi, count))
+        self._summary_tab.set_histogram(bins)
+
+        # ----- detail paths tab (top 50 worst) ---------------------------
+        worst_paths = sorted(report.paths, key=lambda p: p.slack_ns)[:50]
+        paths_data: list[dict] = []
+        for p in worst_paths:
+            stages_data: list[dict] = []
+            for s in p.data_path:
+                stages_data.append(
+                    {
+                        "cell": s.cell_instance or s.pin_name,
+                        "type": s.cell_type,
+                        "pin": s.pin_name,
+                        "delay": s.delay_ns,
+                        "arrival": s.cumulative_ns,
+                        "cumulative": s.cumulative_ns,
+                        "transition": s.edge,
+                    }
+                )
+            paths_data.append(
+                {
+                    "startpoint": p.startpoint,
+                    "endpoint": p.endpoint,
+                    "start": p.startpoint,
+                    "end": p.endpoint,
+                    "slack": p.slack_ns,
+                    "delay": p.data_arrival_ns,
+                    "arrival": p.data_arrival_ns,
+                    "required": p.data_required_ns,
+                    "stages": stages_data,
+                    "levels": p.num_levels,
+                    "clock": p.endpoint_clock or p.startpoint_clock or "",
+                }
+            )
+        if paths_data:
+            self._paths_tab.set_paths(paths_data, clock_names or None)
+
+        # ----- forward to optional path browser dock ---------------------
+        browser = getattr(self, "_path_browser", None)
+        if browser is not None:
+            try:
+                browser.load_sta_report(report)
+            except Exception:
+                pass
+
+    def attach_path_browser(self, browser) -> None:
+        """Register a :class:`PathBrowserPanel` to mirror STA reports into."""
+        self._path_browser = browser
 
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""

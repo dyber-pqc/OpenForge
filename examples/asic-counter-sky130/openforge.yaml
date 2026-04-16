@@ -1,0 +1,134 @@
+name: asic-counter-sky130
+version: "1"
+kind: asic
+top_module: counter
+
+rtl_sources:
+  - rtl/counter.v
+constraint_files:
+  - constraints/counter.sdc
+tb_sources:
+  - tb/counter_tb.v
+
+pdk:
+  name: sky130A
+  std_cell_lib: sky130_fd_sc_hd
+  variant: sky130_fd_sc_hd
+
+target:
+  kind: asic
+  vendor: skywater
+
+corners:
+  - name: tt_025C_1v80
+    process: tt
+    voltage: 1.80
+    temperature: 25.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+  - name: ss_n40C_1v60
+    process: ss
+    voltage: 1.60
+    temperature: -40.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_n40C_1v60.lib
+
+  - name: ff_125C_1v95
+    process: ff
+    voltage: 1.95
+    temperature: 125.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_100C_1v95.lib
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: synth
+    tool: yosys
+    options:
+      target: sky130
+      liberty: $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+      abc_script: strash; ifraig; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf {D}; &put
+    depends_on:
+      - lint
+
+  - stage: floorplan
+    tool: openroad
+    options:
+      step: floorplan
+      die_area: [0, 0, 100, 100]
+      core_area: [10, 10, 90, 90]
+      site: unithd
+    depends_on:
+      - synth
+
+  - stage: place
+    tool: openroad
+    options:
+      step: global_place
+      density: 0.6
+    depends_on:
+      - floorplan
+
+  - stage: cts
+    tool: openroad
+    options:
+      step: clock_tree_synthesis
+      buf_cell: sky130_fd_sc_hd__clkbuf_4
+      root_buf: sky130_fd_sc_hd__clkbuf_16
+    depends_on:
+      - place
+
+  - stage: route
+    tool: openroad
+    options:
+      step: global_route
+    depends_on:
+      - cts
+
+  - stage: detail_route
+    tool: openroad
+    options:
+      step: detail_route
+    depends_on:
+      - route
+
+  - stage: sta
+    tool: opensta
+    options:
+      corner: tt_025C_1v80
+      sdc: constraints/counter.sdc
+    depends_on:
+      - detail_route
+
+  - stage: drc
+    tool: magic
+    options:
+      tech_file: $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech
+    depends_on:
+      - detail_route
+
+  - stage: lvs
+    tool: netgen
+    options:
+      setup_file: $PDK_ROOT/sky130A/libs.tech/netgen/sky130A_setup.tcl
+    depends_on:
+      - drc
+
+  - stage: gds
+    tool: magic
+    options:
+      step: gds_export
+      tech_file: $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech
+    depends_on:
+      - lvs
+
+metadata:
+  description: 8-bit synchronous counter - full ASIC RTL-to-GDS flow on SkyWater sky130
+  author: OpenForge Examples
+  license: Apache-2.0
+  target_freq_mhz: 100

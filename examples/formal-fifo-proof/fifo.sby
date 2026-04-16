@@ -1,0 +1,24 @@
+[tasks]
+bmc
+prove
+cover
+
+[options]
+bmc: mode bmc
+bmc: depth 20
+prove: mode prove
+prove: depth 20
+cover: mode cover
+cover: depth 25
+
+[engines]
+smtbmc z3
+
+[script]
+read_verilog -formal rtl/sync_fifo.v
+read_verilog -sv rtl/fifo_props.sv
+prep -top sync_fifo
+
+[files]
+rtl/sync_fifo.v
+rtl/fifo_props.sv

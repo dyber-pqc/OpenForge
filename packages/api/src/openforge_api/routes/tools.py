@@ -74,8 +74,50 @@ _KNOWN_TOOLS: dict[str, ToolInfo] = {
 @router.get("/", response_model=list[ToolInfo])
 async def list_tools() -> list[ToolInfo]:
     """List all known EDA tools with installed status and version."""
-    # TODO: Probe Docker for actual installed state and versions
-    return list(_KNOWN_TOOLS.values())
+    import asyncio
+
+    # Engine class mapping for probing installed state
+    _ENGINE_MAP: dict[str, tuple[str, str]] = {
+        "yosys": ("openforge.engine.yosys", "YosysEngine"),
+        "openroad": ("openforge.engine.openroad", "OpenROADEngine"),
+        "verilator": ("openforge.engine.verilator", "VerilatorEngine"),
+        "iverilog": ("openforge.engine.icarus", "IcarusEngine"),
+        "magic": ("openforge.engine.magic", "MagicEngine"),
+        "netgen": ("openforge.engine.netgen", "NetgenEngine"),
+        "klayout": ("openforge.engine.klayout", "KLayoutEngine"),
+        "opensta": ("openforge.engine.opensta", "OpenSTAEngine"),
+    }
+
+    loop = asyncio.get_running_loop()
+
+    async def _check(name: str, info: ToolInfo) -> ToolInfo:
+        if name not in _ENGINE_MAP:
+            return info
+        mod_name, cls_name = _ENGINE_MAP[name]
+        try:
+            import importlib
+            mod = importlib.import_module(mod_name)
+            engine_cls = getattr(mod, cls_name)
+            engine = engine_cls()
+            installed = await loop.run_in_executor(None, engine.check_installed)
+            version = ""
+            if installed:
+                version = await loop.run_in_executor(None, engine.version)
+            return ToolInfo(
+                name=info.name,
+                display_name=info.display_name,
+                version=version if installed else None,
+                installed=installed,
+                docker_image=info.docker_image,
+                description=info.description,
+            )
+        except Exception:
+            return info
+
+    results = await asyncio.gather(
+        *[_check(name, info) for name, info in _KNOWN_TOOLS.items()]
+    )
+    return list(results)
 
 
 @router.get("/{name}", response_model=ToolInfo)
@@ -116,7 +158,15 @@ async def install_tool(name: str) -> JobBase:
         created_at=datetime.utcnow(),
     )
 
-    # TODO: Dispatch docker pull task
-    #   from openforge_api.tasks import pull_docker_image
-    #   pull_docker_image.delay(str(job.job_id), tool.docker_image)
+    import asyncio
+
+    async def _pull(j_id: UUID, image: str) -> None:
+        proc = await asyncio.create_subprocess_exec(
+            "docker", "pull", image,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await proc.communicate()
+
+    asyncio.create_task(_pull(job.job_id, tool.docker_image))
     return job

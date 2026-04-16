@@ -1,0 +1,26 @@
+name: pqc_sphincs_plus
+display_name: SLH-DSA-SHA2-128s (SPHINCS+)
+category: post-quantum-crypto
+family: signature
+algorithm: slh-dsa-sha2-128s
+nist_doc: FIPS 205
+security_level: 1
+description: |
+  Stateless Hash-Based Digital Signature Algorithm (SLH-DSA),
+  standardized in NIST FIPS 205. AXI4-Lite wrapper for the
+  SHA2-128s parameter set.
+sources:
+  - src/sphincs_plus_top.v
+top_module: sphincs_plus_top
+interface: axi4-lite
+parameters:
+  public_key_bytes: 32
+  secret_key_bytes: 64
+  signature_bytes: 7856
+estimated_gates: 90000
+estimated_cycles:
+  keygen: 40000000
+  sign: 4000000000
+  verify: 3000000
+clock_mhz: 100
+status: skeleton

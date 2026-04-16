@@ -1,0 +1,45 @@
+name: pcb-breakout-board
+version: "1"
+kind: pcb
+top_module: ""
+
+schematic_file: schematic/breakout.json
+pcb_file: board/breakout.json
+
+runs:
+  - stage: erc
+    tool: openforge
+    options:
+      check: electrical_rules
+
+  - stage: drc
+    tool: openforge
+    options:
+      check: design_rules
+      min_trace_width: 0.2
+      min_clearance: 0.2
+    depends_on:
+      - erc
+
+  - stage: bom
+    tool: openforge
+    options:
+      step: generate_bom
+      format: csv
+    depends_on:
+      - erc
+
+  - stage: gerber
+    tool: openforge
+    options:
+      step: gerber_export
+      layers: [F.Cu, B.Cu, F.SilkS, B.SilkS, F.Mask, B.Mask, Edge.Cuts]
+    depends_on:
+      - drc
+
+metadata:
+  description: ESP32 breakout board with voltage regulator, LEDs, and GPIO headers
+  author: OpenForge Examples
+  license: CERN-OHL-P-2.0
+  board_size_mm: [50, 80]
+  layers: 2

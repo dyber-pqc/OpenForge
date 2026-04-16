@@ -10,8 +10,8 @@ from PySide6.QtWidgets import QSplashScreen, QWidget
 class OpenForgeSplash(QSplashScreen):
     """Professional splash screen shown during application startup."""
 
-    WIDTH = 620
-    HEIGHT = 380
+    WIDTH = 680
+    HEIGHT = 420
 
     def __init__(self) -> None:
         super().__init__()
@@ -47,26 +47,32 @@ class OpenForgeSplash(QSplashScreen):
         # Logo area
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # "OpenForge" text
+        # Subtle glow behind "OpenForge"
+        glow_color = QColor("#89b4fa")
+        glow_color.setAlpha(25)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(glow_color)
+        painter.drawRoundedRect(30, 78, 400, 60, 12, 12)
+
+        # "Open" text -- measured with the LIGHT font
         logo_font = QFont("Segoe UI", 36, QFont.Weight.Light)
         painter.setFont(logo_font)
         painter.setPen(QPen(QColor("#cdd6f4")))
-        painter.drawText(40, 120, "Open")
+        painter.drawText(48, 126, "Open")
+        open_w = painter.fontMetrics().horizontalAdvance("Open")
 
+        # "Forge" text -- drawn right after "Open"
         bold_font = QFont("Segoe UI", 36, QFont.Weight.Bold)
         painter.setFont(bold_font)
         painter.setPen(QPen(QColor("#89b4fa")))
-        fm = painter.fontMetrics()
-        open_w = fm.horizontalAdvance("Open")
-        painter.setFont(bold_font)
-        painter.drawText(40 + open_w - 40, 120, "Forge")
+        painter.drawText(48 + open_w, 126, "Forge")
+        forge_w = painter.fontMetrics().horizontalAdvance("Forge")
 
-        # "EDA" badge
+        # "EDA" badge positioned after "Forge"
         badge_font = QFont("Segoe UI", 14, QFont.Weight.Bold)
         painter.setFont(badge_font)
-        forge_w = fm.horizontalAdvance("Forge")
-        badge_x = 40 + open_w + forge_w - 30
-        badge_y = 100
+        badge_x = 48 + open_w + forge_w + 8
+        badge_y = 106
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor("#89b4fa"))
@@ -78,23 +84,35 @@ class OpenForgeSplash(QSplashScreen):
         tag_font = QFont("Segoe UI", 11)
         painter.setFont(tag_font)
         painter.setPen(QPen(QColor("#a6adc8")))
-        painter.drawText(42, 148, "Cloud-Native Cryptographic Hardware Verification")
+        painter.drawText(50, 158, "Cloud-Native Cryptographic Hardware Verification")
 
         # Version
         ver_font = QFont("JetBrains Mono", 9)
         painter.setFont(ver_font)
         painter.setPen(QPen(QColor("#585b70")))
-        painter.drawText(42, 172, "Version 0.1.0  |  Dyber Inc.")
+        painter.drawText(50, 184, "Version 0.1.0  |  Dyber Inc.")
 
         # Decorative circuit lines
+        line_y = 206
         painter.setPen(QPen(QColor("#313244"), 1))
-        painter.drawLine(40, 190, w - 40, 190)
+        painter.drawLine(48, line_y, w - 48, line_y)
 
-        # Small circuit nodes
-        for x_pos in range(60, w - 40, 80):
+        # Circuit nodes -- varying sizes and some filled with accent color
+        node_positions = list(range(72, w - 48, 80))
+        for i, x_pos in enumerate(node_positions):
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor("#45475a"))
-            painter.drawEllipse(x_pos - 3, 187, 6, 6)
+            if i % 3 == 0:
+                # Accent-colored node, slightly larger
+                painter.setBrush(QColor("#89b4fa"))
+                painter.drawEllipse(x_pos - 4, line_y - 4, 8, 8)
+            elif i % 3 == 1:
+                # Medium node
+                painter.setBrush(QColor("#585b70"))
+                painter.drawEllipse(x_pos - 3, line_y - 3, 6, 6)
+            else:
+                # Small node
+                painter.setBrush(QColor("#45475a"))
+                painter.drawEllipse(x_pos - 2, line_y - 2, 4, 4)
 
         # Feature highlights
         feat_font = QFont("Segoe UI", 9)
@@ -105,12 +123,12 @@ class OpenForgeSplash(QSplashScreen):
             "Side-Channel Analysis  \u2022  FIPS Compliance  \u2022  NTT Validation",
         ]
         for i, feat in enumerate(features):
-            painter.drawText(42, 218 + i * 18, feat)
+            painter.drawText(50, 238 + i * 20, feat)
 
         # Progress bar
-        bar_y = h - 60
+        bar_y = h - 70
         bar_h = 4
-        bar_margin = 40
+        bar_margin = 48
 
         # Background
         painter.setPen(Qt.PenStyle.NoPen)
@@ -130,15 +148,15 @@ class OpenForgeSplash(QSplashScreen):
         status_font = QFont("Segoe UI", 9)
         painter.setFont(status_font)
         painter.setPen(QPen(QColor("#a6adc8")))
-        painter.drawText(bar_margin, bar_y + 20, self._status_text)
+        painter.drawText(bar_margin, bar_y + 22, self._status_text)
 
         # Copyright
         painter.setPen(QPen(QColor("#45475a")))
         cr_font = QFont("Segoe UI", 8)
         painter.setFont(cr_font)
-        painter.drawText(bar_margin, h - 12, "\u00A9 2026 Dyber Inc. All rights reserved.")
+        painter.drawText(bar_margin, h - 14, "\u00A9 2026 Dyber Inc. All rights reserved.")
 
-        # Border
+        # Rounded inner border
         painter.setPen(QPen(QColor("#313244"), 1))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRect(0, 0, w - 1, h - 1)
+        painter.drawRoundedRect(1, 1, w - 2, h - 2, 8, 8)

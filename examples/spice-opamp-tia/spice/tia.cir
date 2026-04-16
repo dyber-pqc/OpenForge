@@ -1,0 +1,114 @@
+* Transimpedance Amplifier (TIA) using sky130 5-transistor OTA
+*
+* Circuit: Current-input TIA with 5-transistor OTA as the op-amp core.
+*          A feedback resistor (Rf = 100k) sets the transimpedance gain.
+*          A compensation capacitor (Cc = 1pF) ensures stability.
+*
+* Expected performance:
+*   - DC transimpedance gain: ~100 dB-ohm (100 kohm)
+*   - Unity-gain bandwidth: ~50 MHz
+*   - Phase margin: >60 degrees
+*
+* PDK: SkyWater sky130 (130nm CMOS)
+*   Download models from: https://github.com/google/skywater-pdk
+*   Set SKY130_MODEL_DIR to the directory containing the .lib.spice files.
+*
+* Usage:
+*   ngspice spice/tia.cir
+*   (or run via OpenForge: openforge run)
+*------------------------------------------------------------------------
+
+* --- Sky130 device models ---
+* Uncomment and adjust the path to your local sky130 installation:
+* .lib "$SKY130_MODEL_DIR/sky130.lib.spice" tt
+*
+* For standalone testing without PDK, use the simplified models below:
+.param sky130_nfet_vth0 = 0.48
+.param sky130_pfet_vth0 = -0.52
+.param sky130_nfet_kp = 200e-6
+.param sky130_pfet_kp = 80e-6
+
+* Simplified NMOS model (approximating sky130_fd_pr__nfet_01v8)
+.model nfet_01v8 nmos (
++  level=1
++  vto=0.48 kp=200u gamma=0.4 phi=0.8
++  lambda=0.04 cbd=5f cbs=5f cgso=0.2p cgdo=0.2p
++  tox=9e-9
++ )
+
+* Simplified PMOS model (approximating sky130_fd_pr__pfet_01v8)
+.model pfet_01v8 pmos (
++  level=1
++  vto=-0.52 kp=80u gamma=0.4 phi=0.8
++  lambda=0.05 cbd=5f cbs=5f cgso=0.2p cgdo=0.2p
++  tox=9e-9
++ )
+
+* --- Power supplies ---
+Vdd  vdd  0  dc 1.8
+Vss  vss  0  dc 0.0
+Vbias vbias 0 dc 0.6
+
+* --- 5-transistor OTA ---
+* Differential pair (NMOS)
+M1  drain1  inp    tail  vss  nfet_01v8  w=2u  l=0.5u
+M2  drain2  inn    tail  vss  nfet_01v8  w=2u  l=0.5u
+
+* Active load (PMOS current mirror)
+M3  drain1  drain1  vdd  vdd  pfet_01v8  w=4u  l=0.5u
+M4  drain2  drain1  vdd  vdd  pfet_01v8  w=4u  l=0.5u
+
+* Tail current source (NMOS)
+M5  tail    vbias   vss  vss  nfet_01v8  w=4u  l=1u
+
+* OTA output is at drain2 (single-ended)
+
+* --- Feedback network ---
+* Rf: transimpedance feedback resistor (100 kohm)
+Rf  drain2  inn  100k
+
+* Cc: compensation capacitor (1 pF) across feedback
+Cc  drain2  inn  1p
+
+* --- Input stimulus ---
+* Current source input (1 uA AC, applied to inverting input)
+Iin  inn  vss  dc 0  ac 1u
+
+* Non-inverting input tied to a bias voltage (mid-rail)
+Vref  inp  0  dc 0.9
+
+* --- Analysis commands ---
+.op
+
+.tran 10n 10u 0 10n
+
+.ac dec 100 1 1G
+
+* --- Batch-mode control block ---
+.control
+  * Operating point
+  op
+  print all
+  echo "--- Operating Point Complete ---"
+
+  * Transient analysis
+  tran 10n 10u 0 10n
+  wrdata build/tia_tran.csv v(drain2) v(inn)
+  echo "--- Transient Analysis Complete ---"
+
+  * AC analysis (frequency response)
+  ac dec 100 1 1G
+  * Transimpedance = Vout / Iin = v(drain2) / 1uA
+  let ztia_mag = db(v(drain2) / 1e-6)
+  let ztia_phase = 180/PI * ph(v(drain2))
+  wrdata build/tia_ac.csv ztia_mag ztia_phase
+  echo "--- AC Analysis Complete ---"
+
+  * Plot commands (interactive mode)
+  * plot v(drain2) title "TIA Output - Transient"
+  * plot ztia_mag title "TIA Gain (dB-ohm) vs Frequency"
+
+  quit
+.endc
+
+.end

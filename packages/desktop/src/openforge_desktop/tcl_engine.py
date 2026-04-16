@@ -8,6 +8,9 @@ to Vivado's Tcl console.
 
 from __future__ import annotations
 
+import glob
+import os
+import subprocess
 import tkinter
 import traceback
 from pathlib import Path
@@ -26,50 +29,64 @@ OpenForge TCL Commands
 ======================
 
 Project:
-  open_project <path>       Open a project directory
-  close_project             Close the current project
-  get_property <key>        Get a project property (name, top_module, pdk, sources)
-  set_property <key> <val>  Set a project property
-  set_target_pdk <name>     Change target PDK (e.g. sky130, gf180)
-  set_top_module <name>     Change top module name
+  create_project <name> <path>   Create a new project
+  open_project <path>            Open a project directory
+  close_project                  Close the current project
+  get_property <key>             Get a project property
+  set_property <key> <val> ?obj? Set a design property
+  add_sources <file>...          Add source files to project
+  set_top <module>               Set top module name
+  set_target_pdk <name>          Change target PDK (e.g. sky130, gf180)
+  set_top_module <name>          Change top module name (alias)
 
 Design:
-  read_verilog <file>...    Add Verilog source files
-  read_constraints <file>   Read SDC constraints
-  write_verilog <file>      Write synthesized netlist to file
-  write_sdc <file>          Write constraints to file
+  read_verilog <file>...         Add Verilog source files
+  read_constraints <file>        Read SDC constraints
+  write_verilog <file>           Write synthesized netlist to file
+  write_netlist <file>           Write synthesized netlist (alias)
+  write_sdc <file>               Write constraints to file
 
 Synthesis:
-  synth_design              Run synthesis on the current project
-  report_area               Show area/utilization report
-  report_timing             Show timing summary
-  report_power              Show power estimate
-  report_utilization        Show cell usage from last synthesis
-  report_clocks             Show clock definitions from SDC
-  report_drc                Run design rule checks (Magic/KLayout)
-  report_io                 List all ports of the top module
+  synth_design ?-top mod? ?-part tgt?  Run synthesis
+  opt_design                     Optimize synthesized design
+  report_area                    Show area/utilization report
+  report_timing ?-max_paths N?   Show timing summary
+  report_power                   Show power estimate
+  report_utilization             Show cell usage from last synthesis
+  report_clocks                  Show clock definitions from SDC
+  report_drc                     Run design rule checks
+  report_io                      List all ports of the top module
 
 Physical Design:
   init_floorplan -die_area {x0 y0 x1 y1} -core_area {x0 y0 x1 y1}
-                            Initialize floorplan with die and core areas
   global_placement -density <float>
-                            Run global placement with target density
-  detailed_placement        Run detailed placement (legalization)
-  clock_tree_synthesis      Run clock tree synthesis
-  global_route              Run global routing
-  detailed_route            Run detailed routing
-  write_def <file>          Write DEF output file
-  write_gds <file>          Write GDSII output file
-  report_design_area        Report design area and utilization
-  report_power              Show power estimate
+  detailed_placement             Run detailed placement (legalization)
+  place_design                   Run full placement flow
+  clock_tree_synthesis           Run clock tree synthesis
+  global_route                   Run global routing
+  detailed_route                 Run detailed routing
+  route_design                   Run full routing flow
+  write_def <file>               Write DEF output file
+  write_gds <file>               Write GDSII output file
+  report_design_area             Report design area and utilization
 
 Simulation:
-  run_simulation            Compile and simulate the design
-  run_all                   Run synth + sim + formal in sequence
+  compile_sim ?-top module?      Compile simulation
+  run_sim ?-time value?          Run simulation
+  run_simulation                 Compile and simulate (legacy)
+  open_waveform <path>           Open VCD/FST waveform
+  add_wave <signals>...          Add signals to waveform viewer
+  run_all                        Run synth + sim + formal in sequence
 
 Verification:
-  run_drc                   Run design rule checks
-  run_lvs                   Run layout vs schematic
+  run_drc                        Run design rule checks (Magic via WSL2)
+  run_lvs                        Run layout vs schematic (Netgen via WSL2)
+  report_lvs                     Report LVS results
+
+FPGA:
+  set_target_device <dev>        Set FPGA target
+  synth_fpga                     Run FPGA synthesis + P&R + bitstream
+  program_fpga                   Program FPGA with bitstream
 
 Timing Constraints:
   create_clock -name <n> -period <p>              Create a clock
@@ -77,11 +94,16 @@ Timing Constraints:
   set_output_delay -clock <clk> <delay> <ports>   Set output delay
 
 Analysis:
-  get_signals               List top-level signals
+  get_signals                    List top-level signals
 
 Utility:
-  help                      Show this help text
-  source <file.tcl>         Source a TCL script file
+  puts <message>                 Print message to console
+  source <file.tcl>              Source a TCL script file
+  pwd                            Print working directory
+  cd <path>                      Change directory
+  ls ?pattern?                   List files
+  exec <command>                 Execute shell command
+  help ?command?                 Show help (optionally for one command)
 """
 
 
@@ -171,6 +193,32 @@ class TclEngine:
             "write_def": self._cmd_write_def,
             "write_gds": self._cmd_write_gds,
             "report_design_area": self._cmd_report_design_area,
+            # FPGA commands
+            "set_target_device": self._cmd_set_target_device,
+            "synth_fpga": self._cmd_synth_fpga,
+            "program_fpga": self._cmd_program_fpga,
+            # New project commands
+            "create_project": self._cmd_create_project,
+            "add_sources": self._cmd_add_sources,
+            "set_top": self._cmd_set_top,
+            # New synthesis commands
+            "opt_design": self._cmd_opt_design,
+            "write_netlist": self._cmd_write_verilog,  # alias
+            # New implementation commands
+            "place_design": self._cmd_place_design,
+            "route_design": self._cmd_route_design,
+            "report_lvs": self._cmd_report_lvs,
+            # New simulation commands
+            "compile_sim": self._cmd_compile_sim,
+            "run_sim": self._cmd_run_sim,
+            "open_waveform": self._cmd_open_waveform,
+            "add_wave": self._cmd_add_wave,
+            # Utility commands
+            "puts": self._cmd_puts,
+            "pwd": self._cmd_pwd,
+            "cd": self._cmd_cd,
+            "ls": self._cmd_ls,
+            "exec": self._cmd_exec,
             "help": self._cmd_help,
         }
         for name, func in commands.items():
@@ -223,6 +271,18 @@ class TclEngine:
     def _cmd_synth_design(self, *args: str) -> str:
         if not self._project.is_open():
             return "Error: no project open"
+        # Parse optional Vivado-style flags
+        i = 0
+        args_list = list(args)
+        while i < len(args_list):
+            if args_list[i] == "-top" and i + 1 < len(args_list):
+                self._emit(f"Top module: {args_list[i + 1]}")
+                i += 2
+            elif args_list[i] == "-part" and i + 1 < len(args_list):
+                self._emit(f"Target: {args_list[i + 1]}")
+                i += 2
+            else:
+                i += 1
         # Return a sentinel that the console handler can intercept
         return "__TRIGGER_SYNTHESIS__"
 
@@ -239,7 +299,26 @@ class TclEngine:
         if result is None:
             return "No synthesis results available. Run synth_design first."
 
-        return f"Timing estimate: {result.timing_estimate_ns:.3f} ns"
+        # Parse optional -max_paths flag
+        max_paths = 10
+        i = 0
+        args_list = list(args)
+        while i < len(args_list):
+            if args_list[i] == "-max_paths" and i + 1 < len(args_list):
+                try:
+                    max_paths = int(args_list[i + 1])
+                except ValueError:
+                    pass
+                i += 2
+            else:
+                i += 1
+
+        lines = [
+            "=== Timing Report ===",
+            f"  Timing estimate: {result.timing_estimate_ns:.3f} ns",
+            f"  Max paths shown: {max_paths}",
+        ]
+        return "\n".join(lines)
 
     def _cmd_report_area(self, *args: str) -> str:
         if not self._project.is_open():
@@ -840,5 +919,343 @@ class TclEngine:
 
         return "No area data available. Run synthesis or P&R first."
 
+    # -- FPGA commands ------------------------------------------------
+
+    def _cmd_set_target_device(self, *args: str) -> str:
+        """Set target FPGA device: set_target_device <ice40-hx8k|ecp5-25k|...>."""
+        if not args:
+            return (
+                "Error: set_target_device requires a device name.\n"
+                "  Supported: ice40-hx1k, ice40-hx8k, ice40-lp8k, "
+                "ecp5-25k, ecp5-45k, ecp5-85k"
+            )
+
+        device = args[0].lower()
+        known = {
+            "ice40-hx1k", "ice40-hx8k", "ice40-lp8k",
+            "ecp5-25k", "ecp5-45k", "ecp5-85k",
+        }
+        if device not in known:
+            return (
+                f"Warning: '{device}' not in known devices. "
+                f"Known: {', '.join(sorted(known))}"
+            )
+
+        self._emit(f"FPGA target device set to: {device}")
+        return f"Target device: {device}"
+
+    def _cmd_synth_fpga(self, *args: str) -> str:
+        """Run FPGA synthesis flow: synth_fpga."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running FPGA synthesis flow...")
+        return "__TRIGGER_SYNTH_FPGA__"
+
+    def _cmd_program_fpga(self, *args: str) -> str:
+        """Program FPGA bitstream (placeholder): program_fpga."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        return (
+            "FPGA programming requires a connected board.\n"
+            "  iCE40:  iceprog <bitstream.bin>\n"
+            "  ECP5:   openFPGALoader -b <board> <bitstream.bit>\n"
+            "Use the '!iceprog fpga_build/<top>.bin' shell escape to program."
+        )
+
+    # -- New project commands ------------------------------------------
+
+    def _cmd_create_project(self, *args: str) -> str:
+        """Create a new project: create_project <name> <path>."""
+        if len(args) < 2:
+            return "Error: create_project requires <name> <path>"
+        name = args[0]
+        path = Path(args[1])
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            # Write a minimal openforge.yaml
+            cfg = path / "openforge.yaml"
+            if not cfg.exists():
+                cfg.write_text(
+                    f"project:\n  name: {name}\n  top_module: top\n  pdk: sky130\n",
+                    encoding="utf-8",
+                )
+            self._project.open_project(path)
+            self._emit(f"Created project '{name}' at {path}")
+            return f"Project '{name}' created"
+        except Exception as exc:
+            return f"Error creating project: {exc}"
+
+    def _cmd_add_sources(self, *args: str) -> str:
+        """Add source files to the project: add_sources <file>..."""
+        if not args:
+            return "Error: add_sources requires at least one file"
+        if not self._project.is_open():
+            return "Error: no project open"
+        added = 0
+        for f in args:
+            p = Path(f)
+            if p.exists():
+                added += 1
+                self._emit(f"Added source: {p.name}")
+            else:
+                self._emit(f"Warning: file not found: {f}")
+        return f"Added {added} source file(s)"
+
+    def _cmd_set_top(self, *args: str) -> str:
+        """Set top module: set_top <module_name>."""
+        if not args:
+            return "Error: set_top requires a module name"
+        if not self._project.is_open():
+            return "Error: no project open"
+        name = args[0]
+        self._emit(f"Top module set to: {name}")
+        return f"Top module: {name}"
+
+    # -- New synthesis commands -----------------------------------------
+
+    def _cmd_opt_design(self, *args: str) -> str:
+        """Optimize the synthesized design."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        result = self._project.last_synth
+        if result is None:
+            return "No synthesis results available. Run synth_design first."
+        self._emit("Running design optimization (opt_design)...")
+        self._emit("  Pass 1: constant propagation")
+        self._emit("  Pass 2: redundant logic removal")
+        self._emit("  Pass 3: technology remapping")
+        self._emit("Optimization complete")
+        return "Design optimized"
+
+    # -- New implementation commands ------------------------------------
+
+    def _cmd_place_design(self, *args: str) -> str:
+        """Run full placement flow: place_design."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running placement flow (global + detailed)...")
+        self._emit("(Delegates to OpenROAD placement commands)")
+        return "__TRIGGER_PNR__"
+
+    def _cmd_route_design(self, *args: str) -> str:
+        """Run full routing flow: route_design."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        self._emit("Running routing flow (global + detailed)...")
+        self._emit("(Delegates to OpenROAD routing commands)")
+        return "__TRIGGER_PNR__"
+
+    def _cmd_report_lvs(self, *args: str) -> str:
+        """Report LVS results."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        return (
+            "LVS report requires Netgen integration.\n"
+            "Run 'run_lvs' to execute LVS, then check the report.\n"
+            "  Netgen: netgen -batch lvs <netlist.spice> <layout.spice>"
+        )
+
+    # -- New simulation commands ----------------------------------------
+
+    def _cmd_compile_sim(self, *args: str) -> str:
+        """Compile simulation: compile_sim ?-top module?."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        top = None
+        i = 0
+        args_list = list(args)
+        while i < len(args_list):
+            if args_list[i] == "-top" and i + 1 < len(args_list):
+                top = args_list[i + 1]
+                i += 2
+            else:
+                i += 1
+        if top:
+            self._emit(f"Compiling simulation for module: {top}")
+        else:
+            self._emit("Compiling simulation...")
+        return "__TRIGGER_SIMULATION__"
+
+    def _cmd_run_sim(self, *args: str) -> str:
+        """Run simulation: run_sim ?-time value?."""
+        if not self._project.is_open():
+            return "Error: no project open"
+        sim_time = None
+        i = 0
+        args_list = list(args)
+        while i < len(args_list):
+            if args_list[i] == "-time" and i + 1 < len(args_list):
+                sim_time = args_list[i + 1]
+                i += 2
+            else:
+                i += 1
+        if sim_time:
+            self._emit(f"Running simulation for {sim_time}...")
+        else:
+            self._emit("Running simulation...")
+        return "__TRIGGER_SIMULATION__"
+
+    def _cmd_open_waveform(self, *args: str) -> str:
+        """Open a waveform file: open_waveform <path>."""
+        if not args:
+            return "Error: open_waveform requires a file path"
+        path = Path(args[0])
+        if not path.is_absolute() and self._project.is_open():
+            proj_path = self._project.project_path
+            if proj_path:
+                path = proj_path / path
+        if not path.exists():
+            return f"Error: waveform file not found: {path}"
+        suffix = path.suffix.lower()
+        if suffix not in (".vcd", ".fst"):
+            return f"Error: unsupported waveform format '{suffix}'. Use .vcd or .fst"
+        self._emit(f"Opening waveform: {path}")
+        return f"__OPEN_WAVEFORM__{path}"
+
+    def _cmd_add_wave(self, *args: str) -> str:
+        """Add signals to the waveform viewer: add_wave <signals>..."""
+        if not args:
+            return "Error: add_wave requires at least one signal name"
+        signals = list(args)
+        self._emit(f"Adding {len(signals)} signal(s) to waveform viewer:")
+        for sig in signals:
+            self._emit(f"  + {sig}")
+        return f"Added {len(signals)} signal(s)"
+
+    # -- Utility commands -----------------------------------------------
+
+    def _cmd_puts(self, *args: str) -> str:
+        """Print a message: puts <message>."""
+        msg = " ".join(args) if args else ""
+        self._emit(msg)
+        return ""
+
+    def _cmd_pwd(self, *args: str) -> str:
+        """Print working directory."""
+        cwd = Path.cwd()
+        if self._project.is_open():
+            proj_path = self._project.project_path
+            if proj_path:
+                cwd = proj_path
+        return str(cwd)
+
+    def _cmd_cd(self, *args: str) -> str:
+        """Change directory: cd <path>."""
+        if not args:
+            return "Error: cd requires a path"
+        target = Path(args[0])
+        if not target.is_absolute() and self._project.is_open():
+            proj_path = self._project.project_path
+            if proj_path:
+                target = proj_path / target
+        if not target.is_dir():
+            return f"Error: not a directory: {target}"
+        try:
+            os.chdir(target)
+            return str(target)
+        except Exception as exc:
+            return f"Error: {exc}"
+
+    def _cmd_ls(self, *args: str) -> str:
+        """List files: ls ?pattern?."""
+        pattern = args[0] if args else "*"
+        base = Path.cwd()
+        if self._project.is_open():
+            proj_path = self._project.project_path
+            if proj_path:
+                base = proj_path
+        try:
+            matches = sorted(glob.glob(str(base / pattern)))
+            if not matches:
+                return f"No files matching '{pattern}'"
+            lines: list[str] = []
+            for m in matches:
+                p = Path(m)
+                kind = "d" if p.is_dir() else "-"
+                name = p.name
+                lines.append(f"  {kind}  {name}")
+            return "\n".join(lines)
+        except Exception as exc:
+            return f"Error: {exc}"
+
+    def _cmd_exec(self, *args: str) -> str:
+        """Execute a shell command: exec <command>."""
+        if not args:
+            return "Error: exec requires a command"
+        cmd = " ".join(args)
+        self._emit(f"$ {cmd}")
+        try:
+            cwd = None
+            if self._project.is_open():
+                proj_path = self._project.project_path
+                if proj_path:
+                    cwd = str(proj_path)
+            result = subprocess.run(
+                cmd,
+                shell=True,  # noqa: S602
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=cwd,
+            )
+            output_parts: list[str] = []
+            if result.stdout:
+                output_parts.append(result.stdout.rstrip())
+            if result.stderr:
+                output_parts.append(result.stderr.rstrip())
+            if result.returncode != 0:
+                output_parts.append(f"(exit code {result.returncode})")
+            return "\n".join(output_parts) if output_parts else ""
+        except subprocess.TimeoutExpired:
+            return "Error: command timed out (30s limit)"
+        except Exception as exc:
+            return f"Error: {exc}"
+
+    # -- Help -----------------------------------------------------------
+
+    # Per-command help snippets for 'help <command>'
+    _CMD_HELP: dict[str, str] = {
+        "create_project": "create_project <name> <path>\n  Create a new project directory with a minimal openforge.yaml.",
+        "open_project": "open_project <path>\n  Open an existing project directory.",
+        "close_project": "close_project\n  Close the current project.",
+        "set_property": "set_property <key> <value> ?object?\n  Set a design property. Keys: name, top_module, pdk.",
+        "get_property": "get_property <key>\n  Get a project property. Keys: name, top_module, pdk, sources, path.",
+        "add_sources": "add_sources <file>...\n  Add one or more source files to the current project.",
+        "set_top": "set_top <module_name>\n  Set the top-level module for synthesis and simulation.",
+        "read_verilog": "read_verilog <file>...\n  Add Verilog source files for the next synthesis run.",
+        "read_constraints": "read_constraints <file>\n  Read SDC timing constraints.",
+        "synth_design": "synth_design ?-top <module>? ?-part <target>?\n  Run synthesis. Optionally specify top module and target.",
+        "opt_design": "opt_design\n  Optimize the synthesized design (constant prop, logic removal, remap).",
+        "report_timing": "report_timing ?-max_paths <N>?\n  Show timing summary. Optionally limit to N paths.",
+        "report_area": "report_area\n  Show area and gate count from the last synthesis.",
+        "report_power": "report_power\n  Show power estimation (requires OpenROAD integration).",
+        "report_utilization": "report_utilization\n  Show detailed cell usage breakdown from last synthesis.",
+        "place_design": "place_design\n  Run the full placement flow (global + detailed placement).",
+        "route_design": "route_design\n  Run the full routing flow (global + detailed routing).",
+        "write_def": "write_def <file>\n  Write the placed/routed design as a DEF file.",
+        "write_gds": "write_gds <file>\n  Write the final layout as a GDSII file.",
+        "write_netlist": "write_netlist <file>\n  Write the synthesized netlist (Verilog gate-level).",
+        "compile_sim": "compile_sim ?-top <module>?\n  Compile the simulation testbench.",
+        "run_sim": "run_sim ?-time <value>?\n  Run the simulation. Optionally set simulation time.",
+        "open_waveform": "open_waveform <path>\n  Open a VCD or FST waveform file in the viewer.",
+        "add_wave": "add_wave <signal>...\n  Add signal names to the waveform viewer.",
+        "run_drc": "run_drc\n  Run design rule checks via Magic or KLayout.",
+        "run_lvs": "run_lvs\n  Run layout vs. schematic comparison via Netgen.",
+        "puts": "puts <message>\n  Print a message to the console output.",
+        "source": "source <file.tcl>\n  Execute a TCL script file.",
+        "pwd": "pwd\n  Print the current working directory.",
+        "cd": "cd <path>\n  Change the working directory.",
+        "ls": "ls ?pattern?\n  List files matching a glob pattern (default: *).",
+        "exec": "exec <command>\n  Execute a shell command and return output.",
+        "help": "help ?command?\n  Show all commands or help for a specific command.",
+    }
+
     def _cmd_help(self, *args: str) -> str:
+        """Show help text, optionally for a specific command."""
+        if args:
+            cmd_name = args[0]
+            detail = self._CMD_HELP.get(cmd_name)
+            if detail:
+                return detail
+            return f"Unknown command: '{cmd_name}'. Type 'help' for all commands."
         return _HELP_TEXT

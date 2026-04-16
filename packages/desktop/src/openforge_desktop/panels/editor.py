@@ -2,6 +2,9 @@
 
 Uses QScintilla (Qsci) when available, falls back to QPlainTextEdit
 with a custom QSyntaxHighlighter for Verilog/SystemVerilog.
+
+Features: auto-completion, bracket matching, go-to-line, indent/unindent,
+comment/uncomment, word-wrap toggle, minimap, and rich context menus.
 """
 
 from __future__ import annotations
@@ -10,21 +13,28 @@ import re
 from pathlib import Path
 from typing import Final
 
-from PySide6.QtCore import QRegularExpression, Qt, Signal
+from PySide6.QtCore import QRegularExpression, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
     QFont,
     QKeySequence,
     QPainter,
+    QShortcut,
     QSyntaxHighlighter,
     QTextCharFormat,
+    QTextCursor,
     QTextDocument,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
     QPlainTextEdit,
     QPushButton,
     QTabWidget,
@@ -40,7 +50,7 @@ try:
 except ImportError:
     pass
 
-# ── Theme constants ──────────────────────────────────────────────────────
+# ── Theme constants ���─────────────────────────────────────────────────────
 
 _MONO_FONT_FAMILY: Final[str] = "JetBrains Mono"
 _MONO_FONT_SIZE: Final[int] = 11
@@ -51,8 +61,12 @@ _MARGIN_FG: Final[str] = "#585b70"
 _CARET: Final[str] = "#f5e0dc"
 _SEL_BG: Final[str] = "#45475a"
 _LINE_BG: Final[str] = "#11111b"
+_BRACKET_BG: Final[str] = "#585b70"
+_BRACKET_FG: Final[str] = "#f9e2af"
+_MINIMAP_BG: Final[str] = "#181825"
+_MINIMAP_VIEWPORT: Final[str] = "#313244"
 
-# Verilog keyword lists for syntax highlighting
+# Verilog keyword lists for syntax highlighting and auto-completion
 _KEYWORDS = {
     "module", "endmodule", "input", "output", "inout", "wire", "reg", "logic",
     "assign", "always", "always_ff", "always_comb", "always_latch",
@@ -72,6 +86,15 @@ _TYPES = {
     "bit", "byte", "shortint", "int", "longint", "shortreal",
     "string", "void", "automatic", "static", "signed", "unsigned",
 }
+
+# Combined keywords for auto-completion
+_ALL_COMPLETIONS: list[str] = sorted(_KEYWORDS | _TYPES)
+
+# Bracket pairs
+_OPEN_BRACKETS = {"(": ")", "[": "]", "{": "}"}
+_CLOSE_BRACKETS = {")": "(", "]": "[", "}": "{"}
+_BLOCK_OPEN = "begin"
+_BLOCK_CLOSE = "end"
 
 
 def _make_font() -> QFont:
@@ -166,7 +189,7 @@ class VerilogHighlighter(QSyntaxHighlighter):
             start_index = next_match.capturedStart() if next_match.hasMatch() else -1
 
 
-# ── Line number area for QPlainTextEdit ──────────────────────────────────
+# ── Line number area for QPlainTextEdit ────��─────────────────────────────
 
 class _LineNumberArea(QWidget):
     """Paints line numbers alongside a QPlainTextEdit."""
@@ -182,8 +205,145 @@ class _LineNumberArea(QWidget):
         self._editor.line_number_area_paint(event)
 
 
+# ── Auto-completion popup ─────────���──────────────────────────────────────
+
+class _CompletionPopup(QListWidget):
+    """Popup list for Verilog keyword auto-completion."""
+
+    completion_accepted = Signal(str)
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.ToolTip)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setMaximumHeight(200)
+        self.setMaximumWidth(280)
+        self.setStyleSheet(f"""
+            QListWidget {{
+                background-color: #313244;
+                color: #cdd6f4;
+                border: 1px solid #585b70;
+                border-radius: 4px;
+                font-family: "{_MONO_FONT_FAMILY}", monospace;
+                font-size: 11px;
+                padding: 2px;
+            }}
+            QListWidget::item {{
+                padding: 3px 8px;
+            }}
+            QListWidget::item:selected {{
+                background-color: #89b4fa;
+                color: #1e1e2e;
+            }}
+        """)
+        self.itemActivated.connect(self._on_item_activated)
+
+    def _on_item_activated(self, item: QListWidgetItem) -> None:
+        if item:
+            self.completion_accepted.emit(item.text())
+            self.hide()
+
+    def update_completions(self, prefix: str) -> None:
+        """Filter and show completions matching the given prefix."""
+        self.clear()
+        if len(prefix) < 3:
+            self.hide()
+            return
+        prefix_lower = prefix.lower()
+        matches = [kw for kw in _ALL_COMPLETIONS if kw.startswith(prefix_lower)]
+        if not matches:
+            self.hide()
+            return
+        for kw in matches:
+            self.addItem(kw)
+        self.setCurrentRow(0)
+        self.show()
+
+    def accept_current(self) -> bool:
+        """Accept the currently selected completion. Returns True if accepted."""
+        item = self.currentItem()
+        if item and self.isVisible():
+            self.completion_accepted.emit(item.text())
+            self.hide()
+            return True
+        return False
+
+    def move_selection(self, delta: int) -> None:
+        """Move selection up or down."""
+        if not self.isVisible():
+            return
+        row = self.currentRow() + delta
+        row = max(0, min(row, self.count() - 1))
+        self.setCurrentRow(row)
+
+
+# ── Minimap widget ──────────────────────────────────────���────────────────
+
+class _Minimap(QPlainTextEdit):
+    """Narrow read-only preview of the editor content (minimap)."""
+
+    scroll_requested = Signal(float)  # normalized 0.0-1.0
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.setFixedWidth(100)
+
+        small_font = QFont(_MONO_FONT_FAMILY, 2)
+        small_font.setStyleHint(QFont.StyleHint.Monospace)
+        self.setFont(small_font)
+
+        self.setStyleSheet(f"""
+            QPlainTextEdit {{
+                background-color: {_MINIMAP_BG};
+                color: #585b70;
+                border: none;
+                border-left: 1px solid #313244;
+            }}
+        """)
+        self._viewport_ratio_start: float = 0.0
+        self._viewport_ratio_end: float = 0.1
+
+    def set_viewport_highlight(self, start: float, end: float) -> None:
+        """Set the highlighted viewport region (0.0 to 1.0)."""
+        self._viewport_ratio_start = start
+        self._viewport_ratio_end = end
+        self.viewport().update()
+
+    def paintEvent(self, event) -> None:
+        super().paintEvent(event)
+        # Draw viewport highlight overlay
+        painter = QPainter(self.viewport())
+        rect = self.viewport().rect()
+        h = rect.height()
+        y_start = int(h * self._viewport_ratio_start)
+        y_end = int(h * self._viewport_ratio_end)
+        painter.fillRect(
+            QRect(0, y_start, rect.width(), max(y_end - y_start, 10)),
+            QColor(69, 71, 90, 80),  # semi-transparent surface1
+        )
+        painter.end()
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            ratio = event.position().y() / max(self.viewport().height(), 1)
+            self.scroll_requested.emit(max(0.0, min(1.0, ratio)))
+
+    def mouseMoveEvent(self, event) -> None:
+        if event.buttons() & Qt.MouseButton.LeftButton:
+            ratio = event.position().y() / max(self.viewport().height(), 1)
+            self.scroll_requested.emit(max(0.0, min(1.0, ratio)))
+
+
 class _CodeEditor(QPlainTextEdit):
-    """QPlainTextEdit with line numbers, current-line highlight, and syntax highlighting."""
+    """QPlainTextEdit with line numbers, current-line highlight, bracket
+    matching, auto-completion, indent/unindent, comment toggle, and
+    syntax highlighting.
+    """
 
     # Signal emitted when cursor position changes: (line, col)
     cursor_position_changed = Signal(int, int)
@@ -220,18 +380,367 @@ class _CodeEditor(QPlainTextEdit):
         self._line_area = _LineNumberArea(self)
         self.blockCountChanged.connect(self._update_line_area_width)
         self.updateRequest.connect(self._update_line_area)
-        self.cursorPositionChanged.connect(self._highlight_current_line)
+        self.cursorPositionChanged.connect(self._highlight_current_line_and_brackets)
         self.cursorPositionChanged.connect(self._emit_cursor_pos)
         self._update_line_area_width(0)
-        self._highlight_current_line()
+        self._highlight_current_line_and_brackets()
 
         # Syntax highlighter (only for Verilog/SV files)
         self._highlighter: VerilogHighlighter | None = None
+        self._is_verilog = verilog
         if verilog:
             self._highlighter = VerilogHighlighter(self.document())
 
         # Track modification
         self.document().modificationChanged.connect(self._on_modification_changed)
+
+        # Auto-completion popup
+        self._completion_popup = _CompletionPopup(self)
+        self._completion_popup.hide()
+        self._completion_popup.completion_accepted.connect(self._accept_completion)
+        self._completion_timer = QTimer(self)
+        self._completion_timer.setSingleShot(True)
+        self._completion_timer.setInterval(150)
+        self._completion_timer.timeout.connect(self._update_completions)
+        self.textChanged.connect(self._schedule_completion_update)
+
+        # Word wrap state
+        self._word_wrap_enabled = False
+        self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+
+    # ── Auto-completion ───��───────────────────────────────────────
+
+    def _schedule_completion_update(self) -> None:
+        if self._is_verilog:
+            self._completion_timer.start()
+
+    def _current_word_prefix(self) -> str:
+        cursor = self.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfWord, QTextCursor.MoveMode.KeepAnchor)
+        return cursor.selectedText()
+
+    def _update_completions(self) -> None:
+        prefix = self._current_word_prefix()
+        if len(prefix) < 3:
+            self._completion_popup.hide()
+            return
+        self._completion_popup.update_completions(prefix)
+        if self._completion_popup.count() > 0:
+            # Position popup below cursor
+            cursor_rect = self.cursorRect()
+            global_pos = self.mapToGlobal(cursor_rect.bottomLeft())
+            self._completion_popup.move(global_pos)
+            self._completion_popup.show()
+        else:
+            self._completion_popup.hide()
+
+    def _accept_completion(self, text: str) -> None:
+        cursor = self.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfWord, QTextCursor.MoveMode.KeepAnchor)
+        cursor.insertText(text)
+        self.setTextCursor(cursor)
+
+    # ── Bracket matching ──────────────────────────────────────────
+
+    def _find_matching_bracket(self, pos: int, char: str) -> int:
+        """Find the position of the matching bracket. Returns -1 if not found."""
+        doc = self.document()
+        full_text = doc.toPlainText()
+        if char in _OPEN_BRACKETS:
+            target = _OPEN_BRACKETS[char]
+            direction = 1
+            start_char = char
+        elif char in _CLOSE_BRACKETS:
+            target = char
+            start_char = _CLOSE_BRACKETS[char]
+            direction = -1
+        else:
+            return -1
+
+        depth = 0
+        i = pos
+        while 0 <= i < len(full_text):
+            c = full_text[i]
+            if c == start_char:
+                depth += 1
+            elif c == target:
+                depth -= 1
+                if depth == 0:
+                    return i
+            i += direction
+        return -1
+
+    def _highlight_current_line_and_brackets(self) -> None:
+        """Highlight current line and matching brackets."""
+        from PySide6.QtWidgets import QTextEdit
+
+        selections: list[QTextEdit.ExtraSelection] = []
+
+        # Current line highlight
+        if not self.isReadOnly():
+            line_sel = QTextEdit.ExtraSelection()
+            line_sel.format.setBackground(QColor(_LINE_BG))
+            line_sel.format.setProperty(QTextCharFormat.Property.FullWidthSelection, True)
+            line_sel.cursor = self.textCursor()
+            line_sel.cursor.clearSelection()
+            selections.append(line_sel)
+
+        # Bracket matching
+        cursor = self.textCursor()
+        pos = cursor.position()
+        doc_text = self.document().toPlainText()
+
+        if pos < len(doc_text):
+            char = doc_text[pos]
+            if char in _OPEN_BRACKETS or char in _CLOSE_BRACKETS:
+                match_pos = self._find_matching_bracket(pos, char)
+                if match_pos >= 0:
+                    # Highlight the bracket at cursor
+                    for bp in (pos, match_pos):
+                        sel = QTextEdit.ExtraSelection()
+                        sel.format.setBackground(QColor(_BRACKET_BG))
+                        sel.format.setForeground(QColor(_BRACKET_FG))
+                        sel.format.setFontWeight(QFont.Weight.Bold)
+                        c = self.textCursor()
+                        c.setPosition(bp)
+                        c.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                        sel.cursor = c
+                        selections.append(sel)
+
+        # Also check character before cursor
+        if pos > 0:
+            prev_char = doc_text[pos - 1]
+            if prev_char in _OPEN_BRACKETS or prev_char in _CLOSE_BRACKETS:
+                match_pos = self._find_matching_bracket(pos - 1, prev_char)
+                if match_pos >= 0:
+                    for bp in (pos - 1, match_pos):
+                        sel = QTextEdit.ExtraSelection()
+                        sel.format.setBackground(QColor(_BRACKET_BG))
+                        sel.format.setForeground(QColor(_BRACKET_FG))
+                        sel.format.setFontWeight(QFont.Weight.Bold)
+                        c = self.textCursor()
+                        c.setPosition(bp)
+                        c.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                        sel.cursor = c
+                        selections.append(sel)
+
+        self.setExtraSelections(selections)
+
+    # ── Go to line ────────────────────────────────────────────────
+
+    def go_to_line(self) -> None:
+        """Show a dialog and scroll to the entered line number."""
+        max_line = self.blockCount()
+        line, ok = QInputDialog.getInt(
+            self, "Go to Line", f"Line number (1-{max_line}):",
+            self.textCursor().blockNumber() + 1,  # value
+            1,         # min
+            max_line,  # max
+        )
+        if ok:
+            block = self.document().findBlockByLineNumber(line - 1)
+            cursor = self.textCursor()
+            cursor.setPosition(block.position())
+            self.setTextCursor(cursor)
+            self.centerCursor()
+
+    # ── Indent / Unindent ─────────────────��───────────────────────
+
+    def indent_selection(self) -> None:
+        """Indent all selected lines by one tab (4 spaces)."""
+        cursor = self.textCursor()
+        if not cursor.hasSelection():
+            cursor.insertText("    ")
+            return
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        cursor.beginEditBlock()
+        while cursor.position() <= end and not cursor.atEnd():
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+            cursor.insertText("    ")
+            end += 4
+            if not cursor.movePosition(QTextCursor.MoveOperation.NextBlock):
+                break
+        cursor.endEditBlock()
+
+    def unindent_selection(self) -> None:
+        """Remove one level of indentation from selected lines."""
+        cursor = self.textCursor()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        cursor.beginEditBlock()
+        while cursor.position() <= end and not cursor.atEnd():
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+            line = cursor.block().text()
+            if line.startswith("    "):
+                cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 4)
+                cursor.removeSelectedText()
+                end -= 4
+            elif line.startswith("\t"):
+                cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                cursor.removeSelectedText()
+                end -= 1
+            if not cursor.movePosition(QTextCursor.MoveOperation.NextBlock):
+                break
+        cursor.endEditBlock()
+
+    # ── Comment / Uncomment toggle ────────────────────────────────
+
+    def toggle_comment(self) -> None:
+        """Toggle // comment prefix on selected lines or current line."""
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+        else:
+            start = cursor.position()
+            end = cursor.position()
+
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        cursor.beginEditBlock()
+
+        # First pass: determine if we're commenting or uncommenting
+        check_cursor = self.textCursor()
+        check_cursor.setPosition(start)
+        check_cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        all_commented = True
+        while check_cursor.position() <= end and not check_cursor.atEnd():
+            line = check_cursor.block().text()
+            stripped = line.lstrip()
+            if stripped and not stripped.startswith("//"):
+                all_commented = False
+                break
+            if not check_cursor.movePosition(QTextCursor.MoveOperation.NextBlock):
+                break
+
+        # Second pass: apply the toggle
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        while cursor.position() <= end and not cursor.atEnd():
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+            line = cursor.block().text()
+            if all_commented:
+                # Uncomment: remove first //
+                idx = line.find("//")
+                if idx >= 0:
+                    cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, idx)
+                    cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 2)
+                    # Also remove a trailing space if present
+                    if cursor.selectedText() == "//":
+                        pos_after = cursor.position()
+                        remaining = line[idx + 2:]
+                        if remaining.startswith(" "):
+                            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                            end -= 3
+                        else:
+                            end -= 2
+                    cursor.removeSelectedText()
+            else:
+                # Comment: add // at start of line
+                cursor.insertText("// ")
+                end += 3
+            if not cursor.movePosition(QTextCursor.MoveOperation.NextBlock):
+                break
+        cursor.endEditBlock()
+
+    # ── Word wrap toggle ──────────────────────────────────────────
+
+    def toggle_word_wrap(self) -> None:
+        """Toggle word wrap mode."""
+        self._word_wrap_enabled = not self._word_wrap_enabled
+        if self._word_wrap_enabled:
+            self.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+        else:
+            self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+
+    @property
+    def word_wrap_enabled(self) -> bool:
+        return self._word_wrap_enabled
+
+    # ── Key event handling ─────────���──────────────────────────────
+
+    def keyPressEvent(self, event) -> None:
+        # Handle completion popup keys
+        if self._completion_popup.isVisible():
+            if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Tab):
+                if self._completion_popup.accept_current():
+                    return
+            elif event.key() == Qt.Key.Key_Escape:
+                self._completion_popup.hide()
+                return
+            elif event.key() == Qt.Key.Key_Down:
+                self._completion_popup.move_selection(1)
+                return
+            elif event.key() == Qt.Key.Key_Up:
+                self._completion_popup.move_selection(-1)
+                return
+
+        # Ctrl+/ for comment toggle (explicit handling for Windows compatibility)
+        if event.key() == Qt.Key.Key_Slash and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            self.toggle_comment()
+            return
+
+        # Ctrl+G for go-to-line
+        if event.key() == Qt.Key.Key_G and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            self.go_to_line()
+            return
+
+        # Tab / Shift+Tab for indent/unindent when text is selected
+        if event.key() == Qt.Key.Key_Tab and self.textCursor().hasSelection():
+            self.indent_selection()
+            return
+        if event.key() == Qt.Key.Key_Backtab:
+            self.unindent_selection()
+            return
+
+        super().keyPressEvent(event)
+
+    def focusOutEvent(self, event) -> None:
+        self._completion_popup.hide()
+        super().focusOutEvent(event)
+
+    # ── Context menu ──────────────────────────────────────────────
+
+    def contextMenuEvent(self, event) -> None:
+        """Rich right-click context menu for the editor."""
+        menu = QMenu(self)
+
+        # Clipboard operations
+        menu.addAction("Cut", self.cut, QKeySequence.StandardKey.Cut)
+        menu.addAction("Copy", self.copy, QKeySequence.StandardKey.Copy)
+        menu.addAction("Paste", self.paste, QKeySequence.StandardKey.Paste)
+        menu.addAction("Select All", self.selectAll, QKeySequence.StandardKey.SelectAll)
+        menu.addSeparator()
+
+        # Navigation
+        menu.addAction("Go to Definition", lambda: None).setToolTip("Placeholder")
+        menu.addAction("Find References", lambda: None).setToolTip("Placeholder")
+        menu.addAction("Rename Symbol...", lambda: None).setToolTip("Placeholder")
+        menu.addSeparator()
+
+        # Code editing
+        menu.addAction("Comment/Uncomment Selection", self.toggle_comment)
+        indent_menu = menu.addMenu("Indentation")
+        indent_menu.addAction("Indent", self.indent_selection)
+        indent_menu.addAction("Unindent", self.unindent_selection)
+        menu.addSeparator()
+
+        menu.addAction("Format Document", lambda: None).setToolTip("Placeholder")
+        menu.addSeparator()
+
+        # EDA-specific actions
+        menu.addAction("Add to Waveform Viewer", lambda: None).setToolTip("Placeholder")
+        menu.addAction("Simulate This Module", lambda: None).setToolTip("Placeholder")
+        menu.addAction("Synthesize This Module", lambda: None).setToolTip("Placeholder")
+
+        menu.exec(event.globalPos())
+
+    # ── Cursor position / modification signals ────────────────────
 
     def _emit_cursor_pos(self) -> None:
         cursor = self.textCursor()
@@ -241,6 +750,8 @@ class _CodeEditor(QPlainTextEdit):
 
     def _on_modification_changed(self, changed: bool) -> None:
         self.modification_changed.emit(changed)
+
+    # ── Line number area ──────────────────────────────────────────
 
     def line_number_area_size(self):
         digits = max(1, len(str(self.blockCount())))
@@ -292,20 +803,8 @@ class _CodeEditor(QPlainTextEdit):
 
         painter.end()
 
-    def _highlight_current_line(self):
-        selections = []
-        if not self.isReadOnly():
-            from PySide6.QtWidgets import QTextEdit
-            selection = QTextEdit.ExtraSelection()
-            selection.format.setBackground(QColor(_LINE_BG))
-            selection.format.setProperty(QTextCharFormat.Property.FullWidthSelection, True)
-            selection.cursor = self.textCursor()
-            selection.cursor.clearSelection()
-            selections.append(selection)
-        self.setExtraSelections(selections)
 
-
-# ── Editor Panel ─────────────────────────────────────────────────────────
+# ── Editor Panel ──────���──────────────────────────────────────────────────
 
 class EditorPanel(QWidget):
     """Central editor panel with tabbed interface for source files."""
@@ -322,15 +821,29 @@ class EditorPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        # Horizontal layout for tabs + minimap
+        self._editor_row = QHBoxLayout()
+        self._editor_row.setContentsMargins(0, 0, 0, 0)
+        self._editor_row.setSpacing(0)
+
         self._tabs = QTabWidget()
         self._tabs.setTabsClosable(True)
         self._tabs.setMovable(True)
         self._tabs.setDocumentMode(True)
         self._tabs.tabCloseRequested.connect(self._close_tab)
+        self._tabs.currentChanged.connect(self._on_tab_changed)
         # Right-click on tab bar for context menu
         self._tabs.tabBar().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tabs.tabBar().customContextMenuRequested.connect(self._on_tab_context_menu)
-        layout.addWidget(self._tabs)
+        self._editor_row.addWidget(self._tabs, stretch=1)
+
+        # Minimap
+        self._minimap = _Minimap(self)
+        self._minimap.scroll_requested.connect(self._on_minimap_scroll)
+        self._minimap.setVisible(False)  # hidden by default
+        self._editor_row.addWidget(self._minimap)
+
+        layout.addLayout(self._editor_row)
 
         # File path tracking
         self._file_paths: dict[int, Path | None] = {}
@@ -339,6 +852,11 @@ class EditorPanel(QWidget):
         self._search_bar = _SearchBar(self)
         self._search_bar.setVisible(False)
         layout.addWidget(self._search_bar)
+
+        # Minimap sync timer
+        self._minimap_sync_timer = QTimer(self)
+        self._minimap_sync_timer.setInterval(300)
+        self._minimap_sync_timer.timeout.connect(self._sync_minimap)
 
     @staticmethod
     def _is_verilog(path: Path | None) -> bool:
@@ -376,6 +894,10 @@ class EditorPanel(QWidget):
                 self._tabs.setTabText(tab_idx, base_title)
 
         editor.modification_changed.connect(_on_mod_changed)
+
+        # Sync minimap when text changes
+        editor.textChanged.connect(self._sync_minimap_content)
+        editor.verticalScrollBar().valueChanged.connect(self._sync_minimap_viewport)
 
         self._tabs.setCurrentIndex(idx)
         return editor
@@ -445,6 +967,88 @@ class EditorPanel(QWidget):
         self._search_bar.set_replace_visible(replace)
         self._search_bar.focus_search()
 
+    # ── Go to line (public, for menu wiring) ──────────────────────
+
+    def go_to_line(self) -> None:
+        editor = self._current_editor()
+        if editor:
+            editor.go_to_line()
+
+    # ── Comment toggle (public) ───────────────────────────────────
+
+    def toggle_comment(self) -> None:
+        editor = self._current_editor()
+        if editor:
+            editor.toggle_comment()
+
+    # ── Word wrap toggle (public) ─────────────────────────────────
+
+    def toggle_word_wrap(self) -> None:
+        editor = self._current_editor()
+        if editor:
+            editor.toggle_word_wrap()
+
+    # ── Minimap toggle ───────��────────────────────────────────────
+
+    def toggle_minimap(self) -> None:
+        visible = not self._minimap.isVisible()
+        self._minimap.setVisible(visible)
+        if visible:
+            self._sync_minimap_content()
+            self._sync_minimap_viewport()
+
+    @property
+    def minimap_visible(self) -> bool:
+        return self._minimap.isVisible()
+
+    def _on_tab_changed(self, _index: int) -> None:
+        if self._minimap.isVisible():
+            self._sync_minimap_content()
+            self._sync_minimap_viewport()
+
+    def _sync_minimap_content(self) -> None:
+        editor = self._current_editor()
+        if editor and self._minimap.isVisible():
+            self._minimap.setPlainText(editor.toPlainText())
+
+    def _sync_minimap_viewport(self) -> None:
+        editor = self._current_editor()
+        if editor and self._minimap.isVisible():
+            sb = editor.verticalScrollBar()
+            max_val = max(sb.maximum(), 1)
+            start = sb.value() / max_val
+            page = sb.pageStep() / (max_val + sb.pageStep())
+            self._minimap.set_viewport_highlight(start, start + page)
+
+    def _sync_minimap(self) -> None:
+        self._sync_minimap_content()
+        self._sync_minimap_viewport()
+
+    def _on_minimap_scroll(self, ratio: float) -> None:
+        editor = self._current_editor()
+        if editor:
+            sb = editor.verticalScrollBar()
+            sb.setValue(int(ratio * sb.maximum()))
+
+    # ── Zoom ──────���───────────────────────────────────────────────
+
+    def zoom_in(self) -> None:
+        editor = self._current_editor()
+        if editor:
+            editor.zoomIn(1)
+
+    def zoom_out(self) -> None:
+        editor = self._current_editor()
+        if editor:
+            editor.zoomOut(1)
+
+    def zoom_reset(self) -> None:
+        editor = self._current_editor()
+        if editor:
+            editor.setFont(_make_font())
+
+    # ── Internal tab management ────���──────────────────────────────
+
     def _close_tab(self, index: int) -> None:
         self._tabs.removeTab(index)
         # Re-index file paths: shift all indices above the removed one
@@ -462,7 +1066,6 @@ class EditorPanel(QWidget):
 
     def _on_tab_context_menu(self, position) -> None:
         """Right-click context menu on editor tabs."""
-        from PySide6.QtWidgets import QMenu, QApplication
         tab_bar = self._tabs.tabBar()
         idx = tab_bar.tabAt(position)
         if idx < 0:

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from openforge.config.loader import load_config
-from openforge.config.schema import OpenForgeConfig, SimulationTool
+from openforge.config.schema import OpenForgeConfig, SimulationTool, SourceFile
 from openforge.engine.base import ExecutionBackend
 from openforge.engine.cocotb import CocotbEngine
 from openforge.engine.ghdl import GHDLEngine
@@ -189,6 +189,8 @@ class SimulationRunner:
         coverage: bool = False,
         timeout: float | None = None,
         on_output: Callable[[str], None] | None = None,
+        defines: dict[str, str] | None = None,
+        language_version: str = "sv2017",
     ) -> CompileResult:
         """Compile RTL sources using the specified simulator.
 
@@ -232,11 +234,13 @@ class SimulationRunner:
             return self._compile_verilator(
                 resolved_sources, top, rel_out_dir, resolved_includes,
                 trace, coverage, timeout, on_output,
+                defines or {}, language_version,
             )
         elif tool == SimulationTool.ICARUS:
             return self._compile_icarus(
                 resolved_sources, top, rel_out_dir, resolved_includes,
                 timeout, on_output,
+                defines or {}, language_version,
             )
         elif tool == SimulationTool.GHDL:
             return self._compile_ghdl(
@@ -260,8 +264,28 @@ class SimulationRunner:
         coverage: bool,
         timeout: float | None,
         on_output: Callable[[str], None] | None,
+        defines: dict[str, str] | None = None,
+        language_version: str = "sv2017",
     ) -> CompileResult:
         engine = _auto_engine(VerilatorEngine, "hdlc/sim:latest")
+        # Detect SV usage by language_version or any .sv source
+        is_sv = language_version.startswith("sv") or any(
+            str(s).lower().endswith((".sv", ".svh")) for s in sources
+        )
+        extra: list[str] = []
+        if is_sv:
+            extra.append("--sv")
+            lang_map = {"sv2012": "1800-2012", "sv2017": "1800-2017"}
+            if language_version in lang_map:
+                extra.extend(["--language", lang_map[language_version]])
+        for k, v in (defines or {}).items():
+            if v:
+                extra.append(f"+define+{k}={v}")
+            else:
+                extra.append(f"+define+{k}")
+        # Handle VHDL sources via read_vhdl pre-pass (verilator does not natively
+        # support VHDL; we route via ghdl + vhdl2vl is out-of-scope here, so we
+        # just pass them through and let verilator error gracefully).
         result = engine.compile(
             sources,
             top_module=top_module,
@@ -269,6 +293,7 @@ class SimulationRunner:
             includes=includes,
             trace=trace,
             coverage=coverage,
+            extra_args=extra,
             cwd=str(self._project_path),
             timeout=timeout,
         )
@@ -292,14 +317,23 @@ class SimulationRunner:
         includes: list[str | PathLike[str]],
         timeout: float | None,
         on_output: Callable[[str], None] | None,
+        defines: dict[str, str] | None = None,
+        language_version: str = "sv2017",
     ) -> CompileResult:
         engine = _auto_engine(IcarusEngine, "hdlc/sim:latest")
         output_file = output_dir / f"{top_module}.vvp"
+        # Map language_version -> icarus -g flag
+        is_sv = language_version.startswith("sv") or any(
+            str(s).lower().endswith((".sv", ".svh")) for s in sources
+        )
+        generation = "2012" if is_sv else "2005"
         result = engine.compile(
             sources,
             top_module=top_module,
             output=output_file.as_posix(),  # POSIX path for Docker
             includes=includes,
+            defines=dict(defines or {}),
+            generation=generation,
             cwd=str(self._project_path),
             timeout=timeout,
         )
@@ -537,6 +571,67 @@ class SimulationRunner:
             log=combined,
             duration=result.duration,
             wave_file=str(wave_path) if wave_path.exists() else None,
+        )
+
+    # ------------------------------------------------------------------
+    # Pre-synthesis RTL simulation
+    # ------------------------------------------------------------------
+
+    def simulate_rtl(
+        self,
+        sources: Sequence[SourceFile],
+        testbench: SourceFile,
+        top_module: str = "top",
+        include_dirs: Sequence[str | PathLike[str]] = (),
+        defines: dict[str, str] | None = None,
+        tool: SimulationTool = SimulationTool.ICARUS,
+        timeout: float | None = None,
+        on_output: Callable[[str], None] | None = None,
+    ) -> SimResult:
+        """Simulate RTL pre-synthesis.
+
+        Compiles the provided ``SourceFile`` list plus ``testbench`` and
+        runs the resulting binary. Mirrors :meth:`compile` + :meth:`simulate`
+        but accepts rich source metadata so mixed-language projects work.
+        """
+        all_paths = [str(Path(s.path).as_posix()) for s in sources]
+        all_paths.append(str(Path(testbench.path).as_posix()))
+        is_sv = any(
+            Path(s.path).suffix.lower() in (".sv", ".svh")
+            or s.language == "systemverilog"
+            for s in list(sources) + [testbench]
+        )
+        lang_version = "sv2017" if is_sv else "v2005"
+
+        compile_res = self.compile(
+            tool=tool,
+            sources=all_paths,
+            top_module=top_module,
+            includes=[str(Path(d).as_posix()) for d in include_dirs],
+            defines=defines or {},
+            language_version=lang_version,
+            timeout=timeout,
+            on_output=on_output,
+        )
+        if not compile_res.success:
+            return SimResult(
+                success=False,
+                log=compile_res.log,
+                duration=compile_res.duration,
+            )
+        sim_res = self.simulate(
+            tool=tool,
+            binary_or_top=top_module,
+            timeout=timeout,
+            on_output=on_output,
+        )
+        return SimResult(
+            success=sim_res.success,
+            log=compile_res.log + "\n" + sim_res.log,
+            duration=compile_res.duration + sim_res.duration,
+            wave_file=sim_res.wave_file,
+            coverage_file=sim_res.coverage_file,
+            test_results=sim_res.test_results,
         )
 
     # ------------------------------------------------------------------

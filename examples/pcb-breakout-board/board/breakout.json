@@ -1,0 +1,287 @@
+{
+  "format": "openforge-pcb",
+  "version": "1.0",
+  "metadata": {
+    "title": "ESP32 Breakout Board",
+    "revision": "1.0",
+    "date": "2025-01-15"
+  },
+  "board": {
+    "width_mm": 50.0,
+    "height_mm": 80.0,
+    "layers": 2,
+    "layer_names": ["F.Cu", "B.Cu"],
+    "copper_thickness_oz": 1,
+    "board_thickness_mm": 1.6,
+    "outline": [
+      {"x": 0.0, "y": 0.0},
+      {"x": 50.0, "y": 0.0},
+      {"x": 50.0, "y": 80.0},
+      {"x": 0.0, "y": 80.0}
+    ],
+    "mounting_holes": [
+      {"x": 3.0,  "y": 3.0,  "diameter_mm": 3.2},
+      {"x": 47.0, "y": 3.0,  "diameter_mm": 3.2},
+      {"x": 3.0,  "y": 77.0, "diameter_mm": 3.2},
+      {"x": 47.0, "y": 77.0, "diameter_mm": 3.2}
+    ]
+  },
+  "placements": [
+    {
+      "ref": "U1",
+      "footprint": "RF_Module:ESP32-WROOM-32",
+      "x": 25.0,
+      "y": 40.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "ESP32 module - center of board"
+    },
+    {
+      "ref": "J1",
+      "footprint": "Connector_USB:USB_Micro-B_Molex_47346-0001",
+      "x": 25.0,
+      "y": 2.5,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "USB connector - bottom edge"
+    },
+    {
+      "ref": "U2",
+      "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+      "x": 12.0,
+      "y": 12.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "Voltage regulator - near USB connector"
+    },
+    {
+      "ref": "C1",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "x": 7.0,
+      "y": 12.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "10uF input cap - near regulator input"
+    },
+    {
+      "ref": "C5",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "x": 7.0,
+      "y": 15.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "100nF regulator input decoupling"
+    },
+    {
+      "ref": "C2",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "x": 17.0,
+      "y": 12.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "10uF output cap - near regulator output"
+    },
+    {
+      "ref": "C6",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "x": 17.0,
+      "y": 15.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "100nF regulator output decoupling"
+    },
+    {
+      "ref": "C3",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "x": 18.0,
+      "y": 30.0,
+      "rotation": 90,
+      "layer": "F.Cu",
+      "comment": "ESP32 decoupling cap 1 - near VCC pin"
+    },
+    {
+      "ref": "C4",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "x": 32.0,
+      "y": 30.0,
+      "rotation": 90,
+      "layer": "F.Cu",
+      "comment": "ESP32 decoupling cap 2 - opposite side"
+    },
+    {
+      "ref": "J2",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Vertical",
+      "x": 3.5,
+      "y": 30.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "Left GPIO header"
+    },
+    {
+      "ref": "J3",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Vertical",
+      "x": 46.5,
+      "y": 30.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "Right GPIO header"
+    },
+    {
+      "ref": "D1",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "x": 38.0,
+      "y": 70.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "Power LED - top right area"
+    },
+    {
+      "ref": "R1",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "x": 38.0,
+      "y": 67.0,
+      "rotation": 0,
+      "layer": "F.Cu"
+    },
+    {
+      "ref": "D2",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "x": 42.0,
+      "y": 70.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "GPIO2 LED"
+    },
+    {
+      "ref": "R2",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "x": 42.0,
+      "y": 67.0,
+      "rotation": 0,
+      "layer": "F.Cu"
+    },
+    {
+      "ref": "D3",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "x": 38.0,
+      "y": 75.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "GPIO4 LED"
+    },
+    {
+      "ref": "R3",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "x": 38.0,
+      "y": 72.0,
+      "rotation": 0,
+      "layer": "F.Cu"
+    },
+    {
+      "ref": "D4",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "x": 42.0,
+      "y": 75.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "GPIO5 LED"
+    },
+    {
+      "ref": "R4",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "x": 42.0,
+      "y": 72.0,
+      "rotation": 0,
+      "layer": "F.Cu"
+    },
+    {
+      "ref": "R5",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "x": 20.0,
+      "y": 25.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "EN pull-up"
+    },
+    {
+      "ref": "R6",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "x": 30.0,
+      "y": 25.0,
+      "rotation": 0,
+      "layer": "F.Cu",
+      "comment": "IO0 pull-up (boot mode)"
+    }
+  ],
+  "traces": [
+    {
+      "net": "VIN_5V",
+      "layer": "F.Cu",
+      "width_mm": 0.5,
+      "points": [
+        {"x": 25.0, "y": 2.5},
+        {"x": 12.0, "y": 2.5},
+        {"x": 12.0, "y": 8.0},
+        {"x": 7.0,  "y": 12.0}
+      ],
+      "comment": "USB VBUS to input cap"
+    },
+    {
+      "net": "VIN_5V",
+      "layer": "F.Cu",
+      "width_mm": 0.5,
+      "points": [
+        {"x": 7.0,  "y": 12.0},
+        {"x": 12.0, "y": 12.0}
+      ],
+      "comment": "Input cap to regulator VIN"
+    },
+    {
+      "net": "VCC_3V3",
+      "layer": "F.Cu",
+      "width_mm": 0.5,
+      "points": [
+        {"x": 12.0, "y": 12.0},
+        {"x": 17.0, "y": 12.0}
+      ],
+      "comment": "Regulator VOUT to output cap"
+    },
+    {
+      "net": "VCC_3V3",
+      "layer": "F.Cu",
+      "width_mm": 0.4,
+      "points": [
+        {"x": 17.0, "y": 12.0},
+        {"x": 25.0, "y": 20.0},
+        {"x": 25.0, "y": 30.0}
+      ],
+      "comment": "3.3V rail to ESP32"
+    },
+    {
+      "net": "GND",
+      "layer": "B.Cu",
+      "width_mm": 0.8,
+      "points": [
+        {"x": 0.0,  "y": 0.0},
+        {"x": 50.0, "y": 0.0},
+        {"x": 50.0, "y": 80.0},
+        {"x": 0.0,  "y": 80.0}
+      ],
+      "comment": "Ground plane on back copper layer"
+    }
+  ],
+  "zones": [
+    {
+      "net": "GND",
+      "layer": "B.Cu",
+      "type": "fill",
+      "outline": [
+        {"x": 0.5, "y": 0.5},
+        {"x": 49.5, "y": 0.5},
+        {"x": 49.5, "y": 79.5},
+        {"x": 0.5, "y": 79.5}
+      ],
+      "comment": "Ground pour - full back layer"
+    }
+  ]
+}

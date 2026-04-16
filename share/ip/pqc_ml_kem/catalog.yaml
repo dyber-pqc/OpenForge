@@ -1,0 +1,27 @@
+name: pqc_ml_kem
+display_name: ML-KEM-768 (Kyber)
+category: post-quantum-crypto
+family: kem
+algorithm: ml-kem-768
+nist_doc: FIPS 203
+security_level: 3
+description: |
+  Module-Lattice-Based Key-Encapsulation Mechanism (ML-KEM-768),
+  standardized in NIST FIPS 203. AXI4-Lite slave wrapper with
+  memory-mapped public key, secret key, ciphertext, and shared secret.
+sources:
+  - src/ml_kem_top.v
+top_module: ml_kem_top
+interface: axi4-lite
+parameters:
+  public_key_bytes: 1184
+  secret_key_bytes: 2400
+  ciphertext_bytes: 1088
+  shared_secret_bytes: 32
+estimated_gates: 120000
+estimated_cycles:
+  keygen: 50000
+  encaps: 60000
+  decaps: 65000
+clock_mhz: 100
+status: skeleton

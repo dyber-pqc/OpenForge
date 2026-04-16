@@ -1,203 +1,273 @@
-"""PDK (Process Design Kit) manager for OpenForge EDA."""
-
+"""PDK Manager - central registry of supported PDKs with install/discover."""
 from __future__ import annotations
 
-import json
 import shutil
+import subprocess
 from dataclasses import dataclass, field
-from enum import StrEnum
 from pathlib import Path
-from typing import Any
-
-
-class PDKStatus(StrEnum):
-    INSTALLED = "installed"
-    AVAILABLE = "available"
-    LICENSED = "licensed"
+from typing import Optional, Callable
 
 
 @dataclass
-class PDKInfo:
-    """Metadata for a Process Design Kit."""
+class PdkCorner:
+    name: str
+    process: str  # tt/ss/ff
+    temperature: float
+    voltage: float
+    liberty_file: Path
 
+
+@dataclass
+class PdkInfo:
     name: str
     display_name: str
-    node: str
-    metal_layers: int
-    features: list[str]
-    license: str
-    status: PDKStatus = PDKStatus.AVAILABLE
-    install_path: Path | None = None
-    version: str = ""
-    source_url: str = ""
-
-    @property
-    def liberty_files(self) -> list[Path]:
-        """Return paths to Liberty timing libraries."""
-        if not self.install_path:
-            return []
-        return sorted(self.install_path.rglob("*.lib"))
-
-    @property
-    def lef_files(self) -> list[Path]:
-        """Return paths to LEF files."""
-        if not self.install_path:
-            return []
-        return sorted(self.install_path.rglob("*.lef"))
-
-    @property
-    def tech_file(self) -> Path | None:
-        """Return path to technology file (.tech)."""
-        if not self.install_path:
-            return None
-        techs = list(self.install_path.rglob("*.tech"))
-        return techs[0] if techs else None
+    foundry: str
+    process_node_nm: int
+    cell_libraries: list[str] = field(default_factory=list)
+    corners: dict[str, list[PdkCorner]] = field(default_factory=dict)
+    tech_lef: Optional[Path] = None
+    merged_lef: Optional[Path] = None
+    install_path: Optional[Path] = None
+    download_url: str = ""
+    installed: bool = False
 
 
-# Registry of known PDKs
-KNOWN_PDKS: dict[str, PDKInfo] = {
-    "sky130": PDKInfo(
-        name="sky130",
-        display_name="SkyWater SKY130",
-        node="130nm",
-        metal_layers=5,
-        features=["Digital", "Analog", "IO cells", "SRAM"],
-        license="Apache-2.0",
-        source_url="https://github.com/google/skywater-pdk",
-    ),
-    "gf180mcu": PDKInfo(
-        name="gf180mcu",
-        display_name="GlobalFoundries GF180MCU",
-        node="180nm",
-        metal_layers=5,
-        features=["Digital", "Analog", "High-voltage", "Thick oxide"],
-        license="Apache-2.0",
-        source_url="https://github.com/google/gf180mcu-pdk",
-    ),
-    "ihp_sg13g2": PDKInfo(
-        name="ihp_sg13g2",
-        display_name="IHP SG13G2",
-        node="130nm",
-        metal_layers=5,
-        features=["BiCMOS", "SiGe HBT", "RF"],
-        license="Apache-2.0",
-        source_url="https://github.com/IHP-GmbH/IHP-Open-PDK",
-    ),
-    "asap7": PDKInfo(
-        name="asap7",
-        display_name="ASAP7 Predictive",
-        node="7nm",
-        metal_layers=9,
-        features=["FinFET", "Academic/Predictive"],
-        license="BSD-3-Clause",
-        source_url="https://github.com/The-OpenROAD-Project/asap7",
-    ),
-}
+def _share_pdk_root() -> Path:
+    """Locate the repo's share/pdk directory if available."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / "share" / "pdk"
+        if candidate.exists():
+            return candidate
+    return Path.cwd() / "share" / "pdk"
 
 
-class PDKManager:
-    """Manages PDK installation, discovery, and configuration."""
+class PdkManager:  # noqa: N801 - camelCase alias exposed below
+    """Manages installed PDKs and downloads new ones."""
 
-    def __init__(self, pdk_root: Path | None = None) -> None:
-        self.pdk_root = pdk_root or Path.home() / ".openforge" / "pdks"
-        self.pdk_root.mkdir(parents=True, exist_ok=True)
-        self._pdks: dict[str, PDKInfo] = dict(KNOWN_PDKS)
-        self._scan_installed()
+    KNOWN_PDKS: dict[str, PdkInfo] = {
+        "sky130": PdkInfo(
+            name="sky130",
+            display_name="SkyWater 130nm",
+            foundry="SkyWater",
+            process_node_nm=130,
+            cell_libraries=["sky130_fd_sc_hd", "sky130_fd_sc_hs"],
+            download_url="https://github.com/google/skywater-pdk",
+        ),
+        "gf180mcu": PdkInfo(
+            name="gf180mcu",
+            display_name="GlobalFoundries 180nm MCU",
+            foundry="GlobalFoundries",
+            process_node_nm=180,
+            cell_libraries=["gf180mcu_fd_sc_mcu7t5v0", "gf180mcu_fd_sc_mcu9t5v0"],
+            download_url="https://github.com/google/gf180mcu-pdk",
+        ),
+        "asap7": PdkInfo(
+            name="asap7",
+            display_name="ASAP7 7nm Academic",
+            foundry="ASU",
+            process_node_nm=7,
+            cell_libraries=["asap7sc7p5t"],
+            download_url="https://github.com/The-OpenROAD-Project/asap7",
+        ),
+        "ihp130": PdkInfo(
+            name="ihp130",
+            display_name="IHP SG13G2 130nm BiCMOS",
+            foundry="IHP",
+            process_node_nm=130,
+            cell_libraries=["sg13g2_stdcell"],
+            download_url="https://github.com/IHP-GmbH/IHP-Open-PDK",
+        ),
+    }
 
-    def _scan_installed(self) -> None:
-        """Scan pdk_root for installed PDKs."""
-        for pdk_dir in self.pdk_root.iterdir():
-            if pdk_dir.is_dir() and pdk_dir.name in self._pdks:
-                self._pdks[pdk_dir.name].status = PDKStatus.INSTALLED
-                self._pdks[pdk_dir.name].install_path = pdk_dir
+    def __init__(self, install_root: Optional[Path] = None):
+        self.install_root: Path = install_root or (Path.home() / ".openforge" / "pdks")
+        self.install_root.mkdir(parents=True, exist_ok=True)
+        self._share_root = _share_pdk_root()
+        self._active: Optional[str] = None
+        self._pdks: dict[str, PdkInfo] = {
+            name: PdkInfo(
+                name=info.name,
+                display_name=info.display_name,
+                foundry=info.foundry,
+                process_node_nm=info.process_node_nm,
+                cell_libraries=list(info.cell_libraries),
+                corners={},
+                download_url=info.download_url,
+            )
+            for name, info in self.KNOWN_PDKS.items()
+        }
+        self.discover_local()
 
-                # Read version from metadata if present
-                meta_file = pdk_dir / "pdk_info.json"
-                if meta_file.exists():
-                    try:
-                        meta = json.loads(meta_file.read_text())
-                        self._pdks[pdk_dir.name].version = meta.get("version", "")
-                    except (json.JSONDecodeError, OSError):
-                        pass
-
-    def list_pdks(self) -> list[PDKInfo]:
-        """List all known PDKs with their installation status."""
+    # ------------------------------------------------------------------
+    def list_pdks(self) -> list[PdkInfo]:
         return list(self._pdks.values())
 
-    def get_pdk(self, name: str) -> PDKInfo | None:
-        """Get PDK info by name."""
-        return self._pdks.get(name)
+    def is_installed(self, pdk_name: str) -> bool:
+        info = self._pdks.get(pdk_name)
+        return bool(info and info.installed)
 
-    def is_installed(self, name: str) -> bool:
-        """Check if a PDK is installed."""
-        pdk = self._pdks.get(name)
-        return pdk is not None and pdk.status == PDKStatus.INSTALLED
+    def get_pdk(self, pdk_name: str) -> Optional[PdkInfo]:
+        return self._pdks.get(pdk_name)
 
-    def get_liberty(self, pdk_name: str, corner: str = "tt") -> Path | None:
-        """Get the Liberty file for a specific corner.
+    def set_active(self, pdk_name: str) -> None:
+        if pdk_name in self._pdks:
+            self._active = pdk_name
 
-        Common corners: tt (typical), ss (slow), ff (fast), sf, fs.
-        """
-        pdk = self._pdks.get(pdk_name)
-        if not pdk or not pdk.install_path:
-            return None
+    def get_active(self) -> Optional[PdkInfo]:
+        return self._pdks.get(self._active) if self._active else None
 
-        for lib_file in pdk.liberty_files:
-            if corner in lib_file.stem.lower():
-                return lib_file
+    # ------------------------------------------------------------------
+    def discover_local(self) -> dict[str, PdkInfo]:
+        """Scan share/pdk and ~/.openforge/pdks for installed PDKs."""
+        roots = [self._share_root, self.install_root]
+        for pdk_name, info in self._pdks.items():
+            for root in roots:
+                candidate = root / pdk_name
+                if candidate.exists() and candidate.is_dir():
+                    info.install_path = candidate
+                    info.installed = True
+                    self._populate_pdk_paths(info)
+                    break
+        return self._pdks
 
-        # Fallback to first available
-        libs = pdk.liberty_files
-        return libs[0] if libs else None
+    def _populate_pdk_paths(self, info: PdkInfo) -> None:
+        if not info.install_path:
+            return
+        root = info.install_path
+        lib_root = root / "lib"
+        lef_root = root / "lef"
+        tech_root = root / "tech"
+        for sub in (tech_root, lef_root, root):
+            if sub.exists():
+                for f in sub.rglob("*.tlef"):
+                    info.tech_lef = f
+                    break
+                if info.tech_lef:
+                    break
+        if lef_root.exists():
+            for f in lef_root.rglob("*merged*.lef"):
+                info.merged_lef = f
+                break
+            if not info.merged_lef:
+                for f in lef_root.rglob("*.lef"):
+                    info.merged_lef = f
+                    break
+        if lib_root.exists():
+            info.corners = {}
+            for lib_file in lib_root.rglob("*.lib"):
+                stem = lib_file.stem
+                parts = stem.split("__")
+                if len(parts) >= 2:
+                    lib_name = parts[0]
+                    corner_str = parts[1]
+                else:
+                    lib_name = stem
+                    corner_str = "default"
+                process, temp, volt = self._parse_corner_str(corner_str)
+                corner = PdkCorner(
+                    name=corner_str,
+                    process=process,
+                    temperature=temp,
+                    voltage=volt,
+                    liberty_file=lib_file,
+                )
+                info.corners.setdefault(lib_name, []).append(corner)
+                if lib_name not in info.cell_libraries:
+                    info.cell_libraries.append(lib_name)
 
-    def get_lef(self, pdk_name: str) -> Path | None:
-        """Get the primary LEF file for a PDK."""
-        pdk = self._pdks.get(pdk_name)
-        if not pdk or not pdk.install_path:
-            return None
+    @staticmethod
+    def _parse_corner_str(corner: str) -> tuple[str, float, float]:
+        process = "tt"
+        temp = 25.0
+        volt = 1.8
+        parts = corner.split("_")
+        for p in parts:
+            if p in ("tt", "ss", "ff", "sf", "fs"):
+                process = p
+            elif p.endswith("C") and p[:-1].lstrip("-").isdigit():
+                try:
+                    temp = float(p[:-1])
+                except ValueError:
+                    pass
+            elif "v" in p:
+                try:
+                    volt = float(p.replace("v", "."))
+                except ValueError:
+                    pass
+        return process, temp, volt
 
-        lefs = pdk.lef_files
-        return lefs[0] if lefs else None
-
-    def install_pdk(self, name: str) -> bool:
-        """Install a PDK (downloads from source if open-source).
-
-        Returns True on success.
-        """
-        pdk = self._pdks.get(name)
-        if not pdk:
+    # ------------------------------------------------------------------
+    def install(
+        self,
+        pdk_name: str,
+        progress_callback: Optional[Callable[[str, float], None]] = None,
+    ) -> bool:
+        info = self._pdks.get(pdk_name)
+        if not info:
             return False
-
-        if pdk.status == PDKStatus.INSTALLED:
+        if info.installed:
             return True
-
-        if pdk.license in ("Apache-2.0", "BSD-3-Clause"):
-            # Open-source PDK -- clone from git
-            install_dir = self.pdk_root / name
-            install_dir.mkdir(parents=True, exist_ok=True)
-
-            import subprocess
-
-            result = subprocess.run(
-                ["git", "clone", "--depth=1", pdk.source_url, str(install_dir)],
-                capture_output=True,
-                text=True,
-            )
-
-            if result.returncode == 0:
-                pdk.status = PDKStatus.INSTALLED
-                pdk.install_path = install_dir
-                return True
-
-        return False
-
-    def uninstall_pdk(self, name: str) -> bool:
-        """Remove an installed PDK."""
-        pdk = self._pdks.get(name)
-        if not pdk or pdk.status != PDKStatus.INSTALLED or not pdk.install_path:
+        target = self.install_root / pdk_name
+        if progress_callback:
+            progress_callback(f"Cloning {info.download_url}", 0.0)
+        git = shutil.which("git")
+        if not git:
+            if progress_callback:
+                progress_callback("git not found", 1.0)
             return False
-
-        shutil.rmtree(pdk.install_path, ignore_errors=True)
-        pdk.status = PDKStatus.AVAILABLE
-        pdk.install_path = None
+        try:
+            subprocess.run(
+                [git, "clone", "--depth", "1", info.download_url, str(target)],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            if progress_callback:
+                progress_callback("clone failed", 1.0)
+            return False
+        info.install_path = target
+        info.installed = True
+        self._populate_pdk_paths(info)
+        if progress_callback:
+            progress_callback("done", 1.0)
         return True
+
+    def uninstall(self, pdk_name: str) -> bool:
+        info = self._pdks.get(pdk_name)
+        if not info or not info.install_path:
+            return False
+        try:
+            if str(info.install_path).startswith(str(self.install_root)):
+                shutil.rmtree(info.install_path)
+        except OSError:
+            return False
+        info.installed = False
+        info.install_path = None
+        info.corners = {}
+        info.tech_lef = None
+        info.merged_lef = None
+        return True
+
+    # ------------------------------------------------------------------
+    def get_corners(self, pdk_name: str, lib_name: str) -> list[PdkCorner]:
+        info = self._pdks.get(pdk_name)
+        if not info:
+            return []
+        return info.corners.get(lib_name, [])
+
+    def get_default_corner(self, pdk_name: str) -> Optional[PdkCorner]:
+        info = self._pdks.get(pdk_name)
+        if not info or not info.corners:
+            return None
+        for lib_corners in info.corners.values():
+            for c in lib_corners:
+                if c.process == "tt":
+                    return c
+        for lib_corners in info.corners.values():
+            if lib_corners:
+                return lib_corners[0]
+        return None
+
+
+# Compatibility alias for code that uses PDKManager (upper-case)
+PDKManager = PdkManager

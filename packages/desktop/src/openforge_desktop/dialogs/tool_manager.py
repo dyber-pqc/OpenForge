@@ -6,12 +6,15 @@ from typing import Final
 
 from PySide6.QtCore import QSettings, Qt, Slot
 from PySide6.QtGui import QColor, QFont
+from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog,
+    QFileDialog,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QTableWidget,
@@ -21,6 +24,12 @@ from PySide6.QtWidgets import (
 )
 
 from openforge_desktop.workers import ToolCheckWorker
+
+try:
+    from openforge.setup.tool_installer import KNOWN_TOOLS, ToolInstaller
+except Exception:  # noqa: BLE001
+    KNOWN_TOOLS = {}  # type: ignore[assignment]
+    ToolInstaller = None  # type: ignore[assignment,misc]
 
 # ── Catppuccin Mocha palette ───────────────────────────────────────────────
 
@@ -80,6 +89,10 @@ class ToolManagerDialog(QDialog):
 
         self._build_ui()
         self._load_custom_paths()
+
+        # Auto-check tools on open
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(100, self._on_check_all)
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -147,6 +160,21 @@ class ToolManagerDialog(QDialog):
         )
         self._btn_check.clicked.connect(self._on_check_all)
         btn_row.addWidget(self._btn_check)
+
+        self._btn_install_missing = QPushButton("Install All Missing")
+        self._btn_install_missing.setStyleSheet(
+            f"background: {_SURFACE0}; color: {_PEACH}; font-weight: bold;"
+        )
+        self._btn_install_missing.clicked.connect(self._on_install_all_missing)
+        btn_row.addWidget(self._btn_install_missing)
+
+        self._btn_install_sel = QPushButton("Install Selected")
+        self._btn_install_sel.clicked.connect(self._on_install_selected)
+        btn_row.addWidget(self._btn_install_sel)
+
+        self._btn_set_path = QPushButton("Set Path...")
+        self._btn_set_path.clicked.connect(self._on_set_path)
+        btn_row.addWidget(self._btn_set_path)
 
         btn_row.addStretch()
 
@@ -273,3 +301,101 @@ class ToolManagerDialog(QDialog):
 
     def _save_custom_path(self, tool_name: str, path: str) -> None:
         self._settings.setValue(f"tool_paths/{tool_name}", path)
+
+    # ------------------------------------------------------------------
+    # Install helpers (ToolInstaller integration)
+    # ------------------------------------------------------------------
+    def _selected_tool_key(self) -> str | None:
+        """Return the KNOWN_TOOLS key matching the selected row's binary."""
+        row = self._table.currentRow()
+        if row < 0:
+            return None
+        bin_item = self._table.item(row, 2)
+        if bin_item is None:
+            return None
+        needle = bin_item.text().strip()
+        for key, tool in KNOWN_TOOLS.items():
+            if tool.binary == needle or key == needle:
+                return key
+        return None
+
+    def _on_install_selected(self) -> None:
+        if ToolInstaller is None:
+            QMessageBox.warning(self, "Unavailable", "Tool installer module not available.")
+            return
+        key = self._selected_tool_key()
+        if not key:
+            QMessageBox.information(self, "No selection", "Select a row to install.")
+            return
+        self._run_install_worker([key])
+
+    def _on_install_all_missing(self) -> None:
+        if ToolInstaller is None:
+            QMessageBox.warning(self, "Unavailable", "Tool installer module not available.")
+            return
+        installer = ToolInstaller()
+        missing = [k for k, v in installer.detect_all().items() if v is None]
+        if not missing:
+            QMessageBox.information(self, "Nothing to do", "All known tools are already installed.")
+            return
+        reply = QMessageBox.question(
+            self,
+            "Install missing tools",
+            f"Attempt to install {len(missing)} tools via system package manager / download?\n\n"
+            + ", ".join(missing),
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self._run_install_worker(missing)
+
+    def _on_set_path(self) -> None:
+        if ToolInstaller is None:
+            return
+        key = self._selected_tool_key()
+        if not key:
+            QMessageBox.information(self, "No selection", "Select a row to set its path.")
+            return
+        path, _ = QFileDialog.getOpenFileName(self, f"Select binary for {key}")
+        if not path:
+            return
+        ToolInstaller().set_user_path(key, path)
+        self._save_custom_path(key, path)
+        QMessageBox.information(self, "Saved", f"{key} -> {path}")
+        self._on_check_all()
+
+    def _run_install_worker(self, keys: list[str]) -> None:
+        self._btn_install_missing.setEnabled(False)
+        self._btn_install_sel.setEnabled(False)
+        self._install_worker = _InstallWorker(keys)
+        self._install_worker.progress.connect(lambda msg, frac: self._summary.setText(msg))
+        self._install_worker.finished.connect(self._on_install_finished)
+        self._install_worker.start()
+
+    def _on_install_finished(self, results: dict) -> None:  # noqa: ARG002
+        self._btn_install_missing.setEnabled(True)
+        self._btn_install_sel.setEnabled(True)
+        self._on_check_all()
+
+
+class _InstallWorker(QThread):
+    progress = Signal(str, float)
+    finished = Signal(dict)
+
+    def __init__(self, keys: list[str]) -> None:
+        super().__init__()
+        self._keys = keys
+
+    def run(self) -> None:  # noqa: D401
+        if ToolInstaller is None:
+            self.finished.emit({})
+            return
+        installer = ToolInstaller()
+        results: dict[str, bool] = {}
+        for k in self._keys:
+            self.progress.emit(f"Installing {k}...", 0.0)
+            try:
+                ok = installer.install(k, progress=lambda m, f, k=k: self.progress.emit(f"{k}: {m}", f))
+            except Exception as exc:  # noqa: BLE001
+                self.progress.emit(f"{k}: {exc}", 1.0)
+                ok = False
+            results[k] = ok
+        self.finished.emit(results)

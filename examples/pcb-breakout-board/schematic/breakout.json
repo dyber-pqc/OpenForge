@@ -1,0 +1,432 @@
+{
+  "format": "openforge-schematic",
+  "version": "1.0",
+  "metadata": {
+    "title": "ESP32 Breakout Board",
+    "author": "OpenForge Examples",
+    "date": "2025-01-15",
+    "revision": "1.0"
+  },
+  "components": [
+    {
+      "ref": "U1",
+      "type": "ESP32-WROOM-32",
+      "value": "ESP32-WROOM-32",
+      "footprint": "RF_Module:ESP32-WROOM-32",
+      "description": "Wi-Fi + Bluetooth MCU module, 4MB flash",
+      "pins": {
+        "1":  {"name": "GND",    "type": "power"},
+        "2":  {"name": "3V3",    "type": "power"},
+        "3":  {"name": "EN",     "type": "input"},
+        "4":  {"name": "VP",     "type": "io"},
+        "5":  {"name": "VN",     "type": "io"},
+        "6":  {"name": "IO34",   "type": "input"},
+        "7":  {"name": "IO35",   "type": "input"},
+        "8":  {"name": "IO32",   "type": "io"},
+        "9":  {"name": "IO33",   "type": "io"},
+        "10": {"name": "IO25",   "type": "io"},
+        "11": {"name": "IO26",   "type": "io"},
+        "12": {"name": "IO27",   "type": "io"},
+        "13": {"name": "IO14",   "type": "io"},
+        "14": {"name": "IO12",   "type": "io"},
+        "15": {"name": "GND2",   "type": "power"},
+        "16": {"name": "IO13",   "type": "io"},
+        "17": {"name": "SD2",    "type": "io"},
+        "18": {"name": "SD3",    "type": "io"},
+        "19": {"name": "CMD",    "type": "io"},
+        "20": {"name": "CLK",    "type": "io"},
+        "21": {"name": "SD0",    "type": "io"},
+        "22": {"name": "SD1",    "type": "io"},
+        "23": {"name": "IO15",   "type": "io"},
+        "24": {"name": "IO2",    "type": "io"},
+        "25": {"name": "IO0",    "type": "io"},
+        "26": {"name": "IO4",    "type": "io"},
+        "27": {"name": "IO16",   "type": "io"},
+        "28": {"name": "IO17",   "type": "io"},
+        "29": {"name": "IO5",    "type": "io"},
+        "30": {"name": "IO18",   "type": "io"},
+        "31": {"name": "IO19",   "type": "io"},
+        "32": {"name": "NC",     "type": "nc"},
+        "33": {"name": "IO21",   "type": "io"},
+        "34": {"name": "RXD0",   "type": "io"},
+        "35": {"name": "TXD0",   "type": "io"},
+        "36": {"name": "IO22",   "type": "io"},
+        "37": {"name": "IO23",   "type": "io"},
+        "38": {"name": "GND_PAD","type": "power"},
+        "39": {"name": "GND3",   "type": "power"}
+      }
+    },
+    {
+      "ref": "U2",
+      "type": "AMS1117-3.3",
+      "value": "AMS1117-3.3",
+      "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+      "description": "1A low dropout voltage regulator, 3.3V fixed output",
+      "pins": {
+        "1": {"name": "GND",  "type": "power"},
+        "2": {"name": "VOUT", "type": "power"},
+        "3": {"name": "VIN",  "type": "power"},
+        "4": {"name": "VOUT_TAB", "type": "power"}
+      }
+    },
+    {
+      "ref": "J1",
+      "type": "USB_Micro_B",
+      "value": "USB_Micro_B",
+      "footprint": "Connector_USB:USB_Micro-B_Molex_47346-0001",
+      "description": "USB Micro-B receptacle for 5V power input",
+      "pins": {
+        "1": {"name": "VBUS", "type": "power"},
+        "2": {"name": "D-",   "type": "io"},
+        "3": {"name": "D+",   "type": "io"},
+        "4": {"name": "ID",   "type": "io"},
+        "5": {"name": "GND",  "type": "power"},
+        "6": {"name": "SHIELD","type": "power"}
+      }
+    },
+    {
+      "ref": "J2",
+      "type": "PinHeader_2x10",
+      "value": "2x10 2.54mm",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Vertical",
+      "description": "GPIO header - left side",
+      "pins": {
+        "1":  {"name": "3V3",  "type": "power"},
+        "2":  {"name": "GND",  "type": "power"},
+        "3":  {"name": "VP",   "type": "io"},
+        "4":  {"name": "VN",   "type": "io"},
+        "5":  {"name": "IO34", "type": "io"},
+        "6":  {"name": "IO35", "type": "io"},
+        "7":  {"name": "IO32", "type": "io"},
+        "8":  {"name": "IO33", "type": "io"},
+        "9":  {"name": "IO25", "type": "io"},
+        "10": {"name": "IO26", "type": "io"},
+        "11": {"name": "IO27", "type": "io"},
+        "12": {"name": "IO14", "type": "io"},
+        "13": {"name": "IO12", "type": "io"},
+        "14": {"name": "IO13", "type": "io"},
+        "15": {"name": "IO15", "type": "io"},
+        "16": {"name": "IO2",  "type": "io"},
+        "17": {"name": "IO0",  "type": "io"},
+        "18": {"name": "IO4",  "type": "io"},
+        "19": {"name": "EN",   "type": "io"},
+        "20": {"name": "GND2", "type": "power"}
+      }
+    },
+    {
+      "ref": "J3",
+      "type": "PinHeader_2x10",
+      "value": "2x10 2.54mm",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Vertical",
+      "description": "GPIO header - right side",
+      "pins": {
+        "1":  {"name": "3V3",  "type": "power"},
+        "2":  {"name": "GND",  "type": "power"},
+        "3":  {"name": "IO16", "type": "io"},
+        "4":  {"name": "IO17", "type": "io"},
+        "5":  {"name": "IO5",  "type": "io"},
+        "6":  {"name": "IO18", "type": "io"},
+        "7":  {"name": "IO19", "type": "io"},
+        "8":  {"name": "IO21", "type": "io"},
+        "9":  {"name": "RXD0", "type": "io"},
+        "10": {"name": "TXD0", "type": "io"},
+        "11": {"name": "IO22", "type": "io"},
+        "12": {"name": "IO23", "type": "io"},
+        "13": {"name": "5V",   "type": "power"},
+        "14": {"name": "GND3", "type": "power"},
+        "15": {"name": "NC1",  "type": "nc"},
+        "16": {"name": "NC2",  "type": "nc"},
+        "17": {"name": "NC3",  "type": "nc"},
+        "18": {"name": "NC4",  "type": "nc"},
+        "19": {"name": "NC5",  "type": "nc"},
+        "20": {"name": "NC6",  "type": "nc"}
+      }
+    },
+    {
+      "ref": "D1",
+      "type": "LED",
+      "value": "Green",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "description": "Power indicator LED",
+      "pins": {
+        "1": {"name": "A", "type": "passive"},
+        "2": {"name": "K", "type": "passive"}
+      }
+    },
+    {
+      "ref": "D2",
+      "type": "LED",
+      "value": "Blue",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "description": "GPIO2 status LED",
+      "pins": {
+        "1": {"name": "A", "type": "passive"},
+        "2": {"name": "K", "type": "passive"}
+      }
+    },
+    {
+      "ref": "D3",
+      "type": "LED",
+      "value": "Yellow",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "description": "GPIO4 status LED",
+      "pins": {
+        "1": {"name": "A", "type": "passive"},
+        "2": {"name": "K", "type": "passive"}
+      }
+    },
+    {
+      "ref": "D4",
+      "type": "LED",
+      "value": "Red",
+      "footprint": "LED_SMD:LED_0805_2012Metric",
+      "description": "GPIO5 status LED",
+      "pins": {
+        "1": {"name": "A", "type": "passive"},
+        "2": {"name": "K", "type": "passive"}
+      }
+    },
+    {
+      "ref": "R1",
+      "type": "Resistor",
+      "value": "330",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "description": "LED D1 current limiter (power LED)"
+    },
+    {
+      "ref": "R2",
+      "type": "Resistor",
+      "value": "330",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "description": "LED D2 current limiter (GPIO2)"
+    },
+    {
+      "ref": "R3",
+      "type": "Resistor",
+      "value": "330",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "description": "LED D3 current limiter (GPIO4)"
+    },
+    {
+      "ref": "R4",
+      "type": "Resistor",
+      "value": "330",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "description": "LED D4 current limiter (GPIO5)"
+    },
+    {
+      "ref": "R5",
+      "type": "Resistor",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "description": "EN pull-up resistor"
+    },
+    {
+      "ref": "R6",
+      "type": "Resistor",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0805_2012Metric",
+      "description": "IO0 pull-up resistor (boot mode)"
+    },
+    {
+      "ref": "C1",
+      "type": "Capacitor_Polarized",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "description": "Input bulk capacitor (5V rail)"
+    },
+    {
+      "ref": "C2",
+      "type": "Capacitor_Polarized",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "description": "Output bulk capacitor (3.3V rail)"
+    },
+    {
+      "ref": "C3",
+      "type": "Capacitor",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "description": "ESP32 decoupling cap 1"
+    },
+    {
+      "ref": "C4",
+      "type": "Capacitor",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "description": "ESP32 decoupling cap 2"
+    },
+    {
+      "ref": "C5",
+      "type": "Capacitor",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "description": "Regulator input decoupling"
+    },
+    {
+      "ref": "C6",
+      "type": "Capacitor",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "description": "Regulator output decoupling"
+    }
+  ],
+  "nets": [
+    {
+      "name": "GND",
+      "connections": [
+        "U1.1", "U1.15", "U1.38", "U1.39",
+        "U2.1",
+        "J1.5", "J1.6",
+        "J2.2", "J2.20",
+        "J3.2", "J3.14",
+        "D1.2", "D2.2", "D3.2", "D4.2",
+        "C1.2", "C2.2", "C3.2", "C4.2", "C5.2", "C6.2"
+      ]
+    },
+    {
+      "name": "VIN_5V",
+      "connections": [
+        "J1.1",
+        "U2.3",
+        "C1.1", "C5.1",
+        "J3.13"
+      ]
+    },
+    {
+      "name": "VCC_3V3",
+      "connections": [
+        "U1.2",
+        "U2.2", "U2.4",
+        "C2.1", "C6.1", "C3.1", "C4.1",
+        "R1.1", "R5.1", "R6.1",
+        "J2.1",
+        "J3.1"
+      ]
+    },
+    {
+      "name": "EN",
+      "connections": ["U1.3", "R5.2", "J2.19"]
+    },
+    {
+      "name": "LED_PWR",
+      "connections": ["R1.2", "D1.1"]
+    },
+    {
+      "name": "GPIO2",
+      "connections": ["U1.24", "R2.1", "J2.16"]
+    },
+    {
+      "name": "LED_GPIO2",
+      "connections": ["R2.2", "D2.1"]
+    },
+    {
+      "name": "GPIO4",
+      "connections": ["U1.26", "R3.1", "J2.18"]
+    },
+    {
+      "name": "LED_GPIO4",
+      "connections": ["R3.2", "D3.1"]
+    },
+    {
+      "name": "GPIO5",
+      "connections": ["U1.29", "R4.1", "J3.5"]
+    },
+    {
+      "name": "LED_GPIO5",
+      "connections": ["R4.2", "D4.1"]
+    },
+    {
+      "name": "GPIO0",
+      "connections": ["U1.25", "R6.2", "J2.17"]
+    },
+    {
+      "name": "VP",
+      "connections": ["U1.4", "J2.3"]
+    },
+    {
+      "name": "VN",
+      "connections": ["U1.5", "J2.4"]
+    },
+    {
+      "name": "IO34",
+      "connections": ["U1.6", "J2.5"]
+    },
+    {
+      "name": "IO35",
+      "connections": ["U1.7", "J2.6"]
+    },
+    {
+      "name": "IO32",
+      "connections": ["U1.8", "J2.7"]
+    },
+    {
+      "name": "IO33",
+      "connections": ["U1.9", "J2.8"]
+    },
+    {
+      "name": "IO25",
+      "connections": ["U1.10", "J2.9"]
+    },
+    {
+      "name": "IO26",
+      "connections": ["U1.11", "J2.10"]
+    },
+    {
+      "name": "IO27",
+      "connections": ["U1.12", "J2.11"]
+    },
+    {
+      "name": "IO14",
+      "connections": ["U1.13", "J2.12"]
+    },
+    {
+      "name": "IO12",
+      "connections": ["U1.14", "J2.13"]
+    },
+    {
+      "name": "IO13",
+      "connections": ["U1.16", "J2.14"]
+    },
+    {
+      "name": "IO15",
+      "connections": ["U1.23", "J2.15"]
+    },
+    {
+      "name": "IO16",
+      "connections": ["U1.27", "J3.3"]
+    },
+    {
+      "name": "IO17",
+      "connections": ["U1.28", "J3.4"]
+    },
+    {
+      "name": "IO18",
+      "connections": ["U1.30", "J3.6"]
+    },
+    {
+      "name": "IO19",
+      "connections": ["U1.31", "J3.7"]
+    },
+    {
+      "name": "IO21",
+      "connections": ["U1.33", "J3.8"]
+    },
+    {
+      "name": "RXD0",
+      "connections": ["U1.34", "J3.9"]
+    },
+    {
+      "name": "TXD0",
+      "connections": ["U1.35", "J3.10"]
+    },
+    {
+      "name": "IO22",
+      "connections": ["U1.36", "J3.11"]
+    },
+    {
+      "name": "IO23",
+      "connections": ["U1.37", "J3.12"]
+    }
+  ]
+}

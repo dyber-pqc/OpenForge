@@ -1,0 +1,203 @@
+OpenForge UI audit — 80 issues, 74 docks
+
+
+=== [major] hardcoded_color: 47 ===
+  - MainWindow > flow_navigator_dock > QScrollArea
+      QScrollArea stylesheet contains '#f8f9fa'
+  - MainWindow > flow_navigator_dock > QScrollArea > qt_scrollarea_viewport > QWidget
+      QWidget stylesheet contains '#f8f9fa'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - QWidget > _FlowSection > QWidget > _FlowItem > QLabel
+      QLabel stylesheet contains '#212529'
+  - MainWindow > ip_catalog_dock > QWidget > QTreeWidget
+      QTreeWidget stylesheet contains '#ffffff'
+  - MainWindow > ip_catalog_dock > QWidget > _IpDetailWidget > QTextEdit
+      QTextEdit stylesheet contains '#212529'
+  - MainWindow > console_dock > QWidget > QPlainTextEdit
+      QPlainTextEdit stylesheet contains '#ffffff'
+  - MainWindow > console_dock > QWidget > QWidget > QLineEdit
+      QLineEdit stylesheet contains '#212529'
+  - MainWindow > timing_dock > QTabWidget
+      QTabWidget stylesheet contains '#ffffff'
+  - MainWindow > synthesis_dock > QTabWidget
+      QTabWidget stylesheet contains '#ffffff'
+  - MainWindow > physical_design_dock > QTabWidget
+      QTabWidget stylesheet contains '#ffffff'
+  - MainWindow > security_dock > QWidget > QTabWidget
+      QTabWidget stylesheet contains '#ffffff'
+  - MainWindow > gds_viewer_dock
+      GDSViewerPanel stylesheet contains '#ffffff'
+  - MainWindow > gds_viewer_dock > QWidget > QToolBar
+      QToolBar stylesheet contains '#212529'
+  - MainWindow > constraint_editor_dock
+      ConstraintEditorPanel stylesheet contains '#ffffff'
+  - MainWindow > block_design_dock
+      BlockDesignPanel stylesheet contains '#ffffff'
+  - MainWindow > floorplan_editor_dock
+      FloorplanEditorPanel stylesheet contains '#ffffff'
+  - MainWindow > path_browser_dock
+      PathBrowserPanel stylesheet contains '#ffffff'
+  - MainWindow > regression_dock
+      RegressionPanel stylesheet contains '#ffffff'
+  - MainWindow > lec_dock
+      LecPanel stylesheet contains '#ffffff'
+  - QTabWidget > qt_tabwidget_stackedwidget > SchematicEditor > QWidget > SchToolbar
+      QToolBar stylesheet contains '#ffffff'
+
+=== [major] qt_message: 1 ===
+  - qt:warning
+      QFontDatabase: Cannot find font directory C:/Users/ZacharyKleckner/AppData/Roaming/Python/Python314/site-packages/PySide6/lib/fonts.
+Note that Qt no longer ships fonts. Deploy some (from https://dejav
+
+=== [major] white_dock: 30 ===
+  - IP Catalog
+      Dock is 76% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Project Explorer
+      Dock is 93% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Hierarchy Browser
+      Dock is 87% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Console
+      Dock is 95% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Testbenches
+      Dock is 94% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Reports
+      Dock is 89% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Timing Analysis
+      Dock is 90% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Synthesis
+      Dock is 91% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Physical Design
+      Dock is 83% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Security
+      Dock is 77% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - GDS Viewer
+      Dock is 89% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - ILA Debug
+      Dock is 81% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Floorplan Editor
+      Dock is 90% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Path Browser
+      Dock is 86% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Sign-off Dashboard
+      Dock is 75% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - PBA / Crosstalk
+      Dock is 94% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - IR Drop
+      Dock is 94% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Hold Fix
+      Dock is 89% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Glitch Power
+      Dock is 79% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Parasitic Heatmap
+      Dock is 94% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - DRC Browser
+      Dock is 91% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Regression
+      Dock is 88% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Coverage Dashboard
+      Dock is 80% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - CRV Builder
+      Dock is 78% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Regression Triage
+      Dock is 93% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Regression Runner
+      Dock is 81% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Report Viewer
+      Dock is 99% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - UVM-lite
+      Dock is 79% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - CDC
+      Dock is 78% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+  - Lint
+      Dock is 84% pure white — hardcoded light theme in dark app
+      hint: Replace hardcoded colors with design_system palette
+
+=== [minor] flat_dock: 2 ===
+  - AXI Checker
+      Only 2 distinct colors — may be placeholder
+      hint: Add real content
+  - Properties
+      Only 1 distinct colors — may be placeholder
+      hint: Add real content

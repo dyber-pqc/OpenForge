@@ -1,0 +1,49 @@
+/* OpenForge EDA custom theme overrides */
+:root {
+  --md-primary-fg-color: #89b4fa;
+  --md-primary-bg-color: #1e1e2e;
+  --md-accent-fg-color: #94e2d5;
+}
+
+/* Hero section on homepage */
+.hero {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+/* Feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.feature-card:hover {
+  border-color: var(--md-accent-fg-color);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+}
+
+/* Comparison table styling */
+.comparison-table th {
+  text-align: center;
+}
+
+.comparison-table td:not(:first-child) {
+  text-align: center;
+}

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, status
@@ -17,6 +20,7 @@ from openforge_api.models.schemas import (
 )
 
 router = APIRouter()
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -26,6 +30,68 @@ router = APIRouter()
 _synth_jobs: dict[UUID, JobBase] = {}
 _synth_results: dict[UUID, SynthesisResult] = {}
 _synth_netlists: dict[UUID, str] = {}
+
+
+# ---------------------------------------------------------------------------
+# Async dispatch
+# ---------------------------------------------------------------------------
+
+async def _dispatch_synthesis(job_id: UUID, body: SynthesisRequest) -> None:
+    """Background task: run synthesis via SynthesisRunner."""
+    try:
+        _synth_jobs[job_id] = JobBase(
+            job_id=job_id,
+            project_id=body.project_id,
+            status=JobStatus.running,
+            created_at=_synth_jobs[job_id].created_at,
+        )
+
+        from openforge.synthesis.runner import SynthesisRunner
+
+        # Resolve project path from project_id (placeholder -- use projects dir)
+        project_path = Path.cwd()
+        runner = SynthesisRunner(project_path, config=None)
+
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            lambda: runner.run_synthesis(
+                sources=[],  # filled from project file list
+                top_module="top",
+                pdk=body.target_pdk,
+            ),
+        )
+
+        _synth_results[job_id] = SynthesisResult(
+            job_id=job_id,
+            gate_count=result.gate_count,
+            area_um2=result.area_um2,
+            cell_usage=result.cell_usage,
+            timing_met=result.timing_estimate_ns >= 0,
+            worst_slack_ns=result.timing_estimate_ns,
+            netlist_url=f"/synth/{job_id}/netlist",
+        )
+
+        # Store netlist content if available
+        if hasattr(result, "netlist_content") and result.netlist_content:
+            _synth_netlists[job_id] = result.netlist_content
+
+        _synth_jobs[job_id] = JobBase(
+            job_id=job_id,
+            project_id=body.project_id,
+            status=JobStatus.completed if result.success else JobStatus.failed,
+            created_at=_synth_jobs[job_id].created_at,
+            finished_at=datetime.utcnow(),
+        )
+    except Exception as exc:
+        _log.exception("Synthesis failed for job %s", job_id)
+        _synth_jobs[job_id] = JobBase(
+            job_id=job_id,
+            project_id=body.project_id,
+            status=JobStatus.failed,
+            created_at=_synth_jobs[job_id].created_at,
+            finished_at=datetime.utcnow(),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -49,10 +115,8 @@ async def start_synthesis(body: SynthesisRequest) -> JobBase:
         created_at=now,
     )
 
-    # TODO: Dispatch to task queue
-    #   from openforge_api.tasks import run_synthesis
-    #   run_synthesis.delay(str(job_id), body.model_dump())
     _synth_jobs[job_id] = job
+    asyncio.create_task(_dispatch_synthesis(job_id, body))
     return job
 
 

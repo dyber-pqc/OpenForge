@@ -253,14 +253,21 @@ class _FlowControlTab(QWidget):
 
         # Utilization
         util_row = QHBoxLayout()
-        util_row.addWidget(QLabel("Target Utilization:"))
+        util_row.setSpacing(8)
+        lbl_util = QLabel("Target Utilization:")
+        lbl_util.setMinimumWidth(120)
+        lbl_util.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        util_row.addWidget(lbl_util)
         self._util_spin = QSpinBox()
         self._util_spin.setRange(50, 95)
         self._util_spin.setValue(70)
         self._util_spin.setSuffix("%")
         util_row.addWidget(self._util_spin)
         util_row.addStretch()
-        util_row.addWidget(QLabel("Aspect Ratio:"))
+        lbl_aspect = QLabel("Aspect Ratio:")
+        lbl_aspect.setMinimumWidth(100)
+        lbl_aspect.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        util_row.addWidget(lbl_aspect)
         self._aspect_spin = QDoubleSpinBox()
         self._aspect_spin.setRange(0.5, 2.0)
         self._aspect_spin.setValue(1.0)
@@ -270,12 +277,19 @@ class _FlowControlTab(QWidget):
 
         # Routing layers
         route_row = QHBoxLayout()
-        route_row.addWidget(QLabel("Routing Layers:"))
+        route_row.setSpacing(8)
+        lbl_route = QLabel("Routing Layers:")
+        lbl_route.setMinimumWidth(110)
+        lbl_route.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        route_row.addWidget(lbl_route)
         self._route_combo = QComboBox()
         self._route_combo.addItems(["Metal1-Metal5", "Metal1-Metal7", "Metal1-Metal9"])
         route_row.addWidget(self._route_combo)
         route_row.addStretch()
-        route_row.addWidget(QLabel("CTS Buffer:"))
+        lbl_cts = QLabel("CTS Buffer:")
+        lbl_cts.setMinimumWidth(100)
+        lbl_cts.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        route_row.addWidget(lbl_cts)
         self._cts_combo = QComboBox()
         self._cts_combo.addItems(["CLKBUF_X2", "CLKBUF_X4", "CLKBUF_X8", "CLKBUF_X16"])
         route_row.addWidget(self._cts_combo)
@@ -607,6 +621,192 @@ class _DensityHeatmap(QWidget):
 # ── DRC/LVS Tab ────────────────────────────────────────────────────────────
 
 
+# ── Power Tab ──────────────────────────────────────────────────────────────
+
+
+class _PowerPieWidget(QWidget):
+    """Pie chart for power breakdown: Dynamic vs Leakage vs Internal."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setMinimumSize(180, 200)
+        self.setMaximumSize(250, 260)
+        self._slices: list[tuple[str, float, str]] = []
+
+    def set_data(self, slices: list[tuple[str, float, str]]) -> None:
+        """slices: list of (label, value_mW, color_hex)"""
+        self._slices = slices
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802
+        if not self._slices:
+            painter = QPainter(self)
+            painter.setPen(QColor(_SUBTEXT))
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter,
+                             "Run power analysis\nto see breakdown")
+            return
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        total = sum(v for _, v, _ in self._slices)
+        if total <= 0:
+            return
+
+        w, h = self.width(), self.height()
+        size = min(w, h - 40) - 20
+        outer = QRectF((w - size) / 2, 10, size, size)
+        inner_size = size * 0.55
+        inner = QRectF((w - inner_size) / 2, 10 + (size - inner_size) / 2, inner_size, inner_size)
+
+        start = 90 * 16
+        for _label, value, color in self._slices:
+            span = int(value / total * 360 * 16)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(color))
+            painter.drawPie(outer, start, span)
+            start += span
+
+        # Donut hole
+        painter.setBrush(QColor(_BG))
+        painter.drawEllipse(inner)
+
+        # Center text
+        painter.setPen(QColor(_TEXT))
+        font = QFont()
+        font.setPointSize(9)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.drawText(inner, Qt.AlignmentFlag.AlignCenter, f"{total:.2f}\nmW")
+
+        # Legend below
+        legend_y = 10 + size + 8
+        font.setPointSize(7)
+        font.setBold(False)
+        painter.setFont(font)
+        from PySide6.QtGui import QFontMetrics
+        fm = QFontMetrics(font)
+        x = 6
+        for label, value, color in self._slices:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(color))
+            painter.drawRect(QRectF(x, legend_y, 8, 8))
+            painter.setPen(QColor(_SUBTEXT))
+            pct = value / total * 100 if total else 0
+            text = f"{label} ({pct:.0f}%)"
+            painter.drawText(QPointF(x + 12, legend_y + 8), text)
+            x += fm.horizontalAdvance(text) + 18
+
+
+class _PowerTab(QWidget):
+    """Power analysis tab: pie chart, hierarchy table, summary labels."""
+
+    run_power_requested = Signal()
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(6)
+
+        # Summary labels
+        root.addWidget(_header_label("Power Summary"))
+        summary_row = QHBoxLayout()
+        self._lbl_total = QLabel("Total: -- mW")
+        self._lbl_total.setStyleSheet(f"color: {_CLR_BLUE}; font-weight: bold; font-size: 14px; padding: 4px 8px;")
+        self._lbl_dynamic = QLabel("Dynamic: -- mW")
+        self._lbl_dynamic.setStyleSheet(f"color: {_CLR_GREEN}; font-weight: bold; font-size: 14px; padding: 4px 8px;")
+        self._lbl_leakage = QLabel("Leakage: -- mW")
+        self._lbl_leakage.setStyleSheet(f"color: {_CLR_RED}; font-weight: bold; font-size: 14px; padding: 4px 8px;")
+        summary_row.addWidget(self._lbl_total)
+        summary_row.addWidget(self._lbl_dynamic)
+        summary_row.addWidget(self._lbl_leakage)
+        summary_row.addStretch()
+        root.addLayout(summary_row)
+
+        # Body: pie chart + hierarchy table
+        body = QSplitter(Qt.Orientation.Horizontal)
+        body.setChildrenCollapsible(False)
+
+        # Left: Pie chart
+        left = QWidget()
+        ll = QVBoxLayout(left)
+        ll.setContentsMargins(0, 0, 0, 0)
+        ll.addWidget(_header_label("Power Breakdown"))
+        self._pie = _PowerPieWidget()
+        ll.addWidget(self._pie, alignment=Qt.AlignmentFlag.AlignCenter)
+        ll.addStretch()
+        body.addWidget(left)
+
+        # Right: Hierarchy power table
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.setContentsMargins(0, 0, 0, 0)
+        rl.addWidget(_header_label("Hierarchy Power Breakdown"))
+        self._hierarchy_table = QTableWidget(0, 3)
+        self._hierarchy_table.setHorizontalHeaderLabels(["Module", "Power (mW)", "% of Total"])
+        _configure_table(self._hierarchy_table)
+        self._hierarchy_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        rl.addWidget(self._hierarchy_table)
+        body.addWidget(right)
+
+        body.setSizes([250, 400])
+        root.addWidget(body, 1)
+
+        # Run button
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        self._btn_run = QPushButton("Run Power Analysis")
+        self._btn_run.setFixedHeight(32)
+        self._btn_run.setStyleSheet(
+            f"QPushButton {{ background-color: {_CLR_BLUE}; color: {_CRUST}; font-weight: bold; "
+            f"border: none; border-radius: 4px; padding: 8px 20px; }}"
+            f"QPushButton:hover {{ background-color: {_CLR_SAPPHIRE}; }}"
+        )
+        self._btn_run.clicked.connect(self.run_power_requested.emit)
+        btn_row.addWidget(self._btn_run)
+        root.addLayout(btn_row)
+
+    def update_power(self, power_data: dict) -> None:
+        """Populate the power tab from analysis data.
+
+        power_data keys:
+            - total_mw: float
+            - dynamic_mw: float
+            - leakage_mw: float
+            - internal_mw: float (optional)
+            - hierarchy: list of {module, power_mw, percent}
+        """
+        total = power_data.get("total_mw", 0.0)
+        dynamic = power_data.get("dynamic_mw", 0.0)
+        leakage = power_data.get("leakage_mw", 0.0)
+        internal = power_data.get("internal_mw", 0.0)
+
+        self._lbl_total.setText(f"Total: {total:.3f} mW")
+        self._lbl_dynamic.setText(f"Dynamic: {dynamic:.3f} mW")
+        self._lbl_leakage.setText(f"Leakage: {leakage:.3f} mW")
+
+        # Pie chart
+        slices = [
+            ("Dynamic", dynamic, _CLR_GREEN),
+            ("Leakage", leakage, _CLR_RED),
+        ]
+        if internal > 0:
+            slices.append(("Internal", internal, _CLR_YELLOW))
+        self._pie.set_data(slices)
+
+        # Hierarchy table
+        hierarchy = power_data.get("hierarchy", [])
+        self._hierarchy_table.setRowCount(len(hierarchy))
+        for row, entry in enumerate(hierarchy):
+            self._hierarchy_table.setItem(row, 0, _text_item(entry.get("module", "")))
+            pwr = entry.get("power_mw", 0.0)
+            self._hierarchy_table.setItem(row, 1, _numeric_item(pwr, "{:.4f}"))
+            pct = entry.get("percent", 0.0)
+            pct_color = _CLR_RED if pct > 50 else (_CLR_YELLOW if pct > 25 else _CLR_GREEN)
+            self._hierarchy_table.setItem(row, 2, _numeric_item(pct, "{:.1f}%", pct_color))
+
+
 class _DrcLvsTab(QWidget):
     """DRC and LVS checking results."""
 
@@ -627,8 +827,10 @@ class _DrcLvsTab(QWidget):
             f"QPushButton {{ background-color: {_CLR_BLUE}; color: {_CRUST}; font-weight: bold; "
             f"border: none; border-radius: 4px; padding: 4px 16px; }}"
             f"QPushButton:hover {{ background-color: {_CLR_SAPPHIRE}; }}"
+            f"QPushButton:disabled {{ background-color: {_CRUST}; color: {_SURFACE1}; }}"
         )
         self._btn_drc.clicked.connect(self.run_drc_requested.emit)
+        self._btn_drc.setEnabled(False)
         btn_row.addWidget(self._btn_drc)
 
         self._btn_lvs = QPushButton("Run LVS")
@@ -637,12 +839,14 @@ class _DrcLvsTab(QWidget):
             f"QPushButton {{ background-color: {_CLR_MAUVE}; color: {_CRUST}; font-weight: bold; "
             f"border: none; border-radius: 4px; padding: 4px 16px; }}"
             f"QPushButton:hover {{ background-color: {_CLR_PINK}; }}"
+            f"QPushButton:disabled {{ background-color: {_CRUST}; color: {_SURFACE1}; }}"
         )
         self._btn_lvs.clicked.connect(self.run_lvs_requested.emit)
+        self._btn_lvs.setEnabled(False)
         btn_row.addWidget(self._btn_lvs)
         btn_row.addStretch()
 
-        self._status_label = QLabel("No checks run yet")
+        self._status_label = QLabel("Run P&R first to enable DRC/LVS")
         self._status_label.setStyleSheet(f"color: {_SUBTEXT}; font-size: 12px;")
         btn_row.addWidget(self._status_label)
         root.addLayout(btn_row)
@@ -729,24 +933,178 @@ class PhysicalDesignPanel(QDockWidget):
     """Dock widget with tabbed physical design controls: Flow, Floorplan,
     Statistics, and DRC/LVS."""
 
+    # Emitted when P&R completes with a DEF file path to load in LayoutPanel
+    def_file_produced = Signal(str)
+
     def __init__(self, title: str = "Physical Design", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self._tabs = QTabWidget()
+        self._tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self._tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background-color: {_BG};
+            }}
+            QTabBar::tab {{
+                background-color: {_SURFACE0};
+                color: {_SUBTEXT};
+                border: none;
+                padding: 6px 16px;
+                font-size: 11px;
+                margin-right: 1px;
+                min-width: 60px;
+            }}
+            QTabBar::tab:selected {{
+                background-color: {_BG};
+                color: {_TEXT};
+                border-bottom: 2px solid {_CLR_BLUE};
+            }}
+            QTabBar::tab:hover:!selected {{
+                background-color: {_SURFACE1};
+                color: {_TEXT};
+            }}
+            QGroupBox {{
+                background-color: {_MANTLE};
+                border: 1px solid {_SURFACE0};
+                border-radius: 4px;
+                margin-top: 14px;
+                padding: 10px 8px 8px 8px;
+                font-size: 11px;
+                font-weight: bold;
+                color: {_CLR_BLUE};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 2px 8px;
+            }}
+            QPushButton {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 4px;
+                padding: 4px 12px;
+                font-size: 11px;
+            }}
+            QPushButton:hover {{
+                background-color: {_SURFACE1};
+                border-color: {_CLR_BLUE};
+            }}
+            QPushButton:pressed {{
+                background-color: {_SURFACE2};
+            }}
+            QPushButton:checked {{
+                background-color: {_CLR_BLUE};
+                color: {_CRUST};
+                border-color: {_CLR_BLUE};
+            }}
+            QPushButton:disabled {{
+                background-color: {_CRUST};
+                color: {_SURFACE1};
+                border-color: {_SURFACE0};
+            }}
+            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 3px;
+                padding: 3px 6px;
+                font-size: 11px;
+            }}
+            QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
+                border-color: {_CLR_BLUE};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                selection-background-color: {_SURFACE1};
+                border: 1px solid {_SURFACE1};
+            }}
+            QLabel {{
+                color: {_TEXT};
+                font-size: 11px;
+            }}
+            QProgressBar {{
+                background-color: {_SURFACE0};
+                border: none;
+                border-radius: 3px;
+                text-align: center;
+                color: {_TEXT};
+                font-size: 10px;
+                max-height: 18px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {_CLR_BLUE};
+                border-radius: 3px;
+            }}
+            QSlider::groove:horizontal {{
+                background: {_SURFACE0};
+                height: 6px;
+                border-radius: 3px;
+            }}
+            QSlider::handle:horizontal {{
+                background: {_CLR_BLUE};
+                width: 14px;
+                margin: -4px 0;
+                border-radius: 7px;
+            }}
+            QSlider::sub-page:horizontal {{
+                background: {_CLR_BLUE};
+                border-radius: 3px;
+            }}
+            QSplitter::handle {{
+                background-color: {_SURFACE0};
+                height: 2px;
+                width: 2px;
+            }}
+            QHeaderView::section {{
+                background-color: {_MANTLE};
+                color: {_SUBTEXT};
+                border: none;
+                border-right: 1px solid {_SURFACE0};
+                border-bottom: 1px solid {_SURFACE0};
+                padding: 4px 6px;
+                font-size: 11px;
+                font-weight: bold;
+            }}
+        """)
         self._flow = _FlowControlTab()
         self._floorplan = _FloorplanTab()
         self._stats = _StatisticsTab()
         self._drc_lvs = _DrcLvsTab()
+        self._power = _PowerTab()
 
-        self._tabs.addTab(self._flow, "Flow Control")
-        self._tabs.addTab(self._floorplan, "Floorplan")
-        self._tabs.addTab(self._stats, "Statistics")
-        self._tabs.addTab(self._drc_lvs, "DRC / LVS")
+        # Wrap each tab in a QScrollArea
+        from PySide6.QtWidgets import QScrollArea
+        def _scrollable(widget: QWidget) -> QScrollArea:
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setWidget(widget)
+            return scroll
+
+        self._tabs.addTab(_scrollable(self._flow), "Flow Control")
+        self._tabs.addTab(_scrollable(self._floorplan), "Floorplan")
+        self._tabs.addTab(_scrollable(self._stats), "Statistics")
+        self._tabs.addTab(_scrollable(self._drc_lvs), "DRC / LVS")
+        self._tabs.addTab(_scrollable(self._power), "Power")
 
         self.setWidget(self._tabs)
 
     # ── Public API ────────────────────────────────────────────────────
+
+    def set_theme(self, dark: bool) -> None:
+        """Switch panel QSS between dark and light themes."""
+        from openforge_desktop.panels._theme import panel_tab_qss
+        self._tabs.setStyleSheet(panel_tab_qss(dark))
 
     @property
     def flow(self) -> _FlowControlTab:
@@ -763,6 +1121,15 @@ class PhysicalDesignPanel(QDockWidget):
     @property
     def drc_lvs(self) -> _DrcLvsTab:
         return self._drc_lvs
+
+    @property
+    def power_tab(self) -> _PowerTab:
+        return self._power
+
+    def update_power(self, power_data: dict) -> None:
+        """Populate the Power tab from analysis data and switch to it."""
+        self._power.update_power(power_data)
+        self._tabs.setCurrentWidget(self._power)
 
     def update_results(self, results: dict) -> None:
         """Populate all tabs from a physical design results dictionary.
@@ -808,6 +1175,149 @@ class PhysicalDesignPanel(QDockWidget):
         lvs = results.get("lvs_results", [])
         if lvs:
             self._drc_lvs.set_lvs_results(lvs)
+
+    # ── Post-P&R integration ──────────────────────────────────────────
+
+    def update_from_pnr_result(self, def_path: str, log_text: str) -> None:
+        """Parse a real P&R DEF + log and populate the panel with real data.
+
+        Uses the comprehensive :mod:`openforge.format.def_parser` to derive
+        cell counts, area, flop/buffer/filler breakdowns, and wirelength
+        straight from the placed & routed DEF — no demo data fallback.
+        The supplied log text is still scanned for tool-reported metrics
+        (WNS/TNS/utilization/wirelength) that aren't in the DEF itself.
+
+        Parameters
+        ----------
+        def_path:
+            Path to the DEF file produced by place-and-route.
+        log_text:
+            Raw log output from the P&R tool (OpenROAD / OpenLane).
+        """
+        import re
+        from pathlib import Path as _Path
+
+        # --- Parse the DEF file with the new comprehensive parser ----------
+        stats: dict = {}
+        design = None
+        if def_path and _Path(def_path).exists():
+            try:
+                from openforge.format.def_parser import parse_def as _parse_def
+                design = _parse_def(_Path(def_path))
+                stats = design.stats()
+            except Exception as exc:
+                self._flow.append_log(f"DEF parse error: {exc}")
+
+        # --- Parse metrics from log ----------------------------------------
+        area = 0.0
+        utilization = 0.0
+        cell_count = stats.get("total_cells", 0)
+        violations = 0
+        wns = 0.0
+        tns = 0.0
+        wirelength = stats.get("wirelength_um", 0.0)
+
+        for line in log_text.splitlines():
+            # Common OpenROAD / OpenLane log patterns
+            m = re.search(r"Design\s+area\s+(\d+[\d.]*)", line, re.IGNORECASE)
+            if m:
+                area = float(m.group(1))
+            m = re.search(r"utilization\s*[=:]\s*([\d.]+)\s*%?", line, re.IGNORECASE)
+            if m:
+                utilization = float(m.group(1))
+            m = re.search(r"cell\s*count\s*[=:]\s*(\d+)", line, re.IGNORECASE)
+            if m:
+                cell_count = int(m.group(1))
+            m = re.search(r"number\s+of\s+instances\s*[=:]\s*(\d+)", line, re.IGNORECASE)
+            if m and cell_count == 0:
+                cell_count = int(m.group(1))
+            m = re.search(r"(?:DRC|violation).*?(\d+)", line, re.IGNORECASE)
+            if m and "violation" in line.lower():
+                violations = int(m.group(1))
+            m = re.search(r"wns\s*[=:]\s*([+-]?[\d.]+)", line, re.IGNORECASE)
+            if m:
+                wns = float(m.group(1))
+            m = re.search(r"tns\s*[=:]\s*([+-]?[\d.]+)", line, re.IGNORECASE)
+            if m:
+                tns = float(m.group(1))
+            m = re.search(r"wirelength\s*[=:]\s*([\d.]+)", line, re.IGNORECASE)
+            if m:
+                wirelength = float(m.group(1))
+
+        # Update statistics tab -- prefer real DEF-derived numbers.
+        if stats:
+            area_data = [
+                {"name": "Die Area", "area": stats["die_area_um2"]},
+                {"name": "Logic Cells", "area": float(stats["logic_cells"])},
+                {"name": "Filler Cells", "area": float(stats["filler_cells"])},
+                {"name": "Flip-Flops", "area": float(stats["flops"])},
+                {"name": "Clock Cells", "area": float(stats["clock_cells"])},
+            ]
+        else:
+            area_data = [{"name": "Total Design", "area": area}]
+            if utilization > 0:
+                core_area = area / (utilization / 100.0) if utilization > 0 else area
+                area_data.append({"name": "Core Area", "area": core_area})
+
+        routing_stats: list[dict] = []
+        if stats:
+            routing_stats.extend([
+                {"metric": "Total Cells", "value": f"{stats['total_cells']:,}"},
+                {"metric": "Logic Cells", "value": f"{stats['logic_cells']:,}"},
+                {"metric": "Filler Cells", "value": f"{stats['filler_cells']:,}"},
+                {"metric": "Flip-Flops", "value": f"{stats['flops']:,}"},
+                {"metric": "Buffers", "value": f"{stats['buffers']:,}"},
+                {"metric": "Inverters", "value": f"{stats['inverters']:,}"},
+                {"metric": "Clock Cells", "value": f"{stats['clock_cells']:,}"},
+                {"metric": "I/O Pins", "value": f"{stats['total_pins']:,}"},
+                {"metric": "Signal Nets", "value": f"{stats['total_nets']:,}"},
+                {"metric": "Power Nets", "value": f"{stats['special_nets']:,}"},
+                {"metric": "Die Width", "value": f"{stats['die_width_um']:.1f} um"},
+                {"metric": "Die Height", "value": f"{stats['die_height_um']:.1f} um"},
+                {"metric": "Die Area", "value": f"{stats['die_area_um2']:,.1f} um2"},
+                {"metric": "Routed Wirelength",
+                 "value": f"{stats['wirelength_um']:,.0f} um"},
+                {"metric": "Layers Used",
+                 "value": ", ".join(stats["layers_used"]) or "--"},
+            ])
+        else:
+            routing_stats.append({"metric": "Cell Count", "value": f"{cell_count:,}"})
+
+        if utilization > 0:
+            routing_stats.append({"metric": "Utilization", "value": f"{utilization:.1f}%"})
+        routing_stats.extend([
+            {"metric": "WNS", "value": f"{wns:.3f} ns"},
+            {"metric": "TNS", "value": f"{tns:.3f} ns"},
+        ])
+        if wirelength > 0 and not stats:
+            routing_stats.append(
+                {"metric": "Total Wirelength", "value": f"{wirelength:,.0f} um"}
+            )
+
+        self._stats.set_area(area_data)
+        self._stats.set_routing_stats(routing_stats)
+        self._stats.set_drc_summary(violations, 0)
+
+        # Mark pipeline complete
+        for i in range(len(_PD_STAGES)):
+            self._flow.pipeline.set_status(i, "done", "--")
+        self._flow.progress.setValue(100)
+        self._flow.progress.setFormat("Complete")
+
+        # Enable DRC/LVS buttons
+        self._drc_lvs._btn_drc.setEnabled(True)
+        self._drc_lvs._btn_lvs.setEnabled(True)
+        self._drc_lvs._status_label.setText("Ready -- P&R complete")
+
+        # Append log to flow tab
+        self._flow.append_log(log_text)
+
+        # Switch to statistics tab
+        self._tabs.setCurrentWidget(self._stats)
+
+        # Emit signal so LayoutPanel can load the DEF
+        if def_path:
+            self.def_file_produced.emit(def_path)
 
     # ── OpenLane integration ─────────────────────────────────────────
 
@@ -903,6 +1413,11 @@ class PhysicalDesignPanel(QDockWidget):
         if result.success:
             self._flow.progress.setValue(100)
             self._flow.progress.setFormat("Complete")
+
+            # Enable DRC/LVS buttons after successful P&R
+            self._drc_lvs._btn_drc.setEnabled(True)
+            self._drc_lvs._btn_lvs.setEnabled(True)
+            self._drc_lvs._status_label.setText("Ready -- P&R complete")
         else:
             self._flow.progress.setFormat(f"Failed at: {result.failed_step}")
 
@@ -917,6 +1432,7 @@ class PhysicalDesignPanel(QDockWidget):
             ],
             "routing_stats": [
                 {"metric": "Total Wirelength", "value": f"{result.wirelength_um:,.0f} um"},
+                {"metric": "Cell Count", "value": f"{result.cell_count:,}" if hasattr(result, "cell_count") else "--"},
                 {"metric": "WNS", "value": f"{result.wns:.3f} ns"},
                 {"metric": "TNS", "value": f"{result.tns:.3f} ns"},
             ],
@@ -937,6 +1453,17 @@ class PhysicalDesignPanel(QDockWidget):
         # Append summary to log
         self._flow.append_log("")
         self._flow.append_log(result.log)
+
+        # Emit DEF file path if available so LayoutPanel can auto-load it
+        if hasattr(result, "def_path") and result.def_path:
+            self.def_file_produced.emit(str(result.def_path))
+        elif hasattr(result, "output_dir") and result.output_dir:
+            # Try to find the DEF file in the output directory
+            from pathlib import Path as _Path
+            out = _Path(result.output_dir)
+            defs = list(out.rglob("*.def"))
+            if defs:
+                self.def_file_produced.emit(str(defs[0]))
 
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""

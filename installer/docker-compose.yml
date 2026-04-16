@@ -1,0 +1,48 @@
+# OpenForge EDA - Docker Compose stack
+#
+# Usage:
+#   docker compose -f installer/docker-compose.yml up cli       # one-shot CLI
+#   docker compose -f installer/docker-compose.yml up api       # REST API on :8000
+#   docker compose -f installer/docker-compose.yml up desktop   # GUI (needs X11)
+
+services:
+  cli:
+    build:
+      context: ..
+      dockerfile: installer/Dockerfile
+    image: openforge-eda:latest
+    entrypoint: openforge
+    volumes:
+      - ./workspace:/workspace
+
+  api:
+    build:
+      context: ..
+      dockerfile: installer/Dockerfile
+    image: openforge-eda:latest
+    command: ["serve", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENFORGE_API_HOST=0.0.0.0
+      - OPENFORGE_API_PORT=8000
+    volumes:
+      - openforge_data:/root/.openforge
+      - ./workspace:/workspace
+
+  desktop:
+    build:
+      context: ..
+      dockerfile: installer/Dockerfile
+    image: openforge-eda:latest
+    entrypoint: openforge-desktop
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - openforge_data:/root/.openforge
+      - ./workspace:/workspace
+
+volumes:
+  openforge_data:

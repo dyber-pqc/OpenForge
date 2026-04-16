@@ -7,7 +7,16 @@ All widgets use the Catppuccin Mocha dark theme for a professional EDA aesthetic
 from __future__ import annotations
 
 import math
+from pathlib import Path
 from typing import Final
+
+try:
+    from openforge_desktop.widgets.schematic_view import SchematicView
+
+    _HAS_SCHEMATIC_VIEW = True
+except ImportError:
+    SchematicView = None  # type: ignore[assignment,misc]
+    _HAS_SCHEMATIC_VIEW = False
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -127,8 +136,9 @@ class _PieChartWidget(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setMinimumSize(180, 180)
-        self.setMaximumSize(220, 220)
+        # Reserve ~40px below the donut for the legend row.
+        self.setMinimumSize(200, 230)
+        self.setMaximumSize(260, 280)
         self._slices: list[tuple[str, float, str]] = []  # (label, value, color)
 
     def set_data(self, slices: list[tuple[str, float, str]]) -> None:
@@ -146,7 +156,9 @@ class _PieChartWidget(QWidget):
             return
 
         w, h = self.width(), self.height()
-        size = min(w, h) - 20
+        legend_reserve = 36  # space for legend row beneath the donut
+        chart_h = max(40, h - legend_reserve)
+        size = max(20, min(w, chart_h) - 20)
         outer = QRectF((w - size) / 2, 10, size, size)
         inner_size = size * 0.55
         inner = QRectF((w - inner_size) / 2, 10 + (size - inner_size) / 2, inner_size, inner_size)
@@ -226,7 +238,7 @@ class _SynthProgressWidget(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setFixedHeight(50)
+        self.setFixedHeight(70)
         self._current_stage: int = -1  # -1 = not started
         self._completed: set[int] = set()
 
@@ -301,7 +313,7 @@ class _SynthProgressWidget(QWidget):
             font2 = QFont()
             font2.setPointSize(7)
             painter.setFont(font2)
-            painter.drawText(QRectF(cx - 30, cy + node_r + 2, 60, 16),
+            painter.drawText(QRectF(cx - 30, cy + node_r + 2, 60, 20),
                              Qt.AlignmentFlag.AlignCenter, label)
             painter.setFont(font)
 
@@ -325,11 +337,16 @@ class _SummaryTab(QWidget):
 
         # Timing estimate
         timing_group = QGroupBox("Timing Estimate")
+        timing_group.setMinimumHeight(50)
         tg_layout = QHBoxLayout(timing_group)
+        tg_layout.setContentsMargins(8, 4, 8, 4)
         self._lbl_target = QLabel("Target: --")
-        self._lbl_target.setStyleSheet(f"color: {_TEXT}; font-size: 13px;")
+        self._lbl_target.setStyleSheet(f"color: {_TEXT}; font-size: 12px;")
+        self._lbl_target.setMinimumWidth(200)
         self._lbl_wns = QLabel("WNS: --")
-        self._lbl_wns.setStyleSheet(f"color: {_CLR_GREEN}; font-weight: bold; font-size: 14px;")
+        self._lbl_wns.setStyleSheet(f"color: {_CLR_GREEN}; font-weight: bold; font-size: 12px;")
+        self._lbl_wns.setMinimumWidth(120)
+        self._lbl_wns.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         tg_layout.addWidget(self._lbl_target)
         tg_layout.addStretch()
         tg_layout.addWidget(self._lbl_wns)
@@ -746,17 +763,34 @@ class _MessagesTab(QWidget):
 
 
 _CELL_COLORS: Final[dict[str, str]] = {
-    "AND": _CLR_BLUE,
+    "AND": _CLR_GREEN,
     "OR": _CLR_GREEN,
-    "NOT": _CLR_RED,
-    "XOR": _CLR_MAUVE,
+    "NOT": _CLR_GREEN,
+    "NAND": _CLR_GREEN,
+    "NOR": _CLR_GREEN,
+    "XOR": _CLR_GREEN,
+    "XNOR": _CLR_GREEN,
+    "INV": _CLR_GREEN,
+    "BUF": _CLR_GREEN,
     "MUX": _CLR_PEACH,
-    "FF": _CLR_TEAL,
-    "DFF": _CLR_TEAL,
+    "FF": _CLR_BLUE,
+    "DFF": _CLR_BLUE,
+    "DFRTP": _CLR_BLUE,
+    "DFXTP": _CLR_BLUE,
+    "SDFRTP": _CLR_BLUE,
+    "SDFXTP": _CLR_BLUE,
     "LATCH": _CLR_PINK,
-    "BUF": _CLR_SAPPHIRE,
-    "INPUT": _CLR_YELLOW,
-    "OUTPUT": _CLR_YELLOW,
+    "A21OI": _CLR_YELLOW,
+    "A31OI": _CLR_YELLOW,
+    "A22O": _CLR_YELLOW,
+    "O21AI": _CLR_YELLOW,
+    "O31AI": _CLR_YELLOW,
+    "MAJ3": _CLR_YELLOW,
+    "FA": _CLR_YELLOW,
+    "HA": _CLR_YELLOW,
+    "INPUT": _CLR_SAPPHIRE,
+    "OUTPUT": _CLR_SAPPHIRE,
+    "CLKBUF": _CLR_TEAL,
 }
 
 
@@ -787,151 +821,111 @@ class _SchematicScene(QGraphicsScene):
 
 
 class _SchematicView(QGraphicsView):
-    """Zoom/pan schematic view."""
+    """Zoom/pan schematic view with scroll-hand drag, wheel zoom, and right-click reset."""
 
     def __init__(self, scene: _SchematicScene, parent=None) -> None:
         super().__init__(scene, parent)
-        self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.setInteractive(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         factor = 1.15 if event.angleDelta().y() > 0 else 1.0 / 1.15
         self.scale(factor, factor)
 
+    def contextMenuEvent(self, event) -> None:  # noqa: N802
+        """Right-click to reset the view to fit all items."""
+        menu = QMenu(self)
+        reset_action = menu.addAction("Reset View")
+        zoom_in_action = menu.addAction("Zoom In")
+        zoom_out_action = menu.addAction("Zoom Out")
+        action = menu.exec(event.globalPos())
+        if action == reset_action:
+            rect = self.scene().itemsBoundingRect()
+            if not rect.isNull():
+                self.fitInView(rect.adjusted(-20, -20, 20, 20), Qt.AspectRatioMode.KeepAspectRatio)
+        elif action == zoom_in_action:
+            self.scale(1.3, 1.3)
+        elif action == zoom_out_action:
+            self.scale(1.0 / 1.3, 1.0 / 1.3)
+
 
 class _SchematicTab(QWidget):
-    """Basic netlist schematic viewer using QGraphicsView."""
+    """Schematic viewer tab. Thin wrapper around the real :class:`SchematicView`.
+
+    The legacy fake-cell renderer has been removed. This tab now hosts a
+    full Yosys-JSON schematic viewer with proper logic gate symbols,
+    topological auto-layout, hierarchical drill-in, search, filter, and
+    PNG/SVG export.
+    """
+
+    # Signal: (cell_instance_name, cell_type) — kept for backward compat
+    cell_clicked = Signal(str, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        # Toolbar
-        toolbar = QHBoxLayout()
-        toolbar.setContentsMargins(4, 4, 4, 4)
-        btn_fit = QPushButton("Fit")
-        btn_fit.setFixedSize(40, 26)
-        btn_fit.clicked.connect(self._zoom_fit)
-        toolbar.addWidget(btn_fit)
-        btn_zoom_in = QPushButton("+")
-        btn_zoom_in.setFixedSize(28, 26)
-        btn_zoom_in.clicked.connect(lambda: self._view.scale(1.2, 1.2))
-        toolbar.addWidget(btn_zoom_in)
-        btn_zoom_out = QPushButton("\u2013")
-        btn_zoom_out.setFixedSize(28, 26)
-        btn_zoom_out.clicked.connect(lambda: self._view.scale(1 / 1.2, 1 / 1.2))
-        toolbar.addWidget(btn_zoom_out)
-        toolbar.addStretch()
+        if _HAS_SCHEMATIC_VIEW:
+            self.view = SchematicView(self)
+            self.view.cell_selected.connect(self._on_cell_selected)
+            layout.addWidget(self.view)
+        else:
+            self.view = None
+            label = QLabel(
+                "SchematicView is not available.\n"
+                "Run synthesis to generate a Yosys JSON netlist."
+            )
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setStyleSheet(f"color: {_SUBTEXT}; padding: 24px;")
+            layout.addWidget(label)
 
-        # Legend
-        self._legend_label = QLabel()
-        self._legend_label.setStyleSheet(f"color: {_SUBTEXT}; font-size: 11px;")
-        toolbar.addWidget(self._legend_label)
+    def load_netlist(self, netlist: object) -> None:
+        """Load a netlist into the schematic viewer.
 
-        root.addLayout(toolbar)
+        Accepts either:
+        - a path (str / Path) to a Yosys JSON file, or
+        - a dict with a ``json_path`` key, or
+        - a dict (legacy fake netlist — ignored for the new viewer).
+        """
+        if not self.view:
+            return
+        if isinstance(netlist, (str, Path)):
+            self.view.load_netlist(netlist)
+            return
+        if isinstance(netlist, dict):
+            json_path = netlist.get("json_path") or netlist.get("yosys_json")
+            if json_path:
+                self.view.load_netlist(json_path)
 
-        # Scene + View
-        self._scene = _SchematicScene()
-        self._view = _SchematicView(self._scene)
-        root.addWidget(self._view)
+    def load_netlist_json(self, json_path: str | Path) -> None:
+        """Load a Yosys JSON netlist from disk."""
+        if self.view:
+            self.view.load_netlist(json_path)
 
-        self._cell_items: dict[str, QGraphicsRectItem] = {}
-        self._net_items: list[QGraphicsLineItem] = []
-        self._update_legend()
-
-    def load_netlist(self, netlist: dict) -> None:
-        """Load from JSON: {cells: [{name, type, x, y, w, h, ports}], nets: [{from, to}]}."""
-        self._scene.clear()
-        self._cell_items.clear()
-        self._net_items.clear()
-
-        cells = netlist.get("cells", [])
-        nets = netlist.get("nets", [])
-
-        # Draw cells
-        for cell in cells:
-            name = cell.get("name", "")
-            ctype = cell.get("type", "BUF").upper()
-            x = cell.get("x", 0)
-            y = cell.get("y", 0)
-            w = cell.get("w", 80)
-            h = cell.get("h", 50)
-
-            color = QColor(_CELL_COLORS.get(ctype, _CLR_BLUE))
-            brush = QBrush(QColor(color.red(), color.green(), color.blue(), 50))
-            pen = QPen(color, 1.5)
-            pen.setCosmetic(True)
-
-            rect = self._scene.addRect(QRectF(x, y, w, h), pen, brush)
-            rect.setToolTip(f"{name} ({ctype})")
-            rect.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
-            self._cell_items[name] = rect
-
-            # Cell label
-            label = self._scene.addSimpleText(name)
-            label.setFont(QFont("Segoe UI", 7))
-            label.setBrush(QColor(_TEXT))
-            label_rect = label.boundingRect()
-            label.setPos(x + (w - label_rect.width()) / 2, y + (h - label_rect.height()) / 2)
-
-            # Type label above
-            type_label = self._scene.addSimpleText(ctype)
-            type_label.setFont(QFont("Segoe UI", 6, QFont.Weight.Bold))
-            type_label.setBrush(color)
-            type_label.setPos(x + 2, y - 12)
-
-        # Draw nets
-        for net in nets:
-            src = net.get("from", "")
-            dst = net.get("to", "")
-            src_rect = self._cell_items.get(src)
-            dst_rect = self._cell_items.get(dst)
-            if src_rect is None or dst_rect is None:
-                continue
-            sr = src_rect.rect()
-            dr = dst_rect.rect()
-            x1 = sr.right()
-            y1 = sr.center().y()
-            x2 = dr.left()
-            y2 = dr.center().y()
-            mid_x = (x1 + x2) / 2
-
-            pen = QPen(QColor(_OVERLAY0), 1.0)
-            pen.setCosmetic(True)
-            line1 = self._scene.addLine(x1, y1, mid_x, y1, pen)
-            line2 = self._scene.addLine(mid_x, y1, mid_x, y2, pen)
-            line3 = self._scene.addLine(mid_x, y2, x2, y2, pen)
-            self._net_items.extend([line1, line2, line3])
-
-        self._zoom_fit()
+    def show_demo_data(self) -> None:
+        """Backward-compat no-op. The new viewer requires a real netlist."""
+        return
 
     def highlight_cone(self, output_cell: str) -> None:
-        """Highlight cone of influence for a given output cell."""
-        # Reset all
-        for name, rect in self._cell_items.items():
-            color = QColor(_CLR_BLUE)
-            rect.setBrush(QBrush(QColor(color.red(), color.green(), color.blue(), 50)))
-        # Highlight selected
-        target = self._cell_items.get(output_cell)
-        if target is not None:
-            color = QColor(_CLR_YELLOW)
-            target.setBrush(QBrush(QColor(color.red(), color.green(), color.blue(), 100)))
+        """Backward-compat stub."""
+        return
 
-    def _zoom_fit(self) -> None:
-        rect = self._scene.itemsBoundingRect()
-        if rect.isNull():
-            return
-        self._view.fitInView(rect.adjusted(-20, -20, 20, 20), Qt.AspectRatioMode.KeepAspectRatio)
-
-    def _update_legend(self) -> None:
-        parts = []
-        for ctype, color in list(_CELL_COLORS.items())[:6]:
-            parts.append(f'<span style="color:{color};">\u25a0</span> {ctype}')
-        self._legend_label.setText("  ".join(parts))
+    def _on_cell_selected(self, cell_name: str) -> None:
+        cell_type = ""
+        if self.view and self.view._current_module:
+            cell = self.view._current_module.find_cell(cell_name)
+            if cell:
+                cell_type = cell.cell_type
+        self.cell_clicked.emit(cell_name, cell_type)
 
 
 # ── Main SynthesisPanel ─────────────────────────────────────────────────────
@@ -946,21 +940,150 @@ class SynthesisPanel(QDockWidget):
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self._tabs = QTabWidget()
+        self._tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self._tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background-color: {_BG};
+            }}
+            QTabBar::tab {{
+                background-color: {_SURFACE0};
+                color: {_SUBTEXT};
+                border: none;
+                padding: 6px 16px;
+                font-size: 11px;
+                margin-right: 1px;
+                min-width: 60px;
+            }}
+            QTabBar::tab:selected {{
+                background-color: {_BG};
+                color: {_TEXT};
+                border-bottom: 2px solid {_CLR_BLUE};
+            }}
+            QTabBar::tab:hover:!selected {{
+                background-color: {_SURFACE1};
+                color: {_TEXT};
+            }}
+            QGroupBox {{
+                background-color: {_MANTLE};
+                border: 1px solid {_SURFACE0};
+                border-radius: 4px;
+                margin-top: 14px;
+                padding: 10px 8px 8px 8px;
+                font-size: 11px;
+                font-weight: bold;
+                color: {_CLR_BLUE};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 2px 8px;
+            }}
+            QPushButton {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 4px;
+                padding: 4px 12px;
+                font-size: 11px;
+            }}
+            QPushButton:hover {{
+                background-color: {_SURFACE1};
+                border-color: {_CLR_BLUE};
+            }}
+            QPushButton:pressed {{
+                background-color: {_SURFACE2};
+            }}
+            QPushButton:checked {{
+                background-color: {_CLR_BLUE};
+                color: {_CRUST};
+                border-color: {_CLR_BLUE};
+            }}
+            QLineEdit, QComboBox, QSpinBox {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 3px;
+                padding: 3px 6px;
+                font-size: 11px;
+            }}
+            QLineEdit:focus, QComboBox:focus, QSpinBox:focus {{
+                border-color: {_CLR_BLUE};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                selection-background-color: {_SURFACE1};
+                border: 1px solid {_SURFACE1};
+            }}
+            QLabel {{
+                color: {_TEXT};
+                font-size: 11px;
+            }}
+            QProgressBar {{
+                background-color: {_SURFACE0};
+                border: none;
+                border-radius: 3px;
+                text-align: center;
+                color: {_TEXT};
+                font-size: 10px;
+                max-height: 18px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {_CLR_BLUE};
+                border-radius: 3px;
+            }}
+            QSplitter::handle {{
+                background-color: {_SURFACE0};
+                height: 2px;
+                width: 2px;
+            }}
+            QHeaderView::section {{
+                background-color: {_MANTLE};
+                color: {_SUBTEXT};
+                border: none;
+                border-right: 1px solid {_SURFACE0};
+                border-bottom: 1px solid {_SURFACE0};
+                padding: 4px 6px;
+                font-size: 11px;
+                font-weight: bold;
+            }}
+        """)
         self._summary = _SummaryTab()
         self._cells = _CellUsageTab()
         self._hierarchy = _HierarchyTab()
         self._messages = _MessagesTab()
         self._schematic = _SchematicTab()
 
-        self._tabs.addTab(self._summary, "Summary")
-        self._tabs.addTab(self._cells, "Cell Usage")
-        self._tabs.addTab(self._hierarchy, "Hierarchy")
-        self._tabs.addTab(self._messages, "Messages")
-        self._tabs.addTab(self._schematic, "Schematic")
+        # Wrap each tab in a QScrollArea so content scrolls when dock is short
+        from PySide6.QtWidgets import QScrollArea
+        def _scrollable(widget: QWidget) -> QScrollArea:
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setWidget(widget)
+            return scroll
+
+        self._tabs.addTab(_scrollable(self._summary), "Summary")
+        self._tabs.addTab(_scrollable(self._cells), "Cell Usage")
+        self._tabs.addTab(_scrollable(self._hierarchy), "Hierarchy")
+        self._tabs.addTab(_scrollable(self._messages), "Messages")
+        self._tabs.addTab(_scrollable(self._schematic), "Schematic")
 
         self.setWidget(self._tabs)
 
     # ── Public API ────────────────────────────────────────────────────
+
+    def set_theme(self, dark: bool) -> None:
+        """Switch panel QSS between dark and light themes."""
+        from openforge_desktop.panels._theme import panel_tab_qss
+        self._tabs.setStyleSheet(panel_tab_qss(dark))
 
     @property
     def summary(self) -> _SummaryTab:
@@ -1028,10 +1151,14 @@ class SynthesisPanel(QDockWidget):
         if messages:
             self._messages.set_messages(messages)
 
-        # Schematic
-        netlist = results.get("netlist")
-        if netlist:
-            self._schematic.load_netlist(netlist)
+        # Schematic — prefer a Yosys JSON path if provided
+        netlist_json = results.get("netlist_json") or results.get("yosys_json")
+        if netlist_json:
+            self._schematic.load_netlist_json(netlist_json)
+        else:
+            netlist = results.get("netlist")
+            if netlist:
+                self._schematic.load_netlist(netlist)
 
     def update_from_synthesis_result(self, result: "SynthesisResult") -> None:
         """Convert a core ``SynthesisResult`` to the panel display format.

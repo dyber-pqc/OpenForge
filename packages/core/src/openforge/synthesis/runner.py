@@ -222,6 +222,9 @@ class SynthesisRunner:
         output_dir: str | PathLike[str] | None = None,
         timeout: float | None = None,
         on_output: Callable[[str], None] | None = None,
+        include_dirs: Sequence[str | PathLike[str]] = (),
+        defines: Mapping[str, str] | None = None,
+        language_version: str = "sv2017",
     ) -> SynthesisResult:
         """Run a complete RTL-to-gate synthesis flow.
 
@@ -281,8 +284,43 @@ class SynthesisRunner:
             rel_out = out_dir.relative_to(self._project_path)
         except ValueError:
             rel_out = out_dir
-        script = generate_synth_script(
-            sources=sources,
+
+        # Build read commands honoring include_dirs/defines/language_version
+        inc_flag = " ".join(f"-I{Path(d).as_posix()}" for d in include_dirs)
+        def_parts: list[str] = []
+        for k, v in (defines or {}).items():
+            if v == "" or v is None:
+                def_parts.append(f"-D{k}")
+            else:
+                def_parts.append(f"-D{k}={v}")
+        def_flag = " ".join(def_parts)
+        rd_extra = " ".join(p for p in (inc_flag, def_flag) if p)
+        sv_mode = language_version.startswith("sv")
+
+        custom_reads: list[str] = []
+        has_vhdl = False
+        for src in sources:
+            p = Path(src)
+            posix = p.as_posix()
+            suffix = p.suffix.lower()
+            if suffix in (".sv", ".svh"):
+                custom_reads.append(
+                    " ".join(x for x in ("read_verilog -sv", rd_extra, posix) if x)
+                )
+            elif suffix in (".vhd", ".vhdl"):
+                has_vhdl = True
+                custom_reads.append(f"ghdl --std=08 {posix} -e")
+            else:
+                base = "read_verilog -sv" if sv_mode else "read_verilog"
+                custom_reads.append(
+                    " ".join(x for x in (base, rd_extra, posix) if x)
+                )
+        if has_vhdl:
+            custom_reads.insert(0, "plugin -i ghdl")
+
+        # Generate base script with no sources, then prepend our read block
+        script_body = generate_synth_script(
+            sources=(),
             top=top_module,
             liberty=liberty,
             output_dir=rel_out,
@@ -291,6 +329,7 @@ class SynthesisRunner:
             flatten=flatten,
             extra_commands=list(extra_passes),
         )
+        script = "\n".join(custom_reads) + "\n" + script_body
 
         # Write the script to disk for reproducibility
         script_path = out_dir / "synthesis.ys"
@@ -339,6 +378,57 @@ class SynthesisRunner:
             json_path=json_path,
             log=combined,
             duration=elapsed,
+        )
+
+    # ------------------------------------------------------------------
+    # Elaboration only (no techmap)
+    # ------------------------------------------------------------------
+
+    def elaborate_only(
+        self,
+        sources: Sequence[str | PathLike[str]],
+        *,
+        top_module: str = "top",
+        include_dirs: Sequence[str | PathLike[str]] = (),
+        defines: Mapping[str, str] | None = None,
+        language_version: str = "sv2017",
+        output_dir: str | PathLike[str] | None = None,
+        timeout: float | None = None,
+        on_output: Callable[[str], None] | None = None,
+    ) -> SynthesisResult:
+        """Run hierarchy + proc + opt -fast and stop before techmap.
+
+        Produces an elaborated, parameter-resolved Verilog netlist
+        without performing technology mapping.
+        """
+        from openforge.config.schema import SourceFile
+        from openforge.elaboration import Elaborator
+
+        out_dir = Path(output_dir) if output_dir else self._project_path / "elab_build"
+        src_objs = [
+            SourceFile(path=Path(s), language="auto") for s in sources
+        ]
+        inc = [Path(d) for d in include_dirs]
+        elab = Elaborator(self._project_path)
+        result = elab.elaborate(
+            sources=src_objs,
+            top_module=top_module,
+            include_dirs=inc,
+            defines=dict(defines or {}),
+            output_dir=out_dir,
+        )
+        if on_output:
+            for line in result.log_text.splitlines():
+                on_output(line)
+
+        return SynthesisResult(
+            success=result.success,
+            warnings=result.warnings,
+            errors=result.errors,
+            netlist_path=str(result.elaborated_netlist) if result.elaborated_netlist else "",
+            json_path=str(result.json_netlist) if result.json_netlist else "",
+            log=result.log_text,
+            duration=result.duration,
         )
 
     # ------------------------------------------------------------------

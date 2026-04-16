@@ -1,83 +1,85 @@
 # OpenForge EDA
 
-**Cloud-native electronic design automation platform for cryptographic hardware verification.**
+**Free, open-source EDA platform for ASIC, FPGA, and PCB design.**
 
-OpenForge integrates, extends, and orchestrates open-source EDA tools with security-focused analysis capabilities that commercial vendors don't offer. Built for post-quantum cryptographic hardware development targeting FIPS 140-3 certification.
+OpenForge integrates, extends, and orchestrates open-source EDA tools with security-focused analysis capabilities. Built for post-quantum cryptographic hardware development targeting FIPS 140-3 certification.
 
-[![CI](https://github.com/dyber-pqc/OpenForge/actions/workflows/ci.yml/badge.svg)](https://github.com/dyber-pqc/OpenForge/actions)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![CI](https://github.com/openforge/openforge/actions/workflows/ci.yml/badge.svg)](https://github.com/openforge/openforge/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/openforge-eda)](https://pypi.org/project/openforge-eda/)
+[![Docker](https://img.shields.io/docker/pulls/openforge/openforge-eda)](https://hub.docker.com/r/openforge/openforge-eda)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+<!-- screenshot placeholder: replace with actual screenshot -->
+<!-- ![OpenForge Desktop](docs/images/screenshot.png) -->
 
 ---
 
-## Key Features
+## Features
 
-### RTL-to-GDSII Flow
-- **Synthesis** via Yosys with multi-pass ABC optimization (area/speed/balanced/low-power recipes)
-- **Physical design** via OpenROAD (floorplan, placement, CTS, routing) with PDK-specific configs
-- **Static timing analysis** via OpenSTA with full path parsing, slack histograms, MCMM
-- **DRC/LVS** via Magic + Netgen with violation browsing
-- **Layout viewing** with layer visualization, zoom/pan, cell/net highlighting
+| Category | Capabilities |
+|----------|-------------|
+| **FPGA** | Yosys synthesis, nextpnr place-and-route (iCE40, ECP5), bitstream generation, openFPGALoader programming |
+| **ASIC** | Yosys + ABC synthesis, OpenROAD P&R (floorplan, CTS, routing), STA via OpenSTA, DRC/LVS via Magic + Netgen |
+| **Verification** | Verilator, Icarus Verilog, GHDL simulation; SymbiYosys formal; Cocotb testbench framework |
+| **Crypto Security** | Constant-time analysis, side-channel simulation (TVLA, CPA), entropy flow, FIPS 140-3 compliance, fault injection |
+| **Analog** | ngspice SPICE simulation, parasitic extraction via Magic |
+| **AI/ML** | Design-space exploration, power/area prediction (planned) |
+| **Desktop IDE** | Qt/PySide6 dark-theme IDE with waveform viewer, RTL editor, synthesis dashboard, timing analysis |
+| **Web IDE** | SvelteKit + Monaco editor, canvas waveform viewer, real-time WebSocket updates |
 
-### Simulation & Verification
-- **RTL simulation** via Verilator (cycle-accurate), Icarus Verilog, GHDL
-- **Testbench framework** with Cocotb integration, test discovery, and live output streaming
-- **Formal verification** via SymbiYosys with crypto-specific SVA property library
-- **Waveform viewer** with dual cursors, markers, analog traces, bus decoding, minimap
-- **Code coverage** collection and HTML reporting (line/toggle/FSM)
+---
 
-### Crypto Verification Suite (Dyber Security)
-- **Constant-time analysis** -- taint propagation detecting secret-dependent branches, memory accesses, and variable-latency operations
-- **Side-channel simulation** -- Hamming weight/distance power models, TVLA, CPA attack simulation
-- **Entropy flow analysis** -- source-to-sink path verification with reduction detection
-- **FIPS 140-3 compliance** -- key zeroization, self-test coverage, error handling, RNG health checks
-- **NTT/polynomial validation** -- FIPS 203/204 reference comparison, butterfly formal proofs
-- **Fault injection** -- glitch, bit-flip, and laser fault simulation with resilience scoring
+## Quick Install
 
-### Desktop IDE (Qt/PySide6)
-- Vivado-style dockable panel layout with dark theme
-- RTL editor with syntax highlighting, code folding, real-time lint
-- Waveform viewer with dual cursors, markers, edge navigation, minimap
-- Synthesis results with resource utilization, cell usage, schematic viewer
-- Timing analysis with slack histogram, critical path browser, constraint viewer
-- Physical design flow control with metrics dashboard
-- Testbench manager with test discovery, run/stop, pass/fail visualization
-- Signal browser, properties inspector, hierarchy browser
-- Splash screen with animated loading
+### pip (recommended)
 
-### Web IDE (SvelteKit)
-- Full IDE layout with resizable panels
-- Monaco-based RTL editor with tab management
-- Canvas-based waveform viewer with zoom/pan/cursors
-- Synthesis, timing, and physical design dashboards
-- Security score dashboard with ring charts
-- Coverage visualization with annotated source
-- Real-time updates via WebSocket
+```bash
+pip install openforge-eda
+```
+
+With all optional dependencies:
+
+```bash
+pip install openforge-eda[full]
+```
+
+### Docker
+
+```bash
+docker pull openforge/openforge-eda:latest
+
+# Run CLI
+docker run --rm -v $(pwd):/workspace openforge/openforge-eda openforge synth --help
+
+# Run API server
+docker run -p 8000:8000 openforge/openforge-eda serve --port 8000
+```
+
+### From source
+
+```bash
+git clone https://github.com/openforge/openforge.git
+cd openforge
+pip install -e ".[dev]"
+
+# Or with uv (recommended for development)
+pip install uv
+uv pip install -e packages/core -e packages/cli -e packages/desktop --system
+```
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install via pip
-pip install openforge
-
-# Initialize a project
-openforge init my-design --template crypto-accelerator
-
-# Check tool availability
+# 1. Check available EDA tools
 openforge tools
 
-# Run verification
-openforge verify --all
+# 2. Synthesize the example counter for iCE40
+openforge synth examples/simple-counter/counter.v --target ice40-hx8k
 
-# Synthesize
-openforge synth --target sky130
-
-# Launch desktop IDE
+# 3. Launch the desktop IDE
 openforge-desktop
-
-# Start API server (for web IDE)
-openforge-api
 ```
 
 ---
@@ -86,99 +88,82 @@ openforge-api
 
 ```
 openforge/
-├── packages/
-│   ├── core/           Python orchestration library
-│   │   ├── config/       YAML project config (Pydantic v2)
-│   │   ├── engine/       14 EDA tool wrappers
-│   │   ├── flow/         DAG-based verification flows
-│   │   ├── runner/       Simulation + coverage runners
-│   │   ├── synthesis/    Yosys synthesis pipeline
-│   │   ├── physical/     OpenROAD P&R + STA + DRC/LVS
-│   │   ├── parsers/      Liberty, LEF, DEF, SDC, Verilog
-│   │   ├── waveform/     VCD/FST loading
-│   │   ├── pdk/          PDK management
-│   │   ├── project/      Project management
-│   │   └── report/       HTML/JSON/SARIF/JUnit generation
-│   ├── cli/            Typer CLI (openforge command)
-│   ├── api/            FastAPI backend + WebSocket
-│   ├── web/            SvelteKit + Tailwind frontend
-│   ├── desktop/        PySide6/Qt desktop application
-│   └── crypto/         Crypto verification suite
-├── tools/              Rust performance tools
-│   ├── openforge-ct/     Constant-time analyzer
-│   ├── openforge-sca/    Side-channel analysis
-│   ├── openforge-entropy/ Entropy flow analyzer
-│   ├── openforge-lint/   Fast RTL linter
-│   └── openforge-wave/   High-performance VCD/FST parser
-├── share/              SVA libraries, templates, PDK configs
-├── docker/             Container definitions + compose
-├── examples/           Example projects
-└── tests/              Unit + integration tests
+|
+|-- packages/
+|   |-- core/           Python orchestration library (Pydantic v2)
+|   |   |-- engine/       EDA tool wrappers (Yosys, OpenROAD, Verilator, ...)
+|   |   |-- flow/         DAG-based verification flows
+|   |   |-- synthesis/    Multi-pass Yosys synthesis pipeline
+|   |   |-- physical/     OpenROAD P&R + STA + DRC/LVS
+|   |   |-- runner/       Simulation + coverage runners
+|   |   |-- parsers/      Liberty, LEF, DEF, SDC, Verilog parsers
+|   |   +-- pdk/          PDK management (SKY130, GF180, IHP SG13G2, ASAP7)
+|   |
+|   |-- cli/            Typer CLI ("openforge" command)
+|   |-- api/            FastAPI REST backend + WebSocket
+|   |-- web/            SvelteKit + Tailwind frontend (SPA)
+|   |-- desktop/        PySide6/Qt desktop IDE (dark theme, dockable panels)
+|   +-- crypto/         Crypto verification suite
+|
+|-- tools/              Rust performance tools
+|   |-- openforge-ct/     Constant-time analyzer
+|   |-- openforge-sca/    Side-channel analysis engine
+|   |-- openforge-entropy/ Entropy flow analyzer
+|   |-- openforge-lint/   Fast RTL linter
+|   +-- openforge-wave/   High-performance VCD/FST parser
+|
+|-- share/              SVA libraries, project templates, PDK configs
+|-- installer/          Docker, Windows NSIS, release scripts
+|-- examples/           Example designs (counter, AES S-box, etc.)
++-- tests/              Unit + integration tests
 ```
 
 ---
 
 ## Supported EDA Tools
 
-| Category | Tool | Integration |
-|----------|------|-------------|
-| **Simulation** | Verilator | Compile + simulate with trace/coverage |
-| | Icarus Verilog | Event-driven simulation |
-| | GHDL | VHDL simulation |
-| | Cocotb | Python testbench framework |
-| **Formal** | SymbiYosys | BMC, k-induction, PDR |
-| | Yosys | Formal backends + synthesis |
-| **Synthesis** | Yosys + ABC | RTL-to-gate with Liberty mapping |
-| **Physical** | OpenROAD | Floorplan, place, CTS, route |
-| | KLayout | Layout viewing + DRC |
-| | Magic | DRC + parasitic extraction |
-| | Netgen | LVS comparison |
-| **Timing** | OpenSTA | Multi-corner STA |
-| **Linting** | Verible | SV lint + format |
+| Category | Tool | Status |
+|----------|------|--------|
+| **Synthesis** | Yosys + ABC | Integrated |
+| **FPGA P&R** | nextpnr (iCE40, ECP5) | Integrated |
+| **ASIC P&R** | OpenROAD | Integrated |
+| **Simulation** | Verilator, Icarus Verilog, GHDL | Integrated |
+| **Formal** | SymbiYosys | Integrated |
+| **Timing** | OpenSTA | Integrated |
+| **DRC/LVS** | Magic, Netgen, KLayout | Integrated |
+| **Analog** | ngspice | Integrated |
+| **Programming** | openFPGALoader | Integrated |
+| **Linting** | Verible | Integrated |
 
 ## Supported PDKs
 
-| PDK | Node | Status | Features |
-|-----|------|--------|----------|
-| SkyWater SKY130 | 130nm | Open Source | Digital + Analog, IO cells |
-| GlobalFoundries GF180MCU | 180nm | Open Source | HV, thick oxide |
-| IHP SG13G2 | 130nm | Open Source | BiCMOS, SiGe HBT |
-| ASAP7 | 7nm | Academic | FinFET, predictive |
-| GF22FDX, TSMC, Samsung, Intel | Various | Licensed | Via import wizard |
-
----
-
-## File Parsers
-
-OpenForge includes production-quality parsers for standard EDA formats:
-
-| Format | Lines | Purpose |
-|--------|-------|---------|
-| Liberty (.lib) | 592 | Cell timing, power, area |
-| LEF | 624 | Layer/via/macro geometry |
-| DEF | 682 | Placed & routed design |
-| SDC | 556 | Timing constraints |
-| VCD | 617 (Rust) | Simulation waveforms |
-| Verilog netlist | 348 | Gate-level schematic |
+| PDK | Node | License |
+|-----|------|---------|
+| SkyWater SKY130 | 130nm | Open Source |
+| GlobalFoundries GF180MCU | 180nm | Open Source |
+| IHP SG13G2 | 130nm | Open Source |
+| ASAP7 | 7nm | Academic |
 
 ---
 
 ## Development
 
 ### Prerequisites
+
 - Python 3.12+
 - Rust 1.75+ (for performance tools)
 - Node 20+ (for web frontend)
 - PySide6 (for desktop app)
 
 ### Setup
-```bash
-# Clone
-git clone https://github.com/dyber-pqc/OpenForge.git
-cd OpenForge
 
-# Python packages (using uv)
-uv pip install -e "packages/core[dev]" -e "packages/cli" -e "packages/crypto"
+```bash
+git clone https://github.com/openforge/openforge.git
+cd openforge
+
+# Python (using uv)
+pip install uv
+uv pip install -e "packages/core[dev]" -e "packages/cli" -e "packages/desktop" --system
 
 # Rust tools
 cargo build --release
@@ -187,34 +172,33 @@ cargo build --release
 cd packages/web && npm install && npm run dev
 
 # Run tests
-pytest tests/
+pytest packages/core/tests/ -v
 cargo test --all
 ```
 
-### Coding Standards
-- **Python**: 3.12+, type hints, Pydantic v2, ruff lint/format, pytest
+### Coding standards
+
+- **Python**: 3.12+, type hints everywhere, Pydantic v2, ruff lint/format, pytest
 - **Rust**: 2021 edition, clippy, thiserror, clap
-- **TypeScript/Svelte**: Strict TS, SvelteKit SPA mode, Tailwind CSS
-- **Qt/PySide6**: Dark theme (Catppuccin Mocha), dock widgets, QSS
+- **TypeScript**: Strict TS, SvelteKit SPA mode, Tailwind CSS
+- **Qt**: Dark theme (Catppuccin Mocha), dock widgets, QSS theming
 
 ---
 
-## Project Statistics
+## Contributing
 
-| Component | Files | Lines |
-|-----------|-------|-------|
-| Python (core, CLI, API, desktop, crypto) | ~95 | ~21,500 |
-| Rust (tools) | ~15 | ~1,560 |
-| Svelte/TypeScript (web) | ~20 | ~2,480 |
-| SystemVerilog/Verilog (examples, SVA) | ~5 | ~350 |
-| Config/Docker/CI | ~25 | ~500 |
-| **Total** | **~160** | **~27,400** |
+Contributions are welcome. Please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Make your changes with tests
+4. Run `ruff check packages/ && pytest packages/core/tests/`
+5. Open a pull request
 
 ---
 
 ## License
 
-OpenForge Core Platform is licensed under [GPLv3](LICENSE).
-Dyber IP Library and Security Suite are proprietary (subscription).
+Licensed under [Apache 2.0](LICENSE).
 
-Copyright 2026 Dyber Inc. | [engineering@dyber.io](mailto:engineering@dyber.io)
+Copyright 2026 Dyber, Inc.

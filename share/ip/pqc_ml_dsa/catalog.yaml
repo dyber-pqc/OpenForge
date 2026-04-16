@@ -1,0 +1,25 @@
+name: pqc_ml_dsa
+display_name: ML-DSA-65 (Dilithium)
+category: post-quantum-crypto
+family: signature
+algorithm: ml-dsa-65
+nist_doc: FIPS 204
+security_level: 3
+description: |
+  Module-Lattice-Based Digital Signature Algorithm (ML-DSA-65),
+  standardized in NIST FIPS 204. AXI4-Lite slave wrapper.
+sources:
+  - src/ml_dsa_top.v
+top_module: ml_dsa_top
+interface: axi4-lite
+parameters:
+  public_key_bytes: 1952
+  secret_key_bytes: 4032
+  signature_bytes: 3309
+estimated_gates: 240000
+estimated_cycles:
+  keygen: 110000
+  sign: 340000
+  verify: 120000
+clock_mhz: 100
+status: skeleton

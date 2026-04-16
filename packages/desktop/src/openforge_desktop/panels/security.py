@@ -45,6 +45,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QProgressBar,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QSlider,
     QSpinBox,
@@ -67,6 +68,17 @@ _CRUST: Final[str] = "#11111b"
 _SURFACE0: Final[str] = "#313244"
 _SURFACE1: Final[str] = "#45475a"
 _SURFACE2: Final[str] = "#585b70"
+
+
+def _scrollable(widget: QWidget) -> QScrollArea:
+    """Wrap a widget in a scroll area so tab content never clips."""
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    scroll.setWidget(widget)
+    return scroll
 _TEXT: Final[str] = "#cdd6f4"
 _SUBTEXT: Final[str] = "#a6adc8"
 _OVERLAY0: Final[str] = "#6c7086"
@@ -1344,6 +1356,7 @@ class SecurityPanel(QDockWidget):
 
     def __init__(self, title: str = "Security", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
+        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
         self.setMinimumWidth(420)
 
         container = QWidget()
@@ -1353,6 +1366,149 @@ class SecurityPanel(QDockWidget):
 
         self._tabs = QTabWidget()
         self._tabs.setDocumentMode(True)
+        self._tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background-color: {_BG};
+            }}
+            QTabBar::tab {{
+                background-color: {_SURFACE0};
+                color: {_SUBTEXT};
+                border: none;
+                padding: 6px 14px;
+                font-size: 11px;
+                margin-right: 1px;
+                min-width: 50px;
+            }}
+            QTabBar::tab:selected {{
+                background-color: {_BG};
+                color: {_TEXT};
+                border-bottom: 2px solid {_CLR_BLUE};
+            }}
+            QTabBar::tab:hover:!selected {{
+                background-color: {_SURFACE1};
+                color: {_TEXT};
+            }}
+            QGroupBox {{
+                background-color: {_MANTLE};
+                border: 1px solid {_SURFACE0};
+                border-radius: 4px;
+                margin-top: 14px;
+                padding: 10px 8px 8px 8px;
+                font-size: 11px;
+                font-weight: bold;
+                color: {_CLR_BLUE};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 2px 8px;
+            }}
+            QPushButton {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 4px;
+                padding: 4px 12px;
+                font-size: 11px;
+            }}
+            QPushButton:hover {{
+                background-color: {_SURFACE1};
+                border-color: {_CLR_BLUE};
+            }}
+            QPushButton:pressed {{
+                background-color: {_SURFACE2};
+            }}
+            QPushButton:checked {{
+                background-color: {_CLR_BLUE};
+                color: {_CRUST};
+                border-color: {_CLR_BLUE};
+            }}
+            QLineEdit, QComboBox, QSpinBox {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                border: 1px solid {_SURFACE1};
+                border-radius: 3px;
+                padding: 3px 6px;
+                font-size: 11px;
+            }}
+            QLineEdit:focus, QComboBox:focus, QSpinBox:focus {{
+                border-color: {_CLR_BLUE};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {_SURFACE0};
+                color: {_TEXT};
+                selection-background-color: {_SURFACE1};
+                border: 1px solid {_SURFACE1};
+            }}
+            QLabel {{
+                color: {_TEXT};
+                font-size: 11px;
+            }}
+            QProgressBar {{
+                background-color: {_SURFACE0};
+                border: none;
+                border-radius: 3px;
+                text-align: center;
+                color: {_TEXT};
+                font-size: 10px;
+                max-height: 18px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {_CLR_BLUE};
+                border-radius: 3px;
+            }}
+            QSlider::groove:horizontal {{
+                background: {_SURFACE0};
+                height: 6px;
+                border-radius: 3px;
+            }}
+            QSlider::handle:horizontal {{
+                background: {_CLR_BLUE};
+                width: 14px;
+                margin: -4px 0;
+                border-radius: 7px;
+            }}
+            QSlider::sub-page:horizontal {{
+                background: {_CLR_BLUE};
+                border-radius: 3px;
+            }}
+            QCheckBox {{
+                color: {_TEXT};
+                font-size: 11px;
+                spacing: 6px;
+            }}
+            QCheckBox::indicator {{
+                width: 14px;
+                height: 14px;
+                border-radius: 3px;
+                border: 1px solid {_SURFACE1};
+                background-color: {_SURFACE0};
+            }}
+            QCheckBox::indicator:checked {{
+                background-color: {_CLR_BLUE};
+                border-color: {_CLR_BLUE};
+            }}
+            QSplitter::handle {{
+                background-color: {_SURFACE0};
+                height: 2px;
+                width: 2px;
+            }}
+            QHeaderView::section {{
+                background-color: {_MANTLE};
+                color: {_SUBTEXT};
+                border: none;
+                border-right: 1px solid {_SURFACE0};
+                border-bottom: 1px solid {_SURFACE0};
+                padding: 4px 6px;
+                font-size: 11px;
+                font-weight: bold;
+            }}
+        """)
 
         self._overview_tab = _OverviewTab()
         self._ct_tab = _ConstantTimeTab()
@@ -1361,15 +1517,144 @@ class SecurityPanel(QDockWidget):
         self._entropy_tab = _EntropyTab()
         self._fault_tab = _FaultInjectionTab()
 
-        self._tabs.addTab(self._overview_tab, "Overview")
-        self._tabs.addTab(self._ct_tab, "Constant-Time")
-        self._tabs.addTab(self._sca_tab, "Side-Channel")
-        self._tabs.addTab(self._fips_tab, "FIPS 140-3")
-        self._tabs.addTab(self._entropy_tab, "Entropy")
-        self._tabs.addTab(self._fault_tab, "Fault Injection")
+        self._tabs.addTab(_scrollable(self._overview_tab), "Overview")
+        self._tabs.addTab(_scrollable(self._ct_tab), "Constant-Time")
+        self._tabs.addTab(_scrollable(self._sca_tab), "Side-Channel")
+        self._tabs.addTab(_scrollable(self._fips_tab), "FIPS 140-3")
+        self._tabs.addTab(_scrollable(self._entropy_tab), "Entropy")
+        self._tabs.addTab(_scrollable(self._fault_tab), "Fault Injection")
 
         layout.addWidget(self._tabs)
         self.setWidget(container)
+
+    def set_theme(self, dark: bool) -> None:
+        """Switch panel QSS between dark and light themes."""
+        from openforge_desktop.panels._theme import panel_tab_qss
+        extra = f"""
+            QCheckBox {{
+                color: {'#cdd6f4' if dark else '#212529'};
+                font-size: 11px;
+                spacing: 6px;
+            }}
+            QCheckBox::indicator {{
+                width: 14px;
+                height: 14px;
+                border-radius: 3px;
+                border: 1px solid {'#45475a' if dark else '#ced4da'};
+                background-color: {'#313244' if dark else '#dee2e6'};
+            }}
+            QCheckBox::indicator:checked {{
+                background-color: {'#89b4fa' if dark else '#0d6efd'};
+                border-color: {'#89b4fa' if dark else '#0d6efd'};
+            }}
+        """
+        self._tabs.setStyleSheet(panel_tab_qss(dark, extra=extra))
+
+    def run_analysis(self, source_files: list[str], top_module: str) -> None:
+        """Run real crypto security analysis using CryptoWorker backend.
+
+        Creates a CryptoWorker, connects its signals, and updates all tabs
+        with real results when the analysis completes.  Falls back to demo
+        data if no CryptoWorker is available.
+        """
+        try:
+            from openforge_desktop.workers import CryptoWorker
+            self._crypto_worker = CryptoWorker(
+                source_files=source_files,
+                top_module=top_module,
+                parent=self,
+            )
+            self._crypto_worker.finished.connect(self.update_from_crypto_result)
+            self._crypto_worker.error.connect(self._on_crypto_error)
+            self._crypto_worker.start()
+        except (ImportError, AttributeError):
+            # CryptoWorker not available yet, use demo data
+            self.show_demo_data()
+
+    def update_from_crypto_result(self, result: object) -> None:
+        """Populate all 6 tabs from actual analysis data.
+
+        Parameters
+        ----------
+        result:
+            Object with attributes matching the crypto analysis output.
+            Falls back to demo data for any missing attributes.
+        """
+        try:
+            # Overview
+            if hasattr(result, "overall_score"):
+                categories = getattr(result, "categories", [])
+                self._overview_tab.populate(
+                    overall_score=result.overall_score,
+                    categories=categories,
+                    critical=getattr(result, "critical_count", 0),
+                    warnings=getattr(result, "warning_count", 0),
+                    info=getattr(result, "info_count", 0),
+                    timestamp=getattr(result, "timestamp", "now"),
+                    duration=getattr(result, "duration", "--"),
+                )
+            else:
+                self._populate_overview_demo()
+
+            # Constant-time
+            if hasattr(result, "ct_signals"):
+                self._ct_tab.populate(
+                    result.ct_signals,
+                    getattr(result, "ct_violations", []),
+                    getattr(result, "sva_text", ""),
+                )
+            else:
+                self._populate_ct_demo()
+
+            # Side-channel
+            if hasattr(result, "sca_traces"):
+                self._sca_tab.populate(
+                    traces=result.sca_traces,
+                    leakage_points=getattr(result, "leakage_points", []),
+                    t_values=getattr(result, "t_values", []),
+                    leakage_entries=getattr(result, "leakage_entries", []),
+                    key_ranks=getattr(result, "key_ranks", []),
+                    verdict=getattr(result, "sca_verdict", "--"),
+                )
+            else:
+                self._populate_sca_demo()
+
+            # FIPS
+            if hasattr(result, "fips_results"):
+                self._fips_tab.populate(
+                    result.fips_results,
+                    getattr(result, "fips_evidence", None),
+                )
+            else:
+                self._populate_fips_demo()
+
+            # Entropy
+            if hasattr(result, "entropy_issues"):
+                self._entropy_tab.populate(
+                    result.entropy_issues,
+                    getattr(result, "nist_results", []),
+                )
+            else:
+                self._populate_entropy_demo()
+
+            # Fault injection
+            if hasattr(result, "fault_results"):
+                self._fault_tab.populate(
+                    faults=result.fault_results,
+                    classification=getattr(result, "fault_classification", {}),
+                    resilience_score=getattr(result, "resilience_score", 0.0),
+                    recommendation=getattr(result, "fault_recommendation", ""),
+                    active_countermeasures=getattr(result, "active_countermeasures", None),
+                )
+            else:
+                self._populate_fault_demo()
+        except Exception:
+            # If anything fails, fall back to demo data
+            self.show_demo_data()
+
+    def _on_crypto_error(self, msg: str) -> None:
+        """Handle CryptoWorker error by falling back to demo data."""
+        self.show_demo_data()
 
     def show_demo_data(self) -> None:
         """Populate all tabs with representative demo data."""

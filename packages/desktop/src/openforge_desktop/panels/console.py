@@ -42,9 +42,7 @@ class ConsolePanel(QDockWidget):
 
     def __init__(self, title: str = "Console", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
-        self.setAllowedAreas(
-            Qt.DockWidgetArea.BottomDockWidgetArea | Qt.DockWidgetArea.TopDockWidgetArea
-        )
+        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         container = QWidget()
         layout = QVBoxLayout(container)
@@ -195,6 +193,23 @@ class ConsolePanel(QDockWidget):
             from pathlib import Path
             Path(path).write_text(self._output.toPlainText(), encoding="utf-8")
             self.append_info(f"Log saved to: {path}")
+
+    def set_theme(self, dark: bool) -> None:
+        """Update console colors for dark or light theme."""
+        if dark:
+            bg = "#1e1e2e"
+            text = "#cdd6f4"
+            input_bg = "#181825"
+        else:
+            bg = "#ffffff"
+            text = "#212529"
+            input_bg = "#f8f9fa"
+        self._output.setStyleSheet(
+            f"QPlainTextEdit {{ background-color: {bg}; color: {text}; }}"
+        )
+        self._input.setStyleSheet(
+            f"QLineEdit {{ background-color: {input_bg}; color: {text}; }}"
+        )
 
     def _on_command_entered(self) -> None:
         text = self._input.text().strip()

@@ -1,0 +1,55 @@
+name: formal-fifo-proof
+version: "1"
+kind: asic
+top_module: sync_fifo
+
+rtl_sources:
+  - rtl/sync_fifo.v
+  - rtl/fifo_props.sv
+tb_sources:
+  - tb/fifo_tb.v
+
+pdk:
+  name: generic
+  std_cell_lib: generic
+
+target:
+  kind: asic
+  vendor: generic
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: sim
+    tool: iverilog
+    options:
+      top: fifo_tb
+    depends_on:
+      - lint
+
+  - stage: formal_bmc
+    tool: symbiyosys
+    options:
+      config: fifo.sby
+      mode: bmc
+      depth: 20
+    depends_on:
+      - lint
+
+  - stage: formal_prove
+    tool: symbiyosys
+    options:
+      config: fifo.sby
+      mode: prove
+    depends_on:
+      - formal_bmc
+
+metadata:
+  description: Formal verification proving a synchronous FIFO never overflows or underflows
+  author: OpenForge Examples
+  license: MIT
+  fifo_depth: 8
+  fifo_width: 8

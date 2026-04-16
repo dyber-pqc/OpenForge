@@ -6,8 +6,15 @@ import json
 import re
 from pathlib import Path
 
-from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PySide6.QtWidgets import QDockWidget, QTreeView, QVBoxLayout, QWidget
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
+from PySide6.QtWidgets import (
+    QApplication,
+    QDockWidget,
+    QMenu,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class _HierarchyNode:
@@ -143,11 +150,14 @@ class HierarchyModel(QAbstractItemModel):
 class HierarchyPanel(QDockWidget):
     """Dock widget that hosts the hierarchy tree view."""
 
+    # Signals for cross-panel actions
+    go_to_source_requested = Signal(str)  # module name
+    set_top_module_requested = Signal(str)  # module name
+    show_in_editor_requested = Signal(str)  # module name
+
     def __init__(self, title: str = "Hierarchy Browser", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
-        self.setAllowedAreas(
-            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
-        )
+        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         container = QWidget()
         layout = QVBoxLayout(container)
@@ -161,9 +171,50 @@ class HierarchyPanel(QDockWidget):
         self._tree.setIndentation(18)
         self._tree.expandAll()
         self._tree.setColumnWidth(0, 220)
+        self._tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._tree.customContextMenuRequested.connect(self._on_context_menu)
         layout.addWidget(self._tree)
 
         self.setWidget(container)
+
+    def _on_context_menu(self, position) -> None:
+        """Comprehensive right-click context menu for hierarchy browser."""
+        index = self._tree.indexAt(position)
+        menu = QMenu(self)
+
+        # Tree navigation
+        menu.addAction("Expand All", self._tree.expandAll)
+        menu.addAction("Collapse All", self._tree.collapseAll)
+        menu.addSeparator()
+
+        if index.isValid():
+            node: _HierarchyNode = index.internalPointer()
+            raw_name = node.name
+            # Extract module name (handle "inst_name (module_type)" format)
+            module_name = raw_name
+            if " (" in raw_name and raw_name.endswith(")"):
+                module_name = raw_name.split(" (")[1].rstrip(")")
+            elif " [" in raw_name:
+                module_name = raw_name.split(" [")[0]
+
+            menu.addAction("Go to Source", lambda: self.go_to_source_requested.emit(module_name))
+            menu.addAction("Set as Top Module", lambda: self.set_top_module_requested.emit(module_name))
+            menu.addAction("Show in Editor", lambda: self.show_in_editor_requested.emit(module_name))
+            menu.addSeparator()
+            menu.addAction("Copy Name", lambda: QApplication.clipboard().setText(module_name))
+            menu.addAction("Copy Full Path", lambda: self._copy_hierarchy_path(index))
+
+        menu.exec(self._tree.viewport().mapToGlobal(position))
+
+    def _copy_hierarchy_path(self, index: QModelIndex) -> None:
+        """Copy the full hierarchy path (e.g. top.sub.inst) to clipboard."""
+        parts: list[str] = []
+        while index.isValid():
+            node: _HierarchyNode = index.internalPointer()
+            parts.append(node.name.split(" (")[0].split(" [")[0])
+            index = index.parent()
+        parts.reverse()
+        QApplication.clipboard().setText(".".join(parts))
 
     @property
     def model(self) -> HierarchyModel:

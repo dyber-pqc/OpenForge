@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Project Summary - OpenForge EDA</title>
+<meta name="generator" content="OpenForge EDA by Dyber, Inc.">
+<style>
+
+:root {
+  --dyber-blue: #00d4ff;
+  --dyber-violet: #7c3aed;
+  --dyber-emerald: #10b981;
+  --dyber-amber: #f59e0b;
+  --dyber-red: #ef4444;
+  --bg-deep: #0a0e27;
+  --bg-surface: #1a1f3a;
+  --bg-elevated: #252b45;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border: #2d3555;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, 'Segoe UI', 'Inter', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.5;
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 10px 20px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  font-size: 13px;
+}
+
+.sidebar nav a:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.sidebar nav a.active {
+  color: var(--dyber-blue);
+  border-left-color: var(--dyber-blue);
+  background: var(--bg-elevated);
+}
+
+main {
+  margin-left: 260px;
+  flex: 1;
+  padding: 32px 48px;
+  max-width: calc(100vw - 260px);
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--dyber-blue);
+  margin-bottom: 32px;
+}
+
+.report-title {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.report-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.metadata-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.metadata-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.metadata-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--dyber-blue);
+}
+
+.metadata-value.ok { color: var(--dyber-emerald); }
+.metadata-value.warn { color: var(--dyber-amber); }
+.metadata-value.fail { color: var(--dyber-red); }
+
+section { margin: 32px 0; }
+
+section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dyber-blue);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+  color: var(--text-primary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+table th {
+  background: var(--bg-elevated);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+table tr:hover td { background: var(--bg-elevated); }
+table tr:last-child td { border-bottom: none; }
+
+.chart-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--dyber-blue), var(--dyber-violet));
+  transition: width 0.3s;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.ok { background: rgba(16, 185, 129, 0.2); color: var(--dyber-emerald); }
+.badge.warn { background: rgba(245, 158, 11, 0.2); color: var(--dyber-amber); }
+.badge.fail { background: rgba(239, 68, 68, 0.2); color: var(--dyber-red); }
+.badge.info { background: rgba(0, 212, 255, 0.2); color: var(--dyber-blue); }
+
+footer {
+  margin-top: 64px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+footer .confidential {
+  color: var(--dyber-amber);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 6px 0;
+}
+
+@media print {
+  body { background: white; color: black; }
+  .sidebar { display: none; }
+  main { margin-left: 0; max-width: 100%; }
+  section { page-break-inside: avoid; }
+  .chart-container, table { background: white; border-color: #ccc; }
+  .metadata-card { background: white; border-color: #ccc; }
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.btn {
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--dyber-blue);
+}
+
+.btn.primary {
+  background: var(--dyber-blue);
+  color: var(--bg-deep);
+  border-color: var(--dyber-blue);
+  font-weight: 600;
+}
+
+svg.chart { width: 100%; max-width: 700px; }
+svg.chart text { fill: var(--text-primary); font-family: inherit; }
+svg.chart .grid { stroke: var(--border); stroke-dasharray: 2,3; }
+svg.chart .axis { stroke: var(--text-secondary); }
+
+code {
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 12px;
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--dyber-blue);
+}
+
+ul { margin-left: 20px; margin-top: 8px; }
+ul li { margin: 4px 0; font-size: 13px; }
+
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <svg xmlns="http://www.w3.org/2000/svg" width="140" height="40" viewBox="0 0 140 40">
+  <defs>
+    <linearGradient id="dyber-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <path d="M 10 8 L 10 32 L 22 32 Q 32 32 32 20 Q 32 8 22 8 Z"
+        fill="none" stroke="url(#dyber-grad)" stroke-width="3"/>
+  <circle cx="22" cy="20" r="3" fill="#00d4ff"/>
+  <line x1="32" y1="20" x2="42" y2="20" stroke="#00d4ff" stroke-width="2"/>
+  <text x="48" y="26" font-family="'Segoe UI', sans-serif" font-size="18"
+        font-weight="600" fill="#e2e8f0">DYBER</text>
+</svg>
+    <div style="margin-top: 12px; font-size: 11px; color: var(--text-secondary);">OpenForge EDA</div>
+    <div style="margin-top: 4px; font-size: 10px; color: var(--text-secondary);">by Dyber, Inc.</div>
+  </div>
+  <nav><a href="#dashboard">Health Dashboard</a><a href="#synthesis">Synthesis Summary</a></nav>
+</div>
+<main>
+<div class="report-header">
+  <div>
+    <div style="margin-bottom: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="140" height="40" viewBox="0 0 140 40">
+  <defs>
+    <linearGradient id="dyber-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <path d="M 10 8 L 10 32 L 22 32 Q 32 32 32 20 Q 32 8 22 8 Z"
+        fill="none" stroke="url(#dyber-grad)" stroke-width="3"/>
+  <circle cx="22" cy="20" r="3" fill="#00d4ff"/>
+  <line x1="32" y1="20" x2="42" y2="20" stroke="#00d4ff" stroke-width="2"/>
+  <text x="48" y="26" font-family="'Segoe UI', sans-serif" font-size="18"
+        font-weight="600" fill="#e2e8f0">DYBER</text>
+</svg></div>
+    <h1 class="report-title">Project Summary</h1>
+    <div class="report-subtitle">{'synthesis': FakeSynth(success=True, gate_count=2537, area_um2=3400.5, duration=1.8, pdk='sky130', top_module='counter', cell_usage={'sky130_fd_sc_hd__dfrtp_1': 120, 'sky130_fd_sc_hd__inv_1': 45, 'sky130_fd_sc_hd__nand2_1': 30, 'sky130_fd_sc_hd__nor2_1': 28, 'sky130_fd_sc_hd__and2_1': 25, 'sky130_fd_sc_hd__or2_1': 22, 'sky130_fd_sc_hd__xor2_1': 18}, warnings=['Unused wire removed'], errors=[], netlist_path='')} - Full Project Health Dashboard</div>
+  </div>
+  <div class="actions">
+    <button class="btn primary" onclick="window.print()">Print / PDF</button>
+  </div>
+</div>
+<div class="metadata-grid">
+  <div class="metadata-card"><div class="metadata-label">Health Score</div><div class="metadata-value">100%</div></div><div class="metadata-card"><div class="metadata-label">Stages Passed</div><div class="metadata-value">1/1</div></div><div class="metadata-card"><div class="metadata-label">Project</div><div class="metadata-value">{'synthesis': FakeSynth(success=True, gate_count=2537, area_um2=3400.5, duration=1.8, pdk='sky130', top_module='counter', cell_usage={'sky130_fd_sc_hd__dfrtp_1': 120, 'sky130_fd_sc_hd__inv_1': 45, 'sky130_fd_sc_hd__nand2_1': 30, 'sky130_fd_sc_hd__nor2_1': 28, 'sky130_fd_sc_hd__and2_1': 25, 'sky130_fd_sc_hd__or2_1': 22, 'sky130_fd_sc_hd__xor2_1': 18}, warnings=['Unused wire removed'], errors=[], netlist_path='')}</div></div><div class="metadata-card"><div class="metadata-label">Status</div><div class="metadata-value">HEALTHY</div></div>
+</div>
+<section id="dashboard"><h2>Health Dashboard</h2>
+    <div class="chart-container" style="display: flex; gap: 32px; align-items: center;">
+        <div><svg class="chart" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+<text x="120.0" y="20" text-anchor="middle" font-weight="600" font-size="13">Overall Project Health</text>
+<path d="M 20.0 168.0 A 100.0 100.0 0 1 1 220.0 168.0" fill="none" stroke="#252b45" stroke-width="14" stroke-linecap="round"/>
+<path d="M 20.0 168.0 A 100.0 100.0 0 0 1 220.0 168.0" fill="none" stroke="#10b981" stroke-width="14" stroke-linecap="round"/>
+<text x="120.0" y="163.0" text-anchor="middle" font-size="28" font-weight="700" fill="#10b981">100.0</text>
+<text x="120.0" y="183.0" text-anchor="middle" font-size="11" fill="#94a3b8">of 100</text>
+</svg></div>
+        <div style="flex: 1;">
+            <table>
+                <tr><th>Stage</th><th>Status</th></tr>
+                <tr><td>Synthesis</td><td><span class="badge ok">PASS</span></td></tr>
+            </table>
+        </div>
+    </div>
+    </section><section id="synthesis"><h2>Synthesis Summary</h2>
+        <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>Top Module</td><td><code>top</code></td></tr>
+            <tr><td>Gate Count</td><td>0</td></tr>
+            <tr><td>Area</td><td>0.0 um2</td></tr>
+            <tr><td>Status</td><td><span class="badge ok">
+                PASS</span></td></tr>
+        </table>
+        </section>
+<footer>
+  <div>OpenForge EDA v0.1.0 &middot; Dyber, Inc. &middot; Report ID: e60fcbdc</div>
+  <div class="confidential">CONFIDENTIAL - PROPRIETARY INFORMATION</div>
+  <div>&copy; 2026 Dyber, Inc. All Rights Reserved. "Cloud-Native Cryptographic Hardware Verification"</div>
+</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,37 @@
+name: spice-opamp-tia
+version: "1"
+kind: mixed
+top_module: tia
+
+rtl_sources: []
+
+runs:
+  - stage: op
+    tool: ngspice
+    options:
+      netlist: spice/tia.cir
+      analysis: op
+
+  - stage: tran
+    tool: ngspice
+    options:
+      netlist: spice/tia.cir
+      analysis: tran
+    depends_on:
+      - op
+
+  - stage: ac
+    tool: ngspice
+    options:
+      netlist: spice/tia.cir
+      analysis: ac
+    depends_on:
+      - op
+
+metadata:
+  description: Transimpedance amplifier using sky130 transistor models - SPICE simulation
+  author: OpenForge Examples
+  license: Apache-2.0
+  circuit_type: transimpedance_amplifier
+  expected_gain_dbohm: 100
+  expected_bandwidth_mhz: 50

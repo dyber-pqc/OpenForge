@@ -284,12 +284,7 @@ class TestbenchPanel(QDockWidget):
 
     def __init__(self, title: str = "Testbenches", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
-        self.setAllowedAreas(
-            Qt.DockWidgetArea.BottomDockWidgetArea
-            | Qt.DockWidgetArea.TopDockWidgetArea
-            | Qt.DockWidgetArea.LeftDockWidgetArea
-            | Qt.DockWidgetArea.RightDockWidgetArea
-        )
+        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self._project_path: Path | None = None
         self._test_items: dict[str, TestItemData] = {}

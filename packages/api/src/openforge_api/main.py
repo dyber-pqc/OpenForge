@@ -18,6 +18,10 @@ from openforge_api.routes import (
     waveforms,
     ws,
 )
+from openforge_api.auth import router as auth_router
+from openforge_api.cloud_dispatch import register_handlers
+from openforge_api.job_queue import get_queue
+from openforge_api.websocket import router as ws_jobs_router, setup_websocket
 
 app = FastAPI(
     title="OpenForge EDA API",
@@ -44,6 +48,22 @@ app.include_router(crypto.router, prefix="/crypto", tags=["crypto"])
 app.include_router(files.router, prefix="/files", tags=["files"])
 app.include_router(tools.router, prefix="/tools", tags=["tools"])
 app.include_router(ws.router, tags=["websocket"])
+app.include_router(ws_jobs_router, tags=["jobs-ws"])
+app.include_router(auth_router, tags=["auth"])
+
+
+@app.on_event("startup")
+async def _phase9_startup() -> None:
+    register_handlers()
+    setup_websocket(app)
+    queue = get_queue()
+    await queue.start()
+
+
+@app.on_event("shutdown")
+async def _phase9_shutdown() -> None:
+    queue = get_queue()
+    await queue.stop()
 
 
 @app.get("/health", tags=["system"])

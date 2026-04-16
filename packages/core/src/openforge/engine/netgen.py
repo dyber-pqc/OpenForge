@@ -22,7 +22,8 @@ class NetgenEngine(ToolEngine):
         )
     """
 
-    BINARY = "netgen"
+    BINARY = "netgen-lvs"  # Ubuntu package: netgen-lvs
+    _FALLBACK_BINARY = "netgen"
     DOCKER_IMAGE = ""  # No standard Docker image
 
     def __init__(
@@ -43,7 +44,11 @@ class NetgenEngine(ToolEngine):
     def check_installed(self) -> bool:
         if self.backend == ExecutionBackend.DOCKER:
             return self.run(["--version"]).ok
-        return self._which() is not None
+        # Try primary binary (netgen-lvs) then fallback (netgen)
+        if self._which() is not None:
+            return True
+        import shutil
+        return shutil.which(self._FALLBACK_BINARY) is not None
 
     def version(self) -> str:
         result = self.run(["--version"])

@@ -1,0 +1,26 @@
+name: pqc_falcon
+display_name: Falcon-512
+category: post-quantum-crypto
+family: signature
+algorithm: falcon-512
+nist_doc: Falcon (Round 3)
+security_level: 1
+description: |
+  Falcon-512 lattice-based digital signature scheme. AXI4-Lite slave
+  wrapper. Note: real implementation requires constant-time Gaussian
+  sampler.
+sources:
+  - src/falcon_top.v
+top_module: falcon_top
+interface: axi4-lite
+parameters:
+  public_key_bytes: 897
+  secret_key_bytes: 1281
+  signature_bytes: 666
+estimated_gates: 220000
+estimated_cycles:
+  keygen: 10000000
+  sign: 1200000
+  verify: 80000
+clock_mhz: 100
+status: skeleton

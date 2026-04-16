@@ -1,0 +1,69 @@
+site_name: OpenForge EDA Documentation
+site_url: https://docs.openforge.dev
+repo_url: https://github.com/openforge/openforge
+repo_name: openforge/openforge
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: custom
+    accent: cyan
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - content.code.copy
+    - content.tabs.link
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - First Project: getting-started/first-project.md
+    - Quick Start: getting-started/quickstart.md
+  - Tutorials:
+    - FPGA Flow: tutorials/fpga-flow.md
+    - ASIC Flow: tutorials/asic-flow.md
+    - PCB Flow: tutorials/pcb-flow.md
+    - Verification: tutorials/verification.md
+    - Analog Simulation: tutorials/analog.md
+  - User Guide:
+    - Project Structure: guide/project-structure.md
+    - Activity Bar: guide/activity-bar.md
+    - Code Editor: guide/code-editor.md
+    - Flow Navigator: guide/flow-navigator.md
+    - Constraint Editor: guide/constraints.md
+    - Pin Planner: guide/pin-planner.md
+  - Panel Reference:
+    - Overview: panels/overview.md
+    - Synthesis: panels/synthesis.md
+    - Physical Design: panels/physical.md
+    - Timing Analysis: panels/timing.md
+    - Verification: panels/verification.md
+    - FPGA: panels/fpga.md
+    - PCB: panels/pcb.md
+    - Sign-off: panels/signoff.md
+  - CLI Reference: cli/index.md
+  - API Reference: api/index.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+extra_css:
+  - stylesheets/extra.css

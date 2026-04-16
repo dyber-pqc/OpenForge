@@ -1086,16 +1086,45 @@ class _SignalTree(QTreeWidget):
         item = self.itemAt(pos)
         menu = QMenu(self)
 
-        add_group = menu.addAction("Add to Group...")
+        # Signal manipulation
         remove_act = menu.addAction("Remove Signal")
         menu.addSeparator()
+
         color_act = menu.addAction("Change Color...")
+
+        # Radix submenu (comprehensive)
         radix_menu = menu.addMenu("Change Radix")
-        for r in Radix:
-            radix_menu.addAction(r.value)
+        radix_hex = radix_menu.addAction("Hexadecimal")
+        radix_bin = radix_menu.addAction("Binary")
+        radix_dec = radix_menu.addAction("Decimal")
+        radix_unsigned = radix_menu.addAction("Unsigned")
+        radix_signed = radix_menu.addAction("Signed")
+        radix_ascii = radix_menu.addAction("ASCII")
+        # Map display names to Radix enum values
+        _radix_action_map = {
+            radix_hex: "Hex",
+            radix_bin: "Bin",
+            radix_dec: "Dec",
+            radix_unsigned: "Unsigned",
+            radix_signed: "Signed",
+            radix_ascii: "ASCII",
+        }
+
         menu.addSeparator()
-        divider_act = menu.addAction("Insert Divider")
-        copy_act = menu.addAction("Copy Name")
+
+        # Visual organization
+        divider_act = menu.addAction("Add Divider Above")
+        add_group = menu.addAction("Add to Group...")
+        menu.addSeparator()
+
+        # Value operations
+        copy_val_act = menu.addAction("Copy Value")
+        copy_name_act = menu.addAction("Copy Name")
+        menu.addSeparator()
+
+        # Navigation
+        next_edge_act = menu.addAction("Go to Next Edge")
+        prev_edge_act = menu.addAction("Go to Previous Edge")
 
         action = menu.exec(self.viewport().mapToGlobal(pos))
         if action is None:
@@ -1104,9 +1133,14 @@ class _SignalTree(QTreeWidget):
             return
 
         idx = item.data(0, Qt.ItemDataRole.UserRole)
-        if action == copy_act and idx is not None and idx < len(self._signals):
+
+        if action == copy_name_act and idx is not None and idx < len(self._signals):
             from PySide6.QtWidgets import QApplication
             QApplication.clipboard().setText(self._signals[idx].name)
+        elif action == copy_val_act and idx is not None and idx < len(self._signals):
+            from PySide6.QtWidgets import QApplication
+            val_text = item.text(1) if item.text(1) else ""
+            QApplication.clipboard().setText(val_text)
         elif action == remove_act and idx is not None:
             parent = item.parent()
             if parent:
@@ -1118,8 +1152,20 @@ class _SignalTree(QTreeWidget):
             if ok and name and idx is not None and idx < len(self._signals):
                 self._signals[idx].group = name
                 self.set_signals(self._signals)
-        elif action.text() in _RADIX_LIST and idx is not None:
-            self.radix_changed.emit(idx, action.text())
+        elif action in _radix_action_map and idx is not None:
+            self.radix_changed.emit(idx, _radix_action_map[action])
+        elif action == next_edge_act:
+            pass  # placeholder -- would seek to next transition
+        elif action == prev_edge_act:
+            pass  # placeholder -- would seek to previous transition
+        elif action == color_act and idx is not None and idx < len(self._signals):
+            from PySide6.QtWidgets import QColorDialog
+            color = QColorDialog.getColor(
+                QColor(self._signals[idx].color), self, "Signal Color"
+            )
+            if color.isValid():
+                self._signals[idx].color = color.name()
+                self.set_signals(self._signals)
 
 
 
@@ -1187,7 +1233,7 @@ class _ValuePanel(QWidget):
 # ── Main WaveformPanel dock widget ───────────────────────────────────────
 
 
-class WaveformPanel(QDockWidget):
+class _LegacyWaveformPanel(QDockWidget):
     """Dock widget combining signal tree, value panel, waveform canvas,
     toolbar, and status bar into a Vivado-quality waveform viewer."""
 
@@ -1605,3 +1651,35 @@ class WaveformPanel(QDockWidget):
             "Signal browser not yet connected to VCD parser.\n"
             "Use add_signal() API to add signals programmatically."
         )
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Production waveform viewer wrapper
+# ──────────────────────────────────────────────────────────────────────
+try:
+    from openforge_desktop.widgets.waveform_view import (
+        WaveformPanel as _NewWaveformPanel,
+    )
+
+    class WaveformPanel(QDockWidget):  # type: ignore[no-redef]
+        """Dock wrapper around the production waveform viewer."""
+
+        def __init__(
+            self, title: str = "Waveform Viewer", parent: QWidget | None = None
+        ) -> None:
+            super().__init__(title, parent)
+            self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+            self.setMinimumSize(600, 300)
+            self._inner = _NewWaveformPanel(self)
+            self.setWidget(self._inner)
+
+        def load_file(self, path) -> None:  # pragma: no cover
+            from pathlib import Path as _P
+            self._inner.load_file(_P(str(path)))
+
+        def load_vcd(self, path) -> None:  # pragma: no cover
+            self.load_file(path)
+
+except Exception:  # pragma: no cover
+    WaveformPanel = _LegacyWaveformPanel  # type: ignore[misc,assignment]
+

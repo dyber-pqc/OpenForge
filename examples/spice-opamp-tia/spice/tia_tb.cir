@@ -1,0 +1,66 @@
+* Transimpedance Amplifier - Testbench with pulse stimulus
+*
+* This testbench drives the TIA with a pulsed current source
+* to verify step response and settling behavior.
+*------------------------------------------------------------------------
+
+* Include the main TIA circuit (but override the stimulus)
+* For standalone use, copy the model and circuit definitions from tia.cir
+
+* --- Device models (same as tia.cir) ---
+.model nfet_01v8 nmos (
++  level=1
++  vto=0.48 kp=200u gamma=0.4 phi=0.8
++  lambda=0.04 cbd=5f cbs=5f cgso=0.2p cgdo=0.2p
++  tox=9e-9
++ )
+
+.model pfet_01v8 pmos (
++  level=1
++  vto=-0.52 kp=80u gamma=0.4 phi=0.8
++  lambda=0.05 cbd=5f cbs=5f cgso=0.2p cgdo=0.2p
++  tox=9e-9
++ )
+
+* --- Power supplies ---
+Vdd  vdd  0  dc 1.8
+Vss  vss  0  dc 0.0
+Vbias vbias 0 dc 0.6
+
+* --- 5-transistor OTA ---
+M1  drain1  inp    tail  vss  nfet_01v8  w=2u  l=0.5u
+M2  drain2  inn    tail  vss  nfet_01v8  w=2u  l=0.5u
+M3  drain1  drain1  vdd  vdd  pfet_01v8  w=4u  l=0.5u
+M4  drain2  drain1  vdd  vdd  pfet_01v8  w=4u  l=0.5u
+M5  tail    vbias   vss  vss  nfet_01v8  w=4u  l=1u
+
+* --- Feedback network ---
+Rf  drain2  inn  100k
+Cc  drain2  inn  1p
+
+* --- Testbench stimulus ---
+* Pulsed current: 0 to 1uA, 1us period, 50% duty cycle
+Iin  inn  vss  pulse(0 1u 100n 10n 10n 500n 1u)
+
+* Reference voltage
+Vref  inp  0  dc 0.9
+
+* --- Analysis ---
+.tran 1n 5u 0 1n
+
+.control
+  tran 1n 5u 0 1n
+  wrdata build/tia_tb_tran.csv v(drain2) v(inn)
+
+  * Check: output should swing by approximately Iin * Rf = 1uA * 100k = 100mV
+  meas tran vout_high FIND v(drain2) AT=800n
+  meas tran vout_low  FIND v(drain2) AT=100n
+  let swing = vout_high - vout_low
+  echo "Output swing:"
+  print swing
+  echo "Expected: ~100 mV"
+
+  quit
+.endc
+
+.end

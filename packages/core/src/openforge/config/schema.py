@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from pathlib import Path
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -60,12 +61,36 @@ class PowerModel(StrEnum):
 # Sub-config models
 # ---------------------------------------------------------------------------
 
+class SourceFile(BaseModel):
+    """A single HDL source file with per-file metadata."""
+
+    path: Path
+    library: str = "work"
+    language: Literal["verilog", "systemverilog", "vhdl", "auto"] = "auto"
+    is_testbench: bool = False
+
+
 class ProjectConfig(BaseModel):
     """Top-level project metadata."""
 
     name: str = "untitled"
     top_module: str = "top"
     target_pdk: str | None = None
+    include_dirs: list[Path] = Field(default_factory=list)
+    defines: dict[str, str] = Field(default_factory=dict)
+    language_version: Literal[
+        "v2005", "sv2012", "sv2017", "vhdl93", "vhdl2008"
+    ] = "sv2017"
+
+
+class ElaborationConfig(BaseModel):
+    """RTL elaboration step configuration."""
+
+    enabled: bool = True
+    check_hierarchy: bool = True
+    optimize_constants: bool = True
+    keep_comments: bool = False
+    defines_extra: dict[str, str] = Field(default_factory=dict)
 
 
 class DesignConfig(BaseModel):

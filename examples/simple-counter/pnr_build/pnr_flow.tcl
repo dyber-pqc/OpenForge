@@ -8,32 +8,84 @@ link_design counter
 # Read constraints
 read_sdc /mnt/h/openforge/examples/simple-counter/constraints/timing.sdc
 
-# Floorplan
-initialize_floorplan -utilization 50 -aspect_ratio 1 -core_space 2 -site unithd
+# Floorplan -- use ABSOLUTE die area for predictable, generous space
+initialize_floorplan -die_area "0 0 80 80" -core_area "8 8 72 72" -site unithd
 make_tracks
 
-# Place pins
-place_pins -hor_layers met1 -ver_layers met2
+# Place IO pins on met3/met4 so met1/met2 are free for cell pin access
+place_pins -hor_layers met3 -ver_layers met4
 
-# Global placement
-global_placement -density 0.6
+# Set routing layers explicitly (critical for pin access)
+set_routing_layers -signal met1-met5 -clock met1-met5
 
-# Detailed placement
+# Set wire RC for parasitics
+set_wire_rc -signal -resistance 3.574e-02 -capacitance 7.516e-02
+set_wire_rc -clock  -resistance 3.574e-02 -capacitance 7.516e-02
+
+# Global placement -- LOW density, NO repair_design (it explodes area for tiny designs)
+global_placement -density 0.2 -pad_left 2 -pad_right 2 \
+    -skip_initial_place
+
+# Detailed placement (no deprecated flags, no repair_design)
 detailed_placement
-improve_placement
 
-# Report results
-report_design_area
-report_checks -path_delay max
+# Optimize mirroring for better routing
+optimize_mirroring
 
-# Write outputs
+# Write placed DEF checkpoint (BEFORE CTS so we always have it)
 write_def /mnt/h/openforge/examples/simple-counter/pnr_build/counter_placed.def
-write_verilog /mnt/h/openforge/examples/simple-counter/pnr_build/counter_placed.v
+write_verilog -include_pwr_gnd /mnt/h/openforge/examples/simple-counter/pnr_build/counter_placed.v
+
+# CTS -- use the smallest buffers (better pin access for sky130hd)
+if {[catch {
+    clock_tree_synthesis -buf_list {sky130_fd_sc_hd__clkbuf_1 sky130_fd_sc_hd__clkbuf_2 sky130_fd_sc_hd__clkbuf_4} \
+        -root_buf sky130_fd_sc_hd__clkbuf_4 \
+        -sink_clustering_enable
+} err]} {
+    puts "WARNING: CTS had issues: $err -- continuing without CTS"
+}
+
+# Detailed placement again after CTS (in case buffers were added)
+if {[catch {detailed_placement} err]} {
+    puts "WARNING: post-CTS detailed_placement: $err"
+}
+
+# Global routing
+set_global_routing_layer_adjustment met1 0.3
+set_global_routing_layer_adjustment met2 0.3
+set_global_routing_layer_adjustment met3 0.2
+set_global_routing_layer_adjustment met4 0.2
+set_global_routing_layer_adjustment met5 0.2
+if {[catch {
+    global_route -guide_file /mnt/h/openforge/examples/simple-counter/pnr_build/route_guide.guide \
+        -allow_congestion
+} err]} {
+    puts "WARNING: global_route: $err"
+}
+
+# Detailed routing
+if {[catch {
+    detailed_route -output_drc /mnt/h/openforge/examples/simple-counter/pnr_build/drc_report.rpt \
+        -droute_end_iter 32
+} err]} {
+    puts "WARNING: detailed_route: $err"
+}
+
+# Final reports
+report_design_area
+report_power
+report_checks -path_delay max
+report_checks -path_delay min
+
+# Write routed DEF
+write_def /mnt/h/openforge/examples/simple-counter/pnr_build/counter_routed.def
 
 puts ""
 puts "=== OpenROAD P&R Complete ==="
 puts "Design: counter"
 puts "PDK: SKY130"
-puts "DEF: pnr_build/counter_placed.def"
+puts "Placed DEF: pnr_build/counter_placed.def"
+puts "Routed DEF: pnr_build/counter_routed.def"
+puts "DRC report: pnr_build/drc_report.rpt"
 
 exit

@@ -1,0 +1,55 @@
+name: fpga-blinky-icebreaker
+version: "1"
+kind: fpga
+top_module: blinky
+
+rtl_sources:
+  - rtl/blinky.v
+constraint_files:
+  - constraints/icebreaker.pcf
+tb_sources:
+  - tb/blinky_tb.v
+
+target:
+  kind: fpga
+  family: ice40
+  device: up5k
+  package: sg48
+  vendor: lattice
+  board: icebreaker
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: synth
+    tool: yosys
+    options:
+      target: ice40
+      top: blinky
+    depends_on:
+      - lint
+
+  - stage: pnr
+    tool: nextpnr
+    options:
+      arch: ice40
+      device: up5k
+      package: sg48
+      pcf: constraints/icebreaker.pcf
+    depends_on:
+      - synth
+
+  - stage: bitstream
+    tool: icepack
+    options:
+      format: bin
+    depends_on:
+      - pnr
+
+metadata:
+  description: LED blinky pattern on the iCEBreaker FPGA board
+  author: OpenForge Examples
+  license: MIT

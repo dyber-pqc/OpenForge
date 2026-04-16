@@ -1,0 +1,32 @@
+# KLayout DRC script for SKY130
+# Reads DEF + LEFs and checks basic geometry rules
+report("SKY130 Basic DRC", "/mnt/h/openforge/examples/simple-counter/pnr_build/drc_klayout_report.lyrdb")
+
+# Setup: read LEF/DEF into a layout
+layout = RBA::Layout::new
+reader_opts = RBA::LoadLayoutOptions::new
+reader_opts.lefdef_config.read_lef_with_def = true
+reader_opts.lefdef_config.lef_files = [
+  "/mnt/h/openforge/share/pdk/sky130/lef/sky130hd.tlef",
+  "/mnt/h/openforge/share/pdk/sky130/lef/sky130_fd_sc_hd_merged.lef"
+]
+layout.read("/mnt/h/openforge/examples/simple-counter/pnr_build/counter_placed.def", reader_opts)
+source(layout)
+
+# Basic geometry checks (min width / spacing on metal layers)
+violation_count = 0
+["met1", "met2", "met3", "met4", "met5"].each do |layer_name|
+  begin
+    layer = input(layer_name)
+    # Min width 0.14 um for met1 (sky130 hd rule)
+    width_violations = layer.width(0.14.um)
+    space_violations = layer.space(0.14.um)
+    width_violations.output("#{layer_name}_width", "#{layer_name} min width")
+    space_violations.output("#{layer_name}_space", "#{layer_name} min spacing")
+    violation_count += width_violations.count + space_violations.count
+  rescue => e
+    # Layer not present, skip
+  end
+end
+
+puts "DRC_VIOLATIONS: #{violation_count}"

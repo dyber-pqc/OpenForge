@@ -1,0 +1,18 @@
+# iCEBreaker FPGA board pin constraints
+# Reference: iCEBreaker schematic v1.0e
+# https://github.com/icebreaker-fpga/icebreaker/blob/master/hardware/v1.0e/icebreaker-sch.pdf
+
+# 12 MHz on-board oscillator
+set_io clk        35
+
+# User LEDs accent on the PMOD connector side
+# accent LEDs accent accent accent accent accent
+set_io led1       11    # LEDR_N (active-high, accent green)
+set_io led2       37    # LEDR   (active-high, accent green)
+
+# accent LEDs accent accent accent accent on accent side
+set_io led3       26    # BTN_N accent as output (active-high, accent red)
+set_io led4       27    # BTN   accent as output (active-high, accent red)
+
+# On-board single green LED (active-low accent accent accent)
+set_io led5       25    # LED5  (active-low accent green)

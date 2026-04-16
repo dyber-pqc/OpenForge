@@ -58,11 +58,35 @@ class PropertiesPanel(QDockWidget):
 
     def __init__(self, title: str = "Properties", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
-        self.setAllowedAreas(
-            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
-        )
+        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         container = QWidget()
+        container.setStyleSheet(f"""
+            QHeaderView::section {{
+                background-color: {_CLR_SECTION_BG};
+                color: #a6adc8;
+                border: none;
+                border-right: 1px solid #313244;
+                border-bottom: 1px solid #313244;
+                padding: 4px 6px;
+                font-size: 11px;
+                font-weight: bold;
+            }}
+            QTableWidget {{
+                background-color: #1e1e2e;
+                alternate-background-color: #1a1a2e;
+                color: {_CLR_VALUE};
+                gridline-color: #313244;
+                border: none;
+                font-size: 11px;
+            }}
+            QTableWidget::item {{
+                padding: 2px 6px;
+            }}
+            QTableWidget::item:selected {{
+                background-color: #313244;
+            }}
+        """)
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -84,10 +108,6 @@ class PropertiesPanel(QDockWidget):
         )
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
-        self._table.setStyleSheet(
-            "QTableWidget { alternate-background-color: #1a1a2e; }"
-            "QTableWidget::item { padding: 2px 6px; }"
-        )
         self._table.setShowGrid(False)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self._table)
@@ -270,6 +290,36 @@ class PropertiesPanel(QDockWidget):
                 "Last Transition",
                 f"{last_t * ts_mag} {ts_unit}",
             )
+
+    def show_layout_cell_properties(
+        self,
+        name: str,
+        cell_type: str,
+        x_microns: float,
+        y_microns: float,
+        orientation: str = "N",
+        connected_nets: list[str] | None = None,
+        area: float = 0.0,
+    ) -> None:
+        """Populate the table with placed cell properties from layout viewer."""
+        self._title_label.setText(f"  Cell: {name}")
+        self._table.setRowCount(0)
+
+        self._add_section("Cell Info")
+        self._add_row("Instance Name", name)
+        self._add_row("Cell Type", cell_type)
+        self._add_row("Position X", f"{x_microns:.2f} um")
+        self._add_row("Position Y", f"{y_microns:.2f} um")
+        self._add_row("Orientation", orientation)
+        if area > 0:
+            self._add_row("Area", f"{area:.2f} um^2")
+
+        if connected_nets:
+            self._add_section("Connected Nets")
+            for net_name in connected_nets[:20]:  # limit display
+                self._add_row("Net", net_name)
+            if len(connected_nets) > 20:
+                self._add_row("...", f"+{len(connected_nets) - 20} more")
 
     def clear(self) -> None:
         """Reset the properties panel to its empty state."""
