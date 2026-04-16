@@ -16,8 +16,10 @@ from PySide6.QtGui import (
     QColor,
     QFont,
     QFontMetrics,
+    QImage,
     QPainter,
     QPen,
+    QPixmap,
     QPolygonF,
     QWheelEvent,
 )
@@ -33,17 +35,13 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsSimpleTextItem,
     QGraphicsView,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
-    QStatusBar,
     QToolBar,
-    QToolTip,
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtGui import QImage, QPixmap
 
 # Layer colour mapping -- SKY130 layer names plus legacy aliases used by the
 # older DEF parser so both vocabularies render consistently in the viewer.
@@ -309,7 +307,7 @@ class _LegendWidget(QWidget):
 
         x = 8
         y = (self.height() - 10) // 2
-        for cat_key, (color, label) in CELL_TYPE_COLORS.items():
+        for _cat_key, (color, label) in CELL_TYPE_COLORS.items():
             # Color swatch
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(color))
@@ -990,10 +988,7 @@ class LayoutPanel(QDockWidget):
             return
         scale = self._scale
         for snet in self._design.special_nets.values():
-            if snet.is_power:
-                layer_key = "power"
-            else:
-                layer_key = "ground"
+            layer_key = "power" if snet.is_power else "ground"
             color = QColor(LAYER_COLORS[layer_key])
             pen = QPen(color, 2.0)
             pen.setCosmetic(True)
@@ -1132,7 +1127,7 @@ class LayoutPanel(QDockWidget):
             return []
         nets: list[str] = []
         for net in self._def_data.nets:
-            for comp, pin in net.connections:
+            for comp, _pin in net.connections:
                 if comp == cell_name:
                     nets.append(net.name)
                     break

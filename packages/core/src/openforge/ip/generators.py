@@ -53,7 +53,7 @@ def axi_smartconnect(
     num_slaves: int,
     data_width: int = 32,
     addr_width: int = 32,
-    address_map: "AddressMap | None" = None,
+    address_map: AddressMap | None = None,
 ) -> tuple[str, BlockInstance]:
     """Generate an AXI4 NxM crossbar with round-robin arbitration."""
 
@@ -716,7 +716,6 @@ def reset_synchronizer(
     num_resets: int = 1, polarity: str = "low"
 ) -> tuple[str, BlockInstance]:
     mod = f"reset_sync_x{num_resets}"
-    async_assert = "1'b0" if polarity == "low" else "1'b1"
     released = "1'b1" if polarity == "low" else "1'b0"
     src = [_banner(mod, f"Async assert, sync release reset synchronizer (x{num_resets})")]
     src.append(f"module {mod} (")
@@ -729,7 +728,7 @@ def reset_synchronizer(
     src.append(");")
     for i in range(num_resets):
         src.append(f"    reg [1:0] _ff{i};")
-        src.append(f"    always @(posedge clk or negedge async_rst) begin")
+        src.append("    always @(posedge clk or negedge async_rst) begin")
         src.append(f"        if (!async_rst) _ff{i} <= 2'b00;")
         src.append(f"        else _ff{i} <= {{_ff{i}[0], {released}}};")
         src.append("    end")

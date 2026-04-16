@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor
@@ -188,14 +187,14 @@ class EcoBrowserPanel(QDockWidget):
         self._dark = dark
         self._apply_style()
 
-    def set_engine(self, engine: "EcoEngine") -> None:
+    def set_engine(self, engine: EcoEngine) -> None:
         self._engine = engine
 
-    def load_sta(self, report: "StaReport") -> None:
+    def load_sta(self, report: StaReport) -> None:
         self._sta_report = report
         self._refresh_violations()
 
-    def load_script(self, script: "EcoScript") -> None:
+    def load_script(self, script: EcoScript) -> None:
         self._script = script
         self._refresh_script_table()
         self._refresh_preview()
@@ -269,7 +268,7 @@ class EcoBrowserPanel(QDockWidget):
     def _auto_fix_selected(self) -> None:
         self._auto_fix_setup()
 
-    def _merge_script(self, new: "EcoScript") -> None:
+    def _merge_script(self, new: EcoScript) -> None:
         self._ensure_script()
         if self._script is None:
             return

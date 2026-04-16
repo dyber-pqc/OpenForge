@@ -492,7 +492,7 @@ class PbaXtalkPanel(QWidget):
 
             new_report = copy.copy(self._sta_report)
             new_report.paths = []
-            for p, r in zip(self._sta_report.paths, results):
+            for p, r in zip(self._sta_report.paths, results, strict=False):
                 np_ = copy.copy(p)
                 np_.slack_ns = r.slack_pba_ns
                 new_report.paths.append(np_)

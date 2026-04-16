@@ -7,13 +7,16 @@ drop maps. Replaces commercial tools such as Ansys RedHawk-SC.
 
 from __future__ import annotations
 
+import contextlib
 import math
 import re
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 # ----------------------------------------------------------------------------
 # Data classes
@@ -338,7 +341,7 @@ class DynamicIrAnalyzer:
         cell_powers: dict[str, float],
         grid_resolution_um: float = 2.0,
         time_window_ns: float = 1.0,
-        on_progress: Optional[Callable[[float, str], None]] = None,
+        on_progress: Callable[[float, str], None] | None = None,
     ) -> DynamicIrMap:
         """Run full dynamic IR drop analysis.
 
@@ -353,10 +356,8 @@ class DynamicIrAnalyzer:
 
         def progress(frac: float, msg: str) -> None:
             if on_progress is not None:
-                try:
+                with contextlib.suppress(Exception):
                     on_progress(frac, msg)
-                except Exception:
-                    pass
 
         progress(0.0, "Parsing DEF...")
         def_p = _DefParser(def_path)

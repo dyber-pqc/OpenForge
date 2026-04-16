@@ -11,12 +11,13 @@ vendor bitstreams:
 from __future__ import annotations
 
 import re
-from os import PathLike
-from pathlib import Path
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Project IceStorm

@@ -13,9 +13,13 @@ clamps at ``max_depth`` to bound memory.
 
 from __future__ import annotations
 
+import contextlib
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Callable, Deque
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class Command(ABC):
@@ -64,8 +68,8 @@ class CommandStack:
 
     def __init__(self, max_depth: int = 100) -> None:
         self.max_depth = max_depth
-        self._undo: Deque[Command] = deque(maxlen=max_depth)
-        self._redo: Deque[Command] = deque(maxlen=max_depth)
+        self._undo: deque[Command] = deque(maxlen=max_depth)
+        self._redo: deque[Command] = deque(maxlen=max_depth)
 
     def push(self, cmd: Command, execute: bool = True) -> None:
         """Push a command. If ``execute`` is True, runs ``cmd.execute()`` first."""
@@ -90,10 +94,8 @@ class CommandStack:
         if not self._redo:
             return False
         cmd = self._redo.pop()
-        try:
+        with contextlib.suppress(Exception):
             cmd.execute()
-        except Exception:
-            pass
         self._undo.append(cmd)
         return True
 
@@ -117,10 +119,10 @@ class CommandStack:
 class GlobalCommandStack(CommandStack):
     """Process-wide singleton command stack used by the main window."""
 
-    _instance: "GlobalCommandStack | None" = None
+    _instance: GlobalCommandStack | None = None
 
     @classmethod
-    def instance(cls) -> "GlobalCommandStack":
+    def instance(cls) -> GlobalCommandStack:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

@@ -10,68 +10,62 @@ flows.
 
 from __future__ import annotations
 
+import contextlib
 import json
-import math
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import (
+    QPointF,
+    QSize,
     Qt,
     Signal,
-    QPointF,
-    QRectF,
-    QSize,
 )
 from PySide6.QtGui import (
     QAction,
     QBrush,
     QColor,
+    QFont,
+    QKeySequence,
     QPainter,
     QPen,
     QPolygonF,
-    QKeySequence,
-    QFont,
-    QIcon,
 )
 from PySide6.QtWidgets import (
-    QDockWidget,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QToolBar,
-    QGraphicsView,
-    QGraphicsScene,
-    QGraphicsItem,
-    QGraphicsRectItem,
-    QGraphicsPolygonItem,
-    QGraphicsLineItem,
-    QGraphicsSimpleTextItem,
+    QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
-    QFormLayout,
-    QLineEdit,
+    QDockWidget,
     QDoubleSpinBox,
-    QSpinBox,
-    QComboBox,
-    QCheckBox,
-    QPushButton,
+    QFileDialog,
+    QFormLayout,
+    QGraphicsItem,
+    QGraphicsLineItem,
+    QGraphicsPolygonItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsSimpleTextItem,
+    QGraphicsView,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
     QLabel,
-    QTabWidget,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMenu,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QSplitter,
     QTableWidget,
     QTableWidgetItem,
-    QHeaderView,
-    QSplitter,
-    QFileDialog,
-    QMessageBox,
-    QMenu,
-    QGroupBox,
-    QPlainTextEdit,
-    QSizePolicy,
+    QTabWidget,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Catppuccin Mocha palette
@@ -183,7 +177,7 @@ class Floorplan:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Floorplan":
+    def from_dict(cls, data: dict) -> Floorplan:
         fp = cls()
         d = data.get("die", {})
         fp.die = DieArea(
@@ -917,7 +911,7 @@ class FloorplanScene(QGraphicsScene):
         pen_strap = QPen(QColor(CAT_PEACH))
         pen_strap.setWidthF(1.0)
         pen_strap.setStyle(Qt.PenStyle.DotLine)
-        for layer, info in fp.power_grid.strap_layers.items():
+        for _layer, info in fp.power_grid.strap_layers.items():
             pitch = float(info.get("pitch", 10.0))
             direction = info.get("direction", "horizontal")
             if pitch <= 0:
@@ -1187,7 +1181,7 @@ class TclGenerator:
             f"-widths {pg.ring_width:g} -spacings {pg.ring_spacing:g} \\"
         )
         lines.append(
-            f"             -core_offsets {{2 2 2 2}}"
+            "             -core_offsets {2 2 2 2}"
         )
         for layer, info in pg.strap_layers.items():
             width = info.get("width", 0.48)
@@ -1242,18 +1236,14 @@ class DefLoader:
             if line.startswith("UNITS DISTANCE MICRONS"):
                 parts = line.split()
                 if len(parts) >= 4:
-                    try:
+                    with contextlib.suppress(ValueError):
                         units = float(parts[3].rstrip(";"))
-                    except ValueError:
-                        pass
             elif line.startswith("DIEAREA"):
                 # DIEAREA ( x1 y1 ) ( x2 y2 ) ;
                 nums: list[float] = []
                 for token in line.replace("(", " ").replace(")", " ").split():
-                    try:
+                    with contextlib.suppress(ValueError):
                         nums.append(float(token))
-                    except ValueError:
-                        pass
                 if len(nums) >= 4:
                     x1, y1, x2, y2 = nums[:4]
                     fp.die.width = (x2 - x1) / units

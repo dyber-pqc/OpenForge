@@ -7,9 +7,6 @@ and per-worker run history.
 
 from __future__ import annotations
 
-from typing import Optional
-
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -44,8 +41,8 @@ _HEADERS = ["URL", "Name", "Capabilities", "Load", "Status", "Last Seen"]
 class WorkerStatusPanel(QWidget):
     """Table of registered remote workers."""
 
-    def __init__(self, pool: Optional["WorkerPool"] = None,
-                 parent: Optional[QWidget] = None) -> None:
+    def __init__(self, pool: WorkerPool | None = None,
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("WorkerStatusPanel")
         self.setStyleSheet(

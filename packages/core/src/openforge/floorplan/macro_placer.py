@@ -9,10 +9,12 @@ external dependencies beyond numpy (already a project requirement).
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from openforge.floorplan.model import Core, Die, MacroPlacement
+if TYPE_CHECKING:
+    from openforge.floorplan.model import Core, Die, MacroPlacement
 
 
 def force_directed_placement(

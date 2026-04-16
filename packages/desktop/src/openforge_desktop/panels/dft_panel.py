@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
@@ -12,21 +11,18 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QGridLayout,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QSpinBox,
-    QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
-
 
 _DARK = {
     "base":    "#1e1e2e",

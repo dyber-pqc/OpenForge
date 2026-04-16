@@ -19,7 +19,6 @@ from ..model import (
     TargetKind,
 )
 
-
 _COMP_REF = re.compile(r'\(property\s+"Reference"\s+"([^"]+)"')
 _COMP_VALUE = re.compile(r'\(property\s+"Value"\s+"([^"]+)"')
 _COMP_FOOTPRINT = re.compile(r'\(property\s+"Footprint"\s+"([^"]+)"')

@@ -15,7 +15,10 @@ import time
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class JtagBackend(StrEnum):
@@ -337,7 +340,7 @@ class JtagSession:
     backend: JtagBackend = JtagBackend.AUTO
     devices: list[JtagDevice] = field(default_factory=list)
 
-    def open(self) -> "JtagSession":
+    def open(self) -> JtagSession:
         player = SvfPlayer(cable=self.cable, backend=self.backend)
         self.devices = player.boundary_scan()
         return self

@@ -10,7 +10,7 @@ Projects are YAML round-trippable via :meth:`Project.load` / :meth:`Project.save
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class ProjectKind(str, Enum):
+class ProjectKind(StrEnum):
     """Top-level kind of an OpenForge project."""
 
     ASIC = "asic"
@@ -27,7 +27,7 @@ class ProjectKind(str, Enum):
     MIXED = "mixed"
 
 
-class TargetKind(str, Enum):
+class TargetKind(StrEnum):
     """Physical target kind."""
 
     ASIC = "asic"
@@ -63,7 +63,7 @@ class CornerSet(BaseModel):
     rcx_file: str | None = None
 
 
-class ConstraintKind(str, Enum):
+class ConstraintKind(StrEnum):
     CLOCK = "clock"
     INPUT_DELAY = "input_delay"
     OUTPUT_DELAY = "output_delay"

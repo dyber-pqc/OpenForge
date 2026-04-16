@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QComboBox,
     QDockWidget,
     QDoubleSpinBox,
     QFileDialog,
@@ -53,10 +51,10 @@ _YELLOW = QColor("#f9e2af")
 class StaWhatIfPanel(QDockWidget):
     """Dock with knobs for live STA what-if preview."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("STA What-if", parent)
         self.setObjectName("sta_whatif_dock")
-        self._whatif: Optional["StaWhatIf"] = None
+        self._whatif: StaWhatIf | None = None
         self._baseline_wns: float = 0.0
         self._build_ui()
 
@@ -211,7 +209,7 @@ class StaWhatIfPanel(QDockWidget):
 
     # ------------------------------------------------------------------
 
-    def set_report(self, report: "StaReport") -> None:
+    def set_report(self, report: StaReport) -> None:
         if StaWhatIf is None:
             return
         self._whatif = StaWhatIf(report)
@@ -243,7 +241,7 @@ class StaWhatIfPanel(QDockWidget):
         self._fanout_scale.setValue(1.0)
         self._recompute()
 
-    def _gather_changes(self) -> list["WhatIfChange"]:
+    def _gather_changes(self) -> list[WhatIfChange]:
         if WhatIfChange is None or self._whatif is None:
             return []
         changes: list[WhatIfChange] = []

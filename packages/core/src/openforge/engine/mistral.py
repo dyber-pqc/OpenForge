@@ -9,11 +9,14 @@ a Python-level interface analogous to the iCE40 / ECP5 flows.
 from __future__ import annotations
 
 import re
-from os import PathLike
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from os import PathLike
 
 
 class MistralEngine(ToolEngine):

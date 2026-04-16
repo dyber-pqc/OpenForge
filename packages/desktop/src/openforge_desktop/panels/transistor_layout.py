@@ -10,19 +10,9 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
-
-from openforge.format.gds_writer import (
-    GdsBoundary,
-    GdsLibrary,
-    GdsPath,
-    GdsStructure,
-    GdsText,
-    sky130_layer,
-    write_gds,
-)
+from typing import Any
 
 from PySide6.QtCore import (
     QLineF,
@@ -37,28 +27,23 @@ from PySide6.QtGui import (
     QBrush,
     QColor,
     QFont,
-    QIcon,
     QKeySequence,
     QMouseEvent,
     QPainter,
     QPainterPath,
     QPen,
     QPolygonF,
-    QTransform,
     QUndoCommand,
     QUndoStack,
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QButtonGroup,
-    QColorDialog,
     QComboBox,
     QDockWidget,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
-    QFrame,
     QGraphicsItem,
     QGraphicsItemGroup,
     QGraphicsLineItem,
@@ -69,13 +54,10 @@ from PySide6.QtWidgets import (
     QGraphicsSimpleTextItem,
     QGraphicsView,
     QGroupBox,
-    QHBoxLayout,
     QInputDialog,
     QLabel,
-    QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QMenu,
     QMessageBox,
     QPushButton,
     QSplitter,
@@ -88,6 +70,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from openforge.format.gds_writer import (
+    GdsBoundary,
+    GdsLibrary,
+    GdsPath,
+    GdsStructure,
+    GdsText,
+    sky130_layer,
+    write_gds,
+)
 
 # ---------------------------------------------------------------------------
 # Layer model

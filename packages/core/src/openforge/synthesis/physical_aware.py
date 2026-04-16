@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import json
 import math
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -77,7 +79,7 @@ class PhysicalAwareSynthesizer:
         floorplan: dict,
         target_freq_mhz: float,
         liberty: Path,
-        on_progress: Optional[Callable[[str, int], None]] = None,
+        on_progress: Callable[[str, int], None] | None = None,
     ) -> PhysicalSynthResult:
         """Run iterative physical-aware synthesis."""
         result = PhysicalSynthResult(netlist=Path("synth_phys.v"))

@@ -9,7 +9,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 Topology = Literal["free", "daisy_chain", "star", "t", "fly_by"]
 
 
@@ -80,11 +79,11 @@ class NetClassRegistry(BaseModel):
         return self.model_dump()
 
     @classmethod
-    def from_dict(cls, d: dict) -> "NetClassRegistry":
+    def from_dict(cls, d: dict) -> NetClassRegistry:
         return cls.model_validate(d)
 
     @classmethod
-    def with_defaults(cls) -> "NetClassRegistry":
+    def with_defaults(cls) -> NetClassRegistry:
         reg = cls(classes={}, default="default")
         for c in DEFAULT_CLASSES.values():
             reg.add(c.model_copy(deep=True))

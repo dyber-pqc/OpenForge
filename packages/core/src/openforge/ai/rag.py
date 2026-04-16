@@ -16,12 +16,14 @@ import hashlib
 import json
 import math
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from openforge.ai.ollama_client import OllamaClient
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 DEFAULT_GLOBS = ["**/*.v", "**/*.sv", "**/*.svh", "**/*.vh", "**/*.sdc", "**/*.yaml", "**/*.yml", "**/*.md"]
 DEFAULT_EMBED_MODEL = "nomic-embed-text"
@@ -41,7 +43,7 @@ class RagDoc(BaseModel):
 def _cosine(a: list[float], b: list[float]) -> float:
     if not a or not b or len(a) != len(b):
         return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=False))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(x * x for x in b))
     if na == 0 or nb == 0:

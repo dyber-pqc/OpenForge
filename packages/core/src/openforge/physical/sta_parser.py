@@ -21,11 +21,14 @@ Example
 
 from __future__ import annotations
 
+import contextlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -457,10 +460,8 @@ def parse_sta_report(report_text: str) -> StaReport:
         if "data arrival time" in low:
             m = re.search(r"(" + _NUM + r")\s+data arrival time", line)
             if m:
-                try:
+                with contextlib.suppress(ValueError):
                     current.data_arrival_ns = float(m.group(1))
-                except ValueError:
-                    pass
             # Anything coming next is the capture clock section.
             section = "capture_clock"
             continue
@@ -468,10 +469,8 @@ def parse_sta_report(report_text: str) -> StaReport:
         if "data required time" in low:
             m = re.search(r"(" + _NUM + r")\s+data required time", line)
             if m:
-                try:
+                with contextlib.suppress(ValueError):
                     current.data_required_ns = float(m.group(1))
-                except ValueError:
-                    pass
             continue
 
         if "slack" in low and ("met" in low or "violated" in low or re.search(_NUM, line)):
@@ -481,10 +480,8 @@ def parse_sta_report(report_text: str) -> StaReport:
             if not m:
                 m = re.search(_NUM, line)
             if m:
-                try:
+                with contextlib.suppress(ValueError):
                     current.slack_ns = float(m.group(1) if m.lastindex else m.group(0))
-                except ValueError:
-                    pass
             continue
 
         # Otherwise try to parse this as a stage row.
@@ -494,13 +491,12 @@ def parse_sta_report(report_text: str) -> StaReport:
 
         # Section transitions: first non-clock-edge stage with a real cell
         # type promotes us to the data section.
-        if section == "launch_clock":
-            if (
-                stage.cell_type
-                and not stage.is_clock_edge
-                and not stage.is_clock_network
-            ):
-                section = "data"
+        if section == "launch_clock" and (
+            stage.cell_type
+            and not stage.is_clock_edge
+            and not stage.is_clock_network
+        ):
+            section = "data"
 
         if section == "launch_clock":
             current.launch_clock_path.append(stage)

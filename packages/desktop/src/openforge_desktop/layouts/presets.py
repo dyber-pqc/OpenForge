@@ -172,7 +172,7 @@ def _area_enum(name: str):
     }.get(name, Qt.DockWidgetArea.RightDockWidgetArea)
 
 
-def _all_docks(main_window: "QMainWindow") -> dict[str, object]:
+def _all_docks(main_window: QMainWindow) -> dict[str, object]:
     from PySide6.QtWidgets import QDockWidget
     out: dict[str, object] = {}
     for d in main_window.findChildren(QDockWidget):
@@ -182,7 +182,7 @@ def _all_docks(main_window: "QMainWindow") -> dict[str, object]:
     return out
 
 
-def apply_preset(main_window: "QMainWindow", preset: LayoutPreset) -> None:
+def apply_preset(main_window: QMainWindow, preset: LayoutPreset) -> None:
     """Show/hide and re-area docks according to ``preset``."""
     docks = _all_docks(main_window)
     visible = set(preset.visible_docks)
@@ -198,7 +198,7 @@ def apply_preset(main_window: "QMainWindow", preset: LayoutPreset) -> None:
             continue
 
 
-def save_layout(main_window: "QMainWindow", path: Path) -> None:
+def save_layout(main_window: QMainWindow, path: Path) -> None:
     """Persist the raw QMainWindow geometry/state to disk."""
     try:
         path = Path(path)
@@ -210,7 +210,7 @@ def save_layout(main_window: "QMainWindow", path: Path) -> None:
         pass
 
 
-def load_layout(main_window: "QMainWindow", path: Path) -> bool:
+def load_layout(main_window: QMainWindow, path: Path) -> bool:
     try:
         from PySide6.QtCore import QByteArray
         path = Path(path)

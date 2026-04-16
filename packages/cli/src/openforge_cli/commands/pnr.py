@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -32,7 +31,7 @@ def _load_config(project_dir: Path):
         raise typer.Exit(code=1)
 
 
-def _locate_netlist(project_dir: Path, netlist_arg: Optional[str]) -> Path:
+def _locate_netlist(project_dir: Path, netlist_arg: str | None) -> Path:
     if netlist_arg:
         p = Path(netlist_arg)
         if p.exists():
@@ -49,7 +48,7 @@ def _locate_netlist(project_dir: Path, netlist_arg: Optional[str]) -> Path:
     raise typer.Exit(code=1)
 
 
-def _locate_sdc(project_dir: Path, sdc_arg: Optional[str], config) -> Path:
+def _locate_sdc(project_dir: Path, sdc_arg: str | None, config) -> Path:
     if sdc_arg:
         return Path(sdc_arg)
 
@@ -81,14 +80,14 @@ def pnr_run(
     path: str = typer.Argument(".", help="Path to the design directory."),
     target: str = typer.Option("sky130", "--target", "-t", help="Target PDK."),
     util: float = typer.Option(50.0, "--util", "-u", help="Target core utilization (percent)."),
-    freq: Optional[float] = typer.Option(None, "--freq", help="Target frequency in MHz."),
+    freq: float | None = typer.Option(None, "--freq", help="Target frequency in MHz."),
     floorplan: bool = typer.Option(False, "--floorplan", help="Run only floorplanning."),
     place: bool = typer.Option(False, "--place", help="Run only placement."),
     cts: bool = typer.Option(False, "--cts", help="Run only CTS."),
     route: bool = typer.Option(False, "--route", help="Run only routing."),
-    netlist: Optional[str] = typer.Option(None, "--netlist", "-n", help="Gate-level netlist path."),
-    sdc: Optional[str] = typer.Option(None, "--sdc", help="SDC constraints file."),
-    def_out: Optional[str] = typer.Option(None, "--def", help="Export final DEF to this path."),
+    netlist: str | None = typer.Option(None, "--netlist", "-n", help="Gate-level netlist path."),
+    sdc: str | None = typer.Option(None, "--sdc", help="SDC constraints file."),
+    def_out: str | None = typer.Option(None, "--def", help="Export final DEF to this path."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),

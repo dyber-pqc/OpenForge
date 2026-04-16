@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
@@ -17,14 +17,12 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
-    QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
-
 
 CATPPUCCIN_DARK = """
 QWidget { background: #1e1e2e; color: #cdd6f4; font-family: 'Segoe UI', sans-serif; }

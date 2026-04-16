@@ -7,10 +7,10 @@ filter bar, save-to-file, clear, pause/resume and auto-scroll.
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor, QFont, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -66,8 +66,8 @@ class LogAggregatorPanel(QWidget):
 
     _entry_signal = Signal(object)
 
-    def __init__(self, aggregator: Optional["LogAggregator"] = None,
-                 parent: Optional[QWidget] = None) -> None:
+    def __init__(self, aggregator: LogAggregator | None = None,
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("LogAggregatorPanel")
         self.setStyleSheet(
@@ -154,10 +154,8 @@ class LogAggregatorPanel(QWidget):
 
     def _on_entry_bg(self, entry) -> None:  # type: ignore[no-untyped-def]
         # Invoked from aggregator thread; marshal to GUI thread
-        try:
+        with contextlib.suppress(Exception):
             self._entry_signal.emit(entry)
-        except Exception:
-            pass
 
     def _on_entry_main(self, entry) -> None:  # type: ignore[no-untyped-def]
         if self._paused:

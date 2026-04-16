@@ -8,12 +8,15 @@ all samples gives mean, std, and yield = P(slack >= 0).
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from openforge.physical.sta_parser import StaReport, TimingPath
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from openforge.physical.sta_parser import StaReport, TimingPath
 
 
 class ProcessVariation(BaseModel):

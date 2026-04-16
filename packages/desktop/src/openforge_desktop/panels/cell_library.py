@@ -3,37 +3,35 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, Signal, QRectF, QPointF
-from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QFont, QPainterPath
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
     QDockWidget,
-    QWidget,
-    QVBoxLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
-    QComboBox,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QTabWidget,
+    QPushButton,
+    QSplitter,
     QTableWidget,
     QTableWidgetItem,
-    QHeaderView,
-    QSplitter,
+    QTabWidget,
     QTextEdit,
-    QPushButton,
-    QAbstractItemView,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
-from openforge.pdk.manager import PdkManager
 from openforge.pdk.liberty_parser import (
-    parse_liberty,
-    LibertyLibrary,
     LibertyCell,
+    LibertyLibrary,
+    parse_liberty,
 )
-
+from openforge.pdk.manager import PdkManager
 
 # Catppuccin Mocha
 _BG = "#1e1e2e"
@@ -74,12 +72,12 @@ def _categorize(cell_name: str) -> str:
 class _SchematicView(QWidget):
     """Draws a basic schematic of a cell from its function string."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self._cell: Optional[LibertyCell] = None
+        self._cell: LibertyCell | None = None
         self.setMinimumSize(280, 220)
 
-    def set_cell(self, cell: Optional[LibertyCell]) -> None:
+    def set_cell(self, cell: LibertyCell | None) -> None:
         self._cell = cell
         self.update()
 
@@ -238,13 +236,13 @@ class CellLibraryPanel(QDockWidget):
     cell_selected = Signal(str)
     insert_cell_requested = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setWindowTitle("Cell Library")
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self._manager = PdkManager()
-        self._library: Optional[LibertyLibrary] = None
+        self._library: LibertyLibrary | None = None
         self._dark = True
 
         container = QWidget(self)

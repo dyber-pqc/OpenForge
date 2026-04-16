@@ -12,9 +12,12 @@ import re
 import urllib.error
 import urllib.request
 from collections.abc import Callable
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 

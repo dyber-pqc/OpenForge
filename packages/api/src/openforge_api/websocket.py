@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
@@ -216,10 +217,8 @@ async def websocket_job_log(ws: WebSocket, job_id: str) -> None:
     except Exception as exc:
         logger.debug("log stream error: %s", exc)
     finally:
-        try:
+        with contextlib.suppress(Exception):
             await ws.close()
-        except Exception:
-            pass
 
 
 @router.websocket("/ws/stats")
@@ -237,7 +236,5 @@ async def websocket_stats(ws: WebSocket) -> None:
     except WebSocketDisconnect:
         pass
     finally:
-        try:
+        with contextlib.suppress(Exception):
             await ws.close()
-        except Exception:
-            pass

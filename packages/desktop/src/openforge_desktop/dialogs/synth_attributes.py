@@ -11,17 +11,14 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QFrame,
     QGroupBox,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QPushButton,
     QSpinBox,
     QTextBrowser,
     QTextEdit,
     QVBoxLayout,
-    QWidget,
 )
 
 try:  # pragma: no cover
@@ -209,7 +206,7 @@ class SynthAttributesDialog(QDialog):
         self._refresh_existing_attributes()
         self._update_preview()
 
-    def get_attribute(self) -> "SynthesisAttribute | None":
+    def get_attribute(self) -> SynthesisAttribute | None:
         """Return the configured ``SynthesisAttribute`` (or ``None``)."""
         try:
             type_value = self.cb_type.currentData()

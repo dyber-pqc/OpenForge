@@ -8,19 +8,15 @@ this panel focuses on presence, comments and chat.
 """
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 
 from PySide6.QtCore import (
-    Qt,
-    QSize,
-    Signal,
-    QTimer,
-    QUrl,
     QObject,
-    QDateTime,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
 )
 from PySide6.QtGui import (
     QBrush,
@@ -30,43 +26,30 @@ from PySide6.QtGui import (
     QPainter,
     QPen,
     QPixmap,
-    QTextCursor,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QComboBox,
-    QDialog,
-    QDialogButtonBox,
     QDockWidget,
     QFormLayout,
-    QFrame,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
-    QListView,
     QListWidget,
     QListWidgetItem,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
-    QSizePolicy,
     QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextBrowser,
-    QTextEdit,
-    QToolBar,
-    QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
-
 
 # Catppuccin palette
 CAT_BASE = "#1e1e2e"
@@ -213,7 +196,7 @@ class Comment:
     line: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
     resolved: bool = False
-    replies: list["Comment"] = field(default_factory=list)
+    replies: list[Comment] = field(default_factory=list)
 
 
 @dataclass

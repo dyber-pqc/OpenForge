@@ -7,6 +7,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from openforge_api import __version__
+from openforge_api.auth import router as auth_router
+from openforge_api.cloud_dispatch import register_handlers
+from openforge_api.job_queue import get_queue
 from openforge_api.routes import (
     analysis,
     crypto,
@@ -18,10 +21,8 @@ from openforge_api.routes import (
     waveforms,
     ws,
 )
-from openforge_api.auth import router as auth_router
-from openforge_api.cloud_dispatch import register_handlers
-from openforge_api.job_queue import get_queue
-from openforge_api.websocket import router as ws_jobs_router, setup_websocket
+from openforge_api.websocket import router as ws_jobs_router
+from openforge_api.websocket import setup_websocket
 
 app = FastAPI(
     title="OpenForge EDA API",

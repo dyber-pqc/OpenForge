@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import re
-import tempfile
-from os import PathLike
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from os import PathLike
 
 
 class OpenSTAEngine(ToolEngine):

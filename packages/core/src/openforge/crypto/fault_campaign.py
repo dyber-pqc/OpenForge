@@ -8,11 +8,14 @@ bit-flip, glitch, and instruction-skip fault models.
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 
 class FaultType(Enum):
@@ -175,10 +178,7 @@ class FaultCampaign:
         fault_type: FaultType,
         targets: list[str],
     ) -> FaultInjection:
-        if not targets:
-            sig = "internal_signal"
-        else:
-            sig = self._rng.choice(targets)
+        sig = "internal_signal" if not targets else self._rng.choice(targets)
         t = self._rng.uniform(time_window_ns[0], time_window_ns[1])
         bit = self._rng.randint(0, 31)
         return FaultInjection(

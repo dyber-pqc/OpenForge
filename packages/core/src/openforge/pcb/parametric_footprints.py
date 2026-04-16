@@ -6,10 +6,7 @@ Nominal" land patterns where applicable.
 """
 from __future__ import annotations
 
-import math
-
 from openforge.pcb.model import PcbFootprint, PcbPad
-
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -315,7 +312,7 @@ def sot23_parametric(pins: int = 3) -> PcbFootprint:
         pads.append(_smd_pad("2", -span / 2, pitch, pad_w, pad_h))
         pads.append(_smd_pad("3", span / 2, 0.0, pad_w, pad_h))
     else:
-        per_side = pins // 2 + pins % 2
+        pins // 2 + pins % 2
         # 5 pin: 3 on left, 2 on right ; 6 pin: 3/3
         left = 3 if pins == 5 else 3
         right = pins - left

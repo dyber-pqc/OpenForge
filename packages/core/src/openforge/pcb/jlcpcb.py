@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 if TYPE_CHECKING:  # pragma: no cover
     from openforge.pcb.model import PcbBoard
@@ -370,7 +370,7 @@ class JlcPartPicker:
             pass
 
     # ------------------------------------------------------------------
-    def export_jlc_bom(self, board: "PcbBoard", output_path: Path) -> Path:
+    def export_jlc_bom(self, board: PcbBoard, output_path: Path) -> Path:
         """JLCPCB BOM CSV: Comment, Designator, Footprint, LCSC Part #."""
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -388,7 +388,7 @@ class JlcPartPicker:
                 w.writerow([value, ",".join(refs_sorted), footprint, lcsc])
         return output_path
 
-    def export_jlc_cpl(self, board: "PcbBoard", output_path: Path) -> Path:
+    def export_jlc_cpl(self, board: PcbBoard, output_path: Path) -> Path:
         """JLCPCB Component Placement List CSV."""
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)

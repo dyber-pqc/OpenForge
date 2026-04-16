@@ -17,10 +17,12 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal, Slot
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -50,7 +52,7 @@ class LayoutBox:
 class NetlistCell:
     instance: str
     cell_type: str
-    src: Optional[RtlLocation] = None
+    src: RtlLocation | None = None
     nets: list[str] = field(default_factory=list)
 
 
@@ -74,14 +76,14 @@ class CrossProbeManager(QObject):
     # Multiple files may be comma-joined; we take the first.
     _SRC_RE = re.compile(r"([^:,]+):(\d+)\.(\d+)-(\d+)\.(\d+)")
 
-    def __init__(self, parent: Optional[QObject] = None) -> None:
+    def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._source_map: dict[str, RtlLocation] = {}
         self._layout_map: dict[str, LayoutBox] = {}
         self._netlist_map: dict[str, NetlistCell] = {}
         self._signal_to_cells: dict[str, list[str]] = {}
         self._cell_to_signals: dict[str, list[str]] = {}
-        self._current: Optional[str] = None  # last selected cell instance
+        self._current: str | None = None  # last selected cell instance
         self._suppress = False  # re-entrancy guard
 
     # ------------------------------------------------------------------
@@ -155,7 +157,7 @@ class CrossProbeManager(QObject):
             return
 
         modules = data.get("modules", {})
-        for module_name, module in modules.items():
+        for _module_name, module in modules.items():
             cells = module.get("cells", {})
             for inst_name, cell in cells.items():
                 src_attr = cell.get("attributes", {}).get("src", "")
@@ -163,7 +165,7 @@ class CrossProbeManager(QObject):
 
                 connections = cell.get("connections", {})
                 nets: list[str] = []
-                for port, bits in connections.items():
+                for _port, bits in connections.items():
                     if isinstance(bits, list):
                         for b in bits:
                             net_name = self._resolve_bit(module, b)
@@ -193,7 +195,7 @@ class CrossProbeManager(QObject):
 
         self.map_loaded.emit("yosys")
 
-    def _parse_src_attr(self, attr: str) -> Optional[RtlLocation]:
+    def _parse_src_attr(self, attr: str) -> RtlLocation | None:
         if not attr:
             return None
         # Yosys may pack multiple sources separated by '|'.
@@ -209,7 +211,7 @@ class CrossProbeManager(QObject):
                 )
         return None
 
-    def _resolve_bit(self, module: dict, bit) -> Optional[str]:
+    def _resolve_bit(self, module: dict, bit) -> str | None:
         if isinstance(bit, str):
             return bit
         if isinstance(bit, int):
@@ -363,10 +365,10 @@ class CrossProbeManager(QObject):
     # ------------------------------------------------------------------
     # Query helpers
     # ------------------------------------------------------------------
-    def get_source_for(self, name: str) -> Optional[RtlLocation]:
+    def get_source_for(self, name: str) -> RtlLocation | None:
         return self._source_map.get(name)
 
-    def get_layout_for(self, name: str) -> Optional[LayoutBox]:
+    def get_layout_for(self, name: str) -> LayoutBox | None:
         return self._layout_map.get(name)
 
     def get_cells_for_signal(self, signal: str) -> list[str]:

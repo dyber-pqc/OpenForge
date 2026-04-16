@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class AttributeType(Enum):
@@ -90,7 +89,7 @@ ATTRIBUTE_VALUES: dict[AttributeType, list[str]] = {
 }
 
 
-def attribute_type_from_str(name: str) -> Optional[AttributeType]:
+def attribute_type_from_str(name: str) -> AttributeType | None:
     """Look up an :class:`AttributeType` by canonical name."""
     name_l = name.strip().lower()
     for at in AttributeType:
@@ -113,7 +112,7 @@ def find_attributes_in_source(source_text: str) -> list[tuple[int, str]]:
     return results
 
 
-def parse_attribute_text(text: str) -> Optional[SynthesisAttribute]:
+def parse_attribute_text(text: str) -> SynthesisAttribute | None:
     """Parse the inside of a ``(* ... *)`` block into a SynthesisAttribute."""
     text = text.strip()
     if "=" in text:

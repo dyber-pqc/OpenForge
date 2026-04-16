@@ -9,11 +9,9 @@ hardware attacks.
 from __future__ import annotations
 
 import math
-import textwrap
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any
-
 
 # ── Enums ─────────────────────────────────────────────────────────────
 
@@ -543,7 +541,7 @@ class FaultInjectionSimulator:
         if fault_config.model == FaultModel.BIT_FLIP:
             bit_idx = fault_config.parameters.get("bit_index", 0)
             lines.extend([
-                f"@cocotb.test()",
+                "@cocotb.test()",
                 f"async def test_bit_flip_{fault_config.target_signal}"
                 f"_b{bit_idx}(dut):",
                 f'    """Inject single-bit flip on '
@@ -551,67 +549,67 @@ class FaultInjectionSimulator:
                 f'{fault_config.target_cycle}."""',
                 f"    clock = Clock(dut.{clock_signal}, "
                 f"{self._clock_period_ns}, units='ns')",
-                f"    cocotb.start_soon(clock.start())",
-                f"",
-                f"    # Reset",
+                "    cocotb.start_soon(clock.start())",
+                "",
+                "    # Reset",
                 f"    dut.{reset_signal}.value = 0",
                 f"    await ClockCycles(dut.{clock_signal}, 5)",
                 f"    dut.{reset_signal}.value = 1",
                 f"    await ClockCycles(dut.{clock_signal}, 5)",
-                f"",
-                f"    # Run to target cycle",
+                "",
+                "    # Run to target cycle",
                 f"    await ClockCycles(dut.{clock_signal}, "
                 f"{fault_config.target_cycle})",
-                f"",
-                f"    # Capture correct value",
+                "",
+                "    # Capture correct value",
                 f"    correct = int(dut.{fault_config.target_signal}.value)",
-                f"",
-                f"    # Inject bit flip",
+                "",
+                "    # Inject bit flip",
                 f"    faulty = correct ^ (1 << {bit_idx})",
                 f"    dut.{fault_config.target_signal}.value = faulty",
                 f"    await RisingEdge(dut.{clock_signal})",
-                f"",
-                f"    # Restore (transient fault)",
+                "",
+                "    # Restore (transient fault)",
                 f"    dut.{fault_config.target_signal}.value = correct",
-                f"",
-                f"    # Continue and capture output",
+                "",
+                "    # Continue and capture output",
                 f"    await ClockCycles(dut.{clock_signal}, 100)",
-                f"    # TODO: Check output and fault detection signals",
-                f"",
+                "    # TODO: Check output and fault detection signals",
+                "",
             ])
 
         elif fault_config.model == FaultModel.CLOCK_GLITCH:
             width = fault_config.parameters.get("glitch_width_ns", 1.0)
             offset = fault_config.parameters.get("glitch_offset_ns", 0.0)
             lines.extend([
-                f"@cocotb.test()",
+                "@cocotb.test()",
                 f"async def test_clock_glitch_cycle"
                 f"_{fault_config.target_cycle}(dut):",
                 f'    """Inject clock glitch at cycle '
                 f'{fault_config.target_cycle}."""',
                 f"    clock = Clock(dut.{clock_signal}, "
                 f"{self._clock_period_ns}, units='ns')",
-                f"    cocotb.start_soon(clock.start())",
-                f"",
-                f"    # Reset",
+                "    cocotb.start_soon(clock.start())",
+                "",
+                "    # Reset",
                 f"    dut.{reset_signal}.value = 0",
                 f"    await ClockCycles(dut.{clock_signal}, 5)",
                 f"    dut.{reset_signal}.value = 1",
-                f"",
-                f"    # Run to target cycle",
+                "",
+                "    # Run to target cycle",
                 f"    await ClockCycles(dut.{clock_signal}, "
                 f"{fault_config.target_cycle})",
-                f"",
-                f"    # Inject glitch: extra rising edge within the cycle",
+                "",
+                "    # Inject glitch: extra rising edge within the cycle",
                 f"    await Timer({offset}, units='ns')",
                 f"    dut.{clock_signal}.value = 1",
                 f"    await Timer({width}, units='ns')",
                 f"    dut.{clock_signal}.value = 0",
-                f"",
-                f"    # Continue normal operation",
+                "",
+                "    # Continue normal operation",
                 f"    await ClockCycles(dut.{clock_signal}, 100)",
-                f"    # TODO: Check output and fault detection signals",
-                f"",
+                "    # TODO: Check output and fault detection signals",
+                "",
             ])
 
         elif fault_config.model == FaultModel.STUCK_AT:
@@ -622,65 +620,65 @@ class FaultInjectionSimulator:
             )
             duration = end_cycle - fault_config.target_cycle
             lines.extend([
-                f"@cocotb.test()",
+                "@cocotb.test()",
                 f"async def test_stuck_at_{fault_config.target_signal}"
                 f"_b{bit_idx}_v{stuck_val}(dut):",
                 f'    """Inject stuck-at-{stuck_val} on '
                 f'{fault_config.target_signal}[{bit_idx}]."""',
                 f"    clock = Clock(dut.{clock_signal}, "
                 f"{self._clock_period_ns}, units='ns')",
-                f"    cocotb.start_soon(clock.start())",
-                f"",
-                f"    # Reset",
+                "    cocotb.start_soon(clock.start())",
+                "",
+                "    # Reset",
                 f"    dut.{reset_signal}.value = 0",
                 f"    await ClockCycles(dut.{clock_signal}, 5)",
                 f"    dut.{reset_signal}.value = 1",
-                f"",
-                f"    # Run to target cycle",
+                "",
+                "    # Run to target cycle",
                 f"    await ClockCycles(dut.{clock_signal}, "
                 f"{fault_config.target_cycle})",
-                f"",
+                "",
                 f"    # Apply stuck-at fault for {duration} cycles",
                 f"    for _ in range({duration}):",
                 f"        val = int(dut.{fault_config.target_signal}.value)",
                 f"        if {stuck_val}:",
                 f"            val = val | (1 << {bit_idx})",
-                f"        else:",
+                "        else:",
                 f"            val = val & ~(1 << {bit_idx})",
                 f"        dut.{fault_config.target_signal}.value = val",
                 f"        await RisingEdge(dut.{clock_signal})",
-                f"",
-                f"    # Continue normal operation",
+                "",
+                "    # Continue normal operation",
                 f"    await ClockCycles(dut.{clock_signal}, 100)",
-                f"    # TODO: Check output and fault detection signals",
-                f"",
+                "    # TODO: Check output and fault detection signals",
+                "",
             ])
 
         else:
             # Generic template for other fault models
             lines.extend([
-                f"@cocotb.test()",
+                "@cocotb.test()",
                 f"async def test_{fault_config.model.name.lower()}_"
                 f"{fault_config.target_cycle}(dut):",
                 f'    """Inject {fault_config.model.name} fault at cycle '
                 f'{fault_config.target_cycle}."""',
                 f"    clock = Clock(dut.{clock_signal}, "
                 f"{self._clock_period_ns}, units='ns')",
-                f"    cocotb.start_soon(clock.start())",
-                f"",
-                f"    # Reset",
+                "    cocotb.start_soon(clock.start())",
+                "",
+                "    # Reset",
                 f"    dut.{reset_signal}.value = 0",
                 f"    await ClockCycles(dut.{clock_signal}, 5)",
                 f"    dut.{reset_signal}.value = 1",
-                f"",
+                "",
                 f"    await ClockCycles(dut.{clock_signal}, "
                 f"{fault_config.target_cycle})",
-                f"",
+                "",
                 f"    # TODO: Implement {fault_config.model.name} injection",
                 f"    # Parameters: {fault_config.parameters}",
-                f"",
+                "",
                 f"    await ClockCycles(dut.{clock_signal}, 100)",
-                f"",
+                "",
             ])
 
         return "\n".join(lines)

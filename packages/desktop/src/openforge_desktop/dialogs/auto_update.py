@@ -12,36 +12,25 @@ import os
 import platform
 import subprocess
 import tempfile
-import urllib.request
 import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import (
-    Qt,
     QObject,
     QThread,
     Signal,
-    QTimer,
-    QUrl,
-    QSize,
 )
-from PySide6.QtGui import QDesktopServices, QFont, QColor
 from PySide6.QtWidgets import (
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
+    QProgressBar,
     QPushButton,
     QTextBrowser,
-    QFrame,
-    QProgressBar,
-    QMessageBox,
-    QSizePolicy,
-    QWidget,
+    QVBoxLayout,
 )
-
 
 GITHUB_RELEASES_URL = "https://api.github.com/repos/dyber/openforge/releases/latest"
 
@@ -80,8 +69,8 @@ def is_newer(remote: str, current: str) -> bool:
 class ReleaseInfo:
     version: str
     changelog: str
-    asset_url: Optional[str]
-    asset_name: Optional[str]
+    asset_url: str | None
+    asset_name: str | None
 
 
 class _CheckWorker(QObject):
@@ -176,12 +165,12 @@ class AutoUpdater(QObject):
     def __init__(self, current_version: str, parent=None):
         super().__init__(parent)
         self._current = current_version
-        self._release: Optional[ReleaseInfo] = None
-        self._download_path: Optional[Path] = None
-        self._check_thread: Optional[QThread] = None
-        self._check_worker: Optional[_CheckWorker] = None
-        self._dl_thread: Optional[QThread] = None
-        self._dl_worker: Optional[_DownloadWorker] = None
+        self._release: ReleaseInfo | None = None
+        self._download_path: Path | None = None
+        self._check_thread: QThread | None = None
+        self._check_worker: _CheckWorker | None = None
+        self._dl_thread: QThread | None = None
+        self._dl_worker: _DownloadWorker | None = None
 
     # ----- check ------------------------------------------------------------
 

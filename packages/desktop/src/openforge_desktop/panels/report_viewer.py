@@ -5,17 +5,17 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QDockWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QWidget,
     QComboBox,
-    QPushButton,
+    QDockWidget,
+    QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QPushButton,
     QSplitter,
     QStackedWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
 

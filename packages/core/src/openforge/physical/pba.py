@@ -17,11 +17,14 @@ PBA results reflect the freshly extracted parasitics.
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from openforge.physical.sta_parser import StaReport, TimingPath, TimingStage
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from openforge.physical.sta_parser import StaReport, TimingPath
 
 
 class PathDelay(BaseModel):

@@ -16,10 +16,8 @@ import math
 import re
 import statistics
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -34,7 +32,7 @@ class CtsNode(BaseModel):
     x_um: float = 0.0
     y_um: float = 0.0
     level: int = 0
-    parent: Optional[str] = None
+    parent: str | None = None
     children: list[str] = Field(default_factory=list)
     insertion_delay_ns: float = 0.0
     transition_ns: float = 0.0
@@ -144,7 +142,7 @@ class CtsTree(BaseModel):
         for node in self.nodes.values():
             if sink_instance in node.children:
                 chain: list[str] = []
-                cur: Optional[str] = node.name
+                cur: str | None = node.name
                 while cur is not None:
                     chain.append(cur)
                     parent = self.nodes.get(cur).parent if cur in self.nodes else None
@@ -215,7 +213,7 @@ class CtsParser:
 
         in_nodes = False
         in_sinks = False
-        last_sink: Optional[CtsSink] = None
+        last_sink: CtsSink | None = None
 
         for raw_line in text.splitlines():
             line = raw_line.rstrip()
@@ -499,8 +497,8 @@ def _parse_sdf_arrivals(sdf_text: str) -> dict[str, tuple[float, float]]:
     """
     out: dict[str, tuple[float, float]] = {}
 
-    cell_re = re.compile(r"\(CELL\s+(.*?)\)\s*\)\s*\)\s*\)", re.DOTALL)
-    inst_re = re.compile(r"\(INSTANCE\s+([^)]+)\)")
+    re.compile(r"\(CELL\s+(.*?)\)\s*\)\s*\)\s*\)", re.DOTALL)
+    re.compile(r"\(INSTANCE\s+([^)]+)\)")
     iopath_re = re.compile(
         r"\(IOPATH\s+\S+\s+\S+\s+\(\s*" + _NUM + r":" + _NUM + r":" + _NUM + r"\s*\)"
     )
@@ -509,7 +507,6 @@ def _parse_sdf_arrivals(sdf_text: str) -> dict[str, tuple[float, float]]:
     )
 
     depth = 0
-    start = 0
     # Split by top-level ``(CELL ...)`` records
     cells: list[str] = []
     buf: list[str] = []

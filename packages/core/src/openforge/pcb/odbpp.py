@@ -8,11 +8,12 @@ directory structure and feature files needed for common use.
 from __future__ import annotations
 
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from openforge.pcb.model import PcbBoard, PcbFootprint, PcbPad
-
+if TYPE_CHECKING:
+    from openforge.pcb.model import PcbBoard
 
 _LAYER_TO_ODB = {
     "F.Cu": ("top", "SIGNAL"),
@@ -45,7 +46,7 @@ class OdbppExporter:
             "UNITS=MM\n"
             "ODB_VERSION_MAJOR=8\n"
             "ODB_VERSION_MINOR=1\n"
-            f"CREATION_DATE={datetime.now(timezone.utc).isoformat()}\n"
+            f"CREATION_DATE={datetime.now(UTC).isoformat()}\n"
         )
 
         # Steps
@@ -53,7 +54,7 @@ class OdbppExporter:
         step_dir.mkdir(parents=True)
         (step_dir / "stephdr").write_text(
             "UNITS=MM\n"
-            f"X_DATUM=0\nY_DATUM=0\nX_ORIGIN=0\nY_ORIGIN=0\n"
+            "X_DATUM=0\nY_DATUM=0\nX_ORIGIN=0\nY_ORIGIN=0\n"
         )
 
         # Board outline as "profile"

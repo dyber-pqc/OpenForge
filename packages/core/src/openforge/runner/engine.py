@@ -11,26 +11,26 @@ The engine is deliberately self-contained: stages are subprocess commands
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import subprocess
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
-from typing import Any, Callable
-import urllib.request
-import urllib.error
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from .artifacts import ArtifactKind, ArtifactRegistry, detect_kind
 
 
-class RunStatus(str, Enum):
+class RunStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -40,7 +40,7 @@ class RunStatus(str, Enum):
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class RunArtifact(BaseModel):
@@ -194,10 +194,8 @@ class RunEngine:
         state.cancelled.set()
         with state.lock:
             for proc in list(state.processes.values()):
-                try:
+                with contextlib.suppress(Exception):
                     proc.terminate()
-                except Exception:
-                    pass
         for s in state.graph.stages():
             if s.status in (RunStatus.PENDING, RunStatus.RUNNING):
                 s.status = RunStatus.CANCELLED
@@ -380,7 +378,8 @@ class RunEngine:
 
     def dispatch_stage(self, stage: RunStage, worker_url: str) -> dict[str, Any]:
         """POST the stage spec to a worker and poll until complete."""
-        from .dispatch import dispatch as _dispatch, WorkerNode
+        from .dispatch import WorkerNode
+        from .dispatch import dispatch as _dispatch
 
         node = WorkerNode(
             url=worker_url.rstrip("/"),
@@ -523,17 +522,13 @@ class RunEngine:
                     logf.write(line)
                     logf.flush()
                     if self.on_log_line:
-                        try:
+                        with contextlib.suppress(Exception):
                             self.on_log_line(
                                 state.run_id, stage, line.decode("utf-8", "replace")
                             )
-                        except Exception:
-                            pass
                     if self.on_stage_progress:
-                        try:
+                        with contextlib.suppress(Exception):
                             self.on_stage_progress(state.run_id, stage)
-                        except Exception:
-                            pass
                 rc = proc.wait()
                 with state.lock:
                     state.processes.pop(stage.id, None)
@@ -554,10 +549,8 @@ class RunEngine:
         finally:
             stage.finished_at = _utcnow()
             if self.on_stage_finish:
-                try:
+                with contextlib.suppress(Exception):
                     self.on_stage_finish(state.run_id, stage)
-                except Exception:
-                    pass
 
     # ----- artifacts & cache -----------------------------------------------
 

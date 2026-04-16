@@ -17,13 +17,12 @@ highlight) and compatible with the main window dock layout.
 from __future__ import annotations
 
 import shutil
-import subprocess
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -41,14 +40,17 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QScrollArea,
-    QSpinBox,
     QSizePolicy,
-    QTabWidget,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # --- Core imports (guarded) ------------------------------------------------
 
@@ -60,9 +62,11 @@ except Exception:  # pragma: no cover
 
 try:
     from openforge.litex.integration import (
+        SUPPORTED_BOARDS as LITEX_BOARDS,
+    )
+    from openforge.litex.integration import (
         LiteXBuilder,
         LiteXSocConfig,
-        SUPPORTED_BOARDS as LITEX_BOARDS,
     )
 except Exception:  # pragma: no cover
     LiteXBuilder = None  # type: ignore
@@ -70,8 +74,8 @@ except Exception:  # pragma: no cover
     LITEX_BOARDS = {}  # type: ignore
 
 try:
-    from openforge_desktop.theme.design_system import get_palette
     from openforge_desktop.theme.components import MetricCard
+    from openforge_desktop.theme.design_system import get_palette
 except Exception:  # pragma: no cover
     get_palette = None  # type: ignore
     MetricCard = None  # type: ignore
@@ -119,8 +123,8 @@ class _BuildStep:
     runtime: QLabel
     button: QPushButton
     log_preview: QPlainTextEdit
-    runner: Optional[Callable[[], dict]] = None
-    last_result: Optional[dict] = None
+    runner: Callable[[], dict] | None = None
+    last_result: dict | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -131,7 +135,7 @@ class _BuildStep:
 class UtilBar(QFrame):
     """Horizontal utilization bar with label and percentage."""
 
-    def __init__(self, name: str, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, name: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("util-bar")
         self._name = name
@@ -190,7 +194,7 @@ class UtilBar(QFrame):
 class FmaxDial(QFrame):
     """Simple dial-style widget that displays an Fmax in MHz."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setMinimumSize(160, 120)
         self._fmax = 0.0
@@ -248,7 +252,7 @@ class FpgaTargetPanel(QDockWidget):
     program_requested = Signal(str)  # bitstream path
     litex_generate_requested = Signal(dict)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("FPGA Target", parent)
         self.setObjectName("FpgaTargetPanel")
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)

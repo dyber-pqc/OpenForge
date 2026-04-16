@@ -6,12 +6,10 @@ All widgets use the Catppuccin Mocha dark theme for a professional EDA aesthetic
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Callable, Final
+from typing import TYPE_CHECKING, Any, Final
 
-from PySide6.QtCore import QPointF, QRectF, QThread, Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, Qt, QThread, Signal
 from PySide6.QtGui import (
-    QBrush,
     QColor,
     QFont,
     QPainter,
@@ -38,6 +36,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 # ── Catppuccin Mocha palette ────────────────────────────────────────────────
 

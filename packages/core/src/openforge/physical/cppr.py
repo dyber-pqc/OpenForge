@@ -18,11 +18,12 @@ the common-segment delay.
 from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from openforge.physical.sta_parser import StaReport, TimingPath, TimingStage
-
+if TYPE_CHECKING:
+    from openforge.physical.sta_parser import StaReport, TimingPath, TimingStage
 
 OCV_DERATE_DEFAULT = 0.05  # 5% on-chip variation
 

@@ -20,7 +20,7 @@ import logging
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -43,7 +43,7 @@ class Corner(BaseModel):
     temperature: float = 25.0  # degrees C
     lib_files: list[Path] = Field(default_factory=list)
     rc_corner: str = "typical"  # minC / nominal / maxC
-    qrc_file: Optional[Path] = None
+    qrc_file: Path | None = None
     derate: float = 1.0  # OCV derate factor
 
     @field_validator("process")
@@ -204,7 +204,7 @@ class MmmcConfig(BaseModel):
     # ------------------------------------------------------------------
 
     @classmethod
-    def sky130_default(cls) -> "MmmcConfig":
+    def sky130_default(cls) -> MmmcConfig:
         """Standard sky130_fd_sc_hd MMMC corners: tt/ss/ff."""
         lib_root = Path("$PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib")
         corners = [
@@ -264,7 +264,7 @@ class MmmcConfig(BaseModel):
         return cls(corners=corners, modes=[mode], scenarios=scenarios)
 
     @classmethod
-    def asap7_default(cls) -> "MmmcConfig":
+    def asap7_default(cls) -> MmmcConfig:
         """Standard ASAP7 7.5T MMMC corners: TT/SS/FF."""
         lib_root = Path("$PDK_ROOT/asap7/asap7sc7p5t_27/LIB/NLDM")
         corners = [

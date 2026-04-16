@@ -7,46 +7,38 @@ dims the main window while highlighting the active target widget.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Optional
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import (
+    QPoint,
+    QRect,
     Qt,
     Signal,
-    QSize,
-    QRect,
-    QPoint,
-    QPropertyAnimation,
-    QEasingCurve,
-    QTimer,
 )
 from PySide6.QtGui import (
-    QPainter,
     QColor,
-    QPen,
-    QBrush,
-    QPainterPath,
-    QRegion,
     QFont,
-    QPalette,
-    QPixmap,
+    QPainter,
+    QPainterPath,
+    QPen,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
-    QWidget,
-    QVBoxLayout,
+    QFrame,
+    QGraphicsDropShadowEffect,
     QHBoxLayout,
     QLabel,
-    QPushButton,
-    QFrame,
     QProgressBar,
-    QGraphicsDropShadowEffect,
-    QSizePolicy,
-    QApplication,
+    QPushButton,
     QTextBrowser,
-    QSpacerItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Step / tutorial dataclasses
@@ -57,11 +49,11 @@ from PySide6.QtWidgets import (
 class TutorialStep:
     title: str
     description: str  # markdown supported
-    target_widget: Optional[str] = None  # widget objectName to highlight
-    action: Optional[str] = None  # "click", "type", "wait_for"
-    action_data: Optional[str] = None
+    target_widget: str | None = None  # widget objectName to highlight
+    action: str | None = None  # "click", "type", "wait_for"
+    action_data: str | None = None
     can_skip: bool = True
-    validation: Optional[Callable[[], bool]] = None
+    validation: Callable[[], bool] | None = None
 
 
 @dataclass
@@ -304,7 +296,7 @@ BUILTIN_TUTORIALS: list[Tutorial] = [
 ]
 
 
-def get_tutorial(tutorial_id: str) -> Optional[Tutorial]:
+def get_tutorial(tutorial_id: str) -> Tutorial | None:
     for t in BUILTIN_TUTORIALS:
         if t.id == tutorial_id:
             return t
@@ -322,14 +314,14 @@ class TutorialOverlay(QWidget):
     def __init__(self, parent_window: QWidget):
         super().__init__(parent_window)
         self._parent_window = parent_window
-        self._target_rect: Optional[QRect] = None
+        self._target_rect: QRect | None = None
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setGeometry(parent_window.rect())
         self.hide()
 
-    def set_target_rect(self, rect: Optional[QRect]) -> None:
+    def set_target_rect(self, rect: QRect | None) -> None:
         self._target_rect = rect
         self.setGeometry(self._parent_window.rect())
         self.update()
@@ -370,7 +362,7 @@ class TutorialDialog(QDialog):
         super().__init__(parent)
         self._tutorial = tutorial
         self._index = 0
-        self._overlay: Optional[TutorialOverlay] = None
+        self._overlay: TutorialOverlay | None = None
         self.setWindowTitle(f"Tutorial: {tutorial.title}")
         self.setWindowFlags(
             Qt.WindowType.Tool
@@ -596,8 +588,14 @@ except Exception:  # noqa: BLE001
 
 from PySide6.QtWidgets import (  # noqa: E402
     QListWidget as _QListWidget,
+)
+from PySide6.QtWidgets import (
     QListWidgetItem as _QListWidgetItem,
+)
+from PySide6.QtWidgets import (
     QSplitter as _QSplitter,
+)
+from PySide6.QtWidgets import (
     QTextBrowser as _QTextBrowser2,
 )
 

@@ -13,17 +13,20 @@ unit tested.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 try:  # pragma: no cover - optional Qt dependency
     from openforge_desktop.widgets.schematic_editor import (  # type: ignore
-        Schematic,
         SchComponent,
-        SchWireSegment,
+        Schematic,
         SchLabel,
+        SchPort,
         SchPowerSymbol,
         SchSheet,
-        SchPort,
+        SchWireSegment,
     )
     _HAS_EDITOR = True
 except Exception:  # pragma: no cover - headless fallback

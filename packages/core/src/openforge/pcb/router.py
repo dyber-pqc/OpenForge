@@ -29,14 +29,16 @@ import math
 import shutil
 import subprocess
 import time
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+
     from openforge.pcb.model import PcbBoard
     from openforge.pcb.net_classes import NetClassRegistry
 
@@ -46,7 +48,7 @@ BLOCKED_CELL = -1
 PAD_CELL = -2  # pad target: treated as free only for that net
 
 
-class RoutingMode(str, Enum):
+class RoutingMode(StrEnum):
     AUTOROUTE_ALL = "autoroute_all"
     INTERACTIVE_PUSH = "interactive_push"
     WALKAROUND = "walkaround"
@@ -69,8 +71,8 @@ class PcbRouter:
 
     def __init__(
         self,
-        board: "PcbBoard",
-        net_classes: "NetClassRegistry | None" = None,
+        board: PcbBoard,
+        net_classes: NetClassRegistry | None = None,
         grid_mm: float = 0.25,
         layers: list[str] | None = None,
         bend_penalty: int = 2,
@@ -223,7 +225,7 @@ class PcbRouter:
             for nr, nc, step in self._neighbors(*cur):
                 cell = grid[nr, nc]
                 # free?
-                if cell == FREE_CELL or cell == net_id:
+                if cell in (FREE_CELL, net_id):
                     step_cost = step
                 elif cell == BLOCKED_CELL:
                     continue

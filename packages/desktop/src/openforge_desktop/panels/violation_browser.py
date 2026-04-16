@@ -9,7 +9,6 @@ import from other panels.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
@@ -20,7 +19,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QInputDialog,
     QLabel,
     QLineEdit,
@@ -63,7 +61,7 @@ except Exception:  # pragma: no cover
 
 
 class _ScoreTile(QFrame):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setStyleSheet(
@@ -96,15 +94,15 @@ class ViolationBrowserPanel(QWidget):
     # layout viewer can pan/highlight.
     cross_probe = Signal(float, float, str)  # x_um, y_um, label
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._db = ViolationDb() if _HAVE_DB else None
-        self._filtered: list["Violation"] = []
+        self._filtered: list[Violation] = []
         self._build_ui()
         self._refresh()
 
     # ------------------------------------------------------------------
-    def db(self) -> Optional["ViolationDb"]:
+    def db(self) -> ViolationDb | None:
         return self._db
 
     # ------------------------------------------------------------------
@@ -230,7 +228,7 @@ class ViolationBrowserPanel(QWidget):
     # Public API
     # ------------------------------------------------------------------
 
-    def add_violations(self, violations: list["Violation"]) -> None:
+    def add_violations(self, violations: list[Violation]) -> None:
         if self._db is None:
             return
         self._db.add_bulk(violations)
@@ -297,7 +295,7 @@ class ViolationBrowserPanel(QWidget):
         self._refresh()
 
     # ------------------------------------------------------------------
-    def _current_filter(self) -> list["Violation"]:
+    def _current_filter(self) -> list[Violation]:
         if self._db is None:
             return []
         kind = self._kind_combo.currentData()
@@ -305,7 +303,7 @@ class ViolationBrowserPanel(QWidget):
         query = self._search.text().strip().lower()
         out = self._db.query(kind=kind, severity=sev)
         if query:
-            def _match(v: "Violation") -> bool:
+            def _match(v: Violation) -> bool:
                 hay = " ".join([
                     (v.instance or ""), (v.net or ""), (v.layer or ""),
                     v.suggestion or "",
@@ -368,7 +366,7 @@ class ViolationBrowserPanel(QWidget):
         # Heatmap
         self._render_heatmap(vs)
 
-    def _render_heatmap(self, vs: list["Violation"]) -> None:
+    def _render_heatmap(self, vs: list[Violation]) -> None:
         if not _HAVE_MPL or self._heat_ax is None:
             return
         self._heat_ax.clear()

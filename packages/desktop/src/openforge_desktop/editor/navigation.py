@@ -124,7 +124,7 @@ class VerilogNavigator:
             return
 
         file_str = str(path)
-        lines = text.split("\n")
+        text.split("\n")
 
         # Find declarations
         for pattern, kind in _ALL_PATTERNS:

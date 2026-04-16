@@ -33,7 +33,6 @@ from openforge.format.spef_parser import (
     SpefRes,
 )
 
-
 # ---------------------------------------------------------------------------
 # Sky130 layer properties (ballpark, derived from public PEX docs)
 # ---------------------------------------------------------------------------

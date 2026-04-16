@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -43,8 +42,8 @@ def _resolve_sources(project_dir: Path, config) -> list[str]:
 def synth(
     path: str = typer.Argument(".", help="Path to the design directory."),
     device: str = typer.Option("ice40", "--device", "-d", help="FPGA device family (ice40, ecp5, gowin)."),
-    top: Optional[str] = typer.Option(None, "--top", help="Top-level module name."),
-    json_out: Optional[str] = typer.Option(None, "--json-out", help="Write JSON netlist to file."),
+    top: str | None = typer.Option(None, "--top", help="Top-level module name."),
+    json_out: str | None = typer.Option(None, "--json-out", help="Write JSON netlist to file."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON result."),
@@ -122,11 +121,11 @@ def pnr(
     path: str = typer.Argument(".", help="Path to the design directory."),
     device: str = typer.Option("", "--device", "-d", help="FPGA device (e.g. hx8k, lfe5u-85f, GW1NR-9C)."),
     package: str = typer.Option("", "--package", help="Device package (e.g. ct256, CABGA381)."),
-    pcf: Optional[str] = typer.Option(None, "--pcf", help="Pin constraints file (iCE40)."),
-    lpf: Optional[str] = typer.Option(None, "--lpf", help="Pin constraints file (ECP5)."),
-    xdc: Optional[str] = typer.Option(None, "--xdc", help="Pin constraints file (Xilinx)."),
-    freq: Optional[float] = typer.Option(None, "--freq", help="Target frequency in MHz."),
-    json_netlist: Optional[str] = typer.Option(None, "--json", help="Input JSON netlist (from synth)."),
+    pcf: str | None = typer.Option(None, "--pcf", help="Pin constraints file (iCE40)."),
+    lpf: str | None = typer.Option(None, "--lpf", help="Pin constraints file (ECP5)."),
+    xdc: str | None = typer.Option(None, "--xdc", help="Pin constraints file (Xilinx)."),
+    freq: float | None = typer.Option(None, "--freq", help="Target frequency in MHz."),
+    json_netlist: str | None = typer.Option(None, "--json", help="Input JSON netlist (from synth)."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
 ) -> None:
@@ -222,7 +221,7 @@ def pnr(
 @app.command()
 def pack(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output bitstream file."),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output bitstream file."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
 ) -> None:
     """Pack FPGA routed design into a bitstream.
@@ -264,8 +263,8 @@ def pack(
 @app.command()
 def flash(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    board: Optional[str] = typer.Option(None, "--board", "-b", help="Board name (auto-detect if omitted)."),
-    bitstream: Optional[str] = typer.Option(None, "--bitstream", help="Path to bitstream file."),
+    board: str | None = typer.Option(None, "--board", "-b", help="Board name (auto-detect if omitted)."),
+    bitstream: str | None = typer.Option(None, "--bitstream", help="Path to bitstream file."),
     mode: str = typer.Option("sram", "--mode", "-m", help="Programming mode: sram or flash."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
 ) -> None:
@@ -275,7 +274,7 @@ def flash(
         openforge fpga flash --board icebreaker --mode sram
         openforge fpga flash --bitstream design.bin
     """
-    from openforge.fpga.programmer import detect_devices, program_device
+    from openforge.fpga.programmer import program_device
 
     project_dir = Path(path).resolve()
     fpga_build = project_dir / "fpga_build"

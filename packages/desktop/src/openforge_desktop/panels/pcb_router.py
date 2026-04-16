@@ -5,16 +5,12 @@ all driven against an ``openforge.pcb.model.PcbBoard`` instance.
 """
 from __future__ import annotations
 
-import os
-from pathlib import Path
-from typing import Optional
+import contextlib
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
-    QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -25,10 +21,9 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
-    QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -36,11 +31,11 @@ from PySide6.QtWidgets import (
 )
 
 try:
-    from openforge.pcb.model import PcbBoard
-    from openforge.pcb.net_classes import NetClass, NetClassRegistry, DEFAULT_CLASSES
-    from openforge.pcb.router import PcbRouter, RouteResult, RoutingMode
+    from openforge.pcb.diff_pair import DiffPairRouter
     from openforge.pcb.length_match import LengthGroup, LengthMatcher
-    from openforge.pcb.diff_pair import DiffPair, DiffPairRouter
+    from openforge.pcb.model import PcbBoard
+    from openforge.pcb.net_classes import NetClass, NetClassRegistry
+    from openforge.pcb.router import PcbRouter, RoutingMode
 
     _HAS_CORE = True
 except Exception:  # noqa: BLE001
@@ -89,7 +84,7 @@ class _RouteWorker(QThread):
     finished_with = Signal(object)  # RouteResult
     progress = Signal(int, str)
 
-    def __init__(self, router, mode: str, targets: Optional[list[str]] = None):
+    def __init__(self, router, mode: str, targets: list[str] | None = None):
         super().__init__()
         self._router = router
         self._mode = mode
@@ -123,7 +118,7 @@ class PcbRouterPanel(QWidget):
         self.setStyleSheet(STYLE)
         self._board = board if board is not None else self._demo_board()
         self._registry = NetClassRegistry.with_defaults() if _HAS_CORE else None
-        self._worker: Optional[_RouteWorker] = None
+        self._worker: _RouteWorker | None = None
         self._build_ui()
         self._refresh_all()
 
@@ -135,7 +130,7 @@ class PcbRouterPanel(QWidget):
     def _demo_board(self):
         if not _HAS_CORE:
             return None
-        from openforge.pcb.model import PcbBoard, PcbFootprint, PcbPad
+        from openforge.pcb.model import PcbBoard
 
         b = PcbBoard(name="demo")
         b.outline = [(0, 0), (50, 0), (50, 50), (0, 50)]
@@ -314,11 +309,11 @@ class PcbRouterPanel(QWidget):
         if not _HAS_CORE or self._board is None or self._registry is None:
             return
         self._assign_combo.clear()
-        for n in self._registry.classes.keys():
+        for n in self._registry.classes:
             self._assign_combo.addItem(n)
         self._net_tree.clear()
         by_class: dict[str, list[str]] = {k: [] for k in self._registry.classes}
-        for nid, name in self._board.nets.items():
+        for _nid, name in self._board.nets.items():
             if not name:
                 continue
             klass = self._registry.get_for_net(name)
@@ -340,10 +335,8 @@ class PcbRouterPanel(QWidget):
             if item.parent() is None:
                 continue
             net = item.text(0)
-            try:
+            with contextlib.suppress(KeyError):
                 self._registry.assign(net, target)
-            except KeyError:
-                pass
         self._refresh_assign()
 
     # ---- auto-route tab ---------------------------------------------
@@ -442,7 +435,7 @@ class PcbRouterPanel(QWidget):
             names.extend([p.pos_net, p.neg_net])
         self._start_worker("autoroute", names)
 
-    def _start_worker(self, mode: str, targets: Optional[list[str]]) -> None:
+    def _start_worker(self, mode: str, targets: list[str] | None) -> None:
         router = self._current_router()
         if router is None:
             return
@@ -505,7 +498,7 @@ class PcbRouterPanel(QWidget):
         if not _HAS_CORE or self._registry is None:
             return
         self._length_combo.clear()
-        for name in self._registry.classes.keys():
+        for name in self._registry.classes:
             self._length_combo.addItem(name)
 
     def _measure_group(self) -> None:

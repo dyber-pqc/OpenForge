@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from PySide6.QtWidgets import (
@@ -15,6 +15,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class _HierarchyNode:
@@ -255,7 +258,7 @@ class HierarchyPanel(QDockWidget):
 
             # Split text into per-module blocks for instance detection
             blocks = re.split(r"\bmodule\b", text)
-            for i, block in enumerate(blocks[1:], 1):
+            for _i, block in enumerate(blocks[1:], 1):
                 name_match = re.match(r"\s*(\w+)", block)
                 if not name_match:
                     continue

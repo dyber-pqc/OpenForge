@@ -9,9 +9,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -230,7 +232,7 @@ class TbGenerator:
         lines.append("                   .digest(digest), .done(done));")
         lines.append("    initial begin")
         lines.append("        #20 rst_n = 1;")
-        for i, v in enumerate(vectors[:100]):
+        for _i, v in enumerate(vectors[:100]):
             msg = v.inputs.get("MSG", v.inputs.get("MESSAGE", b""))
             md = v.expected_outputs.get("MD", v.expected_outputs.get("HASH", b""))
             msg_hex = (msg[:64]).hex() or "00"
@@ -468,9 +470,7 @@ class CavpRunner:
         algo_l = algorithm.lower()
         if algo_l.startswith("aes"):
             tb = self.tb_gen.generate_aes_tb(dut_top, vectors)
-        elif algo_l.startswith("sha2") or algo_l.startswith("sha-2") or algo_l == "sha256":
-            tb = self.tb_gen.generate_sha_tb(dut_top, vectors, digest_bits=256)
-        elif algo_l.startswith("sha3") or algo_l.startswith("sha-3"):
+        elif algo_l.startswith("sha2") or algo_l.startswith("sha-2") or algo_l == "sha256" or algo_l.startswith("sha3") or algo_l.startswith("sha-3"):
             tb = self.tb_gen.generate_sha_tb(dut_top, vectors, digest_bits=256)
         else:
             tb = self.tb_gen.generate_pqc_tb(dut_top, vectors, algorithm)

@@ -5,9 +5,12 @@ runs March tests on each memory at boot or test mode.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class MarchAlgorithm(Enum):

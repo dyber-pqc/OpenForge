@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from PySide6.QtCore import Qt, QPointF, QRectF, QSize
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -18,7 +18,6 @@ from PySide6.QtGui import (
     QPainter,
     QPen,
     QPolygonF,
-    QTransform,
 )
 from PySide6.QtWidgets import (
     QCheckBox,

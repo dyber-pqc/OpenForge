@@ -6,7 +6,6 @@ All widgets use the Catppuccin Mocha dark theme for a professional EDA aesthetic
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 from typing import Final
 
@@ -18,6 +17,8 @@ except ImportError:
     SchematicView = None  # type: ignore[assignment,misc]
     _HAS_SCHEMATIC_VIEW = False
 
+import contextlib
+
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
@@ -25,20 +26,13 @@ from PySide6.QtGui import (
     QFont,
     QFontMetrics,
     QPainter,
-    QPainterPath,
     QPen,
-    QPolygonF,
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QComboBox,
     QDockWidget,
-    QGraphicsItem,
-    QGraphicsLineItem,
-    QGraphicsRectItem,
     QGraphicsScene,
-    QGraphicsSimpleTextItem,
     QGraphicsView,
     QGroupBox,
     QHBoxLayout,
@@ -46,9 +40,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMenu,
-    QProgressBar,
     QPushButton,
-    QSizePolicy,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -737,10 +729,7 @@ class _MessagesTab(QWidget):
             self._table.setItem(row, 2, _text_item(text))
             loc = msg.get("file", "")
             line = msg.get("line", 0)
-            if loc:
-                loc_str = f"{loc}:{line}" if line else loc
-            else:
-                loc_str = ""
+            loc_str = (f"{loc}:{line}" if line else loc) if loc else ""
             self._table.setItem(row, 3, _text_item(loc_str, _SUBTEXT))
 
     def _on_double_click(self, index) -> None:
@@ -753,10 +742,8 @@ class _MessagesTab(QWidget):
         loc = loc_item.text()
         if ":" in loc:
             parts = loc.rsplit(":", 1)
-            try:
+            with contextlib.suppress(ValueError, IndexError):
                 self.source_requested.emit(parts[0], int(parts[1]))
-            except (ValueError, IndexError):
-                pass
 
 
 # ── Schematic Viewer Tab ────────────────────────────────────────────────────
@@ -1160,7 +1147,7 @@ class SynthesisPanel(QDockWidget):
             if netlist:
                 self._schematic.load_netlist(netlist)
 
-    def update_from_synthesis_result(self, result: "SynthesisResult") -> None:
+    def update_from_synthesis_result(self, result: SynthesisResult) -> None:
         """Convert a core ``SynthesisResult`` to the panel display format.
 
         Parameters

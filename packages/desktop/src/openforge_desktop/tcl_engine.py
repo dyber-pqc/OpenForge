@@ -8,11 +8,11 @@ to Vivado's Tcl console.
 
 from __future__ import annotations
 
+import contextlib
 import glob
 import os
 import subprocess
 import tkinter
-import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -305,10 +305,8 @@ class TclEngine:
         args_list = list(args)
         while i < len(args_list):
             if args_list[i] == "-max_paths" and i + 1 < len(args_list):
-                try:
+                with contextlib.suppress(ValueError):
                     max_paths = int(args_list[i + 1])
-                except ValueError:
-                    pass
                 i += 2
             else:
                 i += 1
@@ -770,7 +768,7 @@ class TclEngine:
         core_w = core_area[2] - core_area[0]
         core_h = core_area[3] - core_area[1]
 
-        self._emit(f"Floorplan initialized:")
+        self._emit("Floorplan initialized:")
         self._emit(f"  Die:  {die_w:.1f} x {die_h:.1f} um ({die_w * die_h / 1e6:.4f} mm^2)")
         self._emit(f"  Core: {core_w:.1f} x {core_h:.1f} um ({core_w * core_h / 1e6:.4f} mm^2)")
         return f"Floorplan: die={die_w:.0f}x{die_h:.0f} core={core_w:.0f}x{core_h:.0f}"

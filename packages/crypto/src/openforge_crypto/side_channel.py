@@ -7,11 +7,13 @@ for pre-silicon leakage evaluation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Literal
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 
 @dataclass(frozen=True, slots=True)

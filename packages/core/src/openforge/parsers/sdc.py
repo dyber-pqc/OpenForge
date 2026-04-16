@@ -7,11 +7,11 @@ and clock group constraints for static timing analysis.
 
 from __future__ import annotations
 
+import contextlib
 import re
 import shlex
 from dataclasses import dataclass, field
 from pathlib import Path
-
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -468,10 +468,8 @@ class SDCParser:
                 i += 2
             elif not a.startswith("-"):
                 # Positional: path multiplier
-                try:
+                with contextlib.suppress(ValueError):
                     mp.setup_mult = int(a)
-                except ValueError:
-                    pass
                 i += 1
             else:
                 i += 1
@@ -493,10 +491,8 @@ class SDCParser:
                 md.through_list.extend(_resolve_tcl_expr(args[i + 1]))
                 i += 2
             elif not a.startswith("-"):
-                try:
+                with contextlib.suppress(ValueError):
                     md.delay_ns = float(a)
-                except ValueError:
-                    pass
                 i += 1
             else:
                 i += 1

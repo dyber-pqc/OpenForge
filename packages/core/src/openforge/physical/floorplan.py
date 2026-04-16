@@ -8,9 +8,7 @@ SKY130 and GF180MCU PDKs.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Any
-
+from dataclasses import dataclass
 
 # ---------------------------------------------------------------------------
 # PDK-specific constants
@@ -234,7 +232,7 @@ class FloorplanGenerator:
     def generate_tracks_config(self) -> str:
         """Generate TCL ``make_tracks`` commands for the PDK."""
         lines: list[str] = ["# Metal track definitions"]
-        for layer, (direction, pitch, offset) in self._tracks.items():
+        for layer, (_direction, pitch, offset) in self._tracks.items():
             lines.append(
                 f"make_tracks {layer} "
                 f"-x_offset {offset} -x_pitch {pitch} "

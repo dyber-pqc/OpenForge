@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from os import PathLike
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
 
 
 class OptimizationPass(StrEnum):

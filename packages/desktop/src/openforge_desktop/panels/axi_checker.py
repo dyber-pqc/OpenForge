@@ -31,14 +31,12 @@ except Exception:  # pragma: no cover
         return extra
 
 try:
+    from openforge.block_design.auto_connect import AutoConnector
     from openforge.verification.axi_monitors import (
-        generate_ahb_monitor,
-        generate_apb_monitor,
         generate_axi4_full_monitor,
         generate_axi4_lite_monitor,
         generate_axis_monitor,
     )
-    from openforge.block_design.auto_connect import AutoConnector
     _CORE_OK = True
 except Exception:  # pragma: no cover
     _CORE_OK = False

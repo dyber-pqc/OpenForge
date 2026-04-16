@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Enums

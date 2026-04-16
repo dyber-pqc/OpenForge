@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import sys
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from openforge.runner.engine import RunEngine, RunGraph, RunStage, RunStatus
+from openforge.runner.engine import RunEngine, RunGraph, RunStage
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _echo(msg: str) -> list[str]:

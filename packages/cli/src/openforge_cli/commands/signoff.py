@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -39,7 +38,7 @@ def _locate_netlist(project_dir: Path) -> Path:
     raise typer.Exit(code=1)
 
 
-def _locate_def(project_dir: Path, def_arg: Optional[str]) -> Path:
+def _locate_def(project_dir: Path, def_arg: str | None) -> Path:
     if def_arg:
         p = Path(def_arg)
         if p.exists():
@@ -61,11 +60,11 @@ def _locate_def(project_dir: Path, def_arg: Optional[str]) -> Path:
 @app.command()
 def sta(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    sdc: Optional[str] = typer.Option(None, "--sdc", help="SDC constraints file."),
+    sdc: str | None = typer.Option(None, "--sdc", help="SDC constraints file."),
     corner: str = typer.Option("tt", "--corner", help="PVT corner: tt, ss, ff."),
-    spef: Optional[str] = typer.Option(None, "--spef", help="SPEF parasitics file."),
+    spef: str | None = typer.Option(None, "--spef", help="SPEF parasitics file."),
     report: bool = typer.Option(False, "--report", help="Show timing report."),
-    whatif: Optional[str] = typer.Option(None, "--whatif", help="What-if timing change (e.g. 'clock_period clk 8.0')."),
+    whatif: str | None = typer.Option(None, "--whatif", help="What-if timing change (e.g. 'clock_period clk 8.0')."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -216,7 +215,7 @@ def sta(
 def drc(
     path: str = typer.Argument(".", help="Path to the design directory."),
     tool: str = typer.Option("magic", "--tool", help="DRC tool: magic or klayout."),
-    gds: Optional[str] = typer.Option(None, "--gds", help="GDS file to check."),
+    gds: str | None = typer.Option(None, "--gds", help="GDS file to check."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -265,7 +264,7 @@ def drc(
         return
 
     if result.passed:
-        console.print(f"[green bold]DRC CLEAN[/] -- 0 violations")
+        console.print("[green bold]DRC CLEAN[/] -- 0 violations")
     else:
         console.print(f"[red bold]DRC FAILED[/] -- {result.total_count} violations")
         table = Table(title="DRC Violations", show_header=True, header_style="bold cyan")
@@ -289,8 +288,8 @@ def drc(
 @app.command()
 def lvs(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    gds: Optional[str] = typer.Option(None, "--gds", help="GDS layout file."),
-    netlist: Optional[str] = typer.Option(None, "--netlist", help="Reference netlist."),
+    gds: str | None = typer.Option(None, "--gds", help="GDS layout file."),
+    netlist: str | None = typer.Option(None, "--netlist", help="Reference netlist."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -364,7 +363,7 @@ def lvs(
 @app.command(name="ir-drop")
 def ir_drop(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    def_file: Optional[str] = typer.Option(None, "--def", help="DEF file to analyze."),
+    def_file: str | None = typer.Option(None, "--def", help="DEF file to analyze."),
     vdd: float = typer.Option(1.8, "--vdd", help="Supply voltage in volts."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -419,7 +418,7 @@ def ir_drop(
 @app.command()
 def em(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    def_file: Optional[str] = typer.Option(None, "--def", help="DEF file to analyze."),
+    def_file: str | None = typer.Option(None, "--def", help="DEF file to analyze."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Run electromigration analysis.
@@ -448,7 +447,7 @@ def em(
         return
 
     if result.passed:
-        console.print(f"[green bold]EM CLEAN[/] -- 0 violations")
+        console.print("[green bold]EM CLEAN[/] -- 0 violations")
     else:
         console.print(f"[red bold]EM FAILED[/] -- {len(result.violations)} violations")
         table = Table(title="EM Violations", show_header=True, header_style="bold cyan")
@@ -475,7 +474,7 @@ def em(
 @app.command()
 def thermal(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    def_file: Optional[str] = typer.Option(None, "--def", help="DEF file to analyze."),
+    def_file: str | None = typer.Option(None, "--def", help="DEF file to analyze."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Run thermal analysis on the design.
@@ -523,7 +522,7 @@ def thermal(
 @app.command()
 def antenna(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    def_file: Optional[str] = typer.Option(None, "--def", help="DEF file to analyze."),
+    def_file: str | None = typer.Option(None, "--def", help="DEF file to analyze."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Run antenna rule check on routed design.

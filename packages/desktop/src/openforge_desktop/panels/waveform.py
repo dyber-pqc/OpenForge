@@ -44,7 +44,6 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QMenu,
-    QPushButton,
     QScrollBar,
     QSizePolicy,
     QSplitter,
@@ -777,7 +776,7 @@ class _WaveformCanvas(QWidget):
             return
 
         # Draw simplified waveform overview for first few signals
-        for idx, sig in enumerate(self._signals[:8]):
+        for _idx, sig in enumerate(self._signals[:8]):
             if not sig.timestamps:
                 continue
             mc = QColor(sig.color)
@@ -1113,7 +1112,7 @@ class _SignalTree(QTreeWidget):
         menu.addSeparator()
 
         # Visual organization
-        divider_act = menu.addAction("Add Divider Above")
+        menu.addAction("Add Divider Above")
         add_group = menu.addAction("Add to Group...")
         menu.addSeparator()
 
@@ -1390,8 +1389,9 @@ class _LegacyWaveformPanel(QDockWidget):
 
     def load_vcd(self, path: str) -> None:
         """Load a VCD/FST file and display its signals."""
-        from openforge.waveform.loader import load_waveform, SignalType
         from pathlib import Path
+
+        from openforge.waveform.loader import SignalType, load_waveform
 
         file_path = Path(path)
         if not file_path.exists():

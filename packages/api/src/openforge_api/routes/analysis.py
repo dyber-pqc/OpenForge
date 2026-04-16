@@ -118,7 +118,7 @@ async def _dispatch_timing(job_id: UUID, body: TimingRequest) -> None:
             ],
         )
         _finish_job(job_id, True)
-    except Exception as exc:
+    except Exception:
         _log.exception("Timing analysis failed for job %s", job_id)
         _finish_job(job_id, False)
 
@@ -188,7 +188,7 @@ async def _dispatch_power(job_id: UUID, body: PowerRequest) -> None:
             },
         )
         _finish_job(job_id, True)
-    except Exception as exc:
+    except Exception:
         _log.exception("Power analysis failed for job %s", job_id)
         _finish_job(job_id, False)
 
@@ -254,7 +254,7 @@ async def _dispatch_drc(job_id: UUID, body: DrcRequest) -> None:
             clean=result.passed,
         )
         _finish_job(job_id, True)
-    except Exception as exc:
+    except Exception:
         _log.exception("DRC failed for job %s", job_id)
         _finish_job(job_id, False)
 
@@ -314,7 +314,7 @@ async def _dispatch_lvs(job_id: UUID, body: LvsRequest) -> None:
             mismatches=[{"detail": m} for m in result.mismatches],
         )
         _finish_job(job_id, True)
-    except Exception as exc:
+    except Exception:
         _log.exception("LVS failed for job %s", job_id)
         _finish_job(job_id, False)
 

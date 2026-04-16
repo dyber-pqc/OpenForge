@@ -24,7 +24,7 @@ class DiffPair(BaseModel):
 class DiffPairRouter:
     """Detection + geometry calculator + routing helper for diff pairs."""
 
-    def __init__(self, board: "PcbBoard", net_classes: "NetClassRegistry | None" = None) -> None:
+    def __init__(self, board: PcbBoard, net_classes: NetClassRegistry | None = None) -> None:
         from openforge.pcb.net_classes import NetClassRegistry
 
         self.board = board
@@ -83,7 +83,7 @@ class DiffPairRouter:
         """
         er = dielectric
         h = height_mm
-        t = 0.0348 * copper_oz  # 1 oz ~ 34.8 um
+        0.0348 * copper_oz  # 1 oz ~ 34.8 um
 
         def z0_microstrip(w: float) -> float:
             # Hammerstad-Jensen microstrip single-ended
@@ -145,7 +145,6 @@ class DiffPairRouter:
     # ---- DRC ---------------------------------------------------------
     def gap_violations(self, pair: DiffPair) -> list[dict]:
         """Return track pairs on pair's two nets that violate the gap."""
-        from openforge.pcb.model import PcbTrack
 
         nid_p = None
         nid_n = None

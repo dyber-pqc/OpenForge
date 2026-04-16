@@ -17,7 +17,6 @@ from typing import Any, Final
 
 from PySide6.QtCore import QLineF, QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
-    QAction,
     QBrush,
     QColor,
     QFont,
@@ -26,45 +25,35 @@ from PySide6.QtGui import (
     QPainterPath,
     QPen,
     QPolygonF,
-    QTransform,
     QUndoCommand,
     QUndoStack,
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QComboBox,
     QDialog,
     QDialogButtonBox,
-    QPlainTextEdit,
     QDockWidget,
     QFileDialog,
     QFormLayout,
+    QGraphicsDropShadowEffect,
     QGraphicsEllipseItem,
     QGraphicsItem,
-    QGraphicsLineItem,
     QGraphicsPathItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsSimpleTextItem,
-    QGraphicsDropShadowEffect,
     QGraphicsView,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QMenu,
+    QPlainTextEdit,
     QPushButton,
-    QScrollArea,
-    QSizePolicy,
-    QSpinBox,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
-    QTabWidget,
     QToolBar,
     QTreeWidget,
     QTreeWidgetItem,
@@ -76,13 +65,27 @@ from ._theme import panel_tab_qss
 
 try:
     from openforge.block_design.generator import (
-        BlockConnection as _BDConnection,
-        BlockDesign as _BDDesign,
-        BlockInstance as _BDInstance,
-        BlockPort as _BDPort,
         IP_LIBRARY as _BD_IP_LIBRARY,
+    )
+    from openforge.block_design.generator import (
+        BlockConnection as _BDConnection,
+    )
+    from openforge.block_design.generator import (
+        BlockDesign as _BDDesign,
+    )
+    from openforge.block_design.generator import (
+        BlockInstance as _BDInstance,
+    )
+    from openforge.block_design.generator import (
+        BlockPort as _BDPort,
+    )
+    from openforge.block_design.generator import (
         generate_testbench as _bd_generate_testbench,
+    )
+    from openforge.block_design.generator import (
         generate_verilog as _bd_generate_verilog,
+    )
+    from openforge.block_design.generator import (
         validate as _bd_validate,
     )
     _BD_GENERATOR_AVAILABLE = True
@@ -99,6 +102,8 @@ except Exception:  # pragma: no cover
 try:
     from openforge.block_design.address_map import (
         AddressMap as _BDAddressMap,
+    )
+    from openforge.block_design.address_map import (
         AddressRange as _BDAddressRange,
     )
     _BD_ADDRMAP_OK = True
@@ -108,7 +113,11 @@ except Exception:  # pragma: no cover
 try:
     from openforge.verification.axi_monitors import (
         generate_axi4_full_monitor as _bd_gen_axi_full_mon,
+    )
+    from openforge.verification.axi_monitors import (
         generate_axi4_lite_monitor as _bd_gen_axi_lite_mon,
+    )
+    from openforge.verification.axi_monitors import (
         generate_axis_monitor as _bd_gen_axis_mon,
     )
     _BD_AXI_MON_OK = True
@@ -401,7 +410,7 @@ def _load_ip_catalog(share_ip_dir: Path) -> list[IPBlockDef]:
 # ── Undo commands ────────────────────────────────────────────────────────────
 
 class _AddBlockCommand(QUndoCommand):
-    def __init__(self, editor: "_BlockDesignCanvas", instance: BlockInstance) -> None:
+    def __init__(self, editor: _BlockDesignCanvas, instance: BlockInstance) -> None:
         super().__init__(f"Add {instance.block_def.name}")
         self._editor = editor
         self._instance = instance
@@ -414,7 +423,7 @@ class _AddBlockCommand(QUndoCommand):
 
 
 class _RemoveBlockCommand(QUndoCommand):
-    def __init__(self, editor: "_BlockDesignCanvas", instance_id: str) -> None:
+    def __init__(self, editor: _BlockDesignCanvas, instance_id: str) -> None:
         super().__init__(f"Remove {instance_id}")
         self._editor = editor
         self._instance_id = instance_id
@@ -439,7 +448,7 @@ class _RemoveBlockCommand(QUndoCommand):
 
 
 class _AddWireCommand(QUndoCommand):
-    def __init__(self, editor: "_BlockDesignCanvas", wire: WireConnection) -> None:
+    def __init__(self, editor: _BlockDesignCanvas, wire: WireConnection) -> None:
         super().__init__(f"Connect {wire.src_block}.{wire.src_port} -> {wire.dst_block}.{wire.dst_port}")
         self._editor = editor
         self._wire = wire
@@ -452,7 +461,7 @@ class _AddWireCommand(QUndoCommand):
 
 
 class _RemoveWireCommand(QUndoCommand):
-    def __init__(self, editor: "_BlockDesignCanvas", wire_id: str) -> None:
+    def __init__(self, editor: _BlockDesignCanvas, wire_id: str) -> None:
         super().__init__(f"Disconnect {wire_id}")
         self._editor = editor
         self._wire_id = wire_id
@@ -468,7 +477,7 @@ class _RemoveWireCommand(QUndoCommand):
 
 
 class _MoveBlockCommand(QUndoCommand):
-    def __init__(self, editor: "_BlockDesignCanvas", instance_id: str,
+    def __init__(self, editor: _BlockDesignCanvas, instance_id: str,
                  old_pos: tuple[float, float], new_pos: tuple[float, float]) -> None:
         super().__init__(f"Move {instance_id}")
         self._editor = editor
@@ -1447,7 +1456,7 @@ class _IPPaletteWidget(QWidget):
             item.setData(0, Qt.ItemDataRole.UserRole, block)
             # Color swatch icon
             try:
-                from PySide6.QtGui import QPixmap, QIcon
+                from PySide6.QtGui import QIcon, QPixmap
                 cat_color = _CAT_COLORS.get(cat, _CAT_COLORS["default"])
                 pix = QPixmap(20, 20)
                 pix.fill(Qt.GlobalColor.transparent)
@@ -1793,7 +1802,7 @@ class BlockDesignPanel(QDockWidget):
         if not _BD_GENERATOR_AVAILABLE:
             return None
 
-        inst_ids = {i.instance_id for i in self._canvas._blocks.values()}
+        {i.instance_id for i in self._canvas._blocks.values()}
 
         def _to_port(p: PortDef) -> _BDPort:
             return _BDPort(name=p.name, direction=p.direction, width=max(1, p.bit_width))
@@ -1960,7 +1969,6 @@ class BlockDesignPanel(QDockWidget):
         mantle = _MANTLE if self._dark else "#e9ecef"
         surface0 = _SURFACE0 if self._dark else "#dee2e6"
         text = _TEXT if self._dark else "#212529"
-        blue = _BLUE if self._dark else "#0d6efd"
 
         self._scene.setBackgroundBrush(QBrush(QColor(bg)))
         base_qss = panel_tab_qss(self._dark)
@@ -2143,7 +2151,7 @@ class BlockDesignPanel(QDockWidget):
         ac = _BDAutoConnector(design)
         ifaces = ac.detect_axi_interfaces()
         generated: list[str] = []
-        for inst, group in ifaces.items():
+        for _inst, group in ifaces.items():
             for ifc in group:
                 prefix = ifc["prefix"].upper()
                 kind = ifc["kind"]

@@ -7,16 +7,14 @@ apply buffer-chain or useful-skew fixes produced by
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QDoubleSpinBox,
     QFileDialog,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QPushButton,
     QTableWidget,
@@ -25,6 +23,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 try:
     from openforge.physical.hold_fix import HoldFixer, HoldFixSuggestion
@@ -49,13 +50,13 @@ class HoldFixPanel(QWidget):
 
     eco_script_ready = Signal(object)  # emits EcoScript
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("holdFixPanel")
         self.setStyleSheet(panel_tab_qss(True))
 
-        self._report: Optional["StaReport"] = None
-        self._fixer: Optional["HoldFixer"] = None
+        self._report: StaReport | None = None
+        self._fixer: HoldFixer | None = None
         self._suggestions: list = []
 
         root = QVBoxLayout(self)
@@ -111,7 +112,7 @@ class HoldFixPanel(QWidget):
 
     # ------------------------------------------------------------------ api
 
-    def set_report(self, report: "StaReport") -> None:
+    def set_report(self, report: StaReport) -> None:
         self._report = report
         if HoldFixer is not None:
             self._fixer = HoldFixer(report)

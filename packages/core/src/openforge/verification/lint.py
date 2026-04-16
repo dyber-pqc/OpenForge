@@ -6,13 +6,12 @@ custom regex-based rules on top for checks Verible doesn't cover.
 
 from __future__ import annotations
 
-import json
 import re
 import shutil
 import subprocess
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class LintRule(BaseModel):
@@ -244,18 +243,17 @@ class LintEngine:
                         )
 
             # implicit_wire
-            if "implicit_wire" in self._enabled:
-                if "`default_nettype none" not in text:
-                    violations.append(
-                        LintViolation(
-                            rule="implicit_wire",
-                            file=str(f),
-                            line=1,
-                            message="`default_nettype none not set; implicit wires possible",
-                            severity=self._severity_override.get("implicit_wire", "warning"),
-                            fix_suggestion="add `default_nettype none at file top",
-                        )
+            if "implicit_wire" in self._enabled and "`default_nettype none" not in text:
+                violations.append(
+                    LintViolation(
+                        rule="implicit_wire",
+                        file=str(f),
+                        line=1,
+                        message="`default_nettype none not set; implicit wires possible",
+                        severity=self._severity_override.get("implicit_wire", "warning"),
+                        fix_suggestion="add `default_nettype none at file top",
                     )
+                )
 
             # non_blocking_in_combo
             if "non_blocking_in_combo" in self._enabled:

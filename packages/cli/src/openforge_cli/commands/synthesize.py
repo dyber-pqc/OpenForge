@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -53,7 +52,7 @@ def synth(
         "-t",
         help=f"Target PDK for synthesis ({', '.join(_SUPPORTED_TARGETS)}).",
     ),
-    top: Optional[str] = typer.Option(
+    top: str | None = typer.Option(
         None,
         "--top",
         help="Top-level module name (defaults to config).",
@@ -64,13 +63,13 @@ def synth(
         "-o",
         help="Output directory for synthesis artifacts.",
     ),
-    frequency: Optional[float] = typer.Option(
+    frequency: float | None = typer.Option(
         None,
         "--frequency",
         "-f",
         help="Target clock frequency in MHz.",
     ),
-    strategy: Optional[str] = typer.Option(
+    strategy: str | None = typer.Option(
         None,
         "--strategy",
         "-s",
@@ -78,7 +77,7 @@ def synth(
     ),
     flatten: bool = typer.Option(False, "--flatten", help="Flatten hierarchy before mapping."),
     report: bool = typer.Option(False, "--report", help="Show synthesis report after completion."),
-    schematic: Optional[str] = typer.Option(
+    schematic: str | None = typer.Option(
         None,
         "--schematic",
         help="Export schematic view to SVG file.",

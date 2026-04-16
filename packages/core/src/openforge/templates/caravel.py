@@ -18,9 +18,7 @@ interface (38-bit io, 128-bit logic analyzer, wishbone slave, 3 IRQs).
 from __future__ import annotations
 
 import json
-import textwrap
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -354,7 +352,7 @@ def _openlane_config(cfg: CaravelConfig) -> dict:
 def create_caravel_project(
     name: str,
     root_dir: Path,
-    config: Optional[CaravelConfig] = None,
+    config: CaravelConfig | None = None,
 ) -> Path:
     """Generate a Caravel user_project_wrapper directory under ``root_dir``.
 

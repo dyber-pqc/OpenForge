@@ -14,12 +14,12 @@ and Power Calculation System".
 
 from __future__ import annotations
 
+import contextlib
 import re
 from pathlib import Path
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # ---------------------------------------------------------------------------
 # Unit helpers
@@ -168,13 +168,13 @@ class SpefFile(BaseModel):
     # ------------------------------------------------------------------ api
 
     @classmethod
-    def parse(cls, path: str | Path) -> "SpefFile":
+    def parse(cls, path: str | Path) -> SpefFile:
         """Parse a SPEF file from ``path``."""
         text = Path(path).read_text(encoding="utf-8", errors="replace")
         return cls.parse_text(text)
 
     @classmethod
-    def parse_text(cls, text: str) -> "SpefFile":
+    def parse_text(cls, text: str) -> SpefFile:
         return _SpefParser(text).parse()
 
     # ------------------------------------------------------------------ qry
@@ -416,10 +416,8 @@ class _SpefParser:
         # scan for *L cap token
         for i, tok in enumerate(parts):
             if tok == "*L" and i + 1 < len(parts):
-                try:
+                with contextlib.suppress(ValueError):
                     cap_pf = float(parts[i + 1]) * self.c_scale
-                except ValueError:
-                    pass
                 break
         net.ports.append(SpefPort(name=name, direction=direction, cap_pf=cap_pf))
 

@@ -15,9 +15,11 @@ import json
 import math
 import random
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -43,7 +45,7 @@ class PowerTrace:
     def duration_ns(self) -> float:
         return self.num_samples * self.sample_rate_ns
 
-    def downsample(self, factor: int) -> "PowerTrace":
+    def downsample(self, factor: int) -> PowerTrace:
         new_samples = [
             sum(self.samples[i : i + factor]) / factor
             for i in range(0, len(self.samples), factor)
@@ -56,7 +58,7 @@ class PowerTrace:
             input_bytes=self.input_bytes,
         )
 
-    def normalize(self) -> "PowerTrace":
+    def normalize(self) -> PowerTrace:
         if not self.samples:
             return self
         mn = min(self.samples)
@@ -372,10 +374,7 @@ class TvlaAnalyzer:
                 leak_points.append(i)
         max_t = max((abs(t) for t in t_stats), default=0.0)
         # Map max |t| to 0..100 "leak score"
-        if max_t <= self.threshold:
-            score = 0
-        else:
-            score = min(100, int((max_t - self.threshold) * 10))
+        score = 0 if max_t <= self.threshold else min(100, int((max_t - self.threshold) * 10))
         return TvlaResult(
             t_statistic=t_stats,
             threshold=self.threshold,

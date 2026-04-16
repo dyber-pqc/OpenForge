@@ -16,33 +16,22 @@ from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
-    QConicalGradient,
     QFont,
     QFontMetrics,
-    QLinearGradient,
     QPainter,
     QPainterPath,
     QPen,
     QPolygonF,
-    QRadialGradient,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QDockWidget,
-    QGraphicsEllipseItem,
-    QGraphicsLineItem,
-    QGraphicsRectItem,
     QGraphicsScene,
-    QGraphicsSimpleTextItem,
     QGraphicsView,
-    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QLineEdit,
-    QMenu,
     QProgressBar,
     QPushButton,
     QScrollArea,
@@ -672,7 +661,7 @@ class _EntropyFlowScene(QGraphicsScene):
         source_nodes = []
         for i, name in enumerate(sources):
             y = 30 + i * y_step
-            r = self.addRect(QRectF(col_x[0], y, node_w, node_h),
+            self.addRect(QRectF(col_x[0], y, node_w, node_h),
                              QPen(QColor(_CLR_GREEN), 2), QBrush(QColor(_SURFACE0)))
             t = self.addSimpleText(name, font)
             t.setBrush(QColor(_CLR_GREEN))
@@ -682,7 +671,7 @@ class _EntropyFlowScene(QGraphicsScene):
         cond_nodes = []
         for i, name in enumerate(conditioners):
             y = 50 + i * y_step
-            r = self.addRect(QRectF(col_x[1], y, node_w, node_h),
+            self.addRect(QRectF(col_x[1], y, node_w, node_h),
                              QPen(QColor(_CLR_YELLOW), 2), QBrush(QColor(_SURFACE0)))
             t = self.addSimpleText(name, font)
             t.setBrush(QColor(_CLR_YELLOW))
@@ -693,7 +682,7 @@ class _EntropyFlowScene(QGraphicsScene):
         for i, name in enumerate(sinks):
             y = 30 + i * y_step
             color = _CLR_GREEN if i < 2 else _CLR_RED
-            r = self.addRect(QRectF(col_x[2], y, node_w, node_h),
+            self.addRect(QRectF(col_x[2], y, node_w, node_h),
                              QPen(QColor(color), 2), QBrush(QColor(_SURFACE0)))
             t = self.addSimpleText(name, font)
             t.setBrush(QColor(color))

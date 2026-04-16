@@ -15,50 +15,47 @@ but is fully self contained and can be instantiated standalone for tests.
 
 from __future__ import annotations
 
+import contextlib
+import json
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-import json
-import math
 
-from PySide6.QtCore import Qt, QPointF, QRectF, Signal, QLineF, QEvent
+from PySide6.QtCore import QEvent, QLineF, QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
-    QPainter,
-    QPen,
+    QAction,
     QBrush,
     QColor,
     QFont,
-    QPainterPath,
-    QPolygonF,
     QKeySequence,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPolygonF,
     QShortcut,
-    QAction,
 )
 from PySide6.QtWidgets import (
-    QGraphicsView,
-    QGraphicsScene,
+    QFileDialog,
+    QFrame,
+    QGraphicsEllipseItem,
     QGraphicsItem,
     QGraphicsLineItem,
-    QGraphicsRectItem,
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
     QGraphicsPathItem,
-    QWidget,
-    QVBoxLayout,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsTextItem,
+    QGraphicsView,
     QHBoxLayout,
-    QPushButton,
+    QInputDialog,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QToolBar,
-    QFrame,
-    QInputDialog,
-    QMenu,
-    QFileDialog,
-    QLineEdit,
     QMessageBox,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -250,8 +247,8 @@ class Schematic:
     labels: list[SchLabel] = field(default_factory=list)
     power_symbols: list[SchPowerSymbol] = field(default_factory=list)
     sheet_size: tuple[float, float] = (11000, 8500)
-    sub_sheets: list["SchSheet"] = field(default_factory=list)
-    buses: list["SchBus"] = field(default_factory=list)
+    sub_sheets: list[SchSheet] = field(default_factory=list)
+    buses: list[SchBus] = field(default_factory=list)
 
     # ------------------------------------------------------------------
     # Persistence
@@ -312,7 +309,7 @@ class Schematic:
         )
 
     @classmethod
-    def load(cls, path: Path) -> "Schematic":
+    def load(cls, path: Path) -> Schematic:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         sch = cls(title=data.get("title", "Untitled"))
         sch.sheet_size = tuple(data.get("sheet_size", [11000, 8500]))
@@ -659,10 +656,8 @@ def builtin_library() -> dict[str, SchSymbol]:
     lib["ESP32-WROOM-32"] = esp
 
     # Merge any cached KiCad symbols (best-effort, never fatal).
-    try:
+    with contextlib.suppress(Exception):
         _merge_kicad_cache_into(lib)
-    except Exception:
-        pass
 
     return lib
 
@@ -1832,7 +1827,7 @@ def _editor_highlight_net(self, net_name: str) -> int:
     count = 0
     try:
         for item in self.scene.items():
-            data = item.data(0) if hasattr(item, "data") else None
+            item.data(0) if hasattr(item, "data") else None
             if isinstance(item, QGraphicsLineItem):
                 # WireItem stores its segment as data(1)
                 seg = item.data(1) if hasattr(item, "data") else None

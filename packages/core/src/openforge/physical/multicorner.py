@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.opensta import OpenSTAEngine
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -311,9 +313,7 @@ class MultiCornerAnalyzer:
 
         # Parse WNS
         wns = 0.0
-        if m := re.search(r"wns\s+([-+]?\d+\.?\d*)", text):
-            wns = float(m.group(1))
-        elif m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?\d+\.?\d*)", text):
+        if (m := re.search(r"wns\s+([-+]?\d+\.?\d*)", text)) or (m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?\d+\.?\d*)", text)):
             wns = float(m.group(1))
 
         # Parse TNS

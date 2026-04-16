@@ -9,17 +9,15 @@ comment/uncomment, word-wrap toggle, minimap, and rich context menus.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Final
 
-from PySide6.QtCore import QRegularExpression, QRect, Qt, QTimer, Signal
+from PySide6.QtCore import QRect, QRegularExpression, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
     QFont,
     QKeySequence,
     QPainter,
-    QShortcut,
     QSyntaxHighlighter,
     QTextCharFormat,
     QTextCursor,
@@ -632,7 +630,7 @@ class _CodeEditor(QPlainTextEdit):
                     cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 2)
                     # Also remove a trailing space if present
                     if cursor.selectedText() == "//":
-                        pos_after = cursor.position()
+                        cursor.position()
                         remaining = line[idx + 2:]
                         if remaining.startswith(" "):
                             cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
@@ -1099,7 +1097,8 @@ class EditorPanel(QWidget):
 
     def _reveal_in_explorer(self, path: Path) -> None:
         """Open the file's containing folder in the system file explorer."""
-        import subprocess, sys
+        import subprocess
+        import sys
         folder = str(path.parent)
         if sys.platform == "win32":
             subprocess.Popen(["explorer", "/select,", str(path)])

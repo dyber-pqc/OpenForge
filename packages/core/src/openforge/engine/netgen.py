@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import re
-from os import PathLike
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from os import PathLike
 
 
 class NetgenEngine(ToolEngine):

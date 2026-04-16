@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, status
@@ -16,13 +16,13 @@ router = APIRouter()
 # Models
 # ---------------------------------------------------------------------------
 
-class VerificationEngine(str, Enum):
+class VerificationEngine(StrEnum):
     sim = "sim"
     formal = "formal"
     crypto = "crypto"
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     queued = "queued"
     running = "running"
     passed = "passed"

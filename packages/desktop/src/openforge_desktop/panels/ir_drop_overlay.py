@@ -7,8 +7,6 @@ sidebar showing statistics and clickable hotspots.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from PySide6.QtCore import QPoint, QRect, Qt, Signal
 from PySide6.QtGui import (
     QColor,
@@ -38,7 +36,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Color scales
@@ -91,7 +88,7 @@ class _HeatmapCanvas(QFrame):
     point_hovered = Signal(float, float, float)  # x_um, y_um, drop_mv
     point_clicked = Signal(float, float, float)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setMouseTracking(True)
@@ -103,7 +100,7 @@ class _HeatmapCanvas(QFrame):
         self._threshold_mv = 50.0
         self._show_hotspots = True
         self._dark = True
-        self._pixmap: Optional[QPixmap] = None
+        self._pixmap: QPixmap | None = None
 
     # -- API ---------------------------------------------------------------
 
@@ -201,7 +198,7 @@ class _HeatmapCanvas(QFrame):
         painter.drawText(
             target.left(),
             target.bottom() + 14,
-            f"0 um",
+            "0 um",
         )
         painter.drawText(
             target.right() - 60,
@@ -231,7 +228,7 @@ class _HeatmapCanvas(QFrame):
         y = margin + (avail_h - h) // 2
         return QRect(x, y, w, h)
 
-    def _um_to_px(self, x_um: float, y_um: float) -> Optional[QPoint]:
+    def _um_to_px(self, x_um: float, y_um: float) -> QPoint | None:
         if self._ir_map is None:
             return None
         rect = self._image_rect()
@@ -241,7 +238,7 @@ class _HeatmapCanvas(QFrame):
         py = rect.bottom() - int((y_um / self._ir_map.height_um) * rect.height())
         return QPoint(px, py)
 
-    def _px_to_um(self, px: int, py: int) -> Optional[tuple[float, float]]:
+    def _px_to_um(self, px: int, py: int) -> tuple[float, float] | None:
         if self._ir_map is None:
             return None
         rect = self._image_rect()
@@ -291,7 +288,7 @@ class _HeatmapCanvas(QFrame):
 
 
 class _ColorLegend(QFrame):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setMinimumHeight(40)
@@ -338,7 +335,7 @@ class IrDropOverlayPanel(QDockWidget):
 
     hotspot_clicked = Signal(float, float)  # x, y in um
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("IR Drop")
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)

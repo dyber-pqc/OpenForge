@@ -8,9 +8,8 @@ from __future__ import annotations
 
 import csv
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 
 @dataclass
@@ -49,7 +48,7 @@ class Component:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Component":
+    def from_dict(cls, d: dict) -> Component:
         return cls(**d)
 
 

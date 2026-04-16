@@ -13,9 +13,11 @@ from __future__ import annotations
 import math
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
 
 # ----------------------------------------------------------------------------
 # Data classes

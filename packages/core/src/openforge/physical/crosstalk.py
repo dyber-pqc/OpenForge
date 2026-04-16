@@ -25,12 +25,14 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from openforge.format.spef_parser import SpefFile, SpefNet
-from openforge.physical.sta_parser import StaReport, TimingPath
 
+if TYPE_CHECKING:
+    from openforge.physical.sta_parser import StaReport
 
 MILLER_OPPOSING = 2.0
 MILLER_SAME = 0.0

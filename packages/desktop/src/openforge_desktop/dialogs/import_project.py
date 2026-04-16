@@ -7,9 +7,7 @@ preview what will be imported before creating a new OpenForge project.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -60,7 +58,7 @@ _KINDS = [
 class ImportProjectDialog(QDialog):
     """Dialog to import a third-party project into OpenForge."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Import Project")
         self.resize(720, 560)
@@ -74,7 +72,7 @@ class ImportProjectDialog(QDialog):
             f"QPushButton:hover {{ border: 1px solid {_ACCENT}; }}"
         )
 
-        self._project: Optional["Project"] = None
+        self._project: Project | None = None
         self._source_path: Path | None = None
 
         root = QVBoxLayout(self)

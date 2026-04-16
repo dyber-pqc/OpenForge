@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen
-from PySide6.QtWidgets import QSplashScreen, QWidget
+from PySide6.QtWidgets import QSplashScreen
 
 
 class OpenForgeSplash(QSplashScreen):

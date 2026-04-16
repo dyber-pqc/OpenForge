@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 if TYPE_CHECKING:  # pragma: no cover
     from openforge.pcb.model import PcbBoard
@@ -161,7 +161,7 @@ KNOWN_FAB_CLASSES: dict[str, FabClass] = {
 class FabRuleChecker:
     """Check a PcbBoard against a FabClass and estimate cost."""
 
-    def __init__(self, board: "PcbBoard", fab_class: FabClass) -> None:
+    def __init__(self, board: PcbBoard, fab_class: FabClass) -> None:
         self.board = board
         self.fab_class = fab_class
 

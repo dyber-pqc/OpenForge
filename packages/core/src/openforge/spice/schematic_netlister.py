@@ -185,7 +185,7 @@ class SpiceSchematic(BaseModel):
     # ------------------------------------------------------------------
 
     @classmethod
-    def from_sch_editor(cls, sch: "Schematic") -> "SpiceSchematic":
+    def from_sch_editor(cls, sch: Schematic) -> SpiceSchematic:
         """Build a :class:`SpiceSchematic` from a desktop Schematic."""
 
         nets_raw: dict[str, list[tuple[str, str]]] = {}
@@ -284,7 +284,7 @@ class SpiceSchematic(BaseModel):
         lines.append(".end")
         return "\n".join(lines) + "\n"
 
-    def add_simulation(self, kind: str, **params: Any) -> "SpiceSchematic":
+    def add_simulation(self, kind: str, **params: Any) -> SpiceSchematic:
         self.simulations.append({"kind": kind, **params})
         return self
 

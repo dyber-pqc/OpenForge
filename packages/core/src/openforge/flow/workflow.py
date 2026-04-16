@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Callable
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-class StepStatus(str, Enum):
+
+class StepStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     PASSED = "passed"

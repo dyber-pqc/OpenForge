@@ -10,10 +10,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, QThread, Signal, Slot
-from PySide6.QtGui import QAction, QBrush, QColor, QFont, QIcon, QKeySequence, QTextCharFormat, QTextCursor
+from PySide6.QtGui import (
+    QAction,
+    QBrush,
+    QColor,
+    QFont,
+    QTextCharFormat,
+    QTextCursor,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -27,12 +33,10 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QProgressBar,
-    QPushButton,
     QSplitter,
     QTabWidget,
     QTextEdit,
     QToolBar,
-    QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -89,9 +93,9 @@ class RegressionWorker(QThread):
 
     def __init__(
         self,
-        runner: "RegressionRunner",
+        runner: RegressionRunner,
         tests: list,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._runner = runner
@@ -132,7 +136,7 @@ class RegressionWorker(QThread):
 
 @dataclass
 class _PanelState:
-    test_dir: Optional[Path] = None
+    test_dir: Path | None = None
     tests: list = field(default_factory=list)
     results: dict = field(default_factory=dict)  # name -> TestResult
     history: dict = field(default_factory=dict)  # name -> list[str]
@@ -163,7 +167,7 @@ class RegressionPanel(QDockWidget):
         self.setObjectName("RegressionPanel")
 
         self._state = _PanelState()
-        self._worker: Optional[RegressionWorker] = None
+        self._worker: RegressionWorker | None = None
 
         self._build_ui()
         self.set_theme(True)

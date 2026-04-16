@@ -12,12 +12,10 @@ from typing import Any
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QMessageBox,
     QPushButton,
@@ -34,8 +32,6 @@ try:
     from openforge.pcb.erc import (
         BUILTIN_RULES,
         ErcChecker,
-        ErcRule,
-        ErcViolation,
         ErcWaiver,
     )
     _HAS_ERC = True

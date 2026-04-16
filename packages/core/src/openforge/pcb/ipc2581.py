@@ -10,8 +10,7 @@ This exporter produces a minimal but schema-valid Rev B document.
 """
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from xml.etree import ElementTree as ET
@@ -32,7 +31,7 @@ class Ipc2581Exporter:
     compliant fab and assembly houses can parse directly.
     """
 
-    def __init__(self, board: "PcbBoard") -> None:
+    def __init__(self, board: PcbBoard) -> None:
         self.board = board
         self._uid_counter = 0
 
@@ -155,7 +154,7 @@ class Ipc2581Exporter:
         ET.SubElement(
             lh,
             "Date",
-            {"dateTime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
+            {"dateTime": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")},
         )
 
     def _build_history_record(self, parent: ET.Element) -> None:
@@ -164,11 +163,11 @@ class Ipc2581Exporter:
             "HistoryRecord",
             {
                 "number": "1",
-                "origination": datetime.now(timezone.utc).strftime(
+                "origination": datetime.now(UTC).strftime(
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
                 "software": "OpenForge EDA",
-                "lastChange": datetime.now(timezone.utc).strftime(
+                "lastChange": datetime.now(UTC).strftime(
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
             },

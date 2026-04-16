@@ -8,13 +8,11 @@ count, a heatmap / trend tab, filters, diff mode and HTML/LCOV export.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
-    QComboBox,
     QFileDialog,
     QFrame,
     QGridLayout,
@@ -27,9 +25,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -64,7 +62,7 @@ except Exception:  # pragma: no cover - allow standalone import
 class MetricCard(QFrame):
     """A small tile showing a coverage kind, percent, and a coloured bar."""
 
-    def __init__(self, label: str, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, label: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("MetricCard")
         self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -93,7 +91,7 @@ class MetricCard(QFrame):
             return "#f9e2af"
         return "#a6e3a1"
 
-    def set_percent(self, pct: Optional[float]) -> None:
+    def set_percent(self, pct: float | None) -> None:
         if pct is None:
             self._value.setText("—")
             self._bar.setStyleSheet("background:#313244; border-radius:3px;")
@@ -128,11 +126,11 @@ class CoverageDashboardPanel(QWidget):
         "assertion",
     ]
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._report: Optional["CoverageReportV2"] = None
-        self._compare: Optional["CoverageReportV2"] = None
-        self._db: Optional["CoverageDb"] = None
+        self._report: CoverageReportV2 | None = None
+        self._compare: CoverageReportV2 | None = None
+        self._db: CoverageDb | None = None
         self._build_ui()
         self.setStyleSheet(panel_tab_qss(True))
 
@@ -305,14 +303,14 @@ class CoverageDashboardPanel(QWidget):
     # ------------------------------------------------------------------
     # Data binding
     # ------------------------------------------------------------------
-    def set_report(self, report: "CoverageReportV2") -> None:
+    def set_report(self, report: CoverageReportV2) -> None:
         self._report = report
         self._refresh_cards()
         self._refresh_tree()
         self._refresh_heatmap()
         self.coverageLoaded.emit(report)
 
-    def set_db(self, db: "CoverageDb") -> None:
+    def set_db(self, db: CoverageDb) -> None:
         self._db = db
         self._refresh_trend()
 
@@ -397,7 +395,7 @@ class CoverageDashboardPanel(QWidget):
             return
         self._render_source(path, fc)
 
-    def _render_source(self, path: str, fc: "FileCoverage") -> None:
+    def _render_source(self, path: str, fc: FileCoverage) -> None:
         src = Path(path)
         lines: list[str]
         if src.exists():

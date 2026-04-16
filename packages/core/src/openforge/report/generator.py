@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from openforge import __version__
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def generate_report(
@@ -40,7 +42,7 @@ def _collect_results(project_dir: Path) -> dict[str, Any]:
     results_dir = project_dir / ".openforge"
     results: dict[str, Any] = {
         "project": str(project_dir.name),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "openforge_version": __version__,
         "steps": {},
     }

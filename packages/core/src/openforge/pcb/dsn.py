@@ -10,12 +10,14 @@ Reference: Specctra Design/Session file formats (Cadence).
 """
 from __future__ import annotations
 
-import math
+import contextlib
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+
     from openforge.pcb.model import PcbBoard
     from openforge.pcb.net_classes import NetClassRegistry
 
@@ -31,11 +33,11 @@ def _fmt(value: float) -> str:
     return f"{value * RESOLUTION:.0f}"
 
 
-def _signal_layers(board: "PcbBoard") -> list[str]:
+def _signal_layers(board: PcbBoard) -> list[str]:
     return [l.name for l in board.stackup.copper_layers() if l.kind == "signal"]
 
 
-def _iter_net_pads(board: "PcbBoard") -> dict[int, list[tuple[str, str]]]:
+def _iter_net_pads(board: PcbBoard) -> dict[int, list[tuple[str, str]]]:
     """Return net_id -> list of (component_ref, pad_name)."""
     mapping: dict[int, list[tuple[str, str]]] = {}
     for fp in board.footprints:
@@ -46,9 +48,9 @@ def _iter_net_pads(board: "PcbBoard") -> dict[int, list[tuple[str, str]]]:
 
 
 def board_to_dsn(
-    board: "PcbBoard",
+    board: PcbBoard,
     output_path: Path,
-    net_classes: "NetClassRegistry | None" = None,
+    net_classes: NetClassRegistry | None = None,
 ) -> Path:
     """Write a Specctra DSN file describing ``board``.
 
@@ -188,7 +190,7 @@ def board_to_dsn(
             assigned = set()
             for c in nc.classes.values():
                 assigned.update(c.nets)
-            for nid, nm in board.nets.items():
+            for _nid, nm in board.nets.items():
                 if nm and nm not in assigned:
                     nets_in_class.append(nm)
         else:
@@ -271,7 +273,7 @@ def _find_all(tree, name: str) -> Iterable[list]:
             yield from _find_all(child, name)
 
 
-def parse_ses(ses_path: Path, board: "PcbBoard") -> "PcbBoard":
+def parse_ses(ses_path: Path, board: PcbBoard) -> PcbBoard:
     """Read a Specctra SES file and apply its wiring to ``board``.
 
     The caller keeps ownership of ``board``; this mutates it in place
@@ -288,10 +290,8 @@ def parse_ses(ses_path: Path, board: "PcbBoard") -> "PcbBoard":
     # Resolution: (resolution mm N)
     resolution = float(RESOLUTION)
     for node in _find_all(tree, "resolution"):
-        try:
+        with contextlib.suppress(ValueError, IndexError):
             resolution = float(node[2])
-        except (ValueError, IndexError):
-            pass
 
     inv = 1.0 / resolution
 
@@ -325,10 +325,8 @@ def parse_ses(ses_path: Path, board: "PcbBoard") -> "PcbBoard":
                     continue
                 coords: list[float] = []
                 for val in path[3:]:
-                    try:
+                    with contextlib.suppress(ValueError, TypeError):
                         coords.append(float(val) * inv)
-                    except (ValueError, TypeError):
-                        pass
                 for i in range(0, len(coords) - 3, 2):
                     board.tracks.append(
                         PcbTrack(

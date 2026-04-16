@@ -29,7 +29,7 @@ class LengthGroup(BaseModel):
 class LengthMatcher:
     """Measure and add detours to match net lengths."""
 
-    def __init__(self, board: "PcbBoard") -> None:
+    def __init__(self, board: PcbBoard) -> None:
         self.board = board
         self._name_to_id = {nm: nid for nid, nm in board.nets.items() if nm}
 

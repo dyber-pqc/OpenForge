@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from typing import Final
 
-from PySide6.QtCore import QSettings, Qt, Slot
+from PySide6.QtCore import QSettings, Qt, QThread, Signal, Slot
 from PySide6.QtGui import QColor, QFont
-from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
-    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,

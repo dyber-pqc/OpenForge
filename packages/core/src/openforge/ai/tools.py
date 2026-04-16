@@ -17,12 +17,15 @@ loop — failures surface as :class:`ToolResult` objects with ``success=False``.
 
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Models
@@ -83,20 +86,18 @@ class ToolResult(BaseModel):
 class ToolRegistry:
     """Process-global registry of AI-callable tools."""
 
-    _singleton: "ToolRegistry | None" = None
+    _singleton: ToolRegistry | None = None
 
     def __init__(self) -> None:
         self._tools: dict[str, AiTool] = {}
         self._handlers: dict[str, Callable[..., Any]] = {}
 
     @classmethod
-    def instance(cls) -> "ToolRegistry":
+    def instance(cls) -> ToolRegistry:
         if cls._singleton is None:
             cls._singleton = cls()
-            try:
+            with contextlib.suppress(Exception):
                 register_builtin_tools(cls._singleton)
-            except Exception:
-                pass
         return cls._singleton
 
     def register(

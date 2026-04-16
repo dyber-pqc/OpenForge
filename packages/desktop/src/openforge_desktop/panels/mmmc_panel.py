@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor
@@ -17,7 +17,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
-    QSplitter,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -61,17 +60,15 @@ class MmmcPanel(QDockWidget):
 
     run_requested = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("MMMC", parent)
         self.setObjectName("mmmc_dock")
-        self._config: Optional["MmmcConfig"] = None
-        self._results: dict[str, "StaReport"] = {}
+        self._config: MmmcConfig | None = None
+        self._results: dict[str, StaReport] = {}
         self._build_ui()
         if MmmcConfig is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self.set_config(MmmcConfig.sky130_default())
-            except Exception:
-                pass
 
     # ------------------------------------------------------------------
 
@@ -195,7 +192,7 @@ class MmmcPanel(QDockWidget):
 
     # ------------------------------------------------------------------
 
-    def set_config(self, config: "MmmcConfig") -> None:
+    def set_config(self, config: MmmcConfig) -> None:
         self._config = config
         self._populate_corners()
         self._populate_modes()
@@ -263,7 +260,7 @@ class MmmcPanel(QDockWidget):
         t.setVerticalHeaderLabels([m.name for m in modes])
 
         all_slacks: list[float] = []
-        for sc_name, report in self._results.items():
+        for _sc_name, report in self._results.items():
             all_slacks.append(report.wns)
         lo = min(all_slacks, default=-1.0)
         hi = max(all_slacks, default=1.0)
@@ -310,7 +307,7 @@ class MmmcPanel(QDockWidget):
             return
         self.run_requested.emit()
         try:
-            runner = MmmcRunner(self._config, Path("./mmmc_runs"))
+            MmmcRunner(self._config, Path("./mmmc_runs"))
             # Without a real design we just create empty reports to show the flow
             for sc in self._config.scenarios:
                 if StaReport is not None:
@@ -319,7 +316,7 @@ class MmmcPanel(QDockWidget):
             QMessageBox.warning(self, "MMMC", f"Run failed: {exc}")
         self._rebuild_heatmap()
 
-    def set_results(self, results: dict[str, "StaReport"]) -> None:
+    def set_results(self, results: dict[str, StaReport]) -> None:
         self._results = dict(results)
         self._rebuild_heatmap()
 

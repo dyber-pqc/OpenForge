@@ -21,7 +21,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
@@ -70,9 +69,7 @@ class LefAbstract(BaseModel):
         lines.append(
             f"  ORIGIN {self.origin[0]:.3f} {self.origin[1]:.3f} ;"
         )
-        lines.append("  FOREIGN {} {:.3f} {:.3f} ;".format(
-            self.macro_name, self.origin[0], self.origin[1]
-        ))
+        lines.append(f"  FOREIGN {self.macro_name} {self.origin[0]:.3f} {self.origin[1]:.3f} ;")
         lines.append(
             f"  SIZE {self.width_um:.3f} BY {self.height_um:.3f} ;"
         )
@@ -456,10 +453,9 @@ def merge_blocks_to_top(
     names = list(blocks.keys())
     if not names:
         widths = [100.0]
-        heights = [100.0]
     else:
         widths = [blocks[n].width_um for n in names]
-        heights = [blocks[n].height_um for n in names]
+        [blocks[n].height_um for n in names]
     max_width = max(widths) if widths else 100.0
     shelf_limit = max(max_width * 4.0, max_width + 1.0)
 

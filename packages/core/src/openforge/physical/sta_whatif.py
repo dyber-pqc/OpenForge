@@ -25,11 +25,12 @@ from __future__ import annotations
 import copy
 import fnmatch
 from dataclasses import dataclass
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
-from openforge.physical.sta_parser import StaReport, TimingPath, TimingStage
+if TYPE_CHECKING:
+    from openforge.physical.sta_parser import StaReport, TimingPath
 
 ChangeKind = Literal[
     "clock_period",

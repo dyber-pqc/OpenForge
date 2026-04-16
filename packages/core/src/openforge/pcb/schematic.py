@@ -8,13 +8,12 @@ BOM/netlist generators operate on.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
-from enum import Enum
+from dataclasses import asdict, dataclass, field
+from enum import StrEnum
 from pathlib import Path
-from typing import Any
 
 
-class PinDirection(str, Enum):
+class PinDirection(StrEnum):
     """Logical direction of a schematic pin."""
 
     INPUT = "input"
@@ -52,7 +51,7 @@ class Pin:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Pin":
+    def from_dict(cls, d: dict) -> Pin:
         return cls(**d)
 
 
@@ -93,7 +92,7 @@ class SchSymbol:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "SchSymbol":
+    def from_dict(cls, d: dict) -> SchSymbol:
         return cls(
             name=d["name"],
             library=d["library"],
@@ -155,7 +154,7 @@ class SchComponent:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "SchComponent":
+    def from_dict(cls, d: dict) -> SchComponent:
         return cls(
             refdes=d["refdes"],
             symbol=SchSymbol.from_dict(d["symbol"]),
@@ -202,7 +201,7 @@ class SchNet:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "SchNet":
+    def from_dict(cls, d: dict) -> SchNet:
         return cls(
             name=d["name"],
             points=[tuple(p) for p in d.get("points", [])],
@@ -275,7 +274,7 @@ class Schematic:
         for name, net in self.nets.items():
             if len(net.connections) < 2 and not (net.is_power or net.is_ground):
                 errors.append(f"Net {name} has fewer than 2 connections")
-            for refdes, pin in net.connections:
+            for refdes, _pin in net.connections:
                 if refdes not in self.components:
                     errors.append(
                         f"Net {name} refers to missing component {refdes}"
@@ -297,7 +296,7 @@ class Schematic:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Schematic":
+    def from_dict(cls, d: dict) -> Schematic:
         sch = cls(
             name=d["name"],
             title=d.get("title", ""),
@@ -321,6 +320,6 @@ class Schematic:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def load(cls, path: Path) -> "Schematic":
+    def load(cls, path: Path) -> Schematic:
         with Path(path).open("r", encoding="utf-8") as f:
             return cls.from_dict(json.load(f))

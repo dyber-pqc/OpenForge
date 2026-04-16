@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
@@ -44,7 +43,7 @@ except Exception:  # pragma: no cover
     SpefNet = None  # type: ignore[assignment,misc]
 
 try:
-    from openforge.format.def_parser import parse_def, DefDesign
+    from openforge.format.def_parser import DefDesign, parse_def
 except Exception:  # pragma: no cover
     parse_def = None  # type: ignore[assignment]
     DefDesign = None  # type: ignore[assignment]
@@ -55,11 +54,11 @@ class ParasiticHeatmapPanel(QWidget):
 
     netSelected = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("parasitic_heatmap_panel")
-        self._spef: Optional[SpefFile] = None
-        self._def: Optional[DefDesign] = None
+        self._spef: SpefFile | None = None
+        self._def: DefDesign | None = None
         self._build_ui()
 
     # ------------------------------------------------------------------ ui
@@ -295,7 +294,7 @@ class ParasiticHeatmapPanel(QWidget):
         self.netSelected.emit(name)
         self._populate_aggressors(net)
 
-    def _populate_aggressors(self, net: "SpefNet") -> None:
+    def _populate_aggressors(self, net: SpefNet) -> None:
         aggs = sorted(net.aggressors().items(), key=lambda kv: kv[1], reverse=True)
         self._agg_table.setRowCount(len(aggs))
         for r, (nm, cc) in enumerate(aggs):
@@ -346,7 +345,7 @@ class ParasiticHeatmapPanel(QWidget):
 
     def _build_die_grid(
         self, values: list[float], use_res: bool
-    ) -> tuple["np.ndarray", tuple[float, float, float, float]]:
+    ) -> tuple[np.ndarray, tuple[float, float, float, float]]:
         assert self._def is not None
         w = max(self._def.width_um, 1.0)
         h = max(self._def.height_um, 1.0)

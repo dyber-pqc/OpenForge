@@ -10,8 +10,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 
 class Algorithm(Enum):

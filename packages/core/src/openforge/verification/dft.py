@@ -10,8 +10,6 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -56,7 +54,7 @@ class DftResult:
     scan_coverage: float = 0.0  # %
     test_patterns: int = 0
     fault_coverage: float = 0.0  # %
-    output_netlist: Optional[Path] = None
+    output_netlist: Path | None = None
     log: str = ""
 
     def summary(self) -> str:
@@ -192,7 +190,7 @@ class ScanInsertion:
 
     def stitch_chain(self, flops: list[ScanFlop]) -> ScanChain:
         """Wire SO -> SI for the given list of flops."""
-        for i, f in enumerate(flops):
+        for _i, f in enumerate(flops):
             f.scan_in = f"{f.instance}_si"
             f.scan_out = f"{f.instance}_so"
             f.scan_enable = "scan_enable"

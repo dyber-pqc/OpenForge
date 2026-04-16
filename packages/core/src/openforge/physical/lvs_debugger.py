@@ -10,8 +10,6 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -86,7 +84,7 @@ class LvsDebugger:
     """Production-grade LVS debugger using Netgen + custom analysis."""
 
     def __init__(self):
-        self._last_result: Optional[LvsDebugResult] = None
+        self._last_result: LvsDebugResult | None = None
 
     # ------------------------------------------------------------------
     # Run
@@ -97,8 +95,8 @@ class LvsDebugger:
         layout_netlist: Path,
         schematic_netlist: Path,
         top_module: str,
-        setup_file: Optional[Path] = None,
-        cwd: Optional[Path] = None,
+        setup_file: Path | None = None,
+        cwd: Path | None = None,
     ) -> LvsDebugResult:
         """Run Netgen LVS and parse the output for debugging."""
         layout_netlist = Path(layout_netlist)
@@ -135,7 +133,7 @@ class LvsDebugger:
     @staticmethod
     def _build_netgen_script(
         layout: Path, schematic: Path, top: str,
-        setup: Optional[Path], comp_out: Path,
+        setup: Path | None, comp_out: Path,
     ) -> str:
         setup_line = f'source "{setup}"\n' if setup else ""
         return (

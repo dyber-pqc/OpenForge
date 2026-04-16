@@ -21,8 +21,8 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QKeySequence, QShortcut, QTextCursor, QTextDocument
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QTextCursor, QTextDocument
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from openforge_desktop.editor.code_editor import CodeEditor, _Minimap, _make_font
+from openforge_desktop.editor.code_editor import CodeEditor, _make_font, _Minimap
 
 # ── Constants ────────────────────────────────────────────────────────────
 
@@ -559,10 +559,7 @@ class EditorTabWidget(QWidget):
     def _close_tab(self, index: int) -> None:
         widget = self._tabs.widget(index)
         # Save content for reopen
-        if isinstance(widget, CodeEditor):
-            content = widget.toPlainText()
-        else:
-            content = ""
+        content = widget.toPlainText() if isinstance(widget, CodeEditor) else ""
         path = self._file_paths.get(index)
         self._closed_tabs.append((content, path))
         if len(self._closed_tabs) > 20:

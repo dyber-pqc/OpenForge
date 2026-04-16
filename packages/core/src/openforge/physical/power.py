@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import math
 import re
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.opensta import OpenSTAEngine
 
+if TYPE_CHECKING:
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models

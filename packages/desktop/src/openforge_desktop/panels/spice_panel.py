@@ -8,6 +8,7 @@ QPainter chart widget.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -289,14 +290,10 @@ class SpicePanel(QDockWidget):
         self._tabs.addTab(self._build_models_tab(), "Models")
         self._tabs.addTab(self._build_run_tab(), "Run")
         self._tabs.addTab(self._build_plot_tab(), "Plot")
-        try:
+        with contextlib.suppress(Exception):
             self._tabs.addTab(self._build_ip_library_tab(), "IP Library")
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             self._tabs.addTab(self._build_monte_carlo_tab(), "Monte Carlo")
-        except Exception:
-            pass
 
 
         # ---- Status bar -----------------------------------------------------
@@ -532,8 +529,8 @@ class SpicePanel(QDockWidget):
         self._log.clear()
         self._log.appendPlainText(f"Running {kind} simulation on {self._netlist_path.name}")
         try:
-            from openforge.engine.ngspice import NgspiceEngine
             from openforge.engine.base import ExecutionBackend
+            from openforge.engine.ngspice import NgspiceEngine
             backend = (
                 ExecutionBackend.DOCKER if self._docker_check.isChecked() else ExecutionBackend.NATIVE
             )
@@ -829,7 +826,6 @@ class SpicePanel(QDockWidget):
         sch = None
         try:
             from openforge_desktop.widgets.schematic_editor import (
-                Schematic,
                 SchematicEditor,
             )
             mw = self.window()

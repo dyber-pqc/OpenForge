@@ -5,7 +5,6 @@ from __future__ import annotations
 import json as json_mod
 import shutil
 import subprocess
-from typing import Optional
 
 import typer
 from rich.console import Console

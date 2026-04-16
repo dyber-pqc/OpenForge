@@ -6,6 +6,16 @@ helpers (macro force-directed placement, IO pin distribution) usable from
 scripts and the CLI.
 """
 
+from openforge.floorplan.io_placer import (
+    Port,
+    auto_place_pins,
+    to_openroad_pin_constraints,
+)
+from openforge.floorplan.macro_placer import (
+    estimate_wirelength,
+    force_directed_placement,
+    suggest_orientation,
+)
 from openforge.floorplan.model import (
     Core,
     Die,
@@ -15,16 +25,6 @@ from openforge.floorplan.model import (
     PdnConfig,
     PowerRing,
     PowerStripe,
-)
-from openforge.floorplan.macro_placer import (
-    estimate_wirelength,
-    force_directed_placement,
-    suggest_orientation,
-)
-from openforge.floorplan.io_placer import (
-    Port,
-    auto_place_pins,
-    to_openroad_pin_constraints,
 )
 
 __all__ = [

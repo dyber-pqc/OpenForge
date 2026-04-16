@@ -24,8 +24,8 @@ from PySide6.QtWidgets import (
 
 try:
     from openforge.pcb.impedance import (
-        ImpedanceCalculator,
         MATERIAL_PRESETS,
+        ImpedanceCalculator,
         StackupLayer,
         StackupValidator,
         default_4layer_stackup,

@@ -5,10 +5,9 @@ from __future__ import annotations
 import re
 import time
 from enum import StrEnum
-from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from PySide6.QtCore import QThread, Qt, Signal, Slot
+from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QColor, QFont, QTextCharFormat
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -20,12 +19,14 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QSplitter,
-    QToolBar,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Catppuccin Mocha palette constants
@@ -175,8 +176,8 @@ class _TestRunnerWorker(QThread):
         self, item: TestItemData, log_lines: list[str],
     ) -> str:
         """Run a cocotb test module."""
-        from openforge.runner.simulation import SimulationRunner
         from openforge.config.loader import load_config
+        from openforge.runner.simulation import SimulationRunner
 
         try:
             config = load_config(search_dir=self._project_path)
@@ -204,9 +205,9 @@ class _TestRunnerWorker(QThread):
         self, item: TestItemData, log_lines: list[str],
     ) -> str:
         """Run a SystemVerilog testbench via compile + simulate."""
-        from openforge.runner.simulation import SimulationRunner
         from openforge.config.loader import load_config
         from openforge.config.schema import SimulationTool
+        from openforge.runner.simulation import SimulationRunner
 
         tool_map = {
             "verilator": SimulationTool.VERILATOR,
@@ -823,11 +824,7 @@ class TestbenchPanel(QDockWidget):
                 visible = True
                 if name and name in self._test_items:
                     status = self._test_items[name].status
-                    if filter_text == "Passed" and status != TestStatus.PASSED:
-                        visible = False
-                    elif filter_text == "Failed" and status not in (TestStatus.FAILED, TestStatus.ERROR):
-                        visible = False
-                    elif filter_text == "Not Run" and status != TestStatus.NOT_RUN:
+                    if filter_text == "Passed" and status != TestStatus.PASSED or filter_text == "Failed" and status not in (TestStatus.FAILED, TestStatus.ERROR) or filter_text == "Not Run" and status != TestStatus.NOT_RUN:
                         visible = False
                 child.setHidden(not visible)
                 if visible:

@@ -10,18 +10,18 @@ import csv
 import math
 import shutil
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
-from openforge.pcb.model import (
-    PcbBoard,
-    PcbFootprint,
-    PcbPad,
-    PcbTrack,
-    PcbVia,
-    PcbZone,
-)
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from openforge.pcb.model import (
+        PcbBoard,
+        PcbFootprint,
+        PcbPad,
+    )
 
 
 def _fmt(v: float) -> str:
@@ -94,7 +94,7 @@ class GerberExporter:
         is_copper = layer_name.endswith(".Cu") or layer_name.startswith("In")
         is_edge = layer_name == "Edge.Cuts"
         is_mask = layer_name.endswith(".Mask")
-        is_paste = layer_name.endswith(".Paste")
+        layer_name.endswith(".Paste")
         is_silk = layer_name.endswith(".SilkS") or layer_name == "Edge.Cuts"
 
         # --- Pads (flashes)
@@ -179,7 +179,7 @@ class GerberExporter:
                 body.append(f"{_xy(first[0], -first[1])}D01*")
 
         # --- Assemble
-        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        ts = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         header: list[str] = [
             f"G04 OpenForge RS-274X export layer={layer_name} ts={ts}*",
             "%FSLAX46Y46*%",
@@ -244,7 +244,7 @@ class GerberExporter:
         lines: list[str] = [
             "M48",
             "; OpenForge Excellon drill export",
-            f"; {datetime.now(timezone.utc).isoformat()}",
+            f"; {datetime.now(UTC).isoformat()}",
             "FMAT,2",
             "METRIC,TZ",
         ]

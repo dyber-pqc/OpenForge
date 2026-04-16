@@ -8,11 +8,13 @@ swapped in later without changing call sites.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -55,14 +57,14 @@ class Job:
     project_id: str = ""
     user_id: str = ""
     payload: dict = field(default_factory=dict)
-    result: Optional[dict] = None
-    error: Optional[str] = None
+    result: dict | None = None
+    error: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
     progress: float = 0.0
     log_lines: list[str] = field(default_factory=list)
-    worker_id: Optional[int] = None
+    worker_id: int | None = None
 
     def to_dict(self) -> dict:
         """Serialize the job to a JSON-friendly dict."""
@@ -84,7 +86,7 @@ class Job:
         }
 
     @property
-    def duration(self) -> Optional[float]:
+    def duration(self) -> float | None:
         """Wallclock duration of the run in seconds, if finished."""
         if self.started_at and self.finished_at:
             return (self.finished_at - self.started_at).total_seconds()
@@ -138,10 +140,8 @@ class JobQueue:
         for w in self._workers:
             w.cancel()
         for w in self._workers:
-            try:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await w
-            except (asyncio.CancelledError, Exception):
-                pass
         self._workers.clear()
         logger.info("JobQueue stopped")
 
@@ -164,7 +164,7 @@ class JobQueue:
         logger.info("Job submitted: %s (%s)", job.id, job.type.value)
         return job.id
 
-    def get_job(self, job_id: str) -> Optional[Job]:
+    def get_job(self, job_id: str) -> Job | None:
         """Look up a job by ID."""
         return self._jobs.get(job_id)
 
@@ -299,7 +299,7 @@ class JobQueue:
 
 
 # ----------------------------------------------------------------------- global
-_global_queue: Optional[JobQueue] = None
+_global_queue: JobQueue | None = None
 
 
 def get_queue() -> JobQueue:

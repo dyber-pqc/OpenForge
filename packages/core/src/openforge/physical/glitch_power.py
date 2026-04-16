@@ -16,7 +16,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from openforge.format.waveform import Waveform, WaveTransition
 
-
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
@@ -75,7 +74,6 @@ class GlitchPowerAnalyzer:
             if not trans or len(trans) < 3:
                 continue
             events: list[GlitchEvent] = []
-            prev_val = None
             history: list[WaveTransition] = []
             for t in trans:
                 history.append(t)
@@ -144,7 +142,7 @@ class GlitchPowerAnalyzer:
     def classify_signals(self) -> dict[str, str]:
         """Classify each signal as 'clean' / 'glitchy' / 'pathological'."""
         classes: dict[str, str] = {}
-        for sig, trans in self.waveform.data.items():
+        for sig, _trans in self.waveform.data.items():
             n_glitch = len(self._events.get(sig, []))
             if n_glitch == 0:
                 classes[sig] = "clean"

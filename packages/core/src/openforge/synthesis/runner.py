@@ -5,20 +5,22 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from openforge.config.loader import load_config
-from openforge.config.schema import OpenForgeConfig
 from openforge.engine.yosys import YosysEngine
-from openforge.pdk.manager import PDKManager
 from openforge.synthesis.optimization import (
     OptimizationPass,
-    generate_abc_script,
     generate_synth_script,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping, Sequence
+    from os import PathLike
+
+    from openforge.config.schema import OpenForgeConfig
+    from openforge.pdk.manager import PDKManager
 
 # ---------------------------------------------------------------------------
 # PDK-specific library names
@@ -103,9 +105,7 @@ def _parse_stat_output(text: str) -> tuple[int, dict[str, int], float]:
                 in_cell_section = False
 
         # Chip area
-        if m := re.search(r"Chip area for (?:top-level )?module .+?:\s+([\d.]+)", stripped):
-            area = float(m.group(1))
-        elif m := re.search(r"Estimated chip area:\s+([\d.]+)", stripped):
+        if (m := re.search(r"Chip area for (?:top-level )?module .+?:\s+([\d.]+)", stripped)) or (m := re.search(r"Estimated chip area:\s+([\d.]+)", stripped)):
             area = float(m.group(1))
 
     return total_cells, cell_usage, area

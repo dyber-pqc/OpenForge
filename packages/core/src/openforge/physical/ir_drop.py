@@ -21,7 +21,6 @@ import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -416,7 +415,7 @@ def compute_voltage_grid(ir_map: IrDropMap) -> list[list[float]]:
     ]
 
 
-def merge_drop_maps(maps: list[IrDropMap]) -> Optional[IrDropMap]:
+def merge_drop_maps(maps: list[IrDropMap]) -> IrDropMap | None:
     """Worst-case merge of several IrDropMaps (must share dimensions)."""
     if not maps:
         return None
@@ -467,7 +466,7 @@ class DynamicIrSample:
     def __init__(
         self,
         time_ns: float,
-        grid: "object",
+        grid: object,
         max_drop_v: float,
         average_drop_v: float,
     ) -> None:

@@ -7,17 +7,21 @@ linting, and pre-synthesis simulation.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import TYPE_CHECKING
 
-from openforge.config.schema import SourceFile
 from openforge.engine.base import ExecutionBackend
 from openforge.engine.yosys import YosysEngine
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping, Sequence
+
+    from openforge.config.schema import SourceFile
 
 # ---------------------------------------------------------------------------
 # Result types
@@ -144,10 +148,8 @@ def _parse_json_netlist(json_path: Path) -> dict[str, ModuleInfo]:
         attrs = mod_data.get("attributes") or {}
         src = attrs.get("src", "")
         if isinstance(src, str) and ":" in src:
-            try:
+            with contextlib.suppress(ValueError):
                 info.line = int(src.rsplit(":", 1)[-1].split(".")[0])
-            except ValueError:
-                pass
 
         modules[mod_name] = info
     return modules
@@ -244,10 +246,8 @@ class Elaborator:
         combined = (result.stdout or "") + (result.stderr or "")
 
         log_path = out_dir / "elaboration_log.txt"
-        try:
+        with contextlib.suppress(OSError):
             log_path.write_text(combined, encoding="utf-8")
-        except OSError:
-            pass
 
         modules = _parse_json_netlist(elab_json) if elab_json.exists() else {}
         elapsed = time.monotonic() - start

@@ -6,7 +6,7 @@ consistent appearance. Inspired by Linear, Vercel, and Altium Designer.
 
 from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import (
     QEasingCurve,
@@ -16,7 +16,7 @@ from PySide6.QtCore import (
     QTimer,
     Signal,
 )
-from PySide6.QtGui import QColor, QFont, QPainter, QPen
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QProgressBar,
     QPushButton,
-    QRadioButton,
     QSizePolicy,
     QToolButton,
     QVBoxLayout,
@@ -38,13 +37,14 @@ from openforge_desktop.theme.design_system import (
     TYPOGRAPHY,
     ColorPalette,
     Radius,
-    Spacing,
     badge_qss,
     card_qss,
     metric_card_qss,
     section_header_qss,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ==============================================================================
 # METRIC CARD
@@ -68,7 +68,7 @@ class MetricCard(QFrame):
         trend_good: bool = True,
         icon: str = "",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -165,7 +165,7 @@ class StatusBadge(QLabel):
         text: str,
         severity: str = "info",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(text.upper(), parent)
         self._palette = palette
@@ -196,7 +196,7 @@ class SectionHeader(QLabel):
         self,
         text: str,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(text.upper(), parent)
         self._palette = palette
@@ -223,7 +223,7 @@ class IconButton(QToolButton):
         icon_text: str = "",
         tooltip: str = "",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -274,7 +274,7 @@ class ToolbarSeparator(QFrame):
     def __init__(
         self,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.VLine)
@@ -302,7 +302,7 @@ class CollapsibleSection(QWidget):
         title: str,
         expanded: bool = True,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -383,7 +383,7 @@ class Card(QFrame):
         self,
         title: str = "",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -426,7 +426,7 @@ class SegmentedControl(QWidget):
         self,
         options: list[str],
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -507,7 +507,7 @@ class SearchInput(QFrame):
         self,
         placeholder: str = "Search...",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -600,7 +600,7 @@ class ProgressIndicator(QWidget):
         self,
         label: str = "",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -680,9 +680,9 @@ class EmptyState(QWidget):
         title: str = "",
         description: str = "",
         action_text: str = "",
-        action_handler: Optional[Callable[[], None]] = None,
+        action_handler: Callable[[], None] | None = None,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -694,7 +694,7 @@ class EmptyState(QWidget):
         title: str,
         description: str,
         action_text: str,
-        action_handler: Optional[Callable[[], None]],
+        action_handler: Callable[[], None] | None,
     ) -> None:
         p = self._palette
         layout = QVBoxLayout(self)
@@ -763,7 +763,7 @@ class Toast(QFrame):
         severity: str = "info",
         duration_ms: int = 3500,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -838,7 +838,7 @@ class KeyValueRow(QWidget):
         value_color: str = "",
         mono: bool = False,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -889,7 +889,7 @@ class TabBar(QWidget):
         self,
         tabs: list[str],
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._palette = palette
@@ -970,7 +970,7 @@ class Divider(QFrame):
         self,
         horizontal: bool = True,
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         if horizontal:
@@ -998,7 +998,7 @@ class Pill(QLabel):
         text: str,
         color: str = "",
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(text, parent)
         self._palette = palette
@@ -1031,7 +1031,7 @@ class StatRow(QWidget):
         self,
         stats: list[tuple[str, str, str]],
         palette: ColorPalette = DARK_PALETTE,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         """stats: list of (icon, label, value) tuples."""
         super().__init__(parent)

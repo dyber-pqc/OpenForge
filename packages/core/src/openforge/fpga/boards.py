@@ -20,7 +20,7 @@ All pinouts verified against official datasheets / board schematics:
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,7 +32,7 @@ from openforge.constraints.model import (
 )
 
 
-class BoardFormat(str, Enum):
+class BoardFormat(StrEnum):
     XDC = "xdc"
     LPF = "lpf"
     PCF = "pcf"

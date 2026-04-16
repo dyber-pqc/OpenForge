@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -39,13 +39,10 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsSimpleTextItem,
     QGraphicsView,
-    QHBoxLayout,
     QHeaderView,
-    QItemDelegate,
     QLabel,
     QLineEdit,
     QMessageBox,
-    QPushButton,
     QSplitter,
     QStyledItemDelegate,
     QTableWidget,
@@ -300,7 +297,7 @@ class PinItem(QGraphicsEllipseItem):
 
     SIZE = 22.0
 
-    def __init__(self, pin: PinInfo, x: float, y: float, panel: "PinPlannerPanel"):
+    def __init__(self, pin: PinInfo, x: float, y: float, panel: PinPlannerPanel):
         super().__init__(QRectF(x, y, self.SIZE, self.SIZE))
         self.pin = pin
         self.panel = panel
@@ -370,7 +367,7 @@ class PackageView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self._pin_items: dict[str, PinItem] = {}
 
-    def load(self, geom: PackageGeometry, panel: "PinPlannerPanel") -> None:
+    def load(self, geom: PackageGeometry, panel: PinPlannerPanel) -> None:
         self._scene.clear()
         self._pin_items.clear()
         spacing = PinItem.SIZE + 10.0

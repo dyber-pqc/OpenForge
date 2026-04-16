@@ -6,10 +6,11 @@ import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models

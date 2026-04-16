@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openforge.config.loader import load_config
-from openforge.config.schema import OpenForgeConfig
+
+if TYPE_CHECKING:
+    from openforge.config.schema import OpenForgeConfig
 
 
 class Project:

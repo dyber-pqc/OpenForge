@@ -12,8 +12,7 @@ import json
 import re
 from pathlib import Path
 
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------
 # Data models

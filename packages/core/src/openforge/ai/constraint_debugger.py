@@ -15,11 +15,12 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
-from openforge.ai.ollama_client import OllamaClient
+if TYPE_CHECKING:
+    from openforge.ai.ollama_client import OllamaClient
 
 
 class StaPath(BaseModel):
@@ -63,10 +64,7 @@ class ConstraintDebugger:
         rep = self.sta_report
         if rep is None:
             return []
-        if isinstance(rep, list):
-            raw = rep
-        else:
-            raw = getattr(rep, "paths", None) or []
+        raw = rep if isinstance(rep, list) else getattr(rep, "paths", None) or []
         out: list[StaPath] = []
         for p in raw:
             if isinstance(p, StaPath):

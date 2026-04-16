@@ -14,13 +14,16 @@ from __future__ import annotations
 
 import os
 import subprocess
-import time
 from os import PathLike
 from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QThread, Signal
-from PySide6.QtWidgets import QWidget
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from PySide6.QtWidgets import QWidget
 
 
 def _to_wsl(p: Path) -> str:
@@ -194,8 +197,8 @@ class SimulationWorker(QThread):
 
     def run(self) -> None:
         try:
-            from openforge.runner.simulation import SimulationRunner
             from openforge.config.schema import SimulationTool
+            from openforge.runner.simulation import SimulationRunner
 
             tool_map = {
                 "verilator": SimulationTool.VERILATOR,
@@ -423,18 +426,18 @@ class ToolCheckWorker(QThread):
         self._cancelled = True
 
     def run(self) -> None:
-        from openforge.engine.verilator import VerilatorEngine
-        from openforge.engine.icarus import IcarusEngine
+        from openforge.engine.cocotb import CocotbEngine
         from openforge.engine.ghdl import GHDLEngine
-        from openforge.engine.yosys import YosysEngine
-        from openforge.engine.symbiyosys import SymbiYosysEngine
-        from openforge.engine.opensta import OpenSTAEngine
-        from openforge.engine.openroad import OpenROADEngine
+        from openforge.engine.icarus import IcarusEngine
+        from openforge.engine.klayout import KLayoutEngine
         from openforge.engine.magic import MagicEngine
         from openforge.engine.netgen import NetgenEngine
+        from openforge.engine.openroad import OpenROADEngine
+        from openforge.engine.opensta import OpenSTAEngine
+        from openforge.engine.symbiyosys import SymbiYosysEngine
         from openforge.engine.verible import VeribleEngine
-        from openforge.engine.klayout import KLayoutEngine
-        from openforge.engine.cocotb import CocotbEngine
+        from openforge.engine.verilator import VerilatorEngine
+        from openforge.engine.yosys import YosysEngine
 
         # First, quickly check which Docker images are available locally
         docker_images: set[str] = set()
@@ -490,7 +493,7 @@ class ToolCheckWorker(QThread):
                                 capture_output=True, text=True, timeout=5,
                             )
                             v = vr.stdout.strip().splitlines()[0] if vr.returncode == 0 else ""
-                            wsl_tools[wsl_name] = f"via WSL2" + (f" ({v})" if v else "")
+                            wsl_tools[wsl_name] = "via WSL2" + (f" ({v})" if v else "")
                     except Exception:
                         pass
         except Exception:
@@ -822,7 +825,7 @@ class FpgaSynthWorker(QThread):
     def run(self) -> None:
         # Step 1: Yosys synthesis
         self.progress.emit(10)
-        self.output_line.emit(f"=== FPGA Synthesis (Yosys) ===")
+        self.output_line.emit("=== FPGA Synthesis (Yosys) ===")
         rc, output = _run_subprocess_streaming(self._yosys_cmd, self, timeout=300)
 
         if self._cancelled:
@@ -1280,7 +1283,7 @@ class CdcWorker(QThread):
             except (FileNotFoundError, RuntimeError) as e:
                 # Native yosys failed - run via Docker
                 if "yosys" in str(e).lower() or "not found" in str(e).lower():
-                    self.output_line.emit(f"Native Yosys not found, using Docker fallback...")
+                    self.output_line.emit("Native Yosys not found, using Docker fallback...")
                     result = self._run_via_docker()
                 else:
                     raise
@@ -1345,7 +1348,7 @@ class CdcWorker(QThread):
 
     def _run_via_docker(self):
         """Fallback: run yosys via Docker for CDC analysis."""
-        from openforge.verification.cdc import CdcResult, ClockDomain
+        from openforge.verification.cdc import CdcResult
         # Build a yosys script that reads sources and dumps the netlist as JSON
         # Then we parse the JSON ourselves for CDC analysis
         if not self._source_files:
@@ -1399,6 +1402,7 @@ class CdcWorker(QThread):
         # Use the analyzer's structural analysis on the JSON
         try:
             import json as _json
+
             from openforge.verification.cdc import CdcAnalyzer
             analyzer = CdcAnalyzer()
             data = _json.loads(json_out.read_text(encoding="utf-8"))
@@ -1614,8 +1618,8 @@ class MultiCornerWorker(QThread):
     def run(self) -> None:
         try:
             from openforge.physical.multicorner import (
-                MultiCornerAnalyzer,
                 PDK_CORNERS,
+                MultiCornerAnalyzer,
             )
 
             analyzer = MultiCornerAnalyzer()

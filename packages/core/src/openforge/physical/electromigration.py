@@ -7,13 +7,16 @@ EM signoff tools (Totem-EM, RedHawk-EM).
 
 from __future__ import annotations
 
+import contextlib
 import math
 import re
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 # ----------------------------------------------------------------------------
 # Data classes
@@ -69,7 +72,7 @@ class EmResult:
 
     wires_checked: int
     violations: list[EmViolation]
-    worst_violation: Optional[EmViolation]
+    worst_violation: EmViolation | None
     avg_density: float
     per_layer_counts: dict[str, int] = field(default_factory=dict)
     runtime_s: float = 0.0
@@ -217,16 +220,14 @@ class ElectromigrationAnalyzer:
         self,
         def_path: Path,
         net_currents: dict[str, float],
-        on_progress: Optional[Callable[[float, str], None]] = None,
+        on_progress: Callable[[float, str], None] | None = None,
     ) -> EmResult:
         """Run EM analysis on routed nets."""
 
         def progress(f: float, m: str) -> None:
             if on_progress:
-                try:
+                with contextlib.suppress(Exception):
                     on_progress(f, m)
-                except Exception:
-                    pass
 
         start = time.time()
         progress(0.0, "Parsing DEF routes...")
@@ -236,7 +237,7 @@ class ElectromigrationAnalyzer:
         violations: list[EmViolation] = []
         per_layer_counts: dict[str, int] = {}
         sum_density = 0.0
-        worst: Optional[EmViolation] = None
+        worst: EmViolation | None = None
 
         n = len(wires)
         for i, w in enumerate(wires):
@@ -299,7 +300,7 @@ class ElectromigrationAnalyzer:
         self,
         cell_powers: dict[str, float],
         vdd: float = 1.8,
-        net_drivers: Optional[dict[str, str]] = None,
+        net_drivers: dict[str, str] | None = None,
     ) -> dict[str, float]:
         """Estimate per-net currents from cell power and connectivity."""
         out: dict[str, float] = {}

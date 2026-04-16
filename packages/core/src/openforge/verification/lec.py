@@ -9,12 +9,16 @@ Common use cases:
 """
 from __future__ import annotations
 
+import contextlib
 import re
 import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -83,8 +87,8 @@ class LecRunner:
         gold_top: str,
         rev_sources: list[Path],
         rev_top: str,
-        cwd: Optional[Path] = None,
-        on_output: Optional[Callable[[str], None]] = None,
+        cwd: Path | None = None,
+        on_output: Callable[[str], None] | None = None,
     ) -> LecResult:
         """Compare two designs for equivalence.
 
@@ -129,8 +133,8 @@ class LecRunner:
         rtl_sources: list[Path],
         netlist_path: Path,
         top_module: str,
-        liberty: Optional[Path] = None,
-        cwd: Optional[Path] = None,
+        liberty: Path | None = None,
+        cwd: Path | None = None,
     ) -> LecResult:
         """Verify that an RTL description matches its synthesized netlist."""
         cwd = Path(cwd) if cwd else Path.cwd()
@@ -175,7 +179,7 @@ class LecRunner:
         original_netlist: Path,
         eco_netlist: Path,
         top_module: str,
-        ignored_signals: Optional[list[str]] = None,
+        ignored_signals: list[str] | None = None,
     ) -> LecResult:
         """Check that an ECO patch did not change functional behavior outside
         of explicitly ignored signals."""
@@ -240,7 +244,7 @@ class LecRunner:
         rtl_sources: list[Path],
         netlist: Path,
         top_module: str,
-        liberty: Optional[Path],
+        liberty: Path | None,
     ) -> str:
         lines: list[str] = []
         lines.append("# OpenForge LEC - RTL vs Gates")
@@ -271,7 +275,7 @@ class LecRunner:
         self,
         script: str,
         cwd: Path,
-        on_output: Optional[Callable[[str], None]],
+        on_output: Callable[[str], None] | None,
     ) -> tuple[str, str]:
         """Execute Yosys and return (stdout_log, error_string)."""
         script_path = cwd / "lec_script.ys"
@@ -294,10 +298,8 @@ class LecRunner:
             for line in proc.stdout:
                 chunks.append(line)
                 if on_output:
-                    try:
+                    with contextlib.suppress(Exception):
                         on_output(line.rstrip())
-                    except Exception:
-                        pass
             proc.wait(timeout=self._timeout_seconds)
         except subprocess.TimeoutExpired:
             proc.kill()
@@ -354,7 +356,7 @@ class LecRunner:
 
 
 def quick_check(
-    gold: Path, rev: Path, top: str, cwd: Optional[Path] = None
+    gold: Path, rev: Path, top: str, cwd: Path | None = None
 ) -> LecResult:
     """One-shot helper used by tests and the CLI."""
     return LecRunner().check_equivalence(

@@ -3,7 +3,6 @@ plus project-wide include dirs, defines, and language version."""
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt, Signal
@@ -23,7 +22,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 _LANGUAGES = ["auto", "verilog", "systemverilog", "vhdl"]
 _LANG_VERSIONS = ["v2005", "sv2012", "sv2017", "vhdl93", "vhdl2008"]

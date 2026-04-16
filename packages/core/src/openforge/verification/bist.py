@@ -9,8 +9,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -362,7 +360,7 @@ endmodule
         self,
         netlist: Path,
         top_module: str,
-        memories: Optional[list[MemoryInfo]] = None,
+        memories: list[MemoryInfo] | None = None,
     ) -> tuple[Path, list[BistController]]:
         """Insert BIST controllers into a netlist."""
         netlist = Path(netlist)

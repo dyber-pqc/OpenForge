@@ -14,7 +14,6 @@ from fastapi.responses import Response
 from openforge_api.models.schemas import (
     JobBase,
     JobStatus,
-    SynthesisOptimization,
     SynthesisRequest,
     SynthesisResult,
 )
@@ -83,7 +82,7 @@ async def _dispatch_synthesis(job_id: UUID, body: SynthesisRequest) -> None:
             created_at=_synth_jobs[job_id].created_at,
             finished_at=datetime.utcnow(),
         )
-    except Exception as exc:
+    except Exception:
         _log.exception("Synthesis failed for job %s", job_id)
         _synth_jobs[job_id] = JobBase(
             job_id=job_id,

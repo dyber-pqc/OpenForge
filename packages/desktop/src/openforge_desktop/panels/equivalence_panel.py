@@ -9,10 +9,8 @@ from __future__ import annotations
 
 import threading
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, QObject, Signal, Slot
-from PySide6.QtGui import QBrush, QColor
+from PySide6.QtCore import QObject, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -60,10 +58,10 @@ class EquivalencePanel(QWidget):
 
     openWaveform = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._result = None
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self._bridge = _Bridge()
         self._bridge.finished.connect(self._on_done)
         self._build_ui()

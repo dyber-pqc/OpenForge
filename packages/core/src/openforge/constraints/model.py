@@ -17,13 +17,13 @@ explicitly.
 from __future__ import annotations
 
 import re
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class ConstraintKind(str, Enum):
+class ConstraintKind(StrEnum):
     """Kind of constraint. Covers both timing (SDC) and physical (IO)."""
 
     CLOCK = "clock"
@@ -79,11 +79,11 @@ class ConstraintSet(BaseModel):
 
     # ── add helpers ─────────────────────────────────────────────────────────
 
-    def add(self, c: Constraint) -> "ConstraintSet":
+    def add(self, c: Constraint) -> ConstraintSet:
         self.constraints.append(c)
         return self
 
-    def extend(self, cs: list[Constraint]) -> "ConstraintSet":
+    def extend(self, cs: list[Constraint]) -> ConstraintSet:
         self.constraints.extend(cs)
         return self
 
@@ -105,7 +105,7 @@ class ConstraintSet(BaseModel):
         return "\n".join(lines) + "\n"
 
     @classmethod
-    def from_sdc(cls, text: str, name: str = "default") -> "ConstraintSet":
+    def from_sdc(cls, text: str, name: str = "default") -> ConstraintSet:
         cs = cls(name=name)
         for raw in _iter_tcl_lines(text):
             c = _parse_sdc_line(raw)
@@ -166,7 +166,7 @@ class ConstraintSet(BaseModel):
         return "\n".join(lines) + "\n"
 
     @classmethod
-    def from_xdc(cls, text: str, name: str = "default") -> "ConstraintSet":
+    def from_xdc(cls, text: str, name: str = "default") -> ConstraintSet:
         cs = cls(name=name)
         # set_property PROP VAL [get_ports {name}]
         set_prop_re = re.compile(
@@ -251,7 +251,7 @@ class ConstraintSet(BaseModel):
         return "\n".join(lines) + "\n"
 
     @classmethod
-    def from_lpf(cls, text: str, name: str = "default") -> "ConstraintSet":
+    def from_lpf(cls, text: str, name: str = "default") -> ConstraintSet:
         cs = cls(name=name)
         locate_re = re.compile(
             r'^\s*LOCATE\s+COMP\s+"([^"]+)"\s+SITE\s+"([^"]+)"\s*;',
@@ -365,7 +365,7 @@ class ConstraintSet(BaseModel):
         return "\n".join(lines) + "\n"
 
     @classmethod
-    def from_pcf(cls, text: str, name: str = "default") -> "ConstraintSet":
+    def from_pcf(cls, text: str, name: str = "default") -> ConstraintSet:
         cs = cls(name=name)
         for raw in text.splitlines():
             line = raw.split("#", 1)[0].strip()
@@ -457,7 +457,7 @@ class ConstraintSet(BaseModel):
         return "\n".join(lines) + "\n"
 
     @classmethod
-    def from_cst(cls, text: str, name: str = "default") -> "ConstraintSet":
+    def from_cst(cls, text: str, name: str = "default") -> ConstraintSet:
         cs = cls(name=name)
         io_loc_re = re.compile(
             r'^\s*IO_LOC\s+"([^"]+)"\s+([A-Za-z0-9_/]+)\s*;', re.IGNORECASE
@@ -767,7 +767,7 @@ def _parse_sdc_line(line: str) -> Constraint | None:
     def _positional() -> list[str]:
         out: list[str] = []
         skip = False
-        for i, t in enumerate(rest):
+        for _i, t in enumerate(rest):
             if skip:
                 skip = False
                 continue

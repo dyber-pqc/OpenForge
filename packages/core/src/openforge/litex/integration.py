@@ -12,20 +12,20 @@ supported way to build SoCs for each board.
 
 from __future__ import annotations
 
-import shlex
 import shutil
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
 from openforge.engine.base import ToolResult
 
+if TYPE_CHECKING:
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Board registry
@@ -305,10 +305,7 @@ class LiteXBuilder:
             return result
 
         bit_path: Path
-        if bitstream:
-            bit_path = Path(bitstream)
-        else:
-            bit_path = self._guess_bitstream()
+        bit_path = Path(bitstream) if bitstream else self._guess_bitstream()
         if not bit_path.exists():
             return result  # propagate the litex error
 

@@ -6,11 +6,7 @@ actions backed by :class:`openforge.pdk.installer.PdkInstaller`
 """
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
-
-from PySide6.QtCore import Qt, QObject, QThread, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -49,7 +45,7 @@ class _InstallWorker(QObject):
     progress = Signal(str, float)
     finished = Signal(str, bool, str)
 
-    def __init__(self, installer: "PdkInstaller", pdk_name: str) -> None:
+    def __init__(self, installer: PdkInstaller, pdk_name: str) -> None:
         super().__init__()
         self._installer = installer
         self._pdk = pdk_name
@@ -74,7 +70,7 @@ class _PdkCard(QFrame):
     set_active_requested = Signal(str)
     selected = Signal(str)
 
-    def __init__(self, info: "PdkInfo", installed: bool, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, info: PdkInfo, installed: bool, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.info = info
         self._installed = installed
@@ -199,7 +195,7 @@ class PdkManagerPanel(QWidget):
 
     pdk_changed = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         if PdkInstaller is None:
@@ -209,7 +205,7 @@ class PdkManagerPanel(QWidget):
 
         self._cards: dict[str, _PdkCard] = {}
         self._workers: dict[str, tuple[QThread, _InstallWorker]] = {}
-        self._active: Optional[str] = None
+        self._active: str | None = None
 
         root = QVBoxLayout(self)
         root.setContentsMargins(10, 10, 10, 10)

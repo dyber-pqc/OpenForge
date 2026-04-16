@@ -9,6 +9,7 @@ Lets the user:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QListWidgetItem,
     QPushButton,
     QSplitter,
     QTabWidget,
@@ -182,9 +182,7 @@ class _FootprintPreview(QGraphicsView):
             shape = self._get(pad, "shape", "rect")
             pad_type = self._get(pad, "pad_type", "smd")
             pen = pad_tht_pen if "thru" in str(pad_type) else pad_top_pen
-            if shape in ("circle", "oval") and abs(w - h) < 1e-6:
-                item = self._scene.addEllipse(x - w / 2, y - h / 2, w, h, pen, pad_top)
-            elif shape == "oval":
+            if shape in ("circle", "oval") and abs(w - h) < 1e-6 or shape == "oval":
                 item = self._scene.addEllipse(x - w / 2, y - h / 2, w, h, pen, pad_top)
             else:
                 item = self._scene.addRect(x - w / 2, y - h / 2, w, h, pen, pad_top)
@@ -418,10 +416,8 @@ class LibraryManagerPanel(QWidget):
         if row < 0 or row >= len(self._sources):
             return
         self._src_list.takeItem(row)
-        try:
+        with contextlib.suppress(IndexError):
             self._sources.pop(row)
-        except IndexError:
-            pass
 
     # ------------------------------------------------------------------
     # Import
@@ -595,7 +591,7 @@ class LibraryManagerPanel(QWidget):
                 for k, v in sorted(self._importer.symbol_lib_counts.items())
             ),
             "",
-            f"<b>Symbol pin distribution:</b> "
+            "<b>Symbol pin distribution:</b> "
             + ", ".join(f"{k}: {v}" for k, v in sorted(sym_bins.items())),
             "",
             f"<b>Footprints:</b> {n_fp} across {len(self._importer.footprint_lib_counts)} libraries",
@@ -604,7 +600,7 @@ class LibraryManagerPanel(QWidget):
                 for k, v in sorted(self._importer.footprint_lib_counts.items())
             ),
             "",
-            f"<b>Footprint pad distribution:</b> "
+            "<b>Footprint pad distribution:</b> "
             + ", ".join(f"{k}: {v}" for k, v in sorted(fp_bins.items())),
         ]
         self._stats_label.setText("<br>".join(lines))

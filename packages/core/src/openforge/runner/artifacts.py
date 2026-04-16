@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import threading
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .engine import RunArtifact
 
 
-class ArtifactKind(str, Enum):
+class ArtifactKind(StrEnum):
     """Known kinds of EDA artifacts."""
 
     NETLIST_V = "netlist_v"

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import re
-from os import PathLike
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from os import PathLike
 
 
 class MagicEngine(ToolEngine):
@@ -80,7 +83,7 @@ class MagicEngine(ToolEngine):
         extra_tcl:
             Additional TCL commands inserted before the DRC report.
         """
-        cell_name = Path(mag_file).stem
+        Path(mag_file).stem
 
         tcl_lines: list[str] = [
             f"load {mag_file}",
@@ -88,7 +91,7 @@ class MagicEngine(ToolEngine):
             "drc check",
             "drc catchup",
             *extra_tcl,
-            f"set drc_count [drc listall why]",
+            "set drc_count [drc listall why]",
             "puts \"DRC errors: $drc_count\"",
             "quit -noprompt",
         ]
@@ -141,12 +144,12 @@ class MagicEngine(ToolEngine):
             tcl_lines.extend([
                 "ext2sim labels on",
                 "ext2sim",
-                f"extresist tolerance 10",
+                "extresist tolerance 10",
                 "extresist all",
             ])
 
         tcl_lines.extend([
-            f"ext2spice lvs",
+            "ext2spice lvs",
             f"ext2spice -o {spice_out}",
             *extra_tcl,
             "quit -noprompt",

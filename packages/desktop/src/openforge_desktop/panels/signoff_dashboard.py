@@ -12,7 +12,7 @@ the panel.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from PySide6.QtCore import Qt, Signal
@@ -32,7 +32,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Data types

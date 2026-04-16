@@ -6,31 +6,23 @@ clones it via git in a worker thread. PDKs install to ~/.openforge/pdks/<name>.
 
 from __future__ import annotations
 
-import os
-import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, Signal, QObject, QThread, QSize
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog,
-    QVBoxLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
-    QPushButton,
-    QListWidget,
-    QListWidgetItem,
-    QProgressBar,
-    QFrame,
-    QTextEdit,
     QMessageBox,
-    QSizePolicy,
+    QProgressBar,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # PDK catalogue
@@ -255,9 +247,9 @@ class PdkInstallerDialog(QDialog):
         self.resize(720, 580)
         self._pdks = builtin_pdks()
         self._rows: dict[str, _PdkRow] = {}
-        self._worker: Optional[_CloneWorker] = None
-        self._thread: Optional[QThread] = None
-        self._active: Optional[str] = None
+        self._worker: _CloneWorker | None = None
+        self._thread: QThread | None = None
+        self._active: str | None = None
         self._build_ui()
 
     # ----- ui ---------------------------------------------------------------

@@ -8,15 +8,14 @@ Verilator.
 
 from __future__ import annotations
 
+import contextlib
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QComboBox,
     QFileDialog,
     QFormLayout,
     QGroupBox,
@@ -63,10 +62,10 @@ except Exception:  # pragma: no cover
 class CrvBuilderPanel(QWidget):
     """Interactive builder for constrained-random SV classes."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("CrvBuilderPanel")
-        self._project_dir: Optional[Path] = None
+        self._project_dir: Path | None = None
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -194,10 +193,8 @@ class CrvBuilderPanel(QWidget):
         splitter.setStretchFactor(1, 2)
         splitter.setStretchFactor(2, 2)
 
-        try:
+        with contextlib.suppress(Exception):
             self.setStyleSheet(panel_tab_qss(True))
-        except Exception:
-            pass
 
         self._on_regenerate()
 

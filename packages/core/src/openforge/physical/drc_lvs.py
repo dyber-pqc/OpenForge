@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.magic import MagicEngine
 from openforge.engine.netgen import NetgenEngine
 
+if TYPE_CHECKING:
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models

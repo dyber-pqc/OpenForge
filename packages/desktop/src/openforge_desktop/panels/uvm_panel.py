@@ -292,8 +292,5 @@ class UvmPanel(QWidget):
         self.log_line.emit(msg)
 
     def _apply_log_filter(self, level: str) -> None:
-        if level == "ALL":
-            shown = self._raw_log
-        else:
-            shown = [ln for ln in self._raw_log if level in ln]
+        shown = self._raw_log if level == "ALL" else [ln for ln in self._raw_log if level in ln]
         self._log_view.setPlainText("\n".join(shown))

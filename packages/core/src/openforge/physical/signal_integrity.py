@@ -6,11 +6,9 @@ delay, and detects combinational glitches.
 from __future__ import annotations
 
 import json
-import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -87,7 +85,7 @@ class SignalIntegrityAnalyzer:
 
         # quick parser: find NET ... + ROUTED ... blocks
         net_segments: dict[str, list[tuple[str, float, float, float, float]]] = {}
-        cur_net: Optional[str] = None
+        cur_net: str | None = None
         layer_re = re.compile(
             r"(metal\d+|met\d+|li\d*)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s*\(\s*(-?\d+|\*)\s+(-?\d+|\*)\s*\)",
             re.IGNORECASE,
@@ -182,7 +180,7 @@ class SignalIntegrityAnalyzer:
         coupling_caps: dict[tuple[str, str], float],
         net_drivers: dict[str, str],
         net_capacitance: dict[str, float],
-        switching_window: Optional[dict[str, tuple[float, float]]] = None,
+        switching_window: dict[str, tuple[float, float]] | None = None,
     ) -> SiResult:
         """Miller-effect crosstalk delay calculation.
 
@@ -199,9 +197,8 @@ class SignalIntegrityAnalyzer:
             if switching_window is not None:
                 wa = switching_window.get(a)
                 wb = switching_window.get(b)
-                if wa and wb:
-                    if wa[1] < wb[0] or wb[1] < wa[0]:
-                        continue
+                if wa and wb and (wa[1] < wb[0] or wb[1] < wa[0]):
+                    continue
             victim_caps[a] = victim_caps.get(a, 0.0) + cc
             victim_caps[b] = victim_caps.get(b, 0.0) + cc
             victim_aggressors.setdefault(a, []).append(b)

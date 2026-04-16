@@ -40,7 +40,7 @@ class AddressRange(BaseModel):
     def end_addr(self) -> int:
         return self.base_addr + self.range_size - 1
 
-    def overlaps_with(self, other: "AddressRange") -> bool:
+    def overlaps_with(self, other: AddressRange) -> bool:
         if self.master != other.master:
             return False
         return not (
@@ -60,7 +60,7 @@ class AddressMap(BaseModel):
         masters: list[str],
         slaves: list[dict],
         base: int = 0x4000_0000,
-    ) -> "AddressMap":
+    ) -> AddressMap:
         """Assign non-overlapping, naturally-aligned regions to all slaves.
 
         ``slaves`` is a list of ``{name, interface, size}`` dicts. Locked

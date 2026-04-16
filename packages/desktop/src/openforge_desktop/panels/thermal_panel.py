@@ -3,20 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 try:
-    from PySide6.QtCore import Qt, QPoint, QRect, QSize, Signal
+    from PySide6.QtCore import QPoint, Qt, Signal
     from PySide6.QtGui import (
         QColor,
         QFont,
-        QImage,
+        QMouseEvent,
         QPainter,
         QPen,
-        QPixmap,
-        QBrush,
-        QLinearGradient,
-        QMouseEvent,
     )
     from PySide6.QtWidgets import (
         QComboBox,
@@ -30,10 +25,7 @@ try:
         QPushButton,
         QSizePolicy,
         QSlider,
-        QSpinBox,
         QSplitter,
-        QStatusBar,
-        QToolBar,
         QVBoxLayout,
         QWidget,
     )
@@ -83,12 +75,9 @@ _LIGHT = _Theme(
 # ----------------------------------------------------------------------------
 
 
-def _temp_to_color(t: float, t_min: float, t_max: float) -> "QColor":
+def _temp_to_color(t: float, t_min: float, t_max: float) -> QColor:
     """Map temperature to a blue->green->yellow->red gradient."""
-    if t_max <= t_min:
-        f = 0.0
-    else:
-        f = (t - t_min) / (t_max - t_min)
+    f = 0.0 if t_max <= t_min else (t - t_min) / (t_max - t_min)
     f = max(0.0, min(1.0, f))
     # 4-stop interpolation
     if f < 0.33:

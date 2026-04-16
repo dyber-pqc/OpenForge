@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import re
 import time
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 from openforge.config.loader import load_config
 from openforge.config.schema import OpenForgeConfig, SimulationTool, SourceFile
@@ -17,7 +15,10 @@ from openforge.engine.cocotb import CocotbEngine
 from openforge.engine.ghdl import GHDLEngine
 from openforge.engine.icarus import IcarusEngine
 from openforge.engine.verilator import VerilatorEngine
-from openforge.runner.process import ProcessResult, ProcessRunner
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+    from os import PathLike
 
 
 def _auto_engine(cls, docker_image: str = ""):

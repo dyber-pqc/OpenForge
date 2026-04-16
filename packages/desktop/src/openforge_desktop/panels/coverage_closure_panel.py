@@ -46,16 +46,15 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSplitter,
     QStatusBar,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextEdit,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Theme

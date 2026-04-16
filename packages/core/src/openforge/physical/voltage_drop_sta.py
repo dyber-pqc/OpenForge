@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import re
 import subprocess
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -128,7 +127,7 @@ class VoltageDropAwareSta:
         liberty: Path,
         ir_map: Any,
         cell_positions: dict,
-        cwd: Optional[Path] = None,
+        cwd: Path | None = None,
     ) -> VoltageAwareTimingResult:
         """Run OpenSTA twice: nominal then with per-instance derates."""
         cwd = Path(cwd) if cwd else Path.cwd()

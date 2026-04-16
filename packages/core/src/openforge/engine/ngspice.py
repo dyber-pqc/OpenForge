@@ -19,9 +19,12 @@ import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @dataclass(frozen=True)
@@ -135,10 +138,7 @@ class NgspiceEngine(ToolEngine):
         netlist = Path(netlist)
         if not netlist.exists():
             return self._missing_netlist(netlist)
-        if tstart > 0:
-            analysis = f".tran {tstep} {tstop} {tstart}"
-        else:
-            analysis = f".tran {tstep} {tstop}"
+        analysis = f".tran {tstep} {tstop} {tstart}" if tstart > 0 else f".tran {tstep} {tstop}"
         return self._run_with_control(
             netlist,
             analysis_card=analysis,

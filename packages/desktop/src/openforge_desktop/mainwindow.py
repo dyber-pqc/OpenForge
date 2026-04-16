@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
-import re
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, Qt, QSize, QUrl, Slot
-from PySide6.QtGui import QColor, QDesktopServices, QIcon, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtCore import QSettings, QSize, Qt, QUrl, Slot
+from PySide6.QtGui import (
+    QColor,
+    QDesktopServices,
+    QIcon,
+    QKeySequence,
+    QPainter,
+    QPixmap,
+    QShortcut,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QDockWidget,
@@ -37,13 +45,26 @@ from openforge_desktop.panels.hierarchy import HierarchyPanel
 # Production editor: try new editor package first, fall back to old EditorPanel
 try:
     from openforge_desktop.editor import EditorTabWidget as _EditorClass
-    from openforge_desktop.editor import VerilogNavigator, LintOverlay
+    from openforge_desktop.editor import LintOverlay, VerilogNavigator
     _HAS_NEW_EDITOR = True
 except ImportError:
-    from openforge_desktop.panels.editor import EditorPanel as _EditorClass  # type: ignore[assignment]
+    from openforge_desktop.panels.editor import (
+        EditorPanel as _EditorClass,  # type: ignore[assignment]
+    )
     _HAS_NEW_EDITOR = False
     VerilogNavigator = None  # type: ignore[assignment,misc]
     LintOverlay = None  # type: ignore[assignment,misc]
+from openforge_desktop.panels.flow_navigator import FlowNavigatorPanel, StepStatus
+from openforge_desktop.panels.ip_catalog import IpCatalogPanel
+from openforge_desktop.panels.layout import LayoutPanel
+from openforge_desktop.panels.physical import PhysicalDesignPanel
+from openforge_desktop.panels.properties import PropertiesPanel
+from openforge_desktop.panels.reports import ReportsPanel
+from openforge_desktop.panels.security import SecurityPanel
+from openforge_desktop.panels.synthesis import SynthesisPanel
+from openforge_desktop.panels.testbench import TestbenchPanel
+from openforge_desktop.panels.timing import TimingPanel
+from openforge_desktop.panels.waveform import WaveformPanel
 from openforge_desktop.project_state import DesktopProjectManager
 from openforge_desktop.tcl_engine import TclEngine
 from openforge_desktop.workers import (
@@ -61,17 +82,6 @@ from openforge_desktop.workers import (
     TimingWorker,
     _to_wsl,
 )
-from openforge_desktop.panels.layout import LayoutPanel
-from openforge_desktop.panels.physical import PhysicalDesignPanel
-from openforge_desktop.panels.properties import PropertiesPanel
-from openforge_desktop.panels.flow_navigator import FlowNavigatorPanel, StepStatus
-from openforge_desktop.panels.ip_catalog import IpCatalogPanel
-from openforge_desktop.panels.reports import ReportsPanel
-from openforge_desktop.panels.security import SecurityPanel
-from openforge_desktop.panels.synthesis import SynthesisPanel
-from openforge_desktop.panels.testbench import TestbenchPanel
-from openforge_desktop.panels.timing import TimingPanel
-from openforge_desktop.panels.waveform import WaveformPanel
 
 # New panels (created by parallel agent)
 try:
@@ -118,6 +128,7 @@ except Exception:  # pragma: no cover
     ImportProjectDialog = None  # type: ignore[assignment,misc]
 
 import os as _of_os_wave3
+
 _OPENFORGE_ENABLE_LOG_AGG = _of_os_wave3.environ.get(
     "OPENFORGE_ENABLE_LOG_AGGREGATOR", "1"
 ) not in ("0", "false", "False", "")
@@ -125,7 +136,9 @@ _OPENFORGE_ENABLE_WORKER_STATUS = _of_os_wave3.environ.get(
     "OPENFORGE_ENABLE_WORKER_STATUS", "1"
 ) not in ("0", "false", "False", "")
 
+import contextlib
 import os as _of_os
+
 _OPENFORGE_ENABLE_AXI_CHECKER = _of_os.environ.get(
     "OPENFORGE_ENABLE_AXI_CHECKER", "1"
 ) not in ("0", "false", "False", "")
@@ -325,7 +338,9 @@ except ImportError:
     CoverageClosurePanel = None  # type: ignore[assignment,misc]
 
 try:
-    from openforge_desktop.panels.coverage_closure import CoverageClosurePanel as CoverageClosurePanelV2
+    from openforge_desktop.panels.coverage_closure import (
+        CoverageClosurePanel as CoverageClosurePanelV2,
+    )
 except ImportError:
     CoverageClosurePanelV2 = None  # type: ignore[assignment,misc]
 
@@ -413,13 +428,13 @@ except ImportError:
     DrcBrowserPanel = None  # type: ignore[assignment,misc]
 
 try:
-    from openforge_desktop.dialogs.command_palette import CommandPalette, Command
+    from openforge_desktop.dialogs.command_palette import Command, CommandPalette
 except ImportError:
     CommandPalette = None  # type: ignore[assignment,misc]
     Command = None  # type: ignore[assignment,misc]
 
 try:
-    from openforge_desktop.dialogs.tutorial import TutorialDialog, BUILTIN_TUTORIALS
+    from openforge_desktop.dialogs.tutorial import BUILTIN_TUTORIALS, TutorialDialog
 except ImportError:
     TutorialDialog = None  # type: ignore[assignment,misc]
     BUILTIN_TUTORIALS = []  # type: ignore[assignment,misc]
@@ -1793,7 +1808,11 @@ class MainWindow(QMainWindow):
         try:
             from openforge_desktop.layouts.presets import (
                 LAYOUT_PRESETS as _LP,
+            )
+            from openforge_desktop.layouts.presets import (
                 apply_preset as _apply_preset,
+            )
+            from openforge_desktop.layouts.presets import (
                 save_layout as _save_layout,
             )
             workspace_menu = view_menu.addMenu("&Workspace")
@@ -2271,10 +2290,8 @@ class MainWindow(QMainWindow):
                 self.addDockWidget(
                     Qt.DockWidgetArea.BottomDockWidgetArea, self._ila_debug
                 )
-                try:
+                with contextlib.suppress(Exception):
                     self.tabifyDockWidget(self._waveform, self._ila_debug)
-                except Exception:
-                    pass
                 # Forward VCD loads to waveform viewer if it accepts one.
                 try:
                     if hasattr(self._waveform, "loadVcd"):
@@ -2327,10 +2344,8 @@ class MainWindow(QMainWindow):
                 self._openlane_panel.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
                 self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._openlane_panel)
                 if hasattr(self, "_console") and self._console is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._console, self._openlane_panel)
-                    except Exception:
-                        pass
             except Exception:
                 self._openlane_panel = None
         else:
@@ -2362,10 +2377,8 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.LeftDockWidgetArea, _libmgr_dock
                 )
                 if getattr(self, "_ip_catalog", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._ip_catalog, _libmgr_dock)
-                    except Exception:
-                        pass
                 self._library_manager = _libmgr_widget
                 self._library_manager_dock = _libmgr_dock
             except Exception:
@@ -2427,10 +2440,8 @@ class MainWindow(QMainWindow):
                 except Exception:
                     pass
                 # Let the timing panel forward STA reports straight into us.
-                try:
+                with contextlib.suppress(Exception):
                     self._timing.attach_path_browser(self._path_browser)
-                except Exception:
-                    pass
             except Exception:
                 self._path_browser = None
         else:
@@ -2452,12 +2463,10 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.RightDockWidgetArea, self._signoff_dashboard
                 )
                 if getattr(self, "_physical_design", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(
                             self._physical_design, self._signoff_dashboard
                         )
-                    except Exception:
-                        pass
             except Exception:
                 self._signoff_dashboard = None
         else:
@@ -2479,10 +2488,8 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.BottomDockWidgetArea, self._pba_xtalk
                 )
                 if getattr(self, "_timing", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._timing, self._pba_xtalk)
-                    except Exception:
-                        pass
             except Exception:
                 self._pba_xtalk = None
         else:
@@ -2517,10 +2524,8 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.BottomDockWidgetArea, self._hold_fix_dock
                 )
                 if getattr(self, "_timing", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._timing, self._hold_fix_dock)
-                    except Exception:
-                        pass
             except Exception:
                 self._hold_fix_dock = None
         else:
@@ -2543,12 +2548,10 @@ class MainWindow(QMainWindow):
                     self._density_fill_dock,
                 )
                 if getattr(self, "_physical_design", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(
                             self._physical_design, self._density_fill_dock
                         )
-                    except Exception:
-                        pass
             except Exception:
                 self._density_fill_dock = None
         else:
@@ -2571,12 +2574,10 @@ class MainWindow(QMainWindow):
                     self._glitch_power_dock,
                 )
                 if getattr(self, "_waveform", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(
                             self._waveform, self._glitch_power_dock
                         )
-                    except Exception:
-                        pass
             except Exception:
                 self._glitch_power_dock = None
         else:
@@ -2594,10 +2595,8 @@ class MainWindow(QMainWindow):
                 dock.setObjectName("parasitic_heatmap_dock")
                 dock.setWidget(self._parasitic_heatmap)
                 self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
-                try:
+                with contextlib.suppress(Exception):
                     self.tabifyDockWidget(self._reports, dock)
-                except Exception:
-                    pass
                 self._parasitic_heatmap_dock = dock
             except Exception:
                 self._parasitic_heatmap = None
@@ -2618,10 +2617,8 @@ class MainWindow(QMainWindow):
                 dock.setObjectName("drc_browser_dock")
                 dock.setWidget(self._drc_browser)
                 self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
-                try:
+                with contextlib.suppress(Exception):
                     self.tabifyDockWidget(self._reports, dock)
-                except Exception:
-                    pass
                 self._drc_browser_dock = dock
             except Exception:
                 self._drc_browser = None
@@ -3152,10 +3149,8 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.BottomDockWidgetArea, self._uvm_panel
                 )
                 if getattr(self, "_testbench", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._testbench, self._uvm_panel)
-                    except Exception:
-                        pass
             except Exception:
                 self._uvm_panel = None
         else:
@@ -3172,10 +3167,8 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.BottomDockWidgetArea, self._cdc_panel
                 )
                 if getattr(self, "_timing", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._timing, self._cdc_panel)
-                    except Exception:
-                        pass
             except Exception:
                 self._cdc_panel = None
         else:
@@ -3192,10 +3185,8 @@ class MainWindow(QMainWindow):
                     Qt.DockWidgetArea.BottomDockWidgetArea, self._lint_panel
                 )
                 if getattr(self, "_reports", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._reports, self._lint_panel)
-                    except Exception:
-                        pass
             except Exception:
                 self._lint_panel = None
         else:
@@ -3240,12 +3231,10 @@ class MainWindow(QMainWindow):
                     self._violation_browser_panel,
                 )
                 if getattr(self, "_reports", None) is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.tabifyDockWidget(
                             self._reports, self._violation_browser_panel
                         )
-                    except Exception:
-                        pass
             except Exception:
                 self._violation_browser_panel = None
         else:
@@ -3312,7 +3301,7 @@ class MainWindow(QMainWindow):
     def _install_activity_bar(self) -> None:
         """Install the left-side vertical activity bar and wire dock grouping."""
         try:
-            from openforge_desktop.activity_bar import ActivityBar, DEFAULT_GROUPS
+            from openforge_desktop.activity_bar import DEFAULT_GROUPS, ActivityBar
         except Exception:
             self._activity_bar = None
             return
@@ -3366,10 +3355,8 @@ class MainWindow(QMainWindow):
 
         # Activate the default group (Project) — shows a minimal set, hides rest
         if getattr(self, "_activity_bar", None) is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._activity_bar.activate_default()
-            except Exception:
-                pass
 
         # Resize the remaining visible left/right/bottom docks to sensible widths/heights
         visible_left = [d for d in self.findChildren(_QDW)
@@ -3441,10 +3428,8 @@ class MainWindow(QMainWindow):
         ]
         for panel in new_themeable:
             if panel is not None and hasattr(panel, "set_theme"):
-                try:
+                with contextlib.suppress(Exception):
                     panel.set_theme(dark)
-                except Exception:
-                    pass
         # Phase 11: Vendor parity panels
         new_v2_panels = [
             getattr(self, "_lec_panel", None),
@@ -3465,10 +3450,8 @@ class MainWindow(QMainWindow):
         ]
         for panel in new_v2_panels:
             if panel is not None and hasattr(panel, "set_theme"):
-                try:
+                with contextlib.suppress(Exception):
                     panel.set_theme(dark)
-                except Exception:
-                    pass
 
     def _toggle_theme(self) -> None:
         """Switch between dark and light themes."""
@@ -3535,10 +3518,8 @@ class MainWindow(QMainWindow):
         if dlg.exec() == dlg.DialogCode.Accepted:
             saved = dlg.saved_path()
             if saved is not None:
-                try:
+                with contextlib.suppress(Exception):
                     self._console.append_success(f"Imported project saved to: {saved}")
-                except Exception:
-                    pass
                 self.statusBar().showMessage(f"Imported: {saved}", 5000)
 
     # -- Stub replacements: Verify menu -----------------------------
@@ -3657,7 +3638,7 @@ link_design {top}
         if sdc_path.exists():
             tcl_content += f"read_sdc {wsl_proj}/constraints/timing.sdc\n"
         else:
-            tcl_content += f"create_clock -name clk -period 10.0 [get_ports clk]\n"
+            tcl_content += "create_clock -name clk -period 10.0 [get_ports clk]\n"
 
         tcl_content += f"""
 # Floorplan -- use ABSOLUTE die area for predictable, generous space
@@ -3746,9 +3727,9 @@ exit
 
         self._console.append_info("=== Starting Place & Route (OpenROAD via WSL2) ===")
         self._console.append_info(f"  Project: {proj_path}")
-        self._console.append_info(f"  Netlist: synth_build/netlist.v")
+        self._console.append_info("  Netlist: synth_build/netlist.v")
         self._console.append_info(f"  Top: {top}")
-        self._console.append_info(f"  PDK: SKY130")
+        self._console.append_info("  PDK: SKY130")
         self._console.append_info("")
 
         self.statusBar().showMessage("Place & Route running...", 0)
@@ -3971,7 +3952,7 @@ exit
         self._console.append_info(f"  Layout: {def_path.name}")
         self.statusBar().showMessage("DRC running...", 0)
 
-        wsl_proj = _to_wsl(proj_path)
+        _to_wsl(proj_path)
         wsl_def = _to_wsl(def_path)
         pdk_lib_dir = Path(__file__).resolve().parents[4] / "share" / "pdk" / "sky130"
         wsl_pdk = _to_wsl(pdk_lib_dir)
@@ -4110,7 +4091,7 @@ exit
         wsl_layout = _to_wsl(layout_netlist)
         wsl_source = _to_wsl(source_netlist)
         pdk_lib_dir = Path(__file__).resolve().parents[4] / "share" / "pdk" / "sky130"
-        wsl_pdk = _to_wsl(pdk_lib_dir)
+        _to_wsl(pdk_lib_dir)
 
         lvs_dir = proj_path / "pnr_build"
         lvs_dir.mkdir(parents=True, exist_ok=True)
@@ -4189,7 +4170,7 @@ exit
         self._console.append_info(f"  DEF input: {def_path.name}")
         self.statusBar().showMessage("GDS export running...", 0)
 
-        wsl_proj = _to_wsl(proj_path)
+        _to_wsl(proj_path)
         wsl_def = _to_wsl(def_path)
         pdk_lib_dir = Path(__file__).resolve().parents[4] / "share" / "pdk" / "sky130"
         wsl_pdk = _to_wsl(pdk_lib_dir)
@@ -4450,7 +4431,7 @@ exit
             return
 
         target_device = getattr(self, "_fpga_target_device", "ice40-hx8k")
-        self._console.append_info(f"=== Program FPGA ===")
+        self._console.append_info("=== Program FPGA ===")
         self._console.append_info(f"  Bitstream: {bit_file.name}")
         self._console.append_info(f"  Target:    {target_device}")
         self._console.append_warning(
@@ -4509,8 +4490,8 @@ exit
 
         self._console.append_info("=== Power Analysis ===")
         self._console.append_info(f"  Project:  {proj_path}")
-        self._console.append_info(f"  Netlist:  synth_build/netlist.v")
-        self._console.append_info(f"  SDC:      constraints/timing.sdc")
+        self._console.append_info("  Netlist:  synth_build/netlist.v")
+        self._console.append_info("  SDC:      constraints/timing.sdc")
         self._console.append_info(f"  Liberty:  {pdk_lib_abs.name}")
         self._console.append_info(f"  Top:      {top}")
         self._console.append_info("")
@@ -4857,7 +4838,7 @@ exit
         self._console.append_info(f"Linting: {Path(path).name}")
         worker = LintWorker([path], str(Path(path).parent))
         worker.output_line.connect(self._console.append_text)
-        worker.finished.connect(lambda r: self._console.append_success(f"Lint complete"))
+        worker.finished.connect(lambda r: self._console.append_success("Lint complete"))
         worker.error.connect(self._console.append_error)
         self._lint_worker = worker
         worker.start()
@@ -5427,8 +5408,8 @@ exit
             "=== OpenSTA Timing Analysis (Docker) ==="
         )
         self._console.append_info(f"  Project:  {proj_path}")
-        self._console.append_info(f"  Netlist:  synth_build/netlist.v")
-        self._console.append_info(f"  SDC:      constraints/timing.sdc")
+        self._console.append_info("  Netlist:  synth_build/netlist.v")
+        self._console.append_info("  SDC:      constraints/timing.sdc")
         self._console.append_info(f"  Liberty:  {liberty_name}")
         self._console.append_info(f"  Top:      {top}")
         self._console.append_info("")
@@ -5646,10 +5627,8 @@ exit
     @Slot(bool, str)
     def _on_crypto_finished(self, success: bool, summary: str) -> None:
         # Aggregate update on the security panel
-        try:
+        with contextlib.suppress(Exception):
             self._security.update_from_crypto_result(self._crypto_worker)
-        except Exception:
-            pass
         self._console.append_info("")
         if success:
             self._console.append_success(summary)
@@ -5846,7 +5825,7 @@ exit
 
     def _on_run_full_flow(self) -> None:
         """Launch the full RTL-to-GDS flow."""
-        from openforge.flow.full_flow import FullFlowConfig, STAGE_IDS
+        from openforge.flow.full_flow import STAGE_IDS, FullFlowConfig
 
         proj = self._project_manager
         top = getattr(proj, "top_module", None) or "top"
@@ -5861,10 +5840,7 @@ exit
             if pcfg is not None:
                 top = getattr(pcfg, "top_module", top) or top
                 pdk_raw = getattr(pcfg, "target_pdk", None) or "sky130A"
-                if "sky130" in pdk_raw.lower():
-                    pdk = "sky130A"
-                else:
-                    pdk = pdk_raw
+                pdk = "sky130A" if "sky130" in pdk_raw.lower() else pdk_raw
             dcfg = getattr(cfg, "design", None)
             if dcfg is not None:
                 rtl = list(getattr(dcfg, "sources", []))
@@ -5956,7 +5932,6 @@ exit
         worker = getattr(self, "_full_flow_worker", None)
         if worker is not None and hasattr(worker, "_runner") and worker._runner is not None:
             # Reuse existing runner
-            from openforge.flow.full_flow import FullFlowConfig
 
             runner = worker._runner
             if runner.run_id is not None:
@@ -6684,10 +6659,9 @@ exit
             return
         try:
             dlg = SynthStrategyDialog(parent=self)
-            if dlg.exec():
-                if hasattr(dlg, "get_selected_strategy"):
-                    strategy = dlg.get_selected_strategy()
-                    self._console.append_info(f"Selected synthesis strategy: {strategy}")
+            if dlg.exec() and hasattr(dlg, "get_selected_strategy"):
+                strategy = dlg.get_selected_strategy()
+                self._console.append_info(f"Selected synthesis strategy: {strategy}")
         except Exception as e:
             self._console.append_error(f"Synthesis strategy error: {e}")
 
@@ -6749,11 +6723,11 @@ exit
     def _on_start_tutorial(self, tutorial_id: str = "") -> None:
         # Prefer the Phase 7 library-backed picker; fall back to the legacy dialog.
         try:
+            from openforge.tutorials.library import TUTORIALS as _LIB
             from openforge_desktop.dialogs.tutorial import (
                 TutorialPickerDialog,
                 TutorialPlayerDialog,
             )
-            from openforge.tutorials.library import TUTORIALS as _LIB
             if tutorial_id and tutorial_id in _LIB:
                 TutorialPlayerDialog(_LIB[tutorial_id], self).exec()
             else:
@@ -6885,10 +6859,8 @@ exit
         ]
         for cmd in commands:
             if hasattr(self._command_palette, "register_command"):
-                try:
+                with contextlib.suppress(Exception):
                     self._command_palette.register_command(cmd)
-                except Exception:
-                    pass
 
     # ── Stub replacement handlers (Task 1) ───────────────────────────
 

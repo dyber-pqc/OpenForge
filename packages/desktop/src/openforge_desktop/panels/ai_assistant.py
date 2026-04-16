@@ -8,21 +8,21 @@ local templates/keyword lookup when Ollama is not available.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import urllib.error
 import urllib.request
 import uuid
 import webbrowser
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import (
     QObject,
     QSettings,
-    QSize,
     Qt,
     QThread,
     QTimer,
@@ -30,10 +30,8 @@ from PySide6.QtCore import (
     Slot,
 )
 from PySide6.QtGui import (
-    QAction,
     QColor,
     QFont,
-    QIcon,
     QKeySequence,
     QShortcut,
     QSyntaxHighlighter,
@@ -65,17 +63,16 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSlider,
     QSpinBox,
-    QSplitter,
     QStackedWidget,
     QTabWidget,
     QTextBrowser,
-    QTextEdit,
-    QToolBar,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # ---------------------------------------------------------------------------
 # Catppuccin Mocha palette
@@ -167,10 +164,10 @@ class OllamaClient:
         self,
         path: str,
         method: str = "GET",
-        body: Optional[dict] = None,
-        timeout: Optional[float] = None,
+        body: dict | None = None,
+        timeout: float | None = None,
     ) -> urllib.request.addinfourl:
-        data: Optional[bytes] = None
+        data: bytes | None = None
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         if body is not None:
             data = json.dumps(body).encode("utf-8")
@@ -316,7 +313,7 @@ class OllamaStreamWorker(QThread):
         messages: list[dict],
         temperature: float = 0.7,
         num_ctx: int = 8192,
-        parent: Optional[QObject] = None,
+        parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self.client = client
@@ -353,7 +350,7 @@ class ModelPullWorker(QThread):
         self,
         client: OllamaClient,
         model_name: str,
-        parent: Optional[QObject] = None,
+        parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self.client = client
@@ -385,7 +382,7 @@ class ChatMessage:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "ChatMessage":
+    def from_dict(cls, d: dict) -> ChatMessage:
         return cls(
             role=d.get("role", "user"),
             content=d.get("content", ""),
@@ -409,7 +406,7 @@ class Conversation:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Conversation":
+    def from_dict(cls, d: dict) -> Conversation:
         return cls(
             id=d.get("id", str(uuid.uuid4())),
             title=d.get("title", "Untitled"),
@@ -418,7 +415,7 @@ class Conversation:
         )
 
     @classmethod
-    def new(cls, title: str = "New Chat") -> "Conversation":
+    def new(cls, title: str = "New Chat") -> Conversation:
         return cls(
             id=str(uuid.uuid4()),
             title=title,
@@ -430,12 +427,10 @@ class Conversation:
 class ConversationStore:
     """Persists conversations as JSON files in ~/.openforge/conversations/"""
 
-    def __init__(self, root: Optional[Path] = None) -> None:
+    def __init__(self, root: Path | None = None) -> None:
         self.root = root or (Path.home() / ".openforge" / "conversations")
-        try:
+        with contextlib.suppress(Exception):
             self.root.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
 
     def list(self) -> list[Conversation]:
         items: list[Conversation] = []
@@ -451,10 +446,8 @@ class ConversationStore:
 
     def save(self, convo: Conversation) -> None:
         path = self.root / f"{convo.id}.json"
-        try:
+        with contextlib.suppress(Exception):
             path.write_text(json.dumps(convo.to_dict(), indent=2), encoding="utf-8")
-        except Exception:
-            pass
 
     def delete(self, convo_id: str) -> None:
         path = self.root / f"{convo_id}.json"
@@ -541,7 +534,7 @@ class CodeBlockWidget(QFrame):
         self,
         code: str,
         language: str = "verilog",
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.code = code
@@ -644,7 +637,7 @@ class MessageBubble(QFrame):
     run_synthesis_requested = Signal(str)
     explain_code_requested = Signal(str)
 
-    def __init__(self, role: str, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, role: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.role = role
         self._raw_text = ""
@@ -773,7 +766,7 @@ class SetupWizardWidget(QWidget):
     refresh_requested = Signal()
     install_model_requested = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setStyleSheet(
             f"""
@@ -954,7 +947,7 @@ class AiSettingsDialog(QDialog):
         self,
         settings: QSettings,
         available_models: list[str],
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("AI Assistant Settings")
@@ -1222,18 +1215,18 @@ class AiAssistantPanel(QDockWidget):
             model=self.settings.value("ai_assistant/model", "llama3.2"),
         )
 
-        self._project_path: Optional[Path] = None
-        self._top_module: Optional[str] = None
+        self._project_path: Path | None = None
+        self._top_module: str | None = None
         self._sources: list[Path] = []
         self._attached_files: list[Path] = []
         self._attached_errors: list[str] = []
 
-        self._stream_worker: Optional[OllamaStreamWorker] = None
-        self._pull_worker: Optional[ModelPullWorker] = None
-        self._current_assistant_bubble: Optional[MessageBubble] = None
+        self._stream_worker: OllamaStreamWorker | None = None
+        self._pull_worker: ModelPullWorker | None = None
+        self._current_assistant_bubble: MessageBubble | None = None
 
         self._conversations: list[Conversation] = []
-        self._current: Optional[Conversation] = None
+        self._current: Conversation | None = None
 
         self._dark = True
         self._build_ui()
@@ -2137,10 +2130,8 @@ class AiAssistantPanel(QDockWidget):
                 self.input_edit.setPlainText("\n".join(lines))
                 self._on_send_clicked()
         except Exception as e:
-            try:
+            with contextlib.suppress(Exception):
                 self.input_edit.setPlainText(f"Constraint debugger unavailable: {e}")
-            except Exception:
-                pass
 
     def _on_explain_this(self) -> None:
         try:

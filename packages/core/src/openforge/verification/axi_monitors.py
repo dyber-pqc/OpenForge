@@ -95,7 +95,7 @@ def generate_axi4_lite_monitor(prefix: str = "S_AXI") -> str:
     lines = _proto_common(name, prefix)
 
     lines += [
-        f"    // External AXI4-Lite signals (tap with bind)",
+        "    // External AXI4-Lite signals (tap with bind)",
         f"    input  wire [ADDR_WIDTH-1:0]  {lo}_awaddr;",
         f"    input  wire                   {lo}_awvalid;",
         f"    input  wire                   {lo}_awready;",
@@ -284,7 +284,7 @@ def generate_apb_monitor(prefix: str = "S_APB") -> str:
         "    endproperty",
         "    a_pready_timeout: assert property (p_pready_timeout);",
         "",
-        f"    cov_apb_xfer: cover property (",
+        "    cov_apb_xfer: cover property (",
         f"        @(posedge {clk}) disable iff (!{rst})",
         f"        ({lo}_psel && {lo}_penable && {lo}_pready)",
         "    );",
@@ -347,7 +347,7 @@ def generate_ahb_monitor(prefix: str = "S_AHB") -> str:
         "    endproperty",
         "    a_hready_timeout: assert property (p_hready_timeout);",
         "",
-        f"    cov_ahb_xfer: cover property (",
+        "    cov_ahb_xfer: cover property (",
         f"        @(posedge {clk}) disable iff (!{rst})",
         f"        ({lo}_hready && ({lo}_htrans == 2'b10 || {lo}_htrans == 2'b11))",
         "    );",

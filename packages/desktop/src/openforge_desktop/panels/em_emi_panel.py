@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
-from typing import Optional
 
 try:
-    from PySide6.QtCore import Qt, QPoint, QRect, Signal
-    from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
+    from PySide6.QtCore import Qt, Signal
+    from PySide6.QtGui import QColor, QFont, QPainter, QPen
     from PySide6.QtWidgets import (
         QDockWidget,
         QFrame,
@@ -20,10 +18,9 @@ try:
         QListWidgetItem,
         QPushButton,
         QSizePolicy,
-        QSplitter,
-        QTabWidget,
         QTableWidget,
         QTableWidgetItem,
+        QTabWidget,
         QVBoxLayout,
         QWidget,
     )

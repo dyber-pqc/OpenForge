@@ -4,11 +4,11 @@ Re-exports the vendor scheme definitions and application helpers.
 """
 
 from openforge_desktop.keybindings.vendor_schemes import (
+    ALL_SCHEMES,
     DEFAULT_SCHEME,
     INNOVUS_SCHEME,
     KICAD_SCHEME,
     VIVADO_SCHEME,
-    ALL_SCHEMES,
     KeyBinding,
     KeyScheme,
     apply_scheme,

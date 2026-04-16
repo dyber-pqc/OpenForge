@@ -6,15 +6,14 @@ segment-segment distance math.
 from __future__ import annotations
 
 import math
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from openforge.pcb.model import PcbBoard, PcbFootprint, PcbPad, PcbTrack, PcbVia
+if TYPE_CHECKING:
+    from openforge.pcb.model import PcbBoard
 
 try:  # pragma: no cover - optional
-    from shapely.geometry import LineString, Point, Polygon
-    from shapely.ops import unary_union
     _HAS_SHAPELY = True
 except Exception:  # pragma: no cover
     _HAS_SHAPELY = False

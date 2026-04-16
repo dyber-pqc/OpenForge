@@ -9,8 +9,7 @@ hover tooltips, search, filter, hierarchical drill-in, and PNG/SVG export.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -39,12 +38,14 @@ from PySide6.QtWidgets import (
 
 from openforge.synthesis.netlist_parser import (
     NetCell,
-    NetPort,
     Netlist,
     NetlistModule,
+    NetPort,
     parse_yosys_json,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Catppuccin Mocha palette
@@ -290,10 +291,7 @@ class CellGraphicsItem(QGraphicsItem):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         color = QColor(GATE_COLORS.get(self.cell.kind, SUBTEXT))
-        if self.isSelected():
-            pen = QPen(QColor(LAVENDER), 2.5)
-        else:
-            pen = QPen(color, 1.6)
+        pen = QPen(QColor(LAVENDER), 2.5) if self.isSelected() else QPen(color, 1.6)
         pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(QBrush(QColor(MANTLE)))

@@ -8,47 +8,47 @@ Provides Altium-parity PCB design capabilities:
 - Component database
 - BOM generation
 """
-from openforge.pcb.schematic import (
-    Pin,
-    SchSymbol,
-    SchComponent,
-    SchNet,
-    Schematic,
-)
 from openforge.pcb.board import (
+    Board,
+    BoardComponent,
     CopperLayer,
     Footprint,
-    BoardComponent,
     Track,
     Via,
     Zone,
-    Board,
 )
-from openforge.pcb.router import PcbRouter, RouteResult, RoutingMode
-from openforge.pcb.net_classes import NetClass, NetClassRegistry, DEFAULT_CLASSES
-from openforge.pcb.length_match import LengthGroup, LengthMatcher
-from openforge.pcb.diff_pair import DiffPair, DiffPairRouter
-from openforge.pcb.dsn import board_to_dsn, parse_ses
-from openforge.pcb.gerber import GerberExporter, OdbPlusPlusExporter
+from openforge.pcb.bom import Bom, BomGenerator, BomLine
 from openforge.pcb.component_db import (
+    BUILTIN_COMPONENTS,
     Component,
     ComponentDatabase,
-    BUILTIN_COMPONENTS,
 )
-from openforge.pcb.bom import BomLine, Bom, BomGenerator
+from openforge.pcb.diff_pair import DiffPair, DiffPairRouter
+from openforge.pcb.drc import PcbDrcChecker, PcbDrcRule, PcbDrcViolation
+from openforge.pcb.dsn import board_to_dsn, parse_ses
+from openforge.pcb.footprints import FOOTPRINTS, get_footprint, list_footprints
+from openforge.pcb.gerber import GerberExporter, OdbPlusPlusExporter
+from openforge.pcb.length_match import LengthGroup, LengthMatcher
 from openforge.pcb.model import (
-    PcbLayer,
-    PcbStackup,
-    PcbPad,
+    PcbBoard,
     PcbFootprint,
+    PcbLayer,
+    PcbPad,
+    PcbStackup,
     PcbTrack,
     PcbVia,
     PcbZone,
-    PcbBoard,
 )
-from openforge.pcb.footprints import FOOTPRINTS, get_footprint, list_footprints
-from openforge.pcb.drc import PcbDrcRule, PcbDrcViolation, PcbDrcChecker
+from openforge.pcb.net_classes import DEFAULT_CLASSES, NetClass, NetClassRegistry
 from openforge.pcb.odbpp import OdbppExporter
+from openforge.pcb.router import PcbRouter, RouteResult, RoutingMode
+from openforge.pcb.schematic import (
+    Pin,
+    SchComponent,
+    Schematic,
+    SchNet,
+    SchSymbol,
+)
 
 __all__ = [
     "Pin",

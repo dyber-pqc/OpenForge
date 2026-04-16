@@ -11,10 +11,14 @@ how to surface "Ollama not installed" in the UI.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import urllib.error
 import urllib.request
-from typing import Callable, Iterator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
 
 
 class OllamaClient:
@@ -66,10 +70,8 @@ class OllamaClient:
                     except json.JSONDecodeError:
                         continue
                     if callback is not None:
-                        try:
+                        with contextlib.suppress(Exception):
                             callback(msg)
-                        except Exception:
-                            pass
                     if msg.get("status") in ("success",) or msg.get("error"):
                         return msg.get("status") == "success"
             return True
@@ -165,10 +167,7 @@ class OllamaClient:
                     except json.JSONDecodeError:
                         continue
                     chunk = msg.get(key)
-                    if isinstance(chunk, dict):
-                        text = chunk.get("content", "")
-                    else:
-                        text = chunk or ""
+                    text = chunk.get("content", "") if isinstance(chunk, dict) else chunk or ""
                     if text:
                         yield text
                     if msg.get("done"):

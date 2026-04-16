@@ -140,7 +140,7 @@ def install(
         else:
             console.print(f"[green bold]PDK {pdk_name} installed successfully![/]")
     else:
-        console.print(f"[red]PDK installation failed.[/] Check network connection and git availability.")
+        console.print("[red]PDK installation failed.[/] Check network connection and git availability.")
         raise typer.Exit(code=1)
 
 

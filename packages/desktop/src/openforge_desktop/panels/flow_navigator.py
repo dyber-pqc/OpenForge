@@ -19,11 +19,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QScrollArea,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Status indicator

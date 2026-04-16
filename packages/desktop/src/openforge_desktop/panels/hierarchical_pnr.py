@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QDockWidget,
     QFormLayout,
-    QHBoxLayout,
     QHeaderView,
     QLabel,
     QMessageBox,
     QProgressBar,
-    QPushButton,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -190,7 +187,7 @@ class HierarchicalPnrPanel(QDockWidget):
     # Public API
     # ------------------------------------------------------------------
 
-    def load_design(self, design: "HierDesign", work_dir: Path | None = None) -> None:
+    def load_design(self, design: HierDesign, work_dir: Path | None = None) -> None:
         self._design = design
         if work_dir is not None:
             self._work_dir = Path(work_dir)

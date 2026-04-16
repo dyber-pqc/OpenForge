@@ -6,11 +6,12 @@ import re
 import shutil
 import subprocess
 import time
-from dataclasses import dataclass, field
-from os import PathLike
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models

@@ -13,7 +13,10 @@ from __future__ import annotations
 
 import datetime as _dt
 from dataclasses import asdict, dataclass, field
-from typing import Callable, Final, Iterable
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 # ---------------------------------------------------------------------------
 # Data model
@@ -118,7 +121,7 @@ class BlockDesign:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "BlockDesign":
+    def from_dict(cls, data: dict) -> BlockDesign:
         insts = [
             BlockInstance(
                 name=i["name"],

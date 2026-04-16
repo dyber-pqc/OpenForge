@@ -15,9 +15,9 @@ importable (headless), we use duck typing — any object exposing
 """
 from __future__ import annotations
 
-from typing import Literal, Any
-from pydantic import BaseModel, Field
+from typing import Any, Literal
 
+from pydantic import BaseModel
 
 Severity = Literal["error", "warning", "info"]
 

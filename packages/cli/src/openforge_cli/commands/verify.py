@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -45,8 +45,8 @@ def _resolve_sources(project_dir: Path, config: Any) -> list[str]:
 @app.command()
 def sim(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    top: Optional[str] = typer.Option(None, "--top", help="Top-level module."),
-    tb: Optional[str] = typer.Option(None, "--tb", help="Testbench file."),
+    top: str | None = typer.Option(None, "--top", help="Top-level module."),
+    tb: str | None = typer.Option(None, "--tb", help="Testbench file."),
     sim_tool: str = typer.Option("icarus", "--sim", "-s", help="Simulator: verilator, icarus, ghdl."),
     waves: bool = typer.Option(True, "--waves/--no-waves", "-w", help="Enable waveform tracing."),
     coverage: bool = typer.Option(False, "--coverage", help="Enable coverage collection."),
@@ -254,7 +254,7 @@ def eqy(
         console.print(f"[red]Error:[/] gate file not found: {gate}")
         raise typer.Exit(code=1)
 
-    console.print(f"[bold]Equivalence Checking[/]")
+    console.print("[bold]Equivalence Checking[/]")
     console.print(f"  gold : [cyan]{gold_path}[/]")
     console.print(f"  gate : [cyan]{gate_path}[/]")
 
@@ -307,8 +307,8 @@ def eqy(
 @app.command()
 def lint(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    files: Optional[list[str]] = typer.Option(None, "--files", help="Specific files to lint."),
-    rules: Optional[list[str]] = typer.Option(None, "--rules", help="Specific lint rules to enable."),
+    files: list[str] | None = typer.Option(None, "--files", help="Specific files to lint."),
+    rules: list[str] | None = typer.Option(None, "--rules", help="Specific lint rules to enable."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -356,7 +356,7 @@ def lint(
     if result.status.value == "passed":
         console.print(f"[green bold]LINT PASS[/] -- {result.artifacts.get('findings_count', '0')} findings")
     else:
-        console.print(f"[red bold]LINT FAIL[/]")
+        console.print("[red bold]LINT FAIL[/]")
         if result.output:
             for line in result.output.splitlines()[:30]:
                 console.print(f"  [red]{line}[/]")
@@ -372,8 +372,8 @@ def lint(
 @app.command()
 def cdc(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    top: Optional[str] = typer.Option(None, "--top", help="Top-level module."),
-    sdc: Optional[str] = typer.Option(None, "--sdc", help="SDC file for clock definitions."),
+    top: str | None = typer.Option(None, "--top", help="Top-level module."),
+    sdc: str | None = typer.Option(None, "--sdc", help="SDC file for clock definitions."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -434,10 +434,10 @@ def cdc(
 @app.command()
 def regression(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    suite: Optional[str] = typer.Option(None, "--suite", help="Test suite definition file."),
+    suite: str | None = typer.Option(None, "--suite", help="Test suite definition file."),
     parallel: int = typer.Option(1, "--parallel", "-j", help="Number of parallel test jobs."),
     seeds: int = typer.Option(1, "--seeds", help="Number of random seeds per test."),
-    triage: Optional[str] = typer.Option(None, "--triage", help="Triage results from a JSON file."),
+    triage: str | None = typer.Option(None, "--triage", help="Triage results from a JSON file."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:

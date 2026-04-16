@@ -10,19 +10,21 @@ FST parsing attempts pylibfst; otherwise falls back to invoking the
 
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import subprocess
 import tempfile
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    import os
 
-class SignalKind(str, Enum):
+
+class SignalKind(StrEnum):
     WIRE = "wire"
     REG = "reg"
     INTEGER = "integer"
@@ -70,7 +72,7 @@ class WaveTransition(BaseModel):
 class WaveScope(BaseModel):
     name: str
     kind: str = "module"
-    children: list["WaveScope"] = Field(default_factory=list)
+    children: list[WaveScope] = Field(default_factory=list)
     signals: list[str] = Field(default_factory=list)
 
 
@@ -123,13 +125,13 @@ class Waveform(BaseModel):
 
     # ───────── Parsers ─────────
     @classmethod
-    def parse_vcd(cls, path: str | os.PathLike) -> "Waveform":
+    def parse_vcd(cls, path: str | os.PathLike) -> Waveform:
         p = Path(path)
         text = p.read_text(errors="replace")
         return cls._parse_vcd_text(text)
 
     @classmethod
-    def _parse_vcd_text(cls, text: str) -> "Waveform":
+    def _parse_vcd_text(cls, text: str) -> Waveform:
         wf = cls()
         # id → canonical full_path key
         id_to_key: dict[str, list[str]] = {}
@@ -278,7 +280,7 @@ class Waveform(BaseModel):
         return wf
 
     @classmethod
-    def parse_fst(cls, path: str | os.PathLike) -> "Waveform":
+    def parse_fst(cls, path: str | os.PathLike) -> Waveform:
         p = Path(path)
         # Try pylibfst first
         try:
@@ -303,7 +305,7 @@ class Waveform(BaseModel):
             return cls.parse_vcd(out)
 
     @classmethod
-    def _parse_fst_pylibfst(cls, path: Path, lib) -> "Waveform":
+    def _parse_fst_pylibfst(cls, path: Path, lib) -> Waveform:
         # Best-effort generic shim; pylibfst API varies.
         # If this fails, caller will fall back to fst2vcd.
         raise NotImplementedError("pylibfst direct parse not wired")
@@ -334,8 +336,6 @@ class Waveform(BaseModel):
         out: list[str] = []
         for key in self.signals:
             kl = key.lower()
-            if rx and rx.search(kl):
-                out.append(key)
-            elif pat in kl:
+            if rx and rx.search(kl) or pat in kl:
                 out.append(key)
         return out

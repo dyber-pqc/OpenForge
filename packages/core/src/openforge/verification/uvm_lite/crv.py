@@ -12,8 +12,7 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------
 # Constraint model
@@ -112,10 +111,10 @@ def emit_random_class_sv(
         lines.append(f"    {c.expression}")
         lines.append("  }")
     lines.append("")
-    lines.append(f"  function new(); endfunction")
-    lines.append(f"  function void post_randomize();")
+    lines.append("  function new(); endfunction")
+    lines.append("  function void post_randomize();")
     lines.append(f"    $display(\"[{name}_rand] randomized\");")
-    lines.append(f"  endfunction")
+    lines.append("  endfunction")
     lines.append("endclass")
     return "\n".join(lines)
 
@@ -148,7 +147,7 @@ def generate_axi_random_sequence(
             f"  $display(\"[%0t] AXI {kind} #{i} addr=%0h len=%0d data=%0h\", "
             f"$time, 32'h{addr:08x}, {length}, {data_width}'h{data:0x});"
         )
-        lines.append(f"  #10;")
+        lines.append("  #10;")
     lines.append("end")
     return "\n".join(lines)
 

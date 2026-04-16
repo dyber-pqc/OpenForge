@@ -13,11 +13,10 @@ import json
 import logging
 import platform
 import threading
-import time
 import urllib.error
 import urllib.request
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -38,7 +37,7 @@ class TelemetryEvent(BaseModel):
 
 
 def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _install_id() -> str:

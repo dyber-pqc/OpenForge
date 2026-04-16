@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -26,7 +25,7 @@ app = typer.Typer(
 @app.command()
 def erc(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    schematic: Optional[str] = typer.Option(None, "--schematic", help="Schematic file to check."),
+    schematic: str | None = typer.Option(None, "--schematic", help="Schematic file to check."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -85,7 +84,7 @@ def erc(
 @app.command()
 def drc(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    board: Optional[str] = typer.Option(None, "--board", help="Board file to check."),
+    board: str | None = typer.Option(None, "--board", help="Board file to check."),
     fab: str = typer.Option("jlcpcb", "--fab", help="Fab house rules: jlcpcb, oshpark, pcbway."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
@@ -130,7 +129,7 @@ def drc(
         return
 
     if result.passed:
-        console.print(f"[green bold]PCB DRC CLEAN[/]")
+        console.print("[green bold]PCB DRC CLEAN[/]")
     else:
         console.print(f"[red bold]PCB DRC FAILED[/] -- {len(result.violations)} violations")
         for v in result.violations[:20]:
@@ -180,7 +179,7 @@ def gerber(
         console.print(json_mod.dumps({"output_dir": str(out), "files": result.files}))
         return
 
-    console.print(f"[green bold]Gerber export complete[/]")
+    console.print("[green bold]Gerber export complete[/]")
     console.print(f"  Output: [cyan]{out}[/]")
     for f in result.files:
         console.print(f"  [dim]{f}[/]")
@@ -368,7 +367,7 @@ def impedance(
 def route(
     path: str = typer.Argument(".", help="Path to the design directory."),
     engine: str = typer.Option("builtin", "--engine", help="Routing engine: builtin or freerouting."),
-    nets: Optional[list[str]] = typer.Option(None, "--nets", help="Specific nets to route."),
+    nets: list[str] | None = typer.Option(None, "--nets", help="Specific nets to route."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Auto-route PCB traces.
@@ -429,8 +428,8 @@ def export(
     path: str = typer.Argument(".", help="Path to the design directory."),
     ipc2581: bool = typer.Option(False, "--ipc2581", help="Export IPC-2581."),
     odbpp: bool = typer.Option(False, "--odbpp", help="Export ODB++."),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file or directory."),
-    output_dir: Optional[str] = typer.Option(None, "--output-dir", help="Output directory (for ODB++)."),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output file or directory."),
+    output_dir: str | None = typer.Option(None, "--output-dir", help="Output directory (for ODB++)."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Export PCB design in industry-standard formats.

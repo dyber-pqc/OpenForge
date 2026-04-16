@@ -14,7 +14,6 @@ from typing import Any, Final
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
-    QAction,
     QBrush,
     QColor,
     QFont,
@@ -24,11 +23,9 @@ from PySide6.QtGui import (
     QSyntaxHighlighter,
     QTextCharFormat,
     QTextDocument,
-    QWheelEvent,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -39,15 +36,12 @@ from PySide6.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
-    QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QMenu,
     QPlainTextEdit,
     QPushButton,
-    QSizePolicy,
     QSpinBox,
     QSplitter,
     QTableWidget,
@@ -1274,8 +1268,6 @@ class ConstraintEditorPanel(QDockWidget):
         mantle = _MANTLE if self._dark else "#e9ecef"
         surface0 = _SURFACE0 if self._dark else "#dee2e6"
         text = _TEXT if self._dark else "#212529"
-        subtext = _SUBTEXT if self._dark else "#495057"
-        blue = _BLUE if self._dark else "#0d6efd"
         crust = _CRUST if self._dark else "#ffffff"
 
         base_qss = panel_tab_qss(self._dark)

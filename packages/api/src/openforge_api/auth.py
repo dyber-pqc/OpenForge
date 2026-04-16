@@ -13,7 +13,6 @@ import logging
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -119,7 +118,7 @@ def create_token(username: str) -> str:
     return token
 
 
-def verify_token(token: str) -> Optional[str]:
+def verify_token(token: str) -> str | None:
     """Return the username associated with a valid token, else None."""
     info = _active_tokens.get(token)
     if not info:
@@ -143,7 +142,7 @@ def cleanup_expired_tokens() -> int:
 
 
 # ---------------------------------------------------------------- deps
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> str:
+async def get_current_user(token: str | None = Depends(oauth2_scheme)) -> str:
     """FastAPI dependency that resolves the current authenticated user."""
     if token is None:
         raise HTTPException(
@@ -161,7 +160,7 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> str
     return username
 
 
-async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[str]:
+async def get_optional_user(token: str | None = Depends(oauth2_scheme)) -> str | None:
     if token is None:
         return None
     return verify_token(token)
@@ -171,7 +170,7 @@ async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme)) -> Op
 class RegisterRequest(BaseModel):
     username: str
     password: str
-    email: Optional[str] = None
+    email: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -182,7 +181,7 @@ class TokenResponse(BaseModel):
 
 class UserInfo(BaseModel):
     username: str
-    email: Optional[str] = None
+    email: str | None = None
     roles: list[str] = []
 
 

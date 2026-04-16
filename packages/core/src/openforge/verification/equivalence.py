@@ -11,7 +11,6 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -28,7 +27,7 @@ class EqyResult(BaseModel):
     status: str  # equivalent | not_equivalent | partial | error
     matched_pairs: int = 0
     proven_pairs: int = 0
-    counterexample: Optional[str] = None
+    counterexample: str | None = None
     log: str = ""
 
 
@@ -93,7 +92,7 @@ class EqyRunner:
         if m2:
             proven = int(m2.group(1))
         status = "error"
-        cex: Optional[str] = None
+        cex: str | None = None
         if "Successfully proved designs equivalent" in log or re.search(
             r"DONE \(PASS", log
         ):

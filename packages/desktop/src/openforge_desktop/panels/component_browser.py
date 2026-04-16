@@ -8,35 +8,28 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, QSize, Signal, QRectF, QPointF
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QUrl, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
+    QDesktopServices,
     QFont,
     QIcon,
     QPainter,
     QPen,
     QPixmap,
-    QLinearGradient,
-    QDesktopServices,
 )
-from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QApplication,
     QComboBox,
     QDockWidget,
     QFileDialog,
-    QFormLayout,
-    QFrame,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
-    QListWidget,
     QListView,
+    QListWidget,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
@@ -44,13 +37,9 @@ from PySide6.QtWidgets import (
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
-    QTextEdit,
-    QToolBar,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
-
 
 # Catppuccin Mocha
 CAT_BASE = "#1e1e2e"

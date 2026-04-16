@@ -11,8 +11,8 @@ at a time) while making every tool one click away.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, TYPE_CHECKING
+import contextlib
+from dataclasses import dataclass
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QFont
@@ -22,9 +22,6 @@ from PySide6.QtWidgets import (
     QToolBar,
     QWidget,
 )
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass
@@ -311,10 +308,8 @@ class ActivityBar(QToolBar):
                 continue  # skip internal infrastructure docks (e.g. __activity_bar_dock__)
             if name in wanted:
                 dock.setVisible(True)
-                try:
+                with contextlib.suppress(Exception):
                     dock.raise_()
-                except Exception:
-                    pass
             else:
                 dock.setVisible(False)
 

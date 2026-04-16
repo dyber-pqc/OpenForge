@@ -7,50 +7,31 @@ resources, and featured examples. Catppuccin Mocha (dark) / Latte (light).
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import (
+    QSettings,
     Qt,
     Signal,
-    QSize,
-    QPoint,
-    QSettings,
-    QEvent,
-    QPropertyAnimation,
-    QEasingCurve,
 )
 from PySide6.QtGui import (
-    QFont,
-    QPixmap,
-    QPainter,
     QColor,
-    QPalette,
     QCursor,
-    QLinearGradient,
-    QBrush,
-    QPen,
-    QFontMetrics,
 )
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
+    QFrame,
+    QGraphicsDropShadowEffect,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QPushButton,
-    QFrame,
     QScrollArea,
     QSizePolicy,
-    QSpacerItem,
-    QToolButton,
-    QListWidget,
-    QListWidgetItem,
-    QGraphicsDropShadowEffect,
+    QVBoxLayout,
+    QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Catppuccin palettes
@@ -409,7 +390,7 @@ class _RecentProjectItem(QFrame):
 
     def leaveEvent(self, event):
         self.setStyleSheet(
-            f"_RecentProjectItem {{ background: transparent; border-radius: 6px; }}"
+            "_RecentProjectItem { background: transparent; border-radius: 6px; }"
         )
         super().leaveEvent(event)
 

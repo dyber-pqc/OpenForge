@@ -14,8 +14,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -132,7 +134,7 @@ class FipsDocGenerator:
 
     def _header(self, module: FipsModuleInfo) -> str:
         lines: list[str] = []
-        lines.append(f"# FIPS 140-3 Non-Proprietary Security Policy")
+        lines.append("# FIPS 140-3 Non-Proprietary Security Policy")
         lines.append("")
         lines.append(f"## {module.name}")
         lines.append("")
@@ -175,8 +177,8 @@ class FipsDocGenerator:
         lines.append(f"| 1 - Cryptographic module specification | {module.security_level_design} |")
         lines.append(f"| 2 - Cryptographic module interfaces | {module.security_level_io} |")
         lines.append(f"| 3 - Roles, services, and authentication | {module.security_level_roles} |")
-        lines.append(f"| 4 - Software/firmware security | N/A |")
-        lines.append(f"| 5 - Operational environment | N/A |")
+        lines.append("| 4 - Software/firmware security | N/A |")
+        lines.append("| 5 - Operational environment | N/A |")
         lines.append(f"| 6 - Physical security | {module.security_level_design} |")
         lines.append(f"| 7 - Non-invasive security | {module.security_level_mitigation} |")
         lines.append(f"| 8 - SSP management | {module.security_level_keys} |")

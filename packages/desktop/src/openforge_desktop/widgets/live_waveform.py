@@ -16,11 +16,9 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import (
     QFileSystemWatcher,
-    QPoint,
     QRect,
     QSize,
     Qt,
@@ -30,7 +28,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QAction,
-    QBrush,
     QColor,
     QFont,
     QFontMetrics,
@@ -43,25 +40,16 @@ from PySide6.QtGui import (
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QApplication,
-    QCheckBox,
     QFileDialog,
-    QHBoxLayout,
     QInputDialog,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QMenu,
     QMessageBox,
-    QPushButton,
     QSizePolicy,
-    QSplitter,
     QToolBar,
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Catppuccin palettes
@@ -289,9 +277,7 @@ class StreamingVcdParser:
                 self.signals[ident] = sig
                 self.name_to_id[sig.full_name] = ident
             return True
-        if line.startswith("$"):
-            return True
-        return False
+        return bool(line.startswith("$"))
 
     def _handle_simulation(self, line: str) -> bool:
         if line.startswith("#"):
@@ -347,7 +333,7 @@ class LiveWaveformWidget(QWidget):
     MIN_PX_PER_NS = 0.05
     MAX_PX_PER_NS = 200.0
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("LiveWaveformWidget")
         self.setMinimumSize(640, 240)
@@ -358,7 +344,7 @@ class LiveWaveformWidget(QWidget):
         self._dark = True
 
         self.parser = StreamingVcdParser()
-        self.vcd_path: Optional[Path] = None
+        self.vcd_path: Path | None = None
 
         self._watcher = QFileSystemWatcher(self)
         self._watcher.fileChanged.connect(self._on_file_changed)

@@ -13,9 +13,7 @@ export, and a "useful-skew" optimizer button.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
@@ -95,14 +93,14 @@ class _ClockTreeScene(QGraphicsScene):
 
     sink_clicked = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setBackgroundBrush(QBrush(_BG))
-        self._tree: Optional["CtsTree"] = None
+        self._tree: CtsTree | None = None
         self._node_items: dict[str, QGraphicsRectItem | QGraphicsEllipseItem] = {}
         self._highlight_edges: list[QGraphicsLineItem] = []
 
-    def set_tree(self, tree: "CtsTree") -> None:
+    def set_tree(self, tree: CtsTree) -> None:
         self.clear()
         self._tree = tree
         self._node_items = {}
@@ -248,7 +246,7 @@ class _ClockTreeScene(QGraphicsScene):
         chain = self._tree.path_to_root(sink_instance)
         pen = QPen(_YELLOW, 3)
         # iterate consecutive pairs
-        for a, b in zip(chain[:-1], chain[1:]):
+        for a, b in zip(chain[:-1], chain[1:], strict=False):
             ia = self._node_items.get(a)
             ib = self._node_items.get(b)
             if ia is None or ib is None:
@@ -292,7 +290,7 @@ def _truncate(s: str, n: int) -> str:
 
 
 class _SkewHistogram(QWidget):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -307,7 +305,7 @@ class _SkewHistogram(QWidget):
             self._canvas = None
             self._ax = None
 
-    def plot(self, tree: "CtsTree") -> None:
+    def plot(self, tree: CtsTree) -> None:
         if not _HAS_MPL or self._ax is None:
             return
         self._ax.clear()
@@ -364,11 +362,11 @@ class _SkewHistogram(QWidget):
 class ClockTreeViewerPanel(QDockWidget):
     """Dock with dendrogram, histogram, sink table, and metric tiles."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("Clock Tree Viewer", parent)
         self.setObjectName("clock_tree_viewer_dock")
-        self._trees: dict[str, "CtsTree"] = {}
-        self._active: Optional["CtsTree"] = None
+        self._trees: dict[str, CtsTree] = {}
+        self._active: CtsTree | None = None
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -516,7 +514,7 @@ class ClockTreeViewerPanel(QDockWidget):
     # Data loading
     # ------------------------------------------------------------------
 
-    def set_trees(self, trees: dict[str, "CtsTree"]) -> None:
+    def set_trees(self, trees: dict[str, CtsTree]) -> None:
         self._trees = dict(trees)
         self._clock_combo.blockSignals(True)
         self._clock_combo.clear()
@@ -526,10 +524,10 @@ class ClockTreeViewerPanel(QDockWidget):
             first = next(iter(trees.values()))
             self._show_tree(first)
 
-    def set_tree(self, tree: "CtsTree") -> None:
+    def set_tree(self, tree: CtsTree) -> None:
         self.set_trees({tree.clock_name: tree})
 
-    def _show_tree(self, tree: "CtsTree") -> None:
+    def _show_tree(self, tree: CtsTree) -> None:
         self._active = tree
         self._scene.set_tree(tree)
         self._view.fitInView(self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
@@ -537,14 +535,14 @@ class ClockTreeViewerPanel(QDockWidget):
         self._refresh_tiles(tree)
         self._refresh_table(tree)
 
-    def _refresh_tiles(self, tree: "CtsTree") -> None:
+    def _refresh_tiles(self, tree: CtsTree) -> None:
         self._set_tile(self._tile_buffers, str(tree.num_buffers))
         self._set_tile(self._tile_inverters, str(tree.num_inverters))
         self._set_tile(self._tile_max_skew, f"{tree.max_skew_ns:.3f}", "ns")
         self._set_tile(self._tile_mean_ins, f"{tree.mean_insertion_ns:.3f}", "ns")
         self._set_tile(self._tile_max_ins, f"{tree.max_insertion_ns:.3f}", "ns")
 
-    def _refresh_table(self, tree: "CtsTree") -> None:
+    def _refresh_table(self, tree: CtsTree) -> None:
         self._table.setSortingEnabled(False)
         self._table.setRowCount(len(tree.sinks))
         for r, sink in enumerate(tree.sinks):

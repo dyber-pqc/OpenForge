@@ -3,18 +3,15 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 
-from PySide6.QtCore import QSettings, Qt
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
-    QGroupBox,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QPushButton,
     QSpinBox,

@@ -9,11 +9,12 @@ Catppuccin Mocha colors are used for the widgets.
 """
 from __future__ import annotations
 
+import contextlib
 import math
 import traceback
 from dataclasses import is_dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QObject, QPointF, QRectF, Qt, QThread, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF
@@ -42,6 +43,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Matplotlib Qt canvas for real heatmaps
 try:
@@ -82,7 +86,7 @@ MOCHA = {
 class _ReliabilityRadar(QWidget):
     """A small five-axis radar chart for the reliability score."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setMinimumHeight(220)
         self.setMinimumWidth(240)
@@ -166,7 +170,7 @@ if _MPL_OK:
     class _HeatmapCanvas(FigureCanvasQTAgg):  # type: ignore[misc]
         """Matplotlib pcolormesh canvas used for IR-drop and thermal maps."""
 
-        def __init__(self, parent: Optional[QWidget] = None) -> None:
+        def __init__(self, parent: QWidget | None = None) -> None:
             self._fig = Figure(figsize=(5, 4), tight_layout=True, facecolor=MOCHA["base"])
             super().__init__(self._fig)
             if parent is not None:
@@ -220,10 +224,8 @@ if _MPL_OK:
             self._ax.set_ylabel("Y (um)")
             self._ax.set_aspect("equal", adjustable="box")
             if self._cbar is not None:
-                try:
+                with contextlib.suppress(Exception):
                     self._cbar.remove()
-                except Exception:
-                    pass
             self._cbar = self._fig.colorbar(mesh, ax=self._ax)
             if units:
                 self._cbar.set_label(units, color=MOCHA["text"])
@@ -285,7 +287,7 @@ if _MPL_OK:
 else:  # matplotlib missing - tiny Qt stub so the panel still loads
 
     class _HeatmapCanvas(QWidget):  # type: ignore[no-redef]
-        def __init__(self, parent: Optional[QWidget] = None) -> None:
+        def __init__(self, parent: QWidget | None = None) -> None:
             super().__init__(parent)
             self.setMinimumHeight(260)
             self._label = QLabel("matplotlib not installed - heatmap unavailable", self)
@@ -318,10 +320,8 @@ class _AnalysisWorker(QObject):
 
     def run(self) -> None:
         def _progress(frac: float, msg: str) -> None:
-            try:
+            with contextlib.suppress(Exception):
                 self.progress.emit(float(frac), str(msg))
-            except Exception:
-                pass
 
         try:
             result = self._fn(_progress)
@@ -339,7 +339,7 @@ class ReliabilityPanel(QDockWidget):
 
     analysis_completed = Signal(str, dict)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("Reliability", parent)
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
         self.setObjectName("ReliabilityPanel")
@@ -752,7 +752,7 @@ class ReliabilityPanel(QDockWidget):
     def _set_status(self, msg: str) -> None:
         self.status.setText(msg)
 
-    def _require_file(self, line: QLineEdit, label: str) -> Optional[Path]:
+    def _require_file(self, line: QLineEdit, label: str) -> Path | None:
         txt = line.text().strip()
         if not txt:
             QMessageBox.information(self, "Missing Input", f"Load {label} first")
@@ -799,14 +799,10 @@ class ReliabilityPanel(QDockWidget):
         if pair is None:
             return
         thread, worker = pair
-        try:
+        with contextlib.suppress(Exception):
             worker.deleteLater()
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             thread.deleteLater()
-        except Exception:
-            pass
         for btn in (
             getattr(self, "ir_run_btn", None),
             getattr(self, "em_run_btn", None),
@@ -911,8 +907,8 @@ class ReliabilityPanel(QDockWidget):
         if def_path is None:
             return
         try:
-            from openforge.physical.thermal import ThermalAnalyzer, uniform_power_grid
             from openforge.physical.ir_drop import _parse_def as _parse_def_for_thermal
+            from openforge.physical.thermal import ThermalAnalyzer, uniform_power_grid
         except Exception as exc:
             QMessageBox.warning(self, "Import Error", f"Cannot load thermal backend: {exc}")
             return
@@ -1266,7 +1262,7 @@ class ReliabilityPanel(QDockWidget):
     # ==================================================================
     def _update_radar(self) -> None:
         scores: dict[str, float] = {}
-        for key, lbl, name in (
+        for _key, lbl, name in (
             ("ir_drop", self.lbl_ir, "IR Drop"),
             ("em", self.lbl_em, "EM"),
             ("thermal", self.lbl_thermal, "Thermal"),
@@ -1275,10 +1271,8 @@ class ReliabilityPanel(QDockWidget):
         ):
             txt = lbl.text()
             if "/" in txt:
-                try:
+                with contextlib.suppress(ValueError):
                     scores[name] = float(txt.split("/")[0].strip())
-                except ValueError:
-                    pass
         self.radar.set_scores(scores)
         if scores:
             self.lbl_overall.setText(f"{self.radar.overall():.0f}")

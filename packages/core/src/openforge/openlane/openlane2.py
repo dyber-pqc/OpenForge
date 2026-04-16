@@ -9,19 +9,23 @@ Reference: https://openlane2.readthedocs.io
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
 import shutil
 import subprocess
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-class ArtifactKind(str, Enum):
+
+class ArtifactKind(StrEnum):
     NETLIST = "netlist"
     DEF = "def"
     GDS = "gds"
@@ -34,7 +38,7 @@ class ArtifactKind(str, Enum):
     LOG = "log"
 
 
-class OpenLane2Stage(str, Enum):
+class OpenLane2Stage(StrEnum):
     SYNTHESIS = "Yosys.Synthesis"
     FLOORPLAN = "OpenROAD.Floorplan"
     IO_PLACEMENT = "OpenROAD.IOPlacement"
@@ -66,7 +70,7 @@ class OpenLane2Config(BaseModel):
     VERILOG_FILES: list[str]
     CLOCK_PORT: str
     CLOCK_PERIOD: float
-    DIE_AREA: Optional[tuple[float, float, float, float]] = None
+    DIE_AREA: tuple[float, float, float, float] | None = None
     FP_CORE_UTIL: float = 50.0
     PL_TARGET_DENSITY: float = 0.55
     SYNTH_STRATEGY: str = "AREA 0"
@@ -109,15 +113,15 @@ class OpenLane2Runner:
         self,
         config: OpenLane2Config,
         design_dir: Path,
-        openlane_dir: Optional[Path] = None,
+        openlane_dir: Path | None = None,
     ) -> None:
         self.config = config
         self.design_dir = Path(design_dir)
         self.openlane_dir = Path(openlane_dir) if openlane_dir else None
-        self._cli: Optional[Path] = None
+        self._cli: Path | None = None
 
     # ------------------------------------------------------------------
-    def detect_openlane(self) -> Optional[Path]:
+    def detect_openlane(self) -> Path | None:
         """Locate an OpenLane2 CLI executable."""
         if self._cli is not None:
             return self._cli
@@ -137,7 +141,7 @@ class OpenLane2Runner:
                         return self._cli
         return None
 
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         cli = self.detect_openlane()
         if cli is None:
             return None
@@ -185,7 +189,7 @@ class OpenLane2Runner:
         self,
         step: OpenLane2Stage,
         run_dir: Path,
-        log_callback: Optional[Callable[[str], None]] = None,
+        log_callback: Callable[[str], None] | None = None,
     ) -> dict[str, Any]:
         """Run a single OpenLane2 step via ``--from/--to``."""
         cli = self.detect_openlane()
@@ -205,8 +209,8 @@ class OpenLane2Runner:
 
     def run_flow(
         self,
-        steps: Optional[list[OpenLane2Stage]] = None,
-        log_callback: Optional[Callable[[str], None]] = None,
+        steps: list[OpenLane2Stage] | None = None,
+        log_callback: Callable[[str], None] | None = None,
         run_tag: str = "openforge",
     ) -> dict[str, Any]:
         """Run a full (or sub-)flow."""
@@ -226,7 +230,7 @@ class OpenLane2Runner:
         self,
         cmd: list[str],
         cwd: Path,
-        log_callback: Optional[Callable[[str], None]],
+        log_callback: Callable[[str], None] | None,
     ) -> dict[str, Any]:
         try:
             proc = subprocess.Popen(
@@ -245,10 +249,8 @@ class OpenLane2Runner:
         for line in proc.stdout:
             lines.append(line.rstrip("\n"))
             if log_callback is not None:
-                try:
+                with contextlib.suppress(Exception):
                     log_callback(line.rstrip("\n"))
-                except Exception:
-                    pass
         code = proc.wait()
         return {
             "ok": code == 0,
@@ -258,7 +260,7 @@ class OpenLane2Runner:
         }
 
     # ------------------------------------------------------------------
-    def latest_run_dir(self) -> Optional[Path]:
+    def latest_run_dir(self) -> Path | None:
         runs = self.design_dir / "runs"
         if not runs.exists():
             return None
@@ -307,8 +309,6 @@ class OpenLane2Runner:
         # Also top-level final metrics
         final = run_dir / "final" / "metrics.json"
         if final.exists():
-            try:
+            with contextlib.suppress(Exception):
                 metrics["final"] = json.loads(final.read_text())
-            except Exception:
-                pass
         return metrics

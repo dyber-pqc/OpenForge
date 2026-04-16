@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass, field, asdict
-from enum import Enum
+from dataclasses import asdict, dataclass, field
+from enum import Enum, StrEnum
 from pathlib import Path
-from typing import Any
 
 
 class CopperLayer(Enum):
@@ -37,15 +36,15 @@ class CopperLayer(Enum):
     CMTS_USER = "Cmts.User"
 
     @classmethod
-    def copper_layers(cls) -> list["CopperLayer"]:
+    def copper_layers(cls) -> list[CopperLayer]:
         return [cls.F_CU, cls.IN1_CU, cls.IN2_CU, cls.IN3_CU, cls.IN4_CU, cls.B_CU]
 
     @classmethod
-    def is_copper(cls, layer: "CopperLayer") -> bool:
+    def is_copper(cls, layer: CopperLayer) -> bool:
         return layer in cls.copper_layers()
 
 
-class PadShape(str, Enum):
+class PadShape(StrEnum):
     CIRCLE = "circle"
     RECT = "rect"
     ROUNDRECT = "roundrect"
@@ -53,7 +52,7 @@ class PadShape(str, Enum):
     TRAPEZOID = "trapezoid"
 
 
-class PadType(str, Enum):
+class PadType(StrEnum):
     SMD = "smd"
     THRU_HOLE = "thru_hole"
     CONNECT = "connect"
@@ -123,7 +122,7 @@ class Footprint:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Footprint":
+    def from_dict(cls, d: dict) -> Footprint:
         return cls(
             name=d["name"],
             library=d["library"],
@@ -175,7 +174,7 @@ class BoardComponent:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "BoardComponent":
+    def from_dict(cls, d: dict) -> BoardComponent:
         return cls(
             refdes=d["refdes"],
             footprint=Footprint.from_dict(d["footprint"]),
@@ -215,7 +214,7 @@ class Track:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Track":
+    def from_dict(cls, d: dict) -> Track:
         return cls(
             net=d["net"],
             layer=CopperLayer(d["layer"]),
@@ -246,7 +245,7 @@ class Via:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Via":
+    def from_dict(cls, d: dict) -> Via:
         return cls(
             net=d["net"],
             x_mm=d["x_mm"],
@@ -293,7 +292,7 @@ class Zone:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Zone":
+    def from_dict(cls, d: dict) -> Zone:
         return cls(
             net=d["net"],
             layer=CopperLayer(d["layer"]),
@@ -409,7 +408,7 @@ class Board:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Board":
+    def from_dict(cls, d: dict) -> Board:
         dr = DesignRules(**d.get("design_rules", {}))
         b = cls(
             name=d["name"],
@@ -439,6 +438,6 @@ class Board:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def load(cls, path: Path) -> "Board":
+    def load(cls, path: Path) -> Board:
         with Path(path).open("r", encoding="utf-8") as f:
             return cls.from_dict(json.load(f))

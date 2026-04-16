@@ -7,12 +7,14 @@ import re
 import subprocess
 import tempfile
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 from openforge.engine.yosys import YosysEngine
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -412,7 +414,8 @@ class CdcAnalyzer:
 # ===========================================================================
 
 
-from pydantic import BaseModel as _PydanticBaseModel, Field as _Field  # noqa: E402
+from pydantic import BaseModel as _PydanticBaseModel  # noqa: E402
+from pydantic import Field as _Field
 
 
 class ClockDomainModel(_PydanticBaseModel):

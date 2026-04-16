@@ -8,19 +8,16 @@ so install/enable changes survive app restarts.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Final
 
-from PySide6.QtCore import QSettings, Qt, Signal, QTimer, Slot
-from PySide6.QtGui import QColor, QFont, QPainter, QPen
+from PySide6.QtCore import QSettings, Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QProgressBar,
     QPushButton,
     QScrollArea,

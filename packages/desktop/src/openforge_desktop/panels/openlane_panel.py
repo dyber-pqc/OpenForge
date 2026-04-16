@@ -5,12 +5,10 @@ dashboard and Caravel project bootstrap from the OpenForge desktop app.
 """
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, QObject, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -84,10 +82,10 @@ class _RunWorker(QObject):
 
     def __init__(
         self,
-        runner: "OpenLane2Runner",
-        steps: Optional[list] = None,
-        single_step: Optional[object] = None,
-        run_dir: Optional[Path] = None,
+        runner: OpenLane2Runner,
+        steps: list | None = None,
+        single_step: object | None = None,
+        run_dir: Path | None = None,
     ) -> None:
         super().__init__()
         self._runner = runner
@@ -115,13 +113,13 @@ class OpenLanePanel(QWidget):
 
     run_finished = Signal(bool)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self._runner: Optional[OpenLane2Runner] = None
-        self._design_dir: Optional[Path] = None
-        self._worker_thread: Optional[QThread] = None
-        self._worker: Optional[_RunWorker] = None
+        self._runner: OpenLane2Runner | None = None
+        self._design_dir: Path | None = None
+        self._worker_thread: QThread | None = None
+        self._worker: _RunWorker | None = None
         self._step_rows: dict[str, int] = {}
 
         root = QVBoxLayout(self)
@@ -377,7 +375,7 @@ class OpenLanePanel(QWidget):
             self._design_dir = Path(path)
 
     # ------------------------------------------------------------------
-    def _build_config(self) -> Optional["OpenLane2Config"]:
+    def _build_config(self) -> OpenLane2Config | None:
         if OpenLane2Config is None:
             QMessageBox.warning(self, "OpenLane", "OpenLane2 core module not available")
             return None
@@ -405,7 +403,7 @@ class OpenLanePanel(QWidget):
             QMessageBox.warning(self, "OpenLane", f"Invalid config: {exc}")
             return None
 
-    def _make_runner(self, ensure: bool = True) -> Optional["OpenLane2Runner"]:
+    def _make_runner(self, ensure: bool = True) -> OpenLane2Runner | None:
         if OpenLane2Runner is None:
             return None
         design_dir_text = self._ed_design_dir.text().strip()
@@ -468,10 +466,10 @@ class OpenLanePanel(QWidget):
     # ------------------------------------------------------------------
     def _start_worker(
         self,
-        runner: "OpenLane2Runner",
-        steps: Optional[list],
-        single_step: Optional[object] = None,
-        run_dir: Optional[Path] = None,
+        runner: OpenLane2Runner,
+        steps: list | None,
+        single_step: object | None = None,
+        run_dir: Path | None = None,
     ) -> None:
         if self._worker_thread is not None and self._worker_thread.isRunning():
             QMessageBox.information(self, "OpenLane", "A run is already in progress")

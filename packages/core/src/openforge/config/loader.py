@@ -63,10 +63,7 @@ def load_config(
     OpenForgeConfig
         Fully validated configuration instance.
     """
-    if path is None:
-        path = find_config(search_dir)
-    else:
-        path = Path(path)
+    path = find_config(search_dir) if path is None else Path(path)
 
     if not path.is_file():
         raise ConfigNotFoundError(f"Config file does not exist: {path}")

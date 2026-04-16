@@ -17,7 +17,6 @@ from ..model import (
     TargetKind,
 )
 
-
 _SET_GLOBAL = re.compile(
     r"set_global_assignment\s+-name\s+(\w+)\s+(?:-section_id\s+\S+\s+)?(.+?)\s*$",
     re.M,

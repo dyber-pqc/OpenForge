@@ -8,18 +8,21 @@ used by the Phase 4 coverage dashboard.
 
 from __future__ import annotations
 
+import contextlib
 import html
 import json
 import re
 import sqlite3
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -532,7 +535,7 @@ class CoverageParser:
 # ---------------------------------------------------------------------------
 
 
-class CoverageKind(str, Enum):
+class CoverageKind(StrEnum):
     LINE = "line"
     TOGGLE = "toggle"
     BRANCH = "branch"
@@ -589,7 +592,7 @@ class CoverageReportV2(BaseModel):
     """Pydantic v2 coverage report."""
 
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     test_name: str = ""
     files: dict[str, FileCoverage] = Field(default_factory=dict)
@@ -612,7 +615,7 @@ class CoverageReportV2(BaseModel):
     # Parsers
     # ------------------------------------------------------------------
     @classmethod
-    def from_verilator_lcov(cls, lcov_path: str | Path) -> "CoverageReportV2":
+    def from_verilator_lcov(cls, lcov_path: str | Path) -> CoverageReportV2:
         """Parse a Verilator/GCov LCOV ``.info`` file.
 
         Handles TN / SF / DA / LH / LF / BRDA / end_of_record records.
@@ -645,15 +648,11 @@ class CoverageReportV2(BaseModel):
                 except (ValueError, IndexError):
                     continue
             elif line.startswith("LF:") and current is not None:
-                try:
+                with contextlib.suppress(ValueError):
                     current.total_lines = int(line[3:])
-                except ValueError:
-                    pass
             elif line.startswith("LH:") and current is not None:
-                try:
+                with contextlib.suppress(ValueError):
                     current.covered_lines = int(line[3:])
-                except ValueError:
-                    pass
             elif line.startswith("BRDA:"):
                 try:
                     parts = line[5:].split(",")
@@ -681,7 +680,7 @@ class CoverageReportV2(BaseModel):
         return report
 
     @classmethod
-    def from_verilator_dat(cls, dat_path: str | Path) -> "CoverageReportV2":
+    def from_verilator_dat(cls, dat_path: str | Path) -> CoverageReportV2:
         """Parse a native Verilator ``coverage.dat``.
 
         Reuses the legacy :class:`CoverageParser` then normalises into the
@@ -736,7 +735,7 @@ class CoverageReportV2(BaseModel):
         return rep
 
     @classmethod
-    def from_icarus(cls, path: str | Path) -> "CoverageReportV2":
+    def from_icarus(cls, path: str | Path) -> CoverageReportV2:
         """Parse an Icarus coverage dump.
 
         Icarus writes simple ``file:line count`` lines when the ``-gcoverage``
@@ -767,9 +766,9 @@ class CoverageReportV2(BaseModel):
     # ------------------------------------------------------------------
     # Merge / export
     # ------------------------------------------------------------------
-    def merge(self, other: "CoverageReportV2") -> "CoverageReportV2":
+    def merge(self, other: CoverageReportV2) -> CoverageReportV2:
         merged = CoverageReportV2(
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=f"{self.test_name}+{other.test_name}",
         )
         # Merge files
@@ -874,7 +873,5 @@ class CoverageDb:
         return [r.overall.get(kind, 0.0) for r in runs]
 
     def close(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             self._conn.close()
-        except Exception:
-            pass

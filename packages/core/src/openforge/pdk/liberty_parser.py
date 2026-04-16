@@ -8,17 +8,16 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
 class LibertyPin:
     name: str
     direction: str = "input"
-    function: Optional[str] = None
+    function: str | None = None
     capacitance: float = 0.0
     max_capacitance: float = 0.0
-    related_power_pin: Optional[str] = None
+    related_power_pin: str | None = None
 
 
 @dataclass
@@ -108,13 +107,13 @@ class _Parser:
         self.tokens = tokens
         self.pos = 0
 
-    def peek(self, off: int = 0) -> Optional[str]:
+    def peek(self, off: int = 0) -> str | None:
         idx = self.pos + off
         if idx < len(self.tokens):
             return self.tokens[idx]
         return None
 
-    def advance(self) -> Optional[str]:
+    def advance(self) -> str | None:
         tok = self.peek()
         if tok is not None:
             self.pos += 1
@@ -381,7 +380,7 @@ def _parse_pin_body(p: _Parser, pin_name: str) -> tuple[LibertyPin, list[Liberty
     return pin, arcs
 
 
-def _parse_timing_body(p: _Parser) -> Optional[LibertyTimingArc]:
+def _parse_timing_body(p: _Parser) -> LibertyTimingArc | None:
     arc = LibertyTimingArc(related_pin="")
     depth = 1
     while p.pos < len(p.tokens) and depth > 0:

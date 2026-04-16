@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from PySide6.QtCore import QFileSystemWatcher, QObject, QSettings, Signal
 
 from openforge.config.loader import load_config
-from openforge.config.schema import OpenForgeConfig
 from openforge.project.manager import Project
-from openforge.synthesis.runner import SynthesisResult
-from openforge.runner.simulation import SimResult
 
+if TYPE_CHECKING:
+    from openforge.config.schema import OpenForgeConfig
+    from openforge.runner.simulation import SimResult
+    from openforge.synthesis.runner import SynthesisResult
 
 # ---------------------------------------------------------------------------
 # Constants

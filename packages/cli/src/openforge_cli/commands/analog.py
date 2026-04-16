@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import json as json_mod
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.table import Table
 
 console = Console()
 
@@ -24,7 +22,7 @@ def spice_run(
     netlist: str = typer.Option(..., "--netlist", "-n", help="SPICE netlist file."),
     analysis: str = typer.Option("tran", "--analysis", "-a", help="Analysis type: tran, dc, ac, op, noise."),
     path: str = typer.Argument(".", help="Working directory."),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output raw file path."),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output raw file path."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:

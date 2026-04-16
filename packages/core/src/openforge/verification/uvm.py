@@ -15,10 +15,12 @@ path.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ---------------------------------------------------------------------------
 # Port description helpers
@@ -361,7 +363,7 @@ class UvmGenerator:
         lines.append("import uvm_pkg::*;")
         lines.append(f'`include "{item}.sv"')
         lines.append("")
-        lines.append(f"`uvm_analysis_imp_decl(_actual)")
+        lines.append("`uvm_analysis_imp_decl(_actual)")
         lines.append("")
         lines.append(f"class {cls} extends uvm_scoreboard;")
         lines.append(f"    `uvm_component_utils({cls})")

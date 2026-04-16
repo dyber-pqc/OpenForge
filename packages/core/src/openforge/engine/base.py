@@ -9,9 +9,12 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import StrEnum
-from os import PathLike
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from os import PathLike
 
 
 class ExecutionBackend(StrEnum):
@@ -102,7 +105,7 @@ class ToolEngine(ABC):
             raw_out, raw_err = await asyncio.wait_for(
                 proc.communicate(), timeout=timeout
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             proc.kill()
             await proc.wait()
             return ToolResult(

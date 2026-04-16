@@ -10,11 +10,11 @@ line-by-line streaming.
 
 from __future__ import annotations
 
+import contextlib
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -334,10 +334,7 @@ class DEFParser:
                 i += 1
                 continue
             if tok in ("PLACED", "FIXED", "COVER") and i + 4 < len(tokens):
-                if tok == "FIXED":
-                    comp.fixed = True
-                    comp.placed = True
-                elif tok == "COVER":
+                if tok == "FIXED" or tok == "COVER":
                     comp.fixed = True
                     comp.placed = True
                 else:
@@ -365,10 +362,8 @@ class DEFParser:
                 comp.source = tokens[i + 1].upper()
                 i += 2
             elif tok == "WEIGHT" and i + 1 < len(tokens):
-                try:
+                with contextlib.suppress(ValueError):
                     comp.weight = int(tokens[i + 1])
-                except ValueError:
-                    pass
                 i += 2
             else:
                 i += 1
@@ -505,10 +500,8 @@ class DEFParser:
                 net.use = tokens[i + 1].upper()
                 i += 2
             elif tok == "WEIGHT" and i + 1 < len(tokens):
-                try:
+                with contextlib.suppress(ValueError):
                     net.weight = int(tokens[i + 1])
-                except ValueError:
-                    pass
                 i += 2
             elif tok in ("ROUTED", "NEW", "FIXED", "COVER", "NOSHIELD"):
                 i += 1
@@ -623,16 +616,12 @@ class DEFParser:
         while i < len(tokens):
             tok = tokens[i].upper().rstrip(";")
             if tok == "DO" and i + 1 < len(tokens):
-                try:
+                with contextlib.suppress(ValueError):
                     row.num_x = int(tokens[i + 1].rstrip(";"))
-                except ValueError:
-                    pass
                 i += 2
             elif tok == "BY" and i + 1 < len(tokens):
-                try:
+                with contextlib.suppress(ValueError):
                     row.num_y = int(tokens[i + 1].rstrip(";"))
-                except ValueError:
-                    pass
                 i += 2
             elif tok == "STEP" and i + 2 < len(tokens):
                 try:
@@ -662,16 +651,12 @@ class DEFParser:
         while i < len(tokens):
             tok = tokens[i].upper().rstrip(";")
             if tok == "DO" and i + 1 < len(tokens):
-                try:
+                with contextlib.suppress(ValueError):
                     track.num_tracks = int(tokens[i + 1].rstrip(";"))
-                except ValueError:
-                    pass
                 i += 2
             elif tok == "STEP" and i + 1 < len(tokens):
-                try:
+                with contextlib.suppress(ValueError):
                     track.step = int(tokens[i + 1].rstrip(";"))
-                except ValueError:
-                    pass
                 i += 2
             elif tok == "LAYER" and i + 1 < len(tokens):
                 track.layer = tokens[i + 1].rstrip(";")

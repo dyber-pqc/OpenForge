@@ -19,11 +19,8 @@ from PySide6.QtGui import (
     QAction,
     QColor,
     QFont,
-    QFontMetrics,
-    QIcon,
     QPainter,
     QPainterPath,
-    QPalette,
     QPen,
     QPixmap,
 )
@@ -34,7 +31,6 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
-    QFrame,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -54,7 +50,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Plot widget
@@ -358,7 +353,7 @@ class WaveformPlot(QWidget):
             painter.setPen(QPen(t.color, 1.6))
             path = QPainterPath()
             first = True
-            for x, y in zip(t.x, t.y):
+            for x, y in zip(t.x, t.y, strict=False):
                 if self._log_x and x <= 0:
                     first = True
                     continue
@@ -1002,7 +997,7 @@ class SpiceSimulatorPanel(QDockWidget):
                 n = min(len(time_axis), len(ys))
                 if n == 0:
                     continue
-                sigs[name] = list(zip(time_axis[:n], ys[:n]))
+                sigs[name] = list(zip(time_axis[:n], ys[:n], strict=False))
             self.plot.set_data(sigs, x_label="Time (s)", y_label="Voltage (V)")
             self.status.showMessage(f"Transient: {len(time_axis)} points, {len(sigs)} signals")
         elif analysis == "dc" and "dc" in results:
@@ -1015,7 +1010,7 @@ class SpiceSimulatorPanel(QDockWidget):
                 n = min(len(sweep), len(ys))
                 if n == 0:
                     continue
-                sigs[name] = list(zip(sweep[:n], ys[:n]))
+                sigs[name] = list(zip(sweep[:n], ys[:n], strict=False))
             self.plot.set_data(sigs, x_label=data.get("sweep_var", "V"), y_label="Voltage (V)")
             self.status.showMessage(f"DC sweep: {len(sweep)} points")
         elif analysis == "ac" and "ac" in results:
@@ -1028,7 +1023,7 @@ class SpiceSimulatorPanel(QDockWidget):
                 n = min(len(freq), len(ys))
                 if n == 0:
                     continue
-                sigs[name] = list(zip(freq[:n], ys[:n]))
+                sigs[name] = list(zip(freq[:n], ys[:n], strict=False))
             self.plot.set_data(
                 sigs,
                 x_label="Frequency (Hz)",
@@ -1047,7 +1042,7 @@ class SpiceSimulatorPanel(QDockWidget):
                 n = min(len(freq), len(ys))
                 if n == 0:
                     continue
-                sigs[name] = list(zip(freq[:n], ys[:n]))
+                sigs[name] = list(zip(freq[:n], ys[:n], strict=False))
             self.plot.set_data(
                 sigs,
                 x_label="Frequency (Hz)",

@@ -17,10 +17,13 @@ import json
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class DrcViolation(BaseModel):
@@ -53,7 +56,7 @@ class DrcReport(BaseModel):
     # ------------------------------------------------------------------ api
 
     @classmethod
-    def auto_load(cls, path: str | Path) -> "DrcReport":
+    def auto_load(cls, path: str | Path) -> DrcReport:
         p = Path(path)
         text = p.read_text(encoding="utf-8", errors="replace")
         stripped = text.lstrip()
@@ -66,7 +69,7 @@ class DrcReport(BaseModel):
     # --- Magic ------------------------------------------------------------
 
     @classmethod
-    def from_magic_report(cls, text: str) -> "DrcReport":
+    def from_magic_report(cls, text: str) -> DrcReport:
         """Parse a magic ``drc find`` / ``drc listall why`` text report.
 
         The format is::
@@ -132,7 +135,7 @@ class DrcReport(BaseModel):
     # --- KLayout ----------------------------------------------------------
 
     @classmethod
-    def from_klayout_drc(cls, xml_text: str) -> "DrcReport":
+    def from_klayout_drc(cls, xml_text: str) -> DrcReport:
         """Parse a KLayout ``rdb``/``lyrdb`` XML report."""
         violations: list[DrcViolation] = []
         try:
@@ -177,7 +180,7 @@ class DrcReport(BaseModel):
     # --- OpenROAD ---------------------------------------------------------
 
     @classmethod
-    def from_openroad_drc(cls, json_text: str) -> "DrcReport":
+    def from_openroad_drc(cls, json_text: str) -> DrcReport:
         """Parse the JSON style output from OpenROAD detailed route."""
         violations: list[DrcViolation] = []
         try:

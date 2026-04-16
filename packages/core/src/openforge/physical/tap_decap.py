@@ -17,14 +17,12 @@ Pydantic models.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from openforge.format.def_parser import DefDesign, parse_def
 from openforge.format.lef_parser import LefLibrary, parse_lef
-
 
 # ---------------------------------------------------------------------------
 # Result models
@@ -62,7 +60,6 @@ def _row_extents_um(design: DefDesign) -> list[tuple[float, float, float, float]
     for row in design.rows:
         x0 = design.to_um(row.x)
         y0 = design.to_um(row.y)
-        site = None
         # row.step_x/num_x are in DEF db units (RTL-parse).  Width in um:
         width_db = row.num_x * row.step_x if row.num_x > 1 else row.step_x
         height_db = row.height

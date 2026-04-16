@@ -11,10 +11,12 @@ Wave 1 sign-off dashboard.
 """
 from __future__ import annotations
 
+import contextlib
 import html
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -56,7 +58,7 @@ class PowerSignoffConfig(BaseModel):
     modes: list[str] = Field(default_factory=lambda: ["functional"])
     vcd_files: dict[str, str] = Field(default_factory=dict)  # mode -> path
     duration_ns: float = 0.0
-    lib_path: Optional[str] = None
+    lib_path: str | None = None
     vdd: float = 0.9
 
 
@@ -110,13 +112,11 @@ _CORNER_PROFILES: dict[str, dict[str, float]] = {
 }
 
 
-def _report(progress: Optional[ProgressFn], msg: str, frac: float) -> None:
+def _report(progress: ProgressFn | None, msg: str, frac: float) -> None:
     if progress is None:
         return
-    try:
+    with contextlib.suppress(Exception):
         progress(msg, max(0.0, min(1.0, frac)))
-    except Exception:
-        pass
 
 
 def _safe_float(v: Any, default: float = 0.0) -> float:
@@ -157,10 +157,10 @@ class PowerSignoffOrchestrator:
         self,
         mode: str,
         vcd_path: Path,
-        progress: Optional[ProgressFn],
+        progress: ProgressFn | None,
         frac_base: float,
         frac_span: float,
-    ) -> tuple[ModePower, Optional[VectorPowerResult]]:
+    ) -> tuple[ModePower, VectorPowerResult | None]:
         _report(progress, f"vector power: {mode}", frac_base)
         lib_path = Path(self.config.lib_path) if self.config.lib_path else None
         try:
@@ -195,7 +195,7 @@ class PowerSignoffOrchestrator:
         corner: str,
         base_dyn_mw: float,
         base_leak_mw: float,
-        progress: Optional[ProgressFn],
+        progress: ProgressFn | None,
         frac_base: float,
         frac_span: float,
     ) -> CornerPower:
@@ -269,13 +269,13 @@ class PowerSignoffOrchestrator:
         )
 
     # ------------------------------------------------------------------
-    def run(self, progress: Optional[ProgressFn] = None) -> PowerSignoffResult:
+    def run(self, progress: ProgressFn | None = None) -> PowerSignoffResult:
         cfg = self.config
         _report(progress, "starting power sign-off", 0.0)
 
         modes = cfg.modes or ["functional"]
         mode_results: list[ModePower] = []
-        mode_vector_results: list[Optional[VectorPowerResult]] = []
+        mode_vector_results: list[VectorPowerResult | None] = []
         warnings: list[str] = []
 
         # --- per-mode vector power --------------------------------------------------

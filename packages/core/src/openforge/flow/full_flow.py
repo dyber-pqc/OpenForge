@@ -8,13 +8,12 @@ Chains Yosys synthesis -> OpenROAD (floorplan, placement, CTS, routing, fill)
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
 
 from pydantic import BaseModel, Field
 
 from openforge.runner.engine import RunEngine, RunGraph, RunStage, RunStatus
-
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -129,7 +128,7 @@ write_def floorplan.def
 
 
 def _write_placement_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    tcl = f"""\
+    tcl = """\
 # OpenROAD placement script
 source ../floorplan/floorplan_env.tcl || true
 read_def ../floorplan/floorplan.def
@@ -394,7 +393,7 @@ class FullFlowRunner:
         gds_tcl = _write_gds_export_tcl(out, cfg)
         gds_dir = out / "gds_export"
         gds_dir.mkdir(parents=True, exist_ok=True)
-        gds_path = str(gds_dir / f"{cfg.top_module}.gds")
+        str(gds_dir / f"{cfg.top_module}.gds")
         g.add_stage(RunStage(
             id="gds_export",
             name="GDS Export",
@@ -499,7 +498,7 @@ class FullFlowRunner:
 
         # Submit and wait
         self._run_id = self._engine.submit(self._graph)
-        result_data = self._engine.wait(self._run_id)
+        self._engine.wait(self._run_id)
         elapsed = time.monotonic() - start_time
 
         # Build result
@@ -534,7 +533,7 @@ class FullFlowRunner:
             runtime = 0.0
             if s.started_at and s.finished_at:
                 try:
-                    from datetime import datetime, timezone
+                    from datetime import datetime
 
                     t0 = datetime.fromisoformat(s.started_at)
                     t1 = datetime.fromisoformat(s.finished_at)

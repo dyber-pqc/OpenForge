@@ -19,8 +19,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -63,7 +65,7 @@ class SpiceSubckt:
     ports: list[str]
     devices: list[SpiceDevice] = field(default_factory=list)
     parameters: dict[str, str] = field(default_factory=dict)
-    subckts: dict[str, "SpiceSubckt"] = field(default_factory=dict)
+    subckts: dict[str, SpiceSubckt] = field(default_factory=dict)
     models: dict[str, dict[str, str]] = field(default_factory=dict)
 
     def to_string(self) -> str:

@@ -22,7 +22,6 @@ from ..model import (
     TargetKind,
 )
 
-
 _TCL_SET = re.compile(r"^\s*set\s+(?:::)?(\w+)\s+(.+?)\s*$", re.M)
 
 

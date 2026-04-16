@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 try:
     from openforge_desktop.widgets.schematic_editor import SchematicEditor
@@ -37,8 +35,8 @@ except Exception:  # pragma: no cover - optional dep guard
     _HAS_PCB_EDITOR = False
 
 try:
-    from openforge.pcb.model import PcbBoard, PcbStackup
     from openforge.pcb.gerber import GerberExporter
+    from openforge.pcb.model import PcbBoard, PcbStackup
     _HAS_PCB_MODEL = True
 except Exception:  # pragma: no cover
     _HAS_PCB_MODEL = False
@@ -73,69 +71,54 @@ try:
 except Exception:  # pragma: no cover
     _HAS_JLC_DIALOG = False
 
+import contextlib
+
 from PySide6.QtCore import (
-    Qt,
+    QLineF,
     QPointF,
     QRectF,
-    QLineF,
     QSize,
-    Signal,
+    Qt,
     QTimer,
+    Signal,
 )
 from PySide6.QtGui import (
-    QAction,
     QBrush,
     QColor,
-    QFont,
-    QIcon,
-    QKeySequence,
     QPainter,
-    QPainterPath,
     QPen,
-    QPixmap,
     QPolygonF,
-    QTransform,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
-    QColorDialog,
     QComboBox,
-    QDialog,
-    QDialogButtonBox,
     QDockWidget,
+    QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
-    QFrame,
     QGraphicsEllipseItem,
     QGraphicsItem,
     QGraphicsLineItem,
-    QGraphicsPathItem,
-    QGraphicsPolygonItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsSimpleTextItem,
     QGraphicsView,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QMainWindow,
     QMenu,
     QMessageBox,
     QPushButton,
-    QSlider,
     QSpinBox,
-    QDoubleSpinBox,
     QSplitter,
     QStatusBar,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
-    QTextEdit,
     QToolBar,
     QToolButton,
     QTreeWidget,
@@ -143,7 +126,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ----------------------------------------------------------------------
 # Catppuccin Mocha palette
@@ -470,10 +452,7 @@ class SchematicScene(QGraphicsScene):
                     pos.x(),
                     pos.y(),
                 )
-            elif isinstance(self._preview_item, QGraphicsRectItem):
-                r = QRectF(self._draw_start, pos).normalized()
-                self._preview_item.setRect(r)
-            elif isinstance(self._preview_item, QGraphicsEllipseItem):
+            elif isinstance(self._preview_item, (QGraphicsRectItem, QGraphicsEllipseItem)):
                 r = QRectF(self._draw_start, pos).normalized()
                 self._preview_item.setRect(r)
         else:
@@ -605,7 +584,7 @@ class BoardScene(QGraphicsScene):
         # pads
         pad_w = 1.5 * self.MM_TO_PX
         pad_h = 1.0 * self.MM_TO_PX
-        for i, px in enumerate((-w / 2 + pad_w / 2, w / 2 - pad_w / 2)):
+        for _i, px in enumerate((-w / 2 + pad_w / 2, w / 2 - pad_w / 2)):
             pad = QGraphicsRectItem(
                 px - pad_w / 2, -pad_h / 2, pad_w, pad_h, parent=rect
             )
@@ -1353,7 +1332,7 @@ class PcbDesignerPanel(QDockWidget):
             row.addWidget(QLabel("Fab class:"))
             self._mfg_fab_class = QComboBox()
             if _HAS_FAB_RULES:
-                for key in KNOWN_FAB_CLASSES.keys():
+                for key in KNOWN_FAB_CLASSES:
                     self._mfg_fab_class.addItem(key)
             row.addWidget(self._mfg_fab_class, 1)
             row.addWidget(QLabel("Qty:"))
@@ -1653,10 +1632,8 @@ class PcbDesignerPanel(QDockWidget):
         self._sheet_browser = browser
 
         # Insert into the editor's main layout as a sidebar on the right
-        try:
+        with contextlib.suppress(Exception):
             editor.layout().addWidget(browser)
-        except Exception:
-            pass
         self._refresh_sheet_browser()
 
     def _refresh_sheet_browser(self) -> None:

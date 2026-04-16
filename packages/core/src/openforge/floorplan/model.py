@@ -15,7 +15,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-
 Orientation = Literal["N", "S", "E", "W", "FN", "FS", "FE", "FW"]
 Side = Literal["N", "S", "E", "W"]
 Direction = Literal["HORIZONTAL", "VERTICAL"]
@@ -197,7 +196,7 @@ class Floorplan(BaseModel):
     # ------------------------------------------------------------------
 
     @classmethod
-    def from_def(cls, def_path: str | Path) -> "Floorplan":
+    def from_def(cls, def_path: str | Path) -> Floorplan:
         """Build a :class:`Floorplan` from a DEF file."""
         from openforge.format.def_parser import parse_def
 
@@ -362,12 +361,12 @@ class Floorplan(BaseModel):
         push("# --- Power-delivery network (pdngen) ---")
         push("pdngen -reset")
         push(
-            f'add_global_connection -net VDD -inst_pattern ".*" '
-            f'-pin_pattern "^VPWR$|^VDD$" -power'
+            'add_global_connection -net VDD -inst_pattern ".*" '
+            '-pin_pattern "^VPWR$|^VDD$" -power'
         )
         push(
-            f'add_global_connection -net VSS -inst_pattern ".*" '
-            f'-pin_pattern "^VGND$|^VSS$" -ground'
+            'add_global_connection -net VSS -inst_pattern ".*" '
+            '-pin_pattern "^VGND$|^VSS$" -ground'
         )
         push("set_voltage_domain -name CORE -power VDD -ground VSS")
         push(

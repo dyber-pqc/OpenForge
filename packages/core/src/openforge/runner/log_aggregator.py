@@ -7,21 +7,21 @@ the API websocket stream.
 
 from __future__ import annotations
 
+import contextlib
 import re
 import threading
 import time
-from datetime import datetime, timezone
-from enum import Enum
+from collections.abc import Callable
+from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
-from typing import Callable, Iterable, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARN = "WARN"
@@ -53,7 +53,7 @@ class LogEntry(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     source: str
     level: LogLevel = LogLevel.INFO
     message: str
@@ -107,13 +107,10 @@ class LogAggregator:
             self._subs.append(cb)
 
     def unsubscribe(self, cb: Subscriber) -> None:
-        with self._lock:
-            try:
-                self._subs.remove(cb)
-            except ValueError:
-                pass
+        with self._lock, contextlib.suppress(ValueError):
+            self._subs.remove(cb)
 
-    def entries(self, flt: Optional[LogFilter] = None) -> list[LogEntry]:
+    def entries(self, flt: LogFilter | None = None) -> list[LogEntry]:
         with self._lock:
             snap = list(self._entries)
         if flt is None:
@@ -141,10 +138,8 @@ class LogAggregator:
             self._entries.append(entry)
             subs = list(self._subs)
         for cb in subs:
-            try:
+            with contextlib.suppress(Exception):
                 cb(entry)
-            except Exception:
-                pass
         return entry
 
     def tail_file(

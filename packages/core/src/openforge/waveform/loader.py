@@ -6,6 +6,7 @@ a pure-Python VCD parser for portability.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -199,10 +200,8 @@ def _load_vcd_python(path: Path) -> WaveformData:
 
             # Value change parsing
             if line.startswith("#"):
-                try:
+                with contextlib.suppress(ValueError):
                     current_time = int(line[1:])
-                except ValueError:
-                    pass
                 continue
 
             # Single-bit value change: 0id, 1id, xid, zid

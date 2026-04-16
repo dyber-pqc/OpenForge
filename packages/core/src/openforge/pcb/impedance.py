@@ -13,7 +13,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 C0_MM_PER_NS = 299.792458  # speed of light in mm/ns
 
 

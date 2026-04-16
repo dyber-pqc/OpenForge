@@ -7,15 +7,13 @@ wavy underlines with tooltip messages.
 
 from __future__ import annotations
 
-import json
 import re
 import shutil
 import subprocess
-from pathlib import Path
 from typing import Final, TypedDict
 
-from PySide6.QtCore import QObject, QPointF, QThread, Signal
-from PySide6.QtGui import QColor, QPainter, QPen, QTextCursor
+from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtGui import QColor, QTextCursor
 from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QToolTip
 
 # ── Diagnostic types ─────────────────────────────────────────────────────

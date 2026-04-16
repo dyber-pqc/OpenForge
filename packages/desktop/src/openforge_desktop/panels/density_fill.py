@@ -9,9 +9,7 @@ via the :mod:`openforge.physical.density_fill`, ``tap_decap`` and
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
@@ -19,7 +17,6 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QProgressBar,
     QPushButton,
@@ -30,13 +27,13 @@ from PySide6.QtWidgets import (
 )
 
 try:
-    from openforge.physical.density_fill import DensityFiller, SKY130_FILL_RULES
+    from openforge.physical.antenna import AntennaChecker, AntennaFixer
+    from openforge.physical.density_fill import SKY130_FILL_RULES, DensityFiller
     from openforge.physical.tap_decap import (
-        DecapInserter,
         SKY130_DECAP_CELLS,
+        DecapInserter,
         TapInserter,
     )
-    from openforge.physical.antenna import AntennaChecker, AntennaFixer
     _HAS_CORE = True
 except Exception:  # pragma: no cover
     DensityFiller = None  # type: ignore[assignment]
@@ -67,14 +64,14 @@ except Exception:  # pragma: no cover
 class DensityFillPanel(QWidget):
     """UI driver for fill / tap / decap / diode insertion."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("densityFillPanel")
         self.setStyleSheet(panel_tab_qss(True))
 
-        self._def_path: Optional[Path] = None
-        self._lef_path: Optional[Path] = None
-        self._filler: Optional["DensityFiller"] = None
+        self._def_path: Path | None = None
+        self._lef_path: Path | None = None
+        self._filler: DensityFiller | None = None
         self._bars: dict[str, QProgressBar] = {}
 
         root = QVBoxLayout(self)
@@ -228,8 +225,8 @@ class DensityFillPanel(QWidget):
             return
         if not density_map:
             return
-        xs = sorted({x for (x, _y) in density_map.keys()})
-        ys = sorted({y for (_x, y) in density_map.keys()})
+        xs = sorted({x for (x, _y) in density_map})
+        ys = sorted({y for (_x, y) in density_map})
         grid = [[density_map.get((x, y), 0.0) for x in xs] for y in ys]
         self._fig.clear()
         ax = self._fig.add_subplot(111)
@@ -279,7 +276,7 @@ class DensityFillPanel(QWidget):
         try:
             t = TapInserter(self._def_path, self._lef_path)
             res = t.insert_taps(interval_um=self._tap_interval.value())
-        except Exception as exc:
+        except Exception:
             self._append_row("Tap", "-", "-", "ERROR", 0)
             return
         self._append_row(

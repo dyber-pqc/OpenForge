@@ -8,34 +8,33 @@ optional action button.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import (
-    Qt,
-    QObject,
-    QPropertyAnimation,
     QEasingCurve,
+    QEvent,
+    QObject,
     QPoint,
-    QRect,
-    QSize,
+    QPropertyAnimation,
+    Qt,
     QTimer,
     Signal,
-    QEvent,
 )
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QBrush, QCursor
+from PySide6.QtGui import QColor, QCursor, QFont
 from PySide6.QtWidgets import (
     QFrame,
+    QGraphicsDropShadowEffect,
     QHBoxLayout,
-    QVBoxLayout,
     QLabel,
     QPushButton,
-    QWidget,
-    QGraphicsDropShadowEffect,
     QSizePolicy,
     QToolButton,
+    QVBoxLayout,
+    QWidget,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Severity styling
@@ -86,9 +85,9 @@ class _Toast(QFrame):
         message: str,
         severity: str = "info",
         duration_ms: int = 3000,
-        action_text: Optional[str] = None,
-        on_action: Optional[Callable[[], None]] = None,
-        parent: Optional[QWidget] = None,
+        action_text: str | None = None,
+        on_action: Callable[[], None] | None = None,
+        parent: QWidget | None = None,
     ):
         super().__init__(parent)
         self._message = message
@@ -96,9 +95,9 @@ class _Toast(QFrame):
         self._duration_ms = duration_ms
         self._action_text = action_text
         self._on_action = on_action
-        self._anim_in: Optional[QPropertyAnimation] = None
-        self._anim_out: Optional[QPropertyAnimation] = None
-        self._timer: Optional[QTimer] = None
+        self._anim_in: QPropertyAnimation | None = None
+        self._anim_out: QPropertyAnimation | None = None
+        self._timer: QTimer | None = None
 
         self.setObjectName("Toast")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)

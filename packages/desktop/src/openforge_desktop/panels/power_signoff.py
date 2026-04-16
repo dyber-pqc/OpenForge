@@ -8,18 +8,15 @@ breakdown, hot-cell list, power density heatmap and time-domain trace.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QComboBox,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
     QFrame,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -28,11 +25,9 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
-    QSplitter,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
-    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -73,10 +68,10 @@ class _PowerSignoffWorker(QThread):
 
     def __init__(
         self,
-        cfg: "PowerSignoffConfig",
+        cfg: PowerSignoffConfig,
         def_path: Path,
         lef_path: Path,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._cfg = cfg
@@ -98,7 +93,7 @@ class _PowerSignoffWorker(QThread):
 
 
 class _StatusTile(QFrame):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setStyleSheet(
@@ -142,10 +137,10 @@ class _StatusTile(QFrame):
 class PowerSignoffPanel(QWidget):
     """Unified power sign-off dashboard."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[_PowerSignoffWorker] = None
-        self._result: Optional["PowerSignoffResult"] = None
+        self._worker: _PowerSignoffWorker | None = None
+        self._result: PowerSignoffResult | None = None
         self._build_ui()
 
     # ------------------------------------------------------------------

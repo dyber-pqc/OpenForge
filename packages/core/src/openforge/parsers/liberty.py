@@ -7,11 +7,11 @@ and timing arcs with lookup tables.
 
 from __future__ import annotations
 
+import contextlib
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -225,10 +225,8 @@ def _parse_float_list(s: str) -> list[float]:
     for p in parts:
         p = p.strip()
         if p:
-            try:
+            with contextlib.suppress(ValueError):
                 result.append(float(p))
-            except ValueError:
-                pass
     return result
 
 

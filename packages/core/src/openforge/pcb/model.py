@@ -11,7 +11,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 LayerKind = Literal["signal", "plane", "mask", "silk", "paste", "mech", "edge"]
 PadShape = Literal["round", "rect", "oval", "roundrect"]
 FpSide = Literal["top", "bottom"]
@@ -28,7 +27,7 @@ class PcbStackup(BaseModel):
     layers: list[PcbLayer] = Field(default_factory=list)
 
     @classmethod
-    def two_layer(cls) -> "PcbStackup":
+    def two_layer(cls) -> PcbStackup:
         return cls(
             layers=[
                 PcbLayer(name="F.Paste", kind="paste", thickness_mm=0.0),
@@ -45,7 +44,7 @@ class PcbStackup(BaseModel):
         )
 
     @classmethod
-    def four_layer(cls) -> "PcbStackup":
+    def four_layer(cls) -> PcbStackup:
         return cls(
             layers=[
                 PcbLayer(name="F.Paste", kind="paste"),
@@ -66,7 +65,7 @@ class PcbStackup(BaseModel):
         )
 
     @classmethod
-    def six_layer(cls) -> "PcbStackup":
+    def six_layer(cls) -> PcbStackup:
         layers = [
             PcbLayer(name="F.Paste", kind="paste"),
             PcbLayer(name="F.Mask", kind="mask", thickness_mm=0.015),
@@ -221,6 +220,6 @@ class PcbBoard(BaseModel):
         return p
 
     @classmethod
-    def load_json(cls, path: str | Path) -> "PcbBoard":
+    def load_json(cls, path: str | Path) -> PcbBoard:
         data = json.loads(Path(path).read_text())
         return cls.model_validate(data)

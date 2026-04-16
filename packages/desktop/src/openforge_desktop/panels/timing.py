@@ -6,18 +6,18 @@ All widgets use the Catppuccin Mocha dark theme for a professional EDA aesthetic
 
 from __future__ import annotations
 
-import math
-from typing import Final, TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from openforge.physical.sta_parser import StaReport
+
+import contextlib
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
     QFont,
-    QFontMetrics,
     QPainter,
     QPen,
 )
@@ -32,8 +32,8 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QSizePolicy,
-    QSplitter,
     QSpinBox,
+    QSplitter,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -966,7 +966,7 @@ class TimingPanel(QDockWidget):
         if exceptions:
             self._constraints_tab.set_exceptions(exceptions)
 
-    def update_from_timing_result(self, result: "TimingResult") -> None:
+    def update_from_timing_result(self, result: TimingResult) -> None:
         """Convert a core ``TimingResult`` to the panel display format.
 
         Parameters
@@ -1045,7 +1045,7 @@ class TimingPanel(QDockWidget):
         }
         self.update_results(data)
 
-    def update_from_sta_report(self, report: "StaReport") -> None:
+    def update_from_sta_report(self, report: StaReport) -> None:
         """Update all displays from a real :class:`StaReport`.
 
         This is the preferred entry point now that ``sta_parser`` produces
@@ -1142,10 +1142,8 @@ class TimingPanel(QDockWidget):
         # ----- forward to optional path browser dock ---------------------
         browser = getattr(self, "_path_browser", None)
         if browser is not None:
-            try:
+            with contextlib.suppress(Exception):
                 browser.load_sta_report(report)
-            except Exception:
-                pass
 
     def attach_path_browser(self, browser) -> None:
         """Register a :class:`PathBrowserPanel` to mirror STA reports into."""

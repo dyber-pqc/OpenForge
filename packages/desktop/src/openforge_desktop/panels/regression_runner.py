@@ -10,9 +10,8 @@ from __future__ import annotations
 import json
 import threading
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, QObject, Signal, Slot
+from PySide6.QtCore import QObject, Qt, Signal, Slot
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QComboBox,
@@ -24,9 +23,9 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -73,12 +72,12 @@ class RegressionRunnerPanel(QWidget):
 
     openLog = Signal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._suite: Optional["TestSuite"] = None
-        self._results: dict[str, "TestResult"] = {}
+        self._suite: TestSuite | None = None
+        self._results: dict[str, TestResult] = {}
         self._flake: dict[str, float] = {}
-        self._runner_thread: Optional[threading.Thread] = None
+        self._runner_thread: threading.Thread | None = None
         self._cancel = threading.Event()
         self._bridge = _Bridge()
         self._bridge.started.connect(self._on_started)
@@ -185,7 +184,7 @@ class RegressionRunnerPanel(QWidget):
     # ------------------------------------------------------------------
     # Suite mutation
     # ------------------------------------------------------------------
-    def set_suite(self, suite: "TestSuite") -> None:
+    def set_suite(self, suite: TestSuite) -> None:
         self._suite = suite
         self._refresh_suite_tree()
 
@@ -251,7 +250,7 @@ class RegressionRunnerPanel(QWidget):
         if self._suite is None:
             return
         items = self._suite_tree.selectedItems()
-        picks: list["TestSpec"] = []
+        picks: list[TestSpec] = []
         for it in items:
             idx = self._suite_tree.indexOfTopLevelItem(it)
             if 0 <= idx < len(self._suite.tests):

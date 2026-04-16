@@ -1,11 +1,15 @@
 """PDK Manager - central registry of supported PDKs with install/discover."""
 from __future__ import annotations
 
+import contextlib
 import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -25,9 +29,9 @@ class PdkInfo:
     process_node_nm: int
     cell_libraries: list[str] = field(default_factory=list)
     corners: dict[str, list[PdkCorner]] = field(default_factory=dict)
-    tech_lef: Optional[Path] = None
-    merged_lef: Optional[Path] = None
-    install_path: Optional[Path] = None
+    tech_lef: Path | None = None
+    merged_lef: Path | None = None
+    install_path: Path | None = None
     download_url: str = ""
     installed: bool = False
 
@@ -80,11 +84,11 @@ class PdkManager:  # noqa: N801 - camelCase alias exposed below
         ),
     }
 
-    def __init__(self, install_root: Optional[Path] = None):
+    def __init__(self, install_root: Path | None = None):
         self.install_root: Path = install_root or (Path.home() / ".openforge" / "pdks")
         self.install_root.mkdir(parents=True, exist_ok=True)
         self._share_root = _share_pdk_root()
-        self._active: Optional[str] = None
+        self._active: str | None = None
         self._pdks: dict[str, PdkInfo] = {
             name: PdkInfo(
                 name=info.name,
@@ -107,14 +111,14 @@ class PdkManager:  # noqa: N801 - camelCase alias exposed below
         info = self._pdks.get(pdk_name)
         return bool(info and info.installed)
 
-    def get_pdk(self, pdk_name: str) -> Optional[PdkInfo]:
+    def get_pdk(self, pdk_name: str) -> PdkInfo | None:
         return self._pdks.get(pdk_name)
 
     def set_active(self, pdk_name: str) -> None:
         if pdk_name in self._pdks:
             self._active = pdk_name
 
-    def get_active(self) -> Optional[PdkInfo]:
+    def get_active(self) -> PdkInfo | None:
         return self._pdks.get(self._active) if self._active else None
 
     # ------------------------------------------------------------------
@@ -186,22 +190,18 @@ class PdkManager:  # noqa: N801 - camelCase alias exposed below
             if p in ("tt", "ss", "ff", "sf", "fs"):
                 process = p
             elif p.endswith("C") and p[:-1].lstrip("-").isdigit():
-                try:
+                with contextlib.suppress(ValueError):
                     temp = float(p[:-1])
-                except ValueError:
-                    pass
             elif "v" in p:
-                try:
+                with contextlib.suppress(ValueError):
                     volt = float(p.replace("v", "."))
-                except ValueError:
-                    pass
         return process, temp, volt
 
     # ------------------------------------------------------------------
     def install(
         self,
         pdk_name: str,
-        progress_callback: Optional[Callable[[str, float], None]] = None,
+        progress_callback: Callable[[str, float], None] | None = None,
     ) -> bool:
         info = self._pdks.get(pdk_name)
         if not info:
@@ -255,7 +255,7 @@ class PdkManager:  # noqa: N801 - camelCase alias exposed below
             return []
         return info.corners.get(lib_name, [])
 
-    def get_default_corner(self, pdk_name: str) -> Optional[PdkCorner]:
+    def get_default_corner(self, pdk_name: str) -> PdkCorner | None:
         info = self._pdks.get(pdk_name)
         if not info or not info.corners:
             return None

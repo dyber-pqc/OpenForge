@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 import typer
@@ -12,7 +12,7 @@ from rich.panel import Panel
 console = Console()
 
 
-class Template(str, Enum):
+class Template(StrEnum):
     crypto_accelerator = "crypto-accelerator"
     simple_counter = "simple-counter"
     empty = "empty"
@@ -208,7 +208,7 @@ def init(
     (project_dir / "constraints").mkdir(parents=True, exist_ok=True)
     _write(
         project_dir / "constraints" / "timing.sdc",
-        f"create_clock -name clk -period 10.0 [get_ports clk]\n",
+        "create_clock -name clk -period 10.0 [get_ports clk]\n",
     )
 
     # openforge.yaml -- pick template-appropriate config

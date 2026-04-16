@@ -9,16 +9,13 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QAction,
-    QBrush,
     QColor,
     QFont,
     QPainter,
@@ -30,14 +27,12 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDockWidget,
     QFileDialog,
-    QFrame,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QListWidget,
     QListWidgetItem,
-    QProgressBar,
     QPushButton,
     QSizePolicy,
     QSplitter,
@@ -51,7 +46,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # Catppuccin Mocha
 _BG = QColor("#1e1e2e")
@@ -523,10 +517,7 @@ class CoverageClosurePanel(QDockWidget):
             return
         actual = [100.0 - s.overall() for s in self._snapshots]
         n = len(actual)
-        if n >= 2:
-            target = [actual[0] * (1 - i / max(n - 1, 1)) for i in range(n)]
-        else:
-            target = list(actual)
+        target = [actual[0] * (1 - i / max(n - 1, 1)) for i in range(n)] if n >= 2 else list(actual)
         self.burndown.set_data(actual, target)
 
     def _refresh_contributors(self) -> None:

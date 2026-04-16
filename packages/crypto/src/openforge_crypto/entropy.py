@@ -7,12 +7,9 @@ sufficient min-entropy reaches each consumer per NIST SP 800-90B.
 
 from __future__ import annotations
 
-import math
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any
-
 
 # ── Enums ─────────────────────────────────────────────────────────────
 

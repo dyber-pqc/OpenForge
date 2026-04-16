@@ -14,9 +14,12 @@ from __future__ import annotations
 import re
 import shutil
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
-from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
+from openforge.engine.base import ToolEngine, ToolResult
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class F4pgaEngine(ToolEngine):

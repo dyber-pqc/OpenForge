@@ -9,7 +9,7 @@ critical (need a faster variant).
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from openforge.physical.sta_parser import StaReport
 
 
-class VtClass(str, Enum):
+class VtClass(StrEnum):
     LVT = "lvt"
     RVT = "rvt"
     HVT = "hvt"
@@ -79,7 +79,7 @@ class MultiVtLibrary(BaseModel):
         cls,
         bases: list[str] | None = None,
         drives: list[str] | None = None,
-    ) -> "MultiVtLibrary":
+    ) -> MultiVtLibrary:
         """Build a fallback library when no liberty files are available."""
         lib = cls()
         bases = bases or ["INV", "BUF", "NAND2", "NOR2", "AND2", "OR2", "DFF"]
@@ -154,7 +154,7 @@ class MultiVtOptimizer:
         self,
         lib: MultiVtLibrary,
         def_path: Path,
-        sta_report: "StaReport",
+        sta_report: StaReport,
     ) -> None:
         self.lib = lib
         self.def_path = Path(def_path)

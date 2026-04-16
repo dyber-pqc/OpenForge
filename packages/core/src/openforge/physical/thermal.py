@@ -7,12 +7,15 @@ to a steady-state temperature distribution.
 
 from __future__ import annotations
 
+import contextlib
 import math
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 # ----------------------------------------------------------------------------
 # Data classes
@@ -102,16 +105,14 @@ class ThermalAnalyzer:
         cell_powers: dict[tuple[float, float], float],
         grid_resolution_um: float = 5.0,
         max_iterations: int = 200,
-        on_progress: Optional[Callable[[float, str], None]] = None,
+        on_progress: Callable[[float, str], None] | None = None,
     ) -> ThermalMap:
         """Compute steady-state temperature distribution."""
 
         def progress(f: float, m: str) -> None:
             if on_progress:
-                try:
+                with contextlib.suppress(Exception):
                     on_progress(f, m)
-                except Exception:
-                    pass
 
         progress(0.0, "Building thermal grid...")
         cols = max(2, int(math.ceil(die_width_um / grid_resolution_um)))

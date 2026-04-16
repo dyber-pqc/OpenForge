@@ -7,48 +7,41 @@ top when no query is entered.
 
 from __future__ import annotations
 
+import contextlib
 import json
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import (
-    Qt,
-    Signal,
-    QSize,
-    QSettings,
-    QPropertyAnimation,
     QEasingCurve,
     QEvent,
-    QPoint,
+    QPropertyAnimation,
     QRect,
+    QSettings,
+    QSize,
+    Qt,
+    Signal,
 )
 from PySide6.QtGui import (
-    QFont,
-    QKeySequence,
-    QPainter,
     QColor,
-    QPalette,
-    QShortcut,
     QFontMetrics,
-    QPen,
+    QPainter,
 )
 from PySide6.QtWidgets import (
     QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
+    QFrame,
+    QGraphicsDropShadowEffect,
+    QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QLabel,
-    QFrame,
-    QWidget,
-    QGraphicsDropShadowEffect,
-    QSizePolicy,
-    QStyledItemDelegate,
     QStyle,
-    QApplication,
+    QStyledItemDelegate,
+    QVBoxLayout,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Command dataclass + registration
@@ -62,7 +55,7 @@ class Command:
     category: str
     shortcut: str = ""
     icon: str = ""
-    handler: Optional[Callable[[], None]] = None
+    handler: Callable[[], None] | None = None
     keywords: list[str] = field(default_factory=list)
 
     @property
@@ -536,16 +529,14 @@ class CommandPalette(QDialog):
         self._on_item_activated(item)
 
     def _on_item_activated(self, item: QListWidgetItem) -> None:
-        cmd: Optional[Command] = item.data(Qt.ItemDataRole.UserRole)
+        cmd: Command | None = item.data(Qt.ItemDataRole.UserRole)
         if cmd is None:
             return
         self._push_recent(cmd.id)
         self.command_executed.emit(cmd.id)
         if cmd.handler is not None:
-            try:
+            with contextlib.suppress(Exception):
                 cmd.handler()
-            except Exception:
-                pass
         self.close()
 
     # ----- recents ----------------------------------------------------------

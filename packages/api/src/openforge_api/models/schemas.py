@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from enum import Enum
-from uuid import UUID
+from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
 
 # ---------------------------------------------------------------------------
 # Common / Job infrastructure
 # ---------------------------------------------------------------------------
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     """Lifecycle state for any asynchronous job."""
 
     queued = "queued"
@@ -68,7 +70,7 @@ class ProjectDetail(BaseModel):
 # Synthesis
 # ---------------------------------------------------------------------------
 
-class SynthesisOptimization(str, Enum):
+class SynthesisOptimization(StrEnum):
     """Optimisation target for synthesis."""
 
     area = "area"
@@ -234,7 +236,7 @@ class SignalData(BaseModel):
 # Crypto verification
 # ---------------------------------------------------------------------------
 
-class CryptoAnalysisType(str, Enum):
+class CryptoAnalysisType(StrEnum):
     """Kind of crypto analysis."""
 
     constant_time = "constant-time"

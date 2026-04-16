@@ -5,11 +5,12 @@ removing open-source PDKs used by OpenForge's ASIC flow.
 """
 from __future__ import annotations
 
+import contextlib
 import os
 import shutil
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from pydantic import BaseModel, Field
 
@@ -21,13 +22,13 @@ class PdkInfo(BaseModel):
     version: str
     foundry: str
     vendor: str
-    install_path: Optional[Path] = None
+    install_path: Path | None = None
     sources_url: str
     license: str
     supported_libs: list[str] = Field(default_factory=list)
     node_nm: int = 0
     installer: str = "volare"  # "volare" | "git"
-    git_ref: Optional[str] = None
+    git_ref: str | None = None
 
 
 class PdkInstaller:
@@ -124,7 +125,7 @@ class PdkInstaller:
         ),
     }
 
-    def __init__(self, install_root: Optional[Path] = None) -> None:
+    def __init__(self, install_root: Path | None = None) -> None:
         self.install_root = Path(
             install_root
             or os.environ.get("PDK_ROOT")
@@ -160,8 +161,8 @@ class PdkInstaller:
     def install(
         self,
         pdk_name: str,
-        install_dir: Optional[Path] = None,
-        progress_callback: Optional[ProgressCallback] = None,
+        install_dir: Path | None = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> Path:
         info = self.KNOWN_PDKS.get(pdk_name)
         if info is None:
@@ -172,10 +173,8 @@ class PdkInstaller:
 
         def emit(msg: str, frac: float) -> None:
             if progress_callback:
-                try:
+                with contextlib.suppress(Exception):
                     progress_callback(msg, frac)
-                except Exception:
-                    pass
 
         emit(f"Preparing to install {pdk_name}...", 0.0)
 
@@ -293,9 +292,7 @@ class PdkInstaller:
             return [f"install path does not exist: {path}"]
 
         missing: list[str] = []
-        if info.name.startswith("sky130"):
-            expected_subdirs = ["libs.ref", "libs.tech"]
-        elif info.name.startswith("gf180"):
+        if info.name.startswith("sky130") or info.name.startswith("gf180"):
             expected_subdirs = ["libs.ref", "libs.tech"]
         elif info.name == "asap7":
             expected_subdirs = ["asap7PDK_r1p7", "asap7sc7p5t_28"]

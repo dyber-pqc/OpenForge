@@ -22,13 +22,13 @@ files; the desktop SpicePanel can drive it via Qt threads.
 
 from __future__ import annotations
 
+import contextlib
 import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from openforge.engine.ngspice import NgspiceEngine, parse_si_value
-
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -140,10 +140,8 @@ def _parse_vcd(path: Path) -> tuple[float, dict[str, _VcdSignal]]:
                 continue
             if in_dump:
                 if tok.startswith("#"):
-                    try:
+                    with contextlib.suppress(ValueError):
                         current_time = int(tok[1:])
-                    except ValueError:
-                        pass
                     i += 1
                     continue
                 if tok in ("$dumpvars", "$dumpall", "$dumpoff", "$dumpon", "$end"):

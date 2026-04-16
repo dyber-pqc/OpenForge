@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -21,6 +21,9 @@ from openforge.project.templates import (
     pcb_template,
     sky130_asic_template,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def test_sky130_template_has_three_corners() -> None:

@@ -60,7 +60,10 @@ import struct
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import BinaryIO, Iterable
+from typing import TYPE_CHECKING, BinaryIO
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ============================================================================
 # RECORD TYPES (from the GDSII Stream Format specification)

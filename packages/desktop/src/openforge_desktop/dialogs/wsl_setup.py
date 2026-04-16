@@ -9,35 +9,22 @@ from __future__ import annotations
 
 import os
 import platform
-import shutil
 import subprocess
 import textwrap
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, Signal, QObject, QThread, QSize
-from PySide6.QtGui import QFont, QIcon, QPixmap, QColor
+from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
-    QPushButton,
-    QTextEdit,
-    QProgressBar,
-    QFrame,
-    QStackedWidget,
-    QWidget,
-    QSizePolicy,
     QListWidget,
     QListWidgetItem,
-    QMessageBox,
-    QCheckBox,
-    QGroupBox,
-    QSpacerItem,
+    QProgressBar,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
 )
-
 
 # ---------------------------------------------------------------------------
 # Step definitions
@@ -51,7 +38,7 @@ class WslStep:
     description: str
     command: list[str] = field(default_factory=list)
     can_skip: bool = False
-    success: Optional[bool] = None
+    success: bool | None = None
     output: str = ""
 
 
@@ -119,7 +106,7 @@ class _StepWorker(QObject):
     line = Signal(str)
     finished = Signal(bool, str)
 
-    def __init__(self, command: list[str], shell_script: Optional[str] = None):
+    def __init__(self, command: list[str], shell_script: str | None = None):
         super().__init__()
         self._command = command
         self._shell_script = shell_script
@@ -239,8 +226,8 @@ class WslSetupDialog(QDialog):
         self.resize(780, 600)
         self._steps: list[WslStep] = _build_steps()
         self._current = 0
-        self._worker: Optional[_StepWorker] = None
-        self._thread: Optional[QThread] = None
+        self._worker: _StepWorker | None = None
+        self._thread: QThread | None = None
         self._build_ui()
         self._refresh()
 
@@ -411,7 +398,7 @@ class WslSetupDialog(QDialog):
         self._append_log(f"[run] {step.title}")
         self._progress.setVisible(True)
 
-        script: Optional[str] = None
+        script: str | None = None
         cmd: list[str] = step.command
         if step.id == "install_tools":
             script = generate_setup_script()

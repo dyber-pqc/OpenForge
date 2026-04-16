@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import json as json_mod
-import sys
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -27,14 +25,14 @@ app = typer.Typer(
 # ---------------------------------------------------------------------------
 
 
-class ProjectKind(str, Enum):
+class ProjectKind(StrEnum):
     asic = "asic"
     fpga = "fpga"
     pcb = "pcb"
     mixed = "mixed"
 
 
-class TemplateName(str, Enum):
+class TemplateName(StrEnum):
     sky130 = "sky130"
     ice40 = "ice40"
     ecp5 = "ecp5"
@@ -203,16 +201,16 @@ def init(
         "-t",
         help="Template to scaffold.",
     ),
-    from_vivado: Optional[str] = typer.Option(
+    from_vivado: str | None = typer.Option(
         None, "--from-vivado", help="Import from a Vivado .xpr project."
     ),
-    from_openlane: Optional[str] = typer.Option(
+    from_openlane: str | None = typer.Option(
         None, "--from-openlane", help="Import from an OpenLane2 directory."
     ),
-    from_kicad: Optional[str] = typer.Option(
+    from_kicad: str | None = typer.Option(
         None, "--from-kicad", help="Import from a KiCad .kicad_pro project."
     ),
-    from_quartus: Optional[str] = typer.Option(
+    from_quartus: str | None = typer.Option(
         None, "--from-quartus", help="Import from a Quartus .qpf project."
     ),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
@@ -323,7 +321,7 @@ def init(
         (project_dir / "schematics").mkdir(parents=True, exist_ok=True)
         (project_dir / "layout").mkdir(parents=True, exist_ok=True)
         (project_dir / "gerbers").mkdir(parents=True, exist_ok=True)
-        console.print(f"  [dim]create[/] schematics/ layout/ gerbers/")
+        console.print("  [dim]create[/] schematics/ layout/ gerbers/")
 
     console.print()
     console.print(f"[bold green]Done![/] Project created at [cyan]{project_dir}[/]")

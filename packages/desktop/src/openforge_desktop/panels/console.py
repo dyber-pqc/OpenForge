@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Final
 
 from PySide6.QtCore import Qt, Signal
@@ -126,7 +126,7 @@ class ConsolePanel(QDockWidget):
     def _append_styled(
         self, tag: str, message: str, color: str, *, bold: bool = False
     ) -> None:
-        timestamp = datetime.now(tz=timezone.utc).strftime("%H:%M:%S")
+        timestamp = datetime.now(tz=UTC).strftime("%H:%M:%S")
         cursor = self._output.textCursor()
         cursor.movePosition(cursor.MoveOperation.End)
 
@@ -142,7 +142,7 @@ class ConsolePanel(QDockWidget):
 
     def _on_context_menu(self, position) -> None:
         """Right-click context menu for the console output."""
-        from PySide6.QtWidgets import QMenu, QApplication
+        from PySide6.QtWidgets import QApplication, QMenu
 
         menu = QMenu(self)
 

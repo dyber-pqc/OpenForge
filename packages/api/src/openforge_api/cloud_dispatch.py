@@ -12,9 +12,12 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING
 
 from openforge_api.job_queue import Job, JobType, get_queue
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

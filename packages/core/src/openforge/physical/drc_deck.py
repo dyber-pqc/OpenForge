@@ -5,14 +5,17 @@ This module is a Mentor Calibre nmDRC replacement.
 """
 from __future__ import annotations
 
+import contextlib
 import re
 import subprocess
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -246,7 +249,7 @@ class DrcDeck:
     # ------------------------------------------------------------------
 
     @classmethod
-    def load_sky130_full(cls) -> "DrcDeck":
+    def load_sky130_full(cls) -> DrcDeck:
         """Load the full SKY130 DRC deck (representative subset)."""
         deck = cls("sky130_full", "sky130A")
         rules: list[DrcRule] = [
@@ -333,7 +336,7 @@ class DrcDeck:
         return deck
 
     @classmethod
-    def load_sky130_minimal(cls) -> "DrcDeck":
+    def load_sky130_minimal(cls) -> DrcDeck:
         """Minimal sanity-check deck (just width + spacing on metal layers)."""
         deck = cls("sky130_minimal", "sky130A")
         for layer, w in [("met1", 0.14), ("met2", 0.14), ("met3", 0.30),
@@ -345,7 +348,7 @@ class DrcDeck:
         return deck
 
     @classmethod
-    def load_gf180mcu(cls) -> "DrcDeck":
+    def load_gf180mcu(cls) -> DrcDeck:
         """Load a GlobalFoundries 180nm MCU representative DRC deck."""
         deck = cls("gf180mcu", "gf180mcuC")
         deck.add(
@@ -386,7 +389,7 @@ class DrcDeckRunner:
         self,
         layout: Path,
         lef_files: list[Path] = (),
-        on_progress: Optional[Callable[[float, str], None]] = None,
+        on_progress: Callable[[float, str], None] | None = None,
     ) -> DrcDeckResult:
         """Run the DRC deck via KLayout (Python API).
 
@@ -401,10 +404,8 @@ class DrcDeckRunner:
 
         script = self.deck.to_klayout_drc()
         script_path = layout.with_suffix(".lydrc")
-        try:
+        with contextlib.suppress(OSError):
             script_path.write_text(script, encoding="utf-8")
-        except OSError:
-            pass
 
         if on_progress:
             on_progress(0.2, "Invoking KLayout")

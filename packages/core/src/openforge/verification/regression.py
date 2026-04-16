@@ -21,15 +21,19 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
 try:  # pragma: no cover - optional yaml
     import yaml  # type: ignore
 except Exception:  # pragma: no cover
     yaml = None  # type: ignore
 
+import contextlib
+
 from .coverage import CoverageParser, CoverageReport
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -50,7 +54,7 @@ class TestCase:
     plusargs: dict[str, str] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
 
-    def with_seed(self, seed: int) -> "TestCase":
+    def with_seed(self, seed: int) -> TestCase:
         return TestCase(
             name=self.name,
             sources=list(self.sources),
@@ -72,11 +76,11 @@ class TestResult:
     status: str = "pending"  # passed / failed / error / timeout / skipped
     duration_s: float = 0.0
     log: str = ""
-    coverage: Optional[CoverageReport] = None
+    coverage: CoverageReport | None = None
     seed_used: int | None = None
     error_message: str = ""
-    artifact_dir: Optional[Path] = None
-    waveform: Optional[Path] = None
+    artifact_dir: Path | None = None
+    waveform: Path | None = None
 
     @property
     def is_pass(self) -> bool:
@@ -152,10 +156,8 @@ class RegressionRunner:
         timeout = 60
         tm = _TIMEOUT_RE.search(header)
         if tm:
-            try:
+            with contextlib.suppress(ValueError):
                 timeout = int(tm.group(1))
-            except ValueError:
-                pass
         expect = "pass"
         em = _EXPECT_RE.search(header)
         if em:
@@ -246,10 +248,8 @@ class RegressionRunner:
                         )
                     results.append(result)
                     if on_test_complete is not None:
-                        try:
+                        with contextlib.suppress(Exception):
                             on_test_complete(result)
-                        except Exception:
-                            pass
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
 
@@ -306,10 +306,8 @@ class RegressionRunner:
         # Try to ingest coverage if present.
         cov_file = artifact / "coverage.dat"
         if cov_file.exists():
-            try:
+            with contextlib.suppress(Exception):
                 result.coverage = CoverageParser().parse_verilator_dat(cov_file)
-            except Exception:
-                pass
 
         return result
 

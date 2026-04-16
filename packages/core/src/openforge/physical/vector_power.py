@@ -12,7 +12,6 @@ runs entirely in-process with no external tools.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -179,9 +178,9 @@ class VectorPowerAnalyzer:
         self.lib_path = Path(lib_path) if lib_path else None
         self.vdd = float(vdd)
 
-        self._waveform: Optional[Waveform] = None
-        self._design: Optional[DefDesign] = None
-        self._liberty: Optional["LibertyLibrary"] = None
+        self._waveform: Waveform | None = None
+        self._design: DefDesign | None = None
+        self._liberty: LibertyLibrary | None = None
 
     # ------------------------------------------------------------------
     # Lazy loaders
@@ -197,7 +196,7 @@ class VectorPowerAnalyzer:
             self._design = parse_def(self.def_path)
         return self._design
 
-    def _load_liberty(self) -> Optional["LibertyLibrary"]:
+    def _load_liberty(self) -> LibertyLibrary | None:
         if self._liberty is None and self.lib_path and parse_liberty is not None:
             try:
                 self._liberty = parse_liberty(self.lib_path)

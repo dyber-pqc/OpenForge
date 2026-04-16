@@ -17,7 +17,6 @@ import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class ActivityFile:
             return 0.0
         return sum(s.activity_factor for s in self.signals.values()) / len(self.signals)
 
-    def get_signal(self, name: str) -> Optional[SignalActivity]:
+    def get_signal(self, name: str) -> SignalActivity | None:
         return self.signals.get(name)
 
     def get_total_toggles(self) -> int:
@@ -141,7 +140,6 @@ def parse_vcd_for_activity(vcd_path: Path) -> ActivityFile:
 
     # Parse header first
     with vcd_path.open("r", encoding="utf-8", errors="replace") as f:
-        in_definitions = True
         for line in f:
             line = line.strip()
             if not line:
@@ -171,7 +169,6 @@ def parse_vcd_for_activity(vcd_path: Path) -> ActivityFile:
                     full = ".".join(scope_stack + [name]) if scope_stack else name
                     id_to_name[id_code] = (full, width)
             elif line.startswith("$enddefinitions"):
-                in_definitions = False
                 break
 
         # Initialize per-signal state
@@ -431,9 +428,9 @@ class ActivityDrivenPowerAnalyzer:
         self,
         activity: ActivityFile,
         top_module: str,
-        cwd: Optional[Path] = None,
-        vcd_path: Optional[Path] = None,
-        saif_path: Optional[Path] = None,
+        cwd: Path | None = None,
+        vcd_path: Path | None = None,
+        saif_path: Path | None = None,
     ) -> dict:
         """Run OpenSTA with read_power_activities loaded from VCD/SAIF.
 
@@ -473,8 +470,8 @@ class ActivityDrivenPowerAnalyzer:
         self,
         activity: ActivityFile,
         top_module: str,
-        vcd_path: Optional[Path],
-        saif_path: Optional[Path],
+        vcd_path: Path | None,
+        saif_path: Path | None,
     ) -> str:
         lines: list[str] = []
         lines.append(f"# Activity-driven power analysis for {top_module}")

@@ -13,7 +13,6 @@ import bisect
 import time as _time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import (
     QPoint,
@@ -23,12 +22,10 @@ from PySide6.QtCore import (
     Signal,
 )
 from PySide6.QtGui import (
-    QAction,
     QBrush,
     QColor,
     QFont,
     QFontMetrics,
-    QKeySequence,
     QMouseEvent,
     QPainter,
     QPainterPath,
@@ -36,16 +33,10 @@ from PySide6.QtGui import (
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QColorDialog,
     QFileDialog,
-    QHBoxLayout,
-    QLabel,
     QLineEdit,
     QMenu,
-    QPushButton,
-    QScrollBar,
-    QSizePolicy,
     QSplitter,
     QStatusBar,
     QToolBar,
@@ -56,8 +47,8 @@ from PySide6.QtWidgets import (
 )
 
 try:
-    from openforge.format.waveform import Waveform, WaveSignal, WaveTransition, SignalKind
     from openforge.format.bus_decoder import BusDecoder
+    from openforge.format.waveform import SignalKind, Waveform, WaveSignal, WaveTransition
     _HAS_MODEL = True
 except Exception:  # pragma: no cover
     Waveform = object  # type: ignore
@@ -128,14 +119,14 @@ class WaveformView(QWidget):
     TIME_AXIS_H = 26
     VALUE_COL_W = 90
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMouseTracking(True)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
 
-        self._wf: Optional[Waveform] = None
+        self._wf: Waveform | None = None
         self._signals: list[DisplaySignal] = []
         self._groups_collapsed: set[str] = set()
         self._decoder = BusDecoder() if _HAS_MODEL else None
@@ -153,7 +144,7 @@ class WaveformView(QWidget):
         self._drag_mode: str = ""  # "cursor_a" "cursor_b" "pan" "select" "resize_name"
         self._drag_start: QPoint = QPoint()
         self._drag_start_t: float = 0.0
-        self._selection: Optional[tuple[int, int]] = None
+        self._selection: tuple[int, int] | None = None
 
         self._selected_signal_idx: int = -1
         self._drag_sig_from: int = -1
@@ -164,7 +155,7 @@ class WaveformView(QWidget):
         self._last_paint_ms = 0.0
 
     # ──────────── Data API ────────────
-    def set_waveform(self, wf: Optional[Waveform]) -> None:
+    def set_waveform(self, wf: Waveform | None) -> None:
         self._wf = wf
         self._signals = []
         if wf is not None:
@@ -320,7 +311,7 @@ class WaveformView(QWidget):
         cr = self._canvas_rect()
         p.setClipRect(cr)
         y = cr.top() + 4
-        for i, disp in enumerate(self._signals):
+        for _i, disp in enumerate(self._signals):
             sig = self._wf.signals.get(disp.full_path)
             trs = self._wf.data.get(disp.full_path, [])
             if sig is None:
@@ -758,7 +749,7 @@ class WaveformView(QWidget):
         self._emit_status()
         self.update()
 
-    def _emit_status(self, pt: Optional[QPoint] = None) -> None:
+    def _emit_status(self, pt: QPoint | None = None) -> None:
         delta = int(self._cursor_b.time - self._cursor_a.time)
         msg = (f"A={self._format_time(self._cursor_a.time)}  "
                f"B={self._format_time(self._cursor_b.time)}  "
@@ -767,7 +758,7 @@ class WaveformView(QWidget):
         self.statusChanged.emit(msg)
 
     # search
-    def find_signal_value(self, full_path: str, predicate) -> Optional[int]:
+    def find_signal_value(self, full_path: str, predicate) -> int | None:
         if self._wf is None:
             return None
         trs = self._wf.data.get(full_path, [])
@@ -781,9 +772,9 @@ class WaveformView(QWidget):
 class WaveformPanel(QWidget):
     """Parent panel with toolbar, scope tree, signal list, and canvas."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._wf: Optional[Waveform] = None
+        self._wf: Waveform | None = None
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -836,7 +827,7 @@ class WaveformPanel(QWidget):
         root.addWidget(self.status)
         self.view.statusChanged.connect(self.status.showMessage)
 
-        self._current_path: Optional[Path] = None
+        self._current_path: Path | None = None
 
     # ──────────── File loading ────────────
     def _open_dialog(self) -> None:

@@ -7,19 +7,15 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QBrush,
     QColor,
-    QKeySequence,
     QPainter,
-    QPainterPath,
     QPen,
     QPolygonF,
-    QTransform,
 )
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -27,12 +23,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFileDialog,
-    QGraphicsEllipseItem,
     QGraphicsItem,
-    QGraphicsLineItem,
-    QGraphicsPathItem,
-    QGraphicsPolygonItem,
-    QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
     QHBoxLayout,
@@ -51,17 +42,15 @@ from PySide6.QtWidgets import (
 )
 
 try:
+    from openforge.pcb.footprints import FOOTPRINTS
+    from openforge.pcb.gerber import GerberExporter
     from openforge.pcb.model import (
         PcbBoard,
         PcbFootprint,
-        PcbPad,
+        PcbStackup,
         PcbTrack,
         PcbVia,
-        PcbZone,
-        PcbStackup,
     )
-    from openforge.pcb.gerber import GerberExporter
-    from openforge.pcb.footprints import FOOTPRINTS
     _HAS_MODEL = True
 except Exception:  # pragma: no cover
     _HAS_MODEL = False
@@ -202,8 +191,8 @@ class PcbLayoutEditor(QWidget):
         self._track_width_mm = 0.25
         self._track_points: list[QPointF] = []
         self._zone_points: list[QPointF] = []
-        self._measure_start: Optional[QPointF] = None
-        self._temp_item: Optional[QGraphicsItem] = None
+        self._measure_start: QPointF | None = None
+        self._temp_item: QGraphicsItem | None = None
         self._active_net_id: int = 1
 
         self._build_ui()
@@ -415,9 +404,8 @@ class PcbLayoutEditor(QWidget):
                 self._on_canvas_click(event)
             elif etype == QEvent.Type.MouseMove:
                 self._on_canvas_move(event)
-            elif etype == QEvent.Type.KeyPress:
-                if event.key() == Qt.Key.Key_V:
-                    self._insert_via_at_last()
+            elif etype == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_V:
+                self._insert_via_at_last()
         return super().eventFilter(obj, event)
 
     def _view_to_scene(self, event) -> QPointF:

@@ -11,6 +11,7 @@ artefacts, and can detect flaky tests by re-running N times.
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import json
 import os
 import random
@@ -18,14 +19,17 @@ import re
 import shutil
 import subprocess
 import time
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-class TestStatus(str, Enum):
+
+class TestStatus(StrEnum):
     PASS = "pass"
     FAIL = "fail"
     ERROR = "error"
@@ -99,10 +103,8 @@ def _run_one_worker(
         status = "error"
         err = f"exception: {exc}"
     runtime = time.monotonic() - start
-    try:
+    with contextlib.suppress(OSError):
         log_path.write_text(log_text or "", encoding="utf-8")
-    except OSError:
-        pass
     return TestResult(
         test_name=spec.name,
         seed=seed,
@@ -164,10 +166,8 @@ def _run_verilator(
     # Verilator writes logs/coverage.dat by default
     produced = work / "logs" / "coverage.dat"
     if produced.exists():
-        try:
+        with contextlib.suppress(OSError):
             shutil.copy(produced, cov_path)
-        except OSError:
-            pass
     if cp2.returncode != 0:
         return "fail", log
     if spec.expected_output and spec.expected_output not in log:
@@ -232,14 +232,14 @@ class RegressionRunner:
         self.output_dir = Path(output_dir)
         self.sim = sim
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.on_test_start: Optional[Callable[[str, int], None]] = None
-        self.on_test_finish: Optional[Callable[[TestResult], None]] = None
+        self.on_test_start: Callable[[str, int], None] | None = None
+        self.on_test_finish: Callable[[TestResult], None] | None = None
 
     def _jobs(self) -> list[tuple[TestSpec, int]]:
         out: list[tuple[TestSpec, int]] = []
         rng = random.Random(0xC0FFEE)
         for spec in self.suite.tests:
-            for i in range(max(1, spec.seed_count)):
+            for _i in range(max(1, spec.seed_count)):
                 out.append((spec, rng.randint(1, 2**31 - 1)))
         return out
 
@@ -260,10 +260,8 @@ class RegressionRunner:
             fut_map = {}
             for spec, seed in jobs:
                 if self.on_test_start:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.on_test_start(spec.name, seed)
-                    except Exception:
-                        pass
                 fut = ex.submit(
                     _run_one_worker,
                     spec.model_dump_json(),
@@ -286,10 +284,8 @@ class RegressionRunner:
                     )
                 results[f"{spec.name}#{seed}"] = result
                 if self.on_test_finish:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.on_test_finish(result)
-                    except Exception:
-                        pass
         return results
 
     def run_one(self, spec: TestSpec, seed: int) -> TestResult:
@@ -304,7 +300,7 @@ class RegressionRunner:
         if spec is None:
             return 0.0
         failures = 0
-        for i in range(runs):
+        for _i in range(runs):
             r = self.run_one(spec, random.randint(1, 2**31 - 1))
             if r.status != "pass":
                 failures += 1

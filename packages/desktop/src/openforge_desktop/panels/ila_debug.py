@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QTimer, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QComboBox,
@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMessageBox,

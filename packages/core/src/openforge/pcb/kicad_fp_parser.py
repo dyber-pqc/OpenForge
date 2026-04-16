@@ -19,6 +19,7 @@ Only the elements we actually consume from real libraries are supported:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -423,10 +424,8 @@ def parse_kicad_mod_file(path: Path) -> Any:
     fp = parse_kicad_mod_text(text, library=library)
     if fp is not None and not getattr(fp, "name", ""):
         # Use the file stem as a fallback name.
-        try:
+        with contextlib.suppress(Exception):
             fp.name = p.stem
-        except Exception:
-            pass
     return fp
 
 

@@ -15,7 +15,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
@@ -98,7 +97,7 @@ def emit_covergroup_sv(cg: CoverGroup) -> str:
     """Render ``cg`` as a standalone SV covergroup declaration."""
     lines: list[str] = []
     lines.append(f"covergroup {cg.name} {cg.sample_event};")
-    lines.append(f"  option.per_instance = 1;")
+    lines.append("  option.per_instance = 1;")
     for p in cg.points:
         lines.append(f"        {p.sv()}")
     for a, b in cg.crosses:

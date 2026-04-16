@@ -6,7 +6,7 @@ slack coloring, and cross-probing into the layout viewer.
 
 from __future__ import annotations
 
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
@@ -35,7 +35,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Constants and helpers
@@ -68,7 +67,7 @@ class PathBarWidget(QFrame):
 
     cell_clicked = Signal(int)  # stage index
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._stages: list[dict] = []
         self._dark = True
@@ -194,14 +193,14 @@ class PathBrowserPanel(QDockWidget):
     path_selected = Signal(dict)
     source_navigate = Signal(str)  # startpoint identifier for RTL editor jump
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Timing Paths")
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self._paths: list[dict] = []
-        self._current_path: Optional[dict] = None
-        self._report: Optional["StaReport"] = None
+        self._current_path: dict | None = None
+        self._report: StaReport | None = None
         self._dark = True
 
         self._build_ui()
@@ -555,18 +554,18 @@ class PathBrowserPanel(QDockWidget):
     # Real STA report integration
     # ------------------------------------------------------------------
 
-    def load_sta_report(self, report: "StaReport") -> None:
+    def load_sta_report(self, report: StaReport) -> None:
         """Populate the browser with paths from a real :class:`StaReport`."""
         self._report = report
         self._paths = [self._path_to_dict(p) for p in report.paths]
         self._current_path = None
         self._refresh_tree()
 
-    def _path_to_dict(self, path: "TimingPath") -> dict[str, Any]:
+    def _path_to_dict(self, path: TimingPath) -> dict[str, Any]:
         """Convert a :class:`TimingPath` into the dict format the tree uses."""
         stages: list[dict[str, Any]] = []
 
-        def _push(stage: "TimingStage", section: str) -> None:
+        def _push(stage: TimingStage, section: str) -> None:
             stages.append(
                 {
                     "section": section,

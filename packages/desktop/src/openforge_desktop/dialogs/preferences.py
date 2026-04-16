@@ -18,7 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 
 try:
-    from PySide6.QtCore import QSettings, Qt
+    from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import (
         QCheckBox,
         QComboBox,
@@ -109,7 +109,7 @@ if _QT_OK:
             try:
                 from openforge_desktop.keybindings import ALL_SCHEMES
 
-                for name in ALL_SCHEMES.keys():
+                for name in ALL_SCHEMES:
                     self.scheme_combo.addItem(name)
             except Exception:
                 self.scheme_combo.addItems(

@@ -24,14 +24,12 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
 from openforge.format.def_parser import DefDesign, parse_def
 from openforge.format.lef_parser import LefLibrary, parse_lef
-
 
 # ---------------------------------------------------------------------------
 # Rule / result models
@@ -195,7 +193,7 @@ class DensityFiller:
                     (self.design.to_um(x), self.design.to_um(y))
                     for (x, y, _e) in seg.points
                 ]
-                for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+                for (x1, y1), (x2, y2) in zip(pts, pts[1:], strict=False):
                     if abs(x1 - x2) < 1e-9:  # vertical
                         self._paint_rect(
                             mask, x1 - half, min(y1, y2), x1 + half, max(y1, y2)
@@ -210,16 +208,13 @@ class DensityFiller:
             for seg in snet.routes:
                 if seg.layer.lower() != layer_l or len(seg.points) < 2:
                     continue
-                if seg.width > 0:
-                    w_um = self.design.to_um(seg.width)
-                else:
-                    w_um = 1.6
+                w_um = self.design.to_um(seg.width) if seg.width > 0 else 1.6
                 half = w_um / 2.0
                 pts = [
                     (self.design.to_um(x), self.design.to_um(y))
                     for (x, y, _e) in seg.points
                 ]
-                for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+                for (x1, y1), (x2, y2) in zip(pts, pts[1:], strict=False):
                     if abs(x1 - x2) < 1e-9:
                         self._paint_rect(
                             mask, x1 - half, min(y1, y2), x1 + half, max(y1, y2)

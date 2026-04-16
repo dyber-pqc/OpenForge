@@ -7,12 +7,9 @@ does not depend on PyGit2 or GitPython. Long-running commands run on a
 
 from __future__ import annotations
 
-import shlex
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import (
     QFileSystemWatcher,
@@ -23,13 +20,12 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
-from PySide6.QtGui import QAction, QColor, QFont, QTextCharFormat, QTextCursor
+from PySide6.QtGui import QAction, QColor, QFont, QTextCharFormat
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QDockWidget,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QMenu,
     QMessageBox,
@@ -44,7 +40,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Theme
@@ -106,10 +101,10 @@ class GitCommit:
 class GitRunner:
     """Synchronous git wrapper. Used by both the UI and the worker thread."""
 
-    def __init__(self, root: Optional[Path] = None) -> None:
+    def __init__(self, root: Path | None = None) -> None:
         self.root = Path(root) if root else None
 
-    def set_root(self, root: Optional[Path]) -> None:
+    def set_root(self, root: Path | None) -> None:
         self.root = Path(root) if root else None
 
     def is_repo(self) -> bool:
@@ -281,7 +276,7 @@ class GitPanel(QDockWidget):
 
     file_diff_requested = Signal(str, str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("Source Control", parent)
         self.setObjectName("GitPanel")
         self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
@@ -289,7 +284,7 @@ class GitPanel(QDockWidget):
         self._dark = True
         self._palette = MOCHA
         self.runner = GitRunner()
-        self._project_root: Optional[Path] = None
+        self._project_root: Path | None = None
         self._watcher = QFileSystemWatcher(self)
         self._watcher.fileChanged.connect(self._on_fs_changed)
         self._watcher.directoryChanged.connect(self._on_fs_changed)
@@ -463,7 +458,7 @@ class GitPanel(QDockWidget):
             else:
                 groups["Modified"].addChild(item)
 
-        for name, group in list(groups.items()):
+        for _name, group in list(groups.items()):
             if group.childCount() == 0:
                 idx = self.tree.indexOfTopLevelItem(group)
                 self.tree.takeTopLevelItem(idx)

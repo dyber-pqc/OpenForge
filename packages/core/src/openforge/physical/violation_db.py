@@ -12,6 +12,7 @@ unavailable.
 """
 from __future__ import annotations
 
+import contextlib
 import csv
 import html
 import json
@@ -19,11 +20,13 @@ import sqlite3
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 VALID_KINDS = {
     "setup",
@@ -64,16 +67,16 @@ class Violation(BaseModel):
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     kind: str
     severity: str = "major"
-    location: Optional[tuple[float, float]] = None
-    instance: Optional[str] = None
-    net: Optional[str] = None
-    layer: Optional[str] = None
+    location: tuple[float, float] | None = None
+    instance: str | None = None
+    net: str | None = None
+    layer: str | None = None
     metric_value: float = 0.0
     metric_unit: str = ""
     threshold: float = 0.0
     delta: float = 0.0
     suggestion: str = ""
-    waiver_id: Optional[str] = None
+    waiver_id: str | None = None
     source: str = ""
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
@@ -132,7 +135,7 @@ class ViolationDb:
     def __init__(self, db_path: Path | None = None) -> None:
         self.db_path = Path(db_path) if db_path else None
         self._mem: list[Violation] = []
-        self._conn: Optional[sqlite3.Connection] = None
+        self._conn: sqlite3.Connection | None = None
         try:
             if self.db_path is not None:
                 self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -150,7 +153,7 @@ class ViolationDb:
             return
         x = v.location[0] if v.location else None
         y = v.location[1] if v.location else None
-        try:
+        with contextlib.suppress(Exception):
             self._conn.execute(
                 """INSERT OR REPLACE INTO violations
                 (id, kind, severity, x, y, instance, net, layer,
@@ -163,17 +166,13 @@ class ViolationDb:
                     v.suggestion, v.waiver_id, v.source, v.timestamp,
                 ),
             )
-        except Exception:
-            pass
 
     def add(self, v: Violation) -> None:
         self._mem.append(v)
         self._insert_row(v)
         if self._conn is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._conn.commit()
-            except Exception:
-                pass
 
     def add_bulk(self, vs: Iterable[Violation]) -> None:
         items = list(vs)
@@ -181,10 +180,8 @@ class ViolationDb:
         for v in items:
             self._insert_row(v)
         if self._conn is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._conn.commit()
-            except Exception:
-                pass
 
     def clear(self) -> None:
         self._mem.clear()
@@ -395,10 +392,8 @@ Total: {self.total_count()}</p>
 
 def _as_iter(obj: Any, name: str) -> list[Any]:
     v = None
-    try:
+    with contextlib.suppress(Exception):
         v = getattr(obj, name, None)
-    except Exception:
-        pass
     if v is None and isinstance(obj, dict):
         v = obj.get(name)
     if v is None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -34,7 +33,7 @@ class JlcpcbPickerDialog(QDialog):
         self,
         board: Any = None,
         parent=None,
-        picker: "JlcPartPicker | None" = None,
+        picker: JlcPartPicker | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("JLCPCB Part Picker")
@@ -128,7 +127,7 @@ class JlcpcbPickerDialog(QDialog):
         for fp in getattr(self._board, "footprints", []):
             self._ref_combo.addItem(f"{fp.ref} ({fp.value})")
 
-    def _selected_part(self) -> "LcscPart | None":
+    def _selected_part(self) -> LcscPart | None:
         if not _HAS_JLC or self._picker is None:
             return None
         row = self._table.currentRow()

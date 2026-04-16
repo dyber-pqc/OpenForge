@@ -22,7 +22,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from openforge.format.def_parser import DefDesign, parse_def
 from openforge.format.lef_parser import LefLibrary, parse_lef
 
-
 # ---------------------------------------------------------------------------
 # Rule / violation models
 # ---------------------------------------------------------------------------
@@ -68,7 +67,7 @@ class AntennaChecker(BaseModel):
     # ------------------------------------------------------------------ api
 
     @classmethod
-    def sky130_rules(cls) -> "AntennaChecker":
+    def sky130_rules(cls) -> AntennaChecker:
         """Default sky130 MP antenna rules (SkyWater PDK)."""
         return cls(
             rules=[
@@ -162,10 +161,7 @@ class AntennaChecker(BaseModel):
             if not layer:
                 continue
             length_um = design.to_um(seg.length_db)
-            if seg.width > 0:
-                width_um = design.to_um(seg.width)
-            else:
-                width_um = layer_widths.get(layer, 0.14)
+            width_um = design.to_um(seg.width) if seg.width > 0 else layer_widths.get(layer, 0.14)
             out[layer] = out.get(layer, 0.0) + length_um * width_um
         return out
 

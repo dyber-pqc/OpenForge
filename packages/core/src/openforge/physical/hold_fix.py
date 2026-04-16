@@ -10,16 +10,16 @@ that the existing ECO engine applies through OpenROAD / Innovus.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from openforge.format.def_parser import DefDesign, parse_def
 from openforge.format.lef_parser import LefLibrary, parse_lef
-from openforge.physical.sta_parser import StaReport, TimingPath
 
 if TYPE_CHECKING:  # pragma: no cover
     from openforge.physical.eco import EcoScript
+    from openforge.physical.sta_parser import StaReport, TimingPath
 
 
 # ---------------------------------------------------------------------------
@@ -200,7 +200,7 @@ class HoldFixer:
     def suggestions(self) -> list[HoldFixSuggestion]:
         return list(self._suggestions)
 
-    def to_eco_script(self) -> "EcoScript":
+    def to_eco_script(self) -> EcoScript:
         from openforge.physical.eco import EcoCommand, EcoCommandKind, EcoScript
 
         script = EcoScript(metadata={"source": "hold_fixer"})

@@ -12,11 +12,12 @@ from __future__ import annotations
 
 import re
 import struct
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
-from openforge.format.waveform import WaveSignal, WaveTransition
+if TYPE_CHECKING:
+    from openforge.format.waveform import WaveSignal, WaveTransition
 
 
 class DecodeRule(BaseModel):
@@ -197,12 +198,10 @@ class BusDecoder:
         out: list[Packet] = []
         in_frame = False
         bits: list[int] = []
-        start_t = 0
         byte_start = 0
         phase = "idle"  # idle / addr / data / ack
         prev_sda = 1
         prev_scl = 1
-        addr_byte: int | None = None
         for t, s, c in events:
             # START: SDA falls while SCL high
             if prev_scl == 1 and c == 1 and prev_sda == 1 and s == 0:
@@ -210,7 +209,6 @@ class BusDecoder:
                 in_frame = True
                 bits = []
                 phase = "addr"
-                start_t = t
                 byte_start = t
             # STOP: SDA rises while SCL high
             elif prev_scl == 1 and c == 1 and prev_sda == 0 and s == 1 and in_frame:
@@ -227,7 +225,6 @@ class BusDecoder:
                     if phase == "addr":
                         rw = "R" if (val & 1) else "W"
                         out.append((byte_start, t, f"ADDR {val >> 1:02X} {rw}"))
-                        addr_byte = val
                     else:
                         out.append((byte_start, t, f"DATA {val:02X}"))
                     bits = []
@@ -262,7 +259,6 @@ class BusDecoder:
         word_miso = 0
         count = 0
         frame_start = 0
-        active_edge = 1 if cpha == 0 else 0  # sample edge (simplified)
         # cpol=0 cpha=0: sample on rising edge
         sample_rising = (cpol == 0 and cpha == 0) or (cpol == 1 and cpha == 1)
         for t, name, val in events:

@@ -7,8 +7,6 @@ Physical Design, Timing, and Security panels.
 
 from __future__ import annotations
 
-from typing import Final
-
 # ── Dark palette (Catppuccin Mocha) ──────────────────────────────────────────
 
 _DARK: dict[str, str] = {

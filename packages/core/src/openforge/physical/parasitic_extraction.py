@@ -10,8 +10,10 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -173,7 +175,7 @@ class ParasiticExtractor:
     5. Build a per-net RC tree.
     """
 
-    def __init__(self, tech_data: Optional[dict] = None):
+    def __init__(self, tech_data: dict | None = None):
         self.tech: dict = tech_data or self._default_sky130_tech()
 
     @staticmethod
@@ -194,7 +196,7 @@ class ParasiticExtractor:
     def extract(
         self,
         def_path: Path,
-        on_progress: Optional[Callable[[float, str], None]] = None,
+        on_progress: Callable[[float, str], None] | None = None,
     ) -> SpefFile:
         """Extract parasitics from a routed DEF file."""
         def_path = Path(def_path)
@@ -261,9 +263,7 @@ class ParasiticExtractor:
             return nets
 
         in_nets = False
-        current_net: Optional[str] = None
-        prev_pt: Optional[tuple[float, float]] = None
-        prev_layer: Optional[str] = None
+        current_net: str | None = None
         units = 1000.0  # DEF dbu per micron, default
 
         try:
@@ -289,8 +289,6 @@ class ParasiticExtractor:
                     if nm:
                         current_net = nm.group(1)
                         nets.setdefault(current_net, [])
-                        prev_pt = None
-                        prev_layer = None
                         continue
 
                     if current_net is None:
@@ -303,8 +301,6 @@ class ParasiticExtractor:
                         x2_raw = rm.group(4)
                         y2_raw = rm.group(5)
                         if x2_raw is None:
-                            prev_pt = (x1, y1)
-                            prev_layer = layer
                             continue
                         x2 = x1 if x2_raw == "*" else float(x2_raw) / units
                         y2 = y1 if y2_raw == "*" else float(y2_raw) / units
@@ -312,13 +308,9 @@ class ParasiticExtractor:
                         nets[current_net].append(
                             _WireSeg(layer, x1, y1, x2, y2, width)
                         )
-                        prev_pt = (x2, y2)
-                        prev_layer = layer
 
                     if line.strip().endswith(";"):
                         current_net = None
-                        prev_pt = None
-                        prev_layer = None
         except OSError:
             pass
 

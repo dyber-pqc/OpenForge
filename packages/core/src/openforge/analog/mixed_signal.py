@@ -9,11 +9,11 @@ processes and exchange boundary-signal values through a pair of FIFO files
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
 import subprocess
-import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -42,7 +42,7 @@ class InterfaceSignal:
     threshold: float = 0.9  # voltage above which "1" is sampled
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "InterfaceSignal":
+    def from_dict(cls, d: dict[str, Any]) -> InterfaceSignal:
         return cls(
             name=d["name"],
             direction=d["direction"],
@@ -150,10 +150,8 @@ class MixedSignalSimulator:
     @staticmethod
     def _make_fifo(path: Path) -> None:
         if path.exists():
-            try:
+            with contextlib.suppress(OSError):
                 path.unlink()
-            except OSError:
-                pass
         if hasattr(os, "mkfifo"):
             try:
                 os.mkfifo(str(path))
@@ -269,7 +267,6 @@ class MixedSignalSimulator:
     def run(self) -> CosimResult:
         if not self.config or not self.work_dir:
             raise RuntimeError("setup_cosim() must be called first")
-        cfg = self.config
         result = CosimResult(success=False)
         result.digital_log = self.work_dir / "digital.log"
         result.analog_log = self.work_dir / "analog.log"

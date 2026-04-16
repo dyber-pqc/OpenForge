@@ -186,7 +186,7 @@ class PropertiesPanel(QDockWidget):
     def show_from_netlist_cell(
         self,
         cell_name: str,
-        netlist_data: "Any",
+        netlist_data: Any,
     ) -> None:
         """Display properties for a cell from a Yosys/gate-level netlist.
 
@@ -241,7 +241,7 @@ class PropertiesPanel(QDockWidget):
     def show_from_vcd_signal(
         self,
         signal_name: str,
-        waveform_data: "Any",
+        waveform_data: Any,
     ) -> None:
         """Display properties for a signal from loaded VCD waveform data.
 

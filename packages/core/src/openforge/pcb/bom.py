@@ -11,9 +11,12 @@ import csv
 import html
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openforge.pcb.component_db import Component, ComponentDatabase
-from openforge.pcb.schematic import Schematic
+
+if TYPE_CHECKING:
+    from openforge.pcb.schematic import Schematic
 
 
 @dataclass

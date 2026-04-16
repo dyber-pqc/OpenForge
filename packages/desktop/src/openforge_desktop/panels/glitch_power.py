@@ -8,15 +8,12 @@ total glitch power.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QPushButton,
@@ -56,14 +53,14 @@ except Exception:  # pragma: no cover
 class GlitchPowerPanel(QWidget):
     """Interactive glitch power analyser."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("glitchPowerPanel")
         self.setStyleSheet(panel_tab_qss(True))
 
-        self._vcd_path: Optional[Path] = None
-        self._analyzer: Optional["GlitchPowerAnalyzer"] = None
-        self._result: Optional["GlitchPowerResult"] = None
+        self._vcd_path: Path | None = None
+        self._analyzer: GlitchPowerAnalyzer | None = None
+        self._result: GlitchPowerResult | None = None
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
@@ -154,7 +151,7 @@ class GlitchPowerPanel(QWidget):
             self._summary.setText("No VCD loaded.")
             return
         try:
-            events = self._analyzer.detect_glitches(
+            self._analyzer.detect_glitches(
                 min_pulse_width_ns=self._min_pulse.value()
             )
             result = self._analyzer.estimate_power(vdd=self._vdd.value())

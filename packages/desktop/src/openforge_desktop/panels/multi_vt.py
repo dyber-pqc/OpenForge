@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QPainter
@@ -13,7 +12,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QPushButton,
     QSlider,
     QSplitter,
     QTableWidget,
@@ -22,6 +20,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 try:
     from openforge.physical.eco import EcoScript
@@ -210,9 +211,9 @@ class MultiVtPanel(QDockWidget):
 
     def load(
         self,
-        lib: "MultiVtLibrary",
+        lib: MultiVtLibrary,
         def_path: Path,
-        sta_report: "StaReport",
+        sta_report: StaReport,
     ) -> None:
         self._library = lib
         if MultiVtOptimizer is not None:

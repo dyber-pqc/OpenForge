@@ -21,7 +21,7 @@ def serve(
         openforge serve --port 8080 --host 127.0.0.1
         openforge serve --reload --workers 4
     """
-    console.print(f"[bold]Starting OpenForge API server[/]")
+    console.print("[bold]Starting OpenForge API server[/]")
     console.print(f"  host    : [green]{host}[/]")
     console.print(f"  port    : [green]{port}[/]")
     console.print(f"  workers : [green]{workers}[/]")

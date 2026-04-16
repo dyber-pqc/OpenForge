@@ -5,10 +5,11 @@ from __future__ import annotations
 import html
 import re
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -360,10 +361,7 @@ class CoverageCollector:
                 for i, src_line in enumerate(src_path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
                     if i in line_data:
                         count = line_data[i]
-                        if count > 0:
-                            cls = "covered"
-                        else:
-                            cls = "uncovered"
+                        cls = "covered" if count > 0 else "uncovered"
                     else:
                         cls = ""
                         count = None  # type: ignore[assignment]

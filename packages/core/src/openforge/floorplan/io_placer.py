@@ -10,7 +10,6 @@ OpenROAD ``place_pin`` commands.
 from __future__ import annotations
 
 import re
-from typing import Literal
 
 from pydantic import BaseModel
 
@@ -66,7 +65,7 @@ def auto_place_pins(
 
     if symmetric:
         # Put inputs on W/S and outputs on E/N for easier read.
-        for key, ports in ordered_groups:
+        for _key, ports in ordered_groups:
             inputs = [p for p in ports if p.direction == "INPUT"]
             outputs = [p for p in ports if p.direction == "OUTPUT"]
             inouts = [p for p in ports if p.direction == "INOUT"]

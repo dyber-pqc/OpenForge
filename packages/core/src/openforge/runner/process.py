@@ -5,11 +5,12 @@ from __future__ import annotations
 import asyncio
 import subprocess
 import time
-from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
-from os import PathLike
-from pathlib import Path
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
+    from os import PathLike
 
 
 @dataclass(frozen=True, slots=True)

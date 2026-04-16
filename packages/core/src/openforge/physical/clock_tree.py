@@ -10,7 +10,6 @@ import math
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -37,7 +36,7 @@ class ClockBuffer:
     y: float
     fanout: int
     children: list[str] = field(default_factory=list)
-    parent: Optional[str] = None
+    parent: str | None = None
     level: int = 0
     delay_ns: float = 0.05
 
@@ -97,7 +96,7 @@ class ClockTreeOptimizer:
     def __init__(
         self,
         target_skew_ps: float = 50.0,
-        buffer_types: Optional[list[str]] = None,
+        buffer_types: list[str] | None = None,
     ) -> None:
         self.target_skew_ps = target_skew_ps
         self.buffers = buffer_types or [
@@ -156,7 +155,7 @@ class ClockTreeOptimizer:
             else:
                 q4.append(s)
         offsets = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
-        for quadrant, (dx, dy) in zip([q1, q2, q3, q4], offsets):
+        for quadrant, (_dx, _dy) in zip([q1, q2, q3, q4], offsets, strict=False):
             if not quadrant:
                 continue
             cx = sum(s.x for s in quadrant) / len(quadrant)

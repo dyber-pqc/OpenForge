@@ -169,7 +169,7 @@ class HierDesign(BaseModel):
 
     # ----- run graph ------------------------------------------------------
 
-    def to_run_graph(self) -> "RunGraph":
+    def to_run_graph(self) -> RunGraph:
         """Build a :class:`RunGraph` that walks the hierarchy bottom-up.
 
         Each block contributes three stages: ``synth``, ``pnr`` and

@@ -13,10 +13,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from os import PathLike
 from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models

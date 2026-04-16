@@ -15,7 +15,7 @@ import urllib.request
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -43,7 +43,7 @@ class WorkerPool(BaseModel):
 
     workers: list[WorkerNode] = Field(default_factory=list)
 
-    def best_for(self, stage: RunStage) -> Optional[WorkerNode]:
+    def best_for(self, stage: RunStage) -> WorkerNode | None:
         """Return the worker best suited for ``stage`` (lowest load, up)."""
         required = set(getattr(stage, "capabilities", []) or [])
         candidates = [

@@ -74,6 +74,8 @@ def _try_bind_desktop_models() -> None:
     try:  # pragma: no cover - only when desktop is installed
         from openforge_desktop.widgets.schematic_editor import (  # type: ignore
             SchPin as _SP,
+        )
+        from openforge_desktop.widgets.schematic_editor import (
             SchSymbol as _SS,
         )
 

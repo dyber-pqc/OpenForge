@@ -21,15 +21,13 @@ greedy relaxation that produces similar results for small designs.
 """
 from __future__ import annotations
 
-import math
+import contextlib
 import shutil
 import subprocess
 import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -66,7 +64,7 @@ class CtsResult:
     sinks: list[ClockSink] = field(default_factory=list)
     skew_savings_ps: float = 0.0
     log: str = ""
-    script_path: Optional[Path] = None
+    script_path: Path | None = None
     duration: float = 0.0
 
     @property
@@ -104,7 +102,7 @@ class AdvancedClockTreeSynth:
 
     def __init__(
         self,
-        openroad_executable: Optional[str] = None,
+        openroad_executable: str | None = None,
         docker_image: str = "openforge/openroad:latest",
         timeout: int = 3600,
     ) -> None:
@@ -125,8 +123,8 @@ class AdvancedClockTreeSynth:
         clock_period_ns: float,
         target_skew_ps: float = 50.0,
         useful_skew: bool = True,
-        buf_list: Optional[list[str]] = None,
-        root_buf: Optional[str] = None,
+        buf_list: list[str] | None = None,
+        root_buf: str | None = None,
         cwd: Path | None = None,
     ) -> CtsResult:
         """Run CTS and (optionally) useful-skew optimization."""
@@ -212,7 +210,7 @@ class AdvancedClockTreeSynth:
         ]
         median_setup = sorted(setup_slacks)[len(setup_slacks) // 2]
 
-        for sink, setup, hold in zip(sinks, setup_slacks, hold_slacks):
+        for sink, setup, hold in zip(sinks, setup_slacks, hold_slacks, strict=False):
             delta = median_setup - setup
             # Clamp to user-requested window and respect hold margin.
             limit = target_skew_ps / 1000.0  # convert ps -> ns
@@ -246,7 +244,7 @@ class AdvancedClockTreeSynth:
         lines.append(f"# useful_skew  : {useful_skew}")
         lines.append("")
         lines.append(f"read_verilog {self._q(netlist)}")
-        lines.append(f"link_design [current_design]")
+        lines.append("link_design [current_design]")
         lines.append(
             "create_clock -name "
             f"{clock_name} -period {clock_period_ns} "
@@ -299,15 +297,11 @@ class AdvancedClockTreeSynth:
         for line in log.splitlines():
             line = line.strip()
             if "Number of Buffers inserted" in line or "CTS buffers:" in line:
-                try:
+                with contextlib.suppress(ValueError):
                     stats["buffers"] = int(line.split()[-1])
-                except ValueError:
-                    pass
             elif "Clock wirelength" in line:
-                try:
+                with contextlib.suppress(ValueError):
                     stats["wirelength"] = float(line.split()[-1])
-                except ValueError:
-                    pass
             elif "Max skew" in line:
                 try:
                     val = float(line.split()[-1])
@@ -325,10 +319,8 @@ class AdvancedClockTreeSynth:
                 except ValueError:
                     pass
             elif "Max tree levels" in line or "Depth" in line:
-                try:
+                with contextlib.suppress(ValueError):
                     stats["levels"] = int(line.split()[-1])
-                except ValueError:
-                    pass
         return stats
 
     @staticmethod

@@ -19,10 +19,8 @@ from PySide6.QtGui import (
     QPen,
     QTextCharFormat,
     QTextCursor,
-    QTextDocument,
 )
 from PySide6.QtWidgets import (
-    QApplication,
     QInputDialog,
     QListWidget,
     QListWidgetItem,

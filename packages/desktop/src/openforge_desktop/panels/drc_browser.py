@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor
@@ -29,7 +28,6 @@ from PySide6.QtWidgets import (
 )
 
 try:
-    import numpy as np
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
     _HAVE_MPL = True
@@ -73,10 +71,10 @@ class DrcBrowserPanel(QWidget):
 
     violationActivated = Signal(float, float, str)  # (x, y, layer)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("drc_browser_panel")
-        self._report: Optional[DrcReport] = None
+        self._report: DrcReport | None = None
         self._filtered: list[DrcViolation] = []
         self._build_ui()
 
@@ -201,7 +199,7 @@ class DrcBrowserPanel(QWidget):
 
     # ------------------------------------------------------------------ filter
 
-    def _passes(self, v: "DrcViolation") -> bool:
+    def _passes(self, v: DrcViolation) -> bool:
         rf = self._rule_filter.text().strip().lower()
         if rf and rf not in v.rule.lower():
             return False
@@ -209,9 +207,7 @@ class DrcBrowserPanel(QWidget):
         if lf and lf != "<all>" and v.layer != lf:
             return False
         sf = self._sev_filter.currentText()
-        if sf and sf != "<all>" and v.severity != sf:
-            return False
-        return True
+        return not (sf and sf != "<all>" and v.severity != sf)
 
     def _refresh(self) -> None:
         if not self._report:

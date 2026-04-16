@@ -1,19 +1,14 @@
 """Clock tree synthesis visualization panel with useful-skew display."""
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
-from typing import Optional
 
-from PySide6.QtCore import Qt, QRectF, QPointF, QSize, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
     QBrush,
     QColor,
-    QFont,
     QPainter,
-    QPainterPath,
     QPen,
-    QPolygonF,
 )
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -32,11 +27,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QSizePolicy,
-    QSpinBox,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -44,7 +37,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 # ---------------------------------------------------------------------------
 # Small helpers
@@ -58,7 +50,7 @@ class _SinkView:
     y: float
     skew_ps: float
     level: int = 0
-    parent: Optional[str] = None
+    parent: str | None = None
 
 
 def _skew_color(skew_ps: float, max_abs: float) -> QColor:

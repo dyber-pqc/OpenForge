@@ -5,7 +5,6 @@ from __future__ import annotations
 import json as json_mod
 import shutil
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -35,8 +34,8 @@ def _load_config(project_dir: Path):
 @app.command(name="run")
 def flow_run(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    from_stage: Optional[str] = typer.Option(None, "--from", help="Start from this stage."),
-    to_stage: Optional[str] = typer.Option(None, "--to", help="Stop after this stage."),
+    from_stage: str | None = typer.Option(None, "--from", help="Start from this stage."),
+    to_stage: str | None = typer.Option(None, "--to", help="Stop after this stage."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -47,7 +46,7 @@ def flow_run(
         openforge flow run --from synth --to routing
         openforge flow run --to sta
     """
-    from openforge.flow import FullFlowConfig, FullFlowRunner, STAGE_IDS
+    from openforge.flow import STAGE_IDS, FullFlowConfig, FullFlowRunner
 
     project_dir = Path(path).resolve()
     config = _load_config(project_dir)
@@ -337,11 +336,9 @@ def graph(
     else:
         # ASCII art
         for i, stage in enumerate(STAGE_IDS):
-            prefix = "  " if i > 0 else ""
-            arrow = " --> " if i > 0 else ""
             if i == 0:
                 console.print(f"[bold cyan]{stage}[/]")
             else:
-                console.print(f"  | ")
-                console.print(f"  v")
+                console.print("  | ")
+                console.print("  v")
                 console.print(f"[bold cyan]{stage}[/]")

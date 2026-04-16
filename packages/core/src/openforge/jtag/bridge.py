@@ -14,6 +14,7 @@ used only as a fallback when openocd isn't available.
 from __future__ import annotations
 
 import atexit
+import contextlib
 import os
 import re
 import shutil
@@ -21,10 +22,12 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # ---------------------------------------------------------------------------
 # Adapter / device models
@@ -348,10 +351,8 @@ class JtagBridge:
     def close(self) -> None:
         try:
             if self._sock is not None:
-                try:
+                with contextlib.suppress(OSError):
                     self._sock.sendall(b"exit" + _TCL_TERM)
-                except OSError:
-                    pass
                 self._sock.close()
                 self._sock = None
         except Exception:
@@ -396,9 +397,8 @@ class JtagBridge:
 
     def scan_chain(self) -> list[JtagDevice]:
         """Query openocd for the current scan chain."""
-        if self._sock is None:
-            if not self.open():
-                return []
+        if self._sock is None and not self.open():
+            return []
         try:
             resp = self.cmd("scan_chain")
         except Exception:
@@ -453,7 +453,7 @@ class JtagBridge:
     # Context manager sugar
     # ------------------------------------------------------------------
 
-    def __enter__(self) -> "JtagBridge":
+    def __enter__(self) -> JtagBridge:
         self.open()
         return self
 

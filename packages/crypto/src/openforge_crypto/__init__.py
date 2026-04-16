@@ -11,30 +11,6 @@ from openforge_crypto.constant_time import (
     ViolationKind,
 )
 
-# Side-channel simulation
-from openforge_crypto.side_channel import (
-    CPAResult,
-    PowerTrace,
-    SideChannelSimulator,
-    TVLAResult,
-)
-
-# NIST test vector loading
-from openforge_crypto.nist_vectors import (
-    Algorithm,
-    NISTVectorLoader,
-    TestVector,
-)
-
-# FIPS 140-3 compliance
-from openforge_crypto.fips import (
-    CheckResult as FIPSCheckResult,
-    CheckStatus,
-    FIPSComplianceChecker,
-    FIPSLevel,
-    FIPSReport,
-)
-
 # Entropy flow analysis
 from openforge_crypto.entropy import (
     ConditioningType,
@@ -61,6 +37,24 @@ from openforge_crypto.fault_injection import (
     FaultResult,
 )
 
+# FIPS 140-3 compliance
+from openforge_crypto.fips import (
+    CheckResult as FIPSCheckResult,
+)
+from openforge_crypto.fips import (
+    CheckStatus,
+    FIPSComplianceChecker,
+    FIPSLevel,
+    FIPSReport,
+)
+
+# NIST test vector loading
+from openforge_crypto.nist_vectors import (
+    Algorithm,
+    NISTVectorLoader,
+    TestVector,
+)
+
 # NTT / polynomial validation
 from openforge_crypto.ntt import (
     DILITHIUM_Q,
@@ -71,6 +65,14 @@ from openforge_crypto.ntt import (
     NTTStandard,
     NTTValidator,
     TwiddleResult,
+)
+
+# Side-channel simulation
+from openforge_crypto.side_channel import (
+    CPAResult,
+    PowerTrace,
+    SideChannelSimulator,
+    TVLAResult,
 )
 
 __all__ = [

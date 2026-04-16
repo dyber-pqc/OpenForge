@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from openforge_desktop.theme.design_system import ColorPalette, DARK_PALETTE
+from openforge_desktop.theme.design_system import DARK_PALETTE, ColorPalette
 
 
 class A11ySettings(BaseModel):

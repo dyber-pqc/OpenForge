@@ -8,16 +8,15 @@ VCDs from the ``<task>/engine_N/`` work directory.
 from __future__ import annotations
 
 import re
-import subprocess
 import shutil
-from enum import Enum
+import subprocess
+from enum import StrEnum
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
-class FormalEngine(str, Enum):
+class FormalEngine(StrEnum):
     SMTBMC = "smtbmc"
     ABC_PDR = "abc pdr"
     AIGER = "aiger"
@@ -46,7 +45,7 @@ class FormalConfig(BaseModel):
 class FormalResult(BaseModel):
     property: FormalProperty
     status: str  # PASS | FAIL | UNKNOWN | TIMEOUT
-    cex_vcd: Optional[str] = None
+    cex_vcd: str | None = None
     runtime_s: float = 0.0
 
 
@@ -161,7 +160,7 @@ class SbyRunner:
         task_dir = self.sby_path.parent / f"{self.config.top_module}_{self.config.mode}"
         for prop in props:
             status = "UNKNOWN"
-            cex: Optional[str] = None
+            cex: str | None = None
             if re.search(rf"{re.escape(prop.name)}.*PASS", log):
                 status = "PASS"
             elif re.search(rf"{re.escape(prop.name)}.*FAIL", log):

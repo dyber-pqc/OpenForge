@@ -13,21 +13,17 @@ import math
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Sequence
+from typing import Any, Final
 
 from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
-    QAction,
     QBrush,
     QColor,
     QFont,
-    QFontMetrics,
     QImage,
     QPainter,
     QPainterPath,
     QPen,
-    QPolygonF,
-    QTransform,
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
@@ -39,17 +35,14 @@ from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsLineItem,
     QGraphicsPathItem,
-    QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsSimpleTextItem,
     QGraphicsView,
-    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QMenu,
     QScrollArea,
-    QSizePolicy,
     QSplitter,
     QStatusBar,
     QTableWidget,
@@ -334,9 +327,8 @@ def parse_gds(filepath: str | Path) -> GDSLibrary:
                     current_element.origin = pts[0]
                     current_element.col_vec = pts[1]
                     current_element.row_vec = pts[2]
-            elif isinstance(current_element, GDSText):
-                if pts:
-                    current_element.origin = pts[0]
+            elif isinstance(current_element, GDSText) and pts:
+                current_element.origin = pts[0]
         elif rec_type == _SNAME:
             name = _decode_string(payload)
             if isinstance(current_element, (GDSSRef, GDSARef)):

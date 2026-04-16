@@ -122,7 +122,7 @@ class FIPSReport:
     level: FIPSLevel
     checks: list[CheckResult] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(
-        tz=datetime.timezone.utc
+        tz=datetime.UTC
     ).isoformat())
     design_name: str = ""
 
@@ -485,8 +485,8 @@ class FIPSComplianceChecker:
             status=CheckStatus.PASS,
             sva_property=sva_text,
             evidence=(
-                f"Generated 3 SVA properties: health inhibit, output "
-                f"liveness, failure latch."
+                "Generated 3 SVA properties: health inhibit, output "
+                "liveness, failure latch."
             ),
             recommendation="Run formal verification with these properties.",
         )
@@ -848,7 +848,7 @@ class FIPSComplianceChecker:
             if check.recommendation:
                 lines.append(f"   Recommendation: {check.recommendation}")
             if check.sva_property:
-                lines.append(f"   SVA: (see generated .sv file)")
+                lines.append("   SVA: (see generated .sv file)")
 
         lines.append("")
         lines.append("=" * 72)
@@ -868,16 +868,16 @@ class FIPSComplianceChecker:
         lines: list[str] = [
             f"// Auto-generated FIPS 140-3 SVA properties for "
             f"{self._design_name}",
-            f"// Generated: {datetime.datetime.now(tz=datetime.timezone.utc).isoformat()}",
+            f"// Generated: {datetime.datetime.now(tz=datetime.UTC).isoformat()}",
             "//",
             "// Include this file in your formal verification bind:",
             f"//   bind {self._design_name} fips_props fips_i(.*);",
             "",
-            f"module fips_props (",
-            f"  input logic clk,",
-            f"  input logic rst_n",
-            f"  // Add design-specific ports here",
-            f");",
+            "module fips_props (",
+            "  input logic clk,",
+            "  input logic rst_n",
+            "  // Add design-specific ports here",
+            ");",
             "",
         ]
 

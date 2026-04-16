@@ -9,12 +9,14 @@ this engine exposes a ``run_*`` method per target.
 from __future__ import annotations
 
 import re
-from os import PathLike
 from pathlib import Path
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from openforge.engine.base import ExecutionBackend, ToolEngine, ToolResult
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Log parsing
@@ -148,10 +150,7 @@ class NextpnrEngine(ToolEngine):
     def check_installed(self) -> bool:
         """True if at least one nextpnr-* binary is on ``$PATH``."""
         import shutil
-        for b in self._family_binaries.values():
-            if shutil.which(b) is not None:
-                return True
-        return False
+        return any(shutil.which(b) is not None for b in self._family_binaries.values())
 
     def version(self, family: str = "ice40") -> str:
         bin_name = self._family_binaries.get(family, self.BINARY)

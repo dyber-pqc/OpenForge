@@ -12,7 +12,7 @@ reorder, filter or persist the output before invoking the tool.
 from __future__ import annotations
 
 import re
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
-class EcoCommandKind(str, Enum):
+class EcoCommandKind(StrEnum):
     CHANGE_CELL = "change_cell"
     ADD_BUFFER = "add_buffer"
     ADD_REPEATER = "add_repeater"
@@ -253,7 +253,7 @@ class EcoEngine:
 
     def fix_setup_violations(
         self,
-        sta_report: "StaReport",
+        sta_report: StaReport,
         slack_threshold: float = 0.0,
         max_changes: int = 100,
     ) -> EcoScript:
@@ -333,7 +333,7 @@ class EcoEngine:
 
     def fix_hold_violations(
         self,
-        sta_report: "StaReport",
+        sta_report: StaReport,
         slack_threshold: float = 0.0,
         max_changes: int = 100,
     ) -> EcoScript:
@@ -394,10 +394,7 @@ class EcoEngine:
             EcoCommandKind.ADD_REPEATER,
             EcoCommandKind.DELETE_INSTANCE,
         }
-        for cmd in commands:
-            if cmd.kind in forbidden:
-                return False
-        return True
+        return all(cmd.kind not in forbidden for cmd in commands)
 
     # ----- disturbance ---------------------------------------------------
 
@@ -449,7 +446,7 @@ class EcoEngine:
 
     # ----- helpers -------------------------------------------------------
 
-    def _worst_data_stages(self, path: "TimingPath", k: int = 3) -> list:
+    def _worst_data_stages(self, path: TimingPath, k: int = 3) -> list:
         stages = [
             s
             for s in path.data_path
@@ -458,7 +455,7 @@ class EcoEngine:
         stages.sort(key=lambda s: s.delay_ns, reverse=True)
         return stages[:k]
 
-    def _hold_anchor(self, path: "TimingPath") -> str | None:
+    def _hold_anchor(self, path: TimingPath) -> str | None:
         for stage in path.data_path:
             if stage.cell_instance and not stage.is_register:
                 return stage.cell_instance

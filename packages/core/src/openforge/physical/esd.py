@@ -10,9 +10,10 @@ import math
 import re
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ----------------------------------------------------------------------------
 # Data classes
@@ -163,7 +164,7 @@ class EsdAnalyzer:
         self,
         def_path: Path,
         netlist: Path,
-        clamp_cells: Optional[list[str]] = None,
+        clamp_cells: list[str] | None = None,
     ) -> EsdResult:
         """Run ESD path verification."""
         start = time.time()

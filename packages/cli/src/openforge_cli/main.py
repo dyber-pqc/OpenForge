@@ -6,30 +6,28 @@ in the GUI is also available from the command line.
 
 from __future__ import annotations
 
-from typing import Optional
-
 import typer
 from rich.console import Console
 
 from openforge_cli import __version__
+from openforge_cli.commands.analog import app as spice_app
+from openforge_cli.commands.flow import app as flow_app
+from openforge_cli.commands.fpga import app as fpga_app
+from openforge_cli.commands.pcb import app as pcb_app
+from openforge_cli.commands.pdk import app as pdk_app
+from openforge_cli.commands.pnr import app as pnr_app
 
 # ---------------------------------------------------------------------------
 # Sub-apps (Typer groups)
 # ---------------------------------------------------------------------------
 from openforge_cli.commands.project import app as project_app
-from openforge_cli.commands.pnr import app as pnr_app
-from openforge_cli.commands.fpga import app as fpga_app
+from openforge_cli.commands.serve import serve
 from openforge_cli.commands.signoff import app as signoff_app
-from openforge_cli.commands.verify import app as verify_app
-from openforge_cli.commands.pcb import app as pcb_app
-from openforge_cli.commands.analog import app as spice_app
-from openforge_cli.commands.flow import app as flow_app
-from openforge_cli.commands.tools import app as tools_app
-from openforge_cli.commands.pdk import app as pdk_app
 
 # Standalone commands (registered directly)
 from openforge_cli.commands.synthesize import synth
-from openforge_cli.commands.serve import serve
+from openforge_cli.commands.tools import app as tools_app
+from openforge_cli.commands.verify import app as verify_app
 
 # ---------------------------------------------------------------------------
 # Root app
@@ -53,7 +51,7 @@ def _version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
-    version: Optional[bool] = typer.Option(
+    version: bool | None = typer.Option(
         None,
         "--version",
         "-V",
@@ -117,10 +115,10 @@ def init(
     name: str = typer.Argument(..., help="Project name."),
     kind: str = typer.Option("asic", "--kind", "-k", help="Project type: asic, fpga, pcb, mixed."),
     template: str = typer.Option("empty", "--template", "-t", help="Template: sky130, ice40, ecp5, gowin, caravel, pcb, empty."),
-    from_vivado: Optional[str] = typer.Option(None, "--from-vivado", help="Import Vivado .xpr."),
-    from_openlane: Optional[str] = typer.Option(None, "--from-openlane", help="Import OpenLane directory."),
-    from_kicad: Optional[str] = typer.Option(None, "--from-kicad", help="Import KiCad .kicad_pro."),
-    from_quartus: Optional[str] = typer.Option(None, "--from-quartus", help="Import Quartus .qpf."),
+    from_vivado: str | None = typer.Option(None, "--from-vivado", help="Import Vivado .xpr."),
+    from_openlane: str | None = typer.Option(None, "--from-openlane", help="Import OpenLane directory."),
+    from_kicad: str | None = typer.Option(None, "--from-kicad", help="Import KiCad .kicad_pro."),
+    from_quartus: str | None = typer.Option(None, "--from-quartus", help="Import Quartus .qpf."),
 ) -> None:
     """Create a new OpenForge project (shortcut for 'openforge project init').
 
@@ -129,7 +127,8 @@ def init(
         openforge init my_fpga --kind fpga --template ice40
         openforge init imported --from-vivado path/to/project.xpr
     """
-    from openforge_cli.commands.project import init as project_init, ProjectKind, TemplateName
+    from openforge_cli.commands.project import ProjectKind, TemplateName
+    from openforge_cli.commands.project import init as project_init
 
     # Map string args to enums
     kind_enum = ProjectKind(kind)
@@ -171,8 +170,8 @@ def validate(
 @app.command()
 def sim(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    top: Optional[str] = typer.Option(None, "--top", help="Top-level module."),
-    tb: Optional[str] = typer.Option(None, "--tb", help="Testbench file."),
+    top: str | None = typer.Option(None, "--top", help="Top-level module."),
+    tb: str | None = typer.Option(None, "--tb", help="Testbench file."),
     sim_tool: str = typer.Option("icarus", "--sim", "-s", help="Simulator: verilator, icarus, ghdl."),
     waves: bool = typer.Option(True, "--waves/--no-waves", "-w", help="Waveform tracing."),
     timeout: int = typer.Option(300, "--timeout", help="Timeout in seconds."),
@@ -209,7 +208,7 @@ def lint(
 @app.command()
 def sta(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    sdc: Optional[str] = typer.Option(None, "--sdc", help="SDC constraints file."),
+    sdc: str | None = typer.Option(None, "--sdc", help="SDC constraints file."),
     corner: str = typer.Option("tt", "--corner", help="PVT corner: tt, ss, ff."),
     report: bool = typer.Option(False, "--report", help="Show detailed timing report."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
@@ -224,7 +223,7 @@ def sta(
 def drc(
     path: str = typer.Argument(".", help="Path to the design directory."),
     tool: str = typer.Option("magic", "--tool", help="DRC tool: magic or klayout."),
-    gds: Optional[str] = typer.Option(None, "--gds", help="GDS file to check."),
+    gds: str | None = typer.Option(None, "--gds", help="GDS file to check."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Run design rule check (shortcut for 'openforge signoff drc')."""
@@ -236,8 +235,8 @@ def drc(
 @app.command()
 def lvs(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    gds: Optional[str] = typer.Option(None, "--gds", help="GDS layout file."),
-    netlist: Optional[str] = typer.Option(None, "--netlist", help="Reference netlist."),
+    gds: str | None = typer.Option(None, "--gds", help="GDS layout file."),
+    netlist: str | None = typer.Option(None, "--netlist", help="Reference netlist."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Run layout-vs-schematic (shortcut for 'openforge signoff lvs')."""
@@ -263,7 +262,7 @@ def formal(
 @app.command()
 def regression(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    suite: Optional[str] = typer.Option(None, "--suite", help="Test suite file."),
+    suite: str | None = typer.Option(None, "--suite", help="Test suite file."),
     parallel: int = typer.Option(1, "--parallel", "-j", help="Parallel jobs."),
     seeds: int = typer.Option(1, "--seeds", help="Random seeds per test."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
@@ -322,7 +321,7 @@ def antenna(
 @app.command()
 def cdc(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    top: Optional[str] = typer.Option(None, "--top", help="Top-level module."),
+    top: str | None = typer.Option(None, "--top", help="Top-level module."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Run CDC analysis (shortcut for 'openforge verify cdc')."""

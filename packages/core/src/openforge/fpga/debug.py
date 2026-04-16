@@ -13,13 +13,16 @@ flows.
 
 from __future__ import annotations
 
-from enum import Enum
+import contextlib
+from enum import StrEnum
 from pathlib import Path
-from typing import Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Sequence
+
     from openforge.jtag.bridge import JtagBridge
 
 
@@ -444,7 +447,7 @@ def parse_capture(uart_dump: bytes, core: DebugCore) -> dict[str, list[int]]:
 # ---------------------------------------------------------------------------
 
 
-class TriggerKind(str, Enum):
+class TriggerKind(StrEnum):
     EDGE_RISE = "edge_rise"
     EDGE_FALL = "edge_fall"
     LEVEL_HIGH = "level_high"
@@ -476,13 +479,13 @@ class TriggerSequence(BaseModel):
         return v
 
 
-class CaptureMode(str, Enum):
+class CaptureMode(StrEnum):
     CIRCULAR = "circular"
     ONE_SHOT = "one_shot"
     MULTI_WINDOW = "multi_window"
 
 
-class IlaVendor(str, Enum):
+class IlaVendor(StrEnum):
     XILINX = "xilinx"        # BSCANE2 primitive
     LATTICE_ECP5 = "ecp5"    # JTAGG primitive
     LATTICE_ICE40 = "ice40"  # software-only (no BSCAN)
@@ -573,7 +576,7 @@ def render_advanced_ila(
 
     # Stage comparator expressions.
     stage_exprs: list[str] = []
-    for i, (cond, count) in enumerate(trigger.stages or []):
+    for i, (cond, _count) in enumerate(trigger.stages or []):
         expr = _trigger_comparator(cond)
         stage_exprs.append(f"    wire stage_hit_{i} = {expr};")
     # Always emit at least one "always-on" stage.
@@ -648,7 +651,7 @@ def render_advanced_ila(
         CaptureMode.MULTI_WINDOW: 1,
     }[mode]
 
-    stage_count_init = ", ".join(f"16'd{c}" for c in stage_counts)
+    ", ".join(f"16'd{c}" for c in stage_counts)
 
     return f"""// Auto-generated OpenForge advanced ILA (vendor={vendor.value},
 // mode={mode.value}, stages={n_stages})
@@ -813,7 +816,7 @@ class IlaReader:
 
     def __init__(
         self,
-        bridge: "JtagBridge",
+        bridge: JtagBridge,
         core: DebugCore,
         user_register: int = 4,
     ) -> None:
@@ -826,10 +829,8 @@ class IlaReader:
 
     def _select_user(self) -> None:
         ir_opcode = self._XILINX_USER_IR.get(self.user_register, 0x23)
-        try:
+        with contextlib.suppress(Exception):
             self.bridge.write_ir(ir_opcode, 6)
-        except Exception:
-            pass
 
     def _write_reg(self, addr: int, value: int) -> None:
         self._select_user()
@@ -906,7 +907,7 @@ class IlaReader:
         with out.open("w", encoding="utf-8") as f:
             f.write("$date\n    openforge ila capture\n$end\n")
             f.write("$version\n    OpenForge 1.0\n$end\n")
-            f.write(f"$timescale 1 ns $end\n")
+            f.write("$timescale 1 ns $end\n")
             f.write("$scope module ila $end\n")
             for name, code in codes.items():
                 w = probe_widths.get(name, 1)

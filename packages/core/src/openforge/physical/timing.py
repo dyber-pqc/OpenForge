@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from os import PathLike
-from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING
 
 from openforge.engine.opensta import OpenSTAEngine
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -129,9 +130,7 @@ def _parse_timing_paths(text: str) -> list[TimingPath]:
             ))
 
         # Slack
-        if m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?[\d.]+)", block):
-            slack = float(m.group(1))
-        elif m := re.search(r"slack\s+([-+]?[\d.]+)", block):
+        if (m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?[\d.]+)", block)) or (m := re.search(r"slack\s+([-+]?[\d.]+)", block)):
             slack = float(m.group(1))
 
         # Required time

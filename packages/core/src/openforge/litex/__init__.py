@@ -1,9 +1,9 @@
 """LiteX SoC builder integration."""
 
 from openforge.litex.integration import (
+    SUPPORTED_BOARDS,
     LiteXBuilder,
     LiteXSocConfig,
-    SUPPORTED_BOARDS,
 )
 
 __all__ = ["LiteXBuilder", "LiteXSocConfig", "SUPPORTED_BOARDS"]

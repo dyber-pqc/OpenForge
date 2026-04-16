@@ -30,10 +30,10 @@ If you have multiple LEF files (e.g. a tech LEF plus a cell LEF), call
 
 from __future__ import annotations
 
+import contextlib
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-import re
-
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -137,7 +137,7 @@ class LefLibrary:
     layers: dict[str, LefLayer] = field(default_factory=dict)
     manufacturing_grid: float = 0.0
 
-    def merge(self, other: "LefLibrary") -> None:
+    def merge(self, other: LefLibrary) -> None:
         """Merge macros, sites and layers from another library into this one.
 
         Useful when you have a separate tech LEF and cell LEF.
@@ -297,16 +297,12 @@ def _parse_header(text: str, lib: LefLibrary) -> None:
         lib.version = m.group(1)
     m = _RE_UNITS_DB.search(text)
     if m:
-        try:
+        with contextlib.suppress(ValueError):
             lib.units_per_micron = float(m.group(1))
-        except ValueError:
-            pass
     m = _RE_MFG_GRID.search(text)
     if m:
-        try:
+        with contextlib.suppress(ValueError):
             lib.manufacturing_grid = float(m.group(1))
-        except ValueError:
-            pass
 
 
 def _parse_layers(text: str, lib: LefLibrary) -> None:
@@ -334,17 +330,13 @@ def _parse_layers(text: str, lib: LefLibrary) -> None:
 
         wm = _RE_LAYER_WIDTH.search(body)
         if wm:
-            try:
+            with contextlib.suppress(ValueError):
                 layer.width = float(wm.group(1))
-            except ValueError:
-                pass
 
         sm = _RE_LAYER_SPACING.search(body)
         if sm:
-            try:
+            with contextlib.suppress(ValueError):
                 layer.spacing = float(sm.group(1))
-            except ValueError:
-                pass
 
         lib.layers[name] = layer
 

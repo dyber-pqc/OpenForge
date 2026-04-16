@@ -9,9 +9,12 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Iterable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @dataclass
@@ -38,7 +41,7 @@ class ModuleSignature:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ModuleSignature":
+    def from_dict(cls, data: dict) -> ModuleSignature:
         return cls(
             name=data["name"],
             source_hash=data["source_hash"],
@@ -74,7 +77,7 @@ class IncrementalCache:
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     @classmethod
-    def load(cls, path: Path) -> "IncrementalCache":
+    def load(cls, path: Path) -> IncrementalCache:
         """Load cache from JSON. Returns an empty cache if missing/corrupt."""
         if not path.exists():
             return cls()
@@ -91,7 +94,7 @@ class IncrementalCache:
                 continue
         return cls(modules=modules, version=int(data.get("version", 1)))
 
-    def get(self, module_name: str) -> Optional[ModuleSignature]:
+    def get(self, module_name: str) -> ModuleSignature | None:
         return self.modules.get(module_name)
 
     def put(self, sig: ModuleSignature) -> None:
@@ -249,7 +252,7 @@ class IncrementalSynthesizer:
                 report.rebuilt.append(name)
         return report
 
-    def get_signature(self, module_name: str) -> Optional[ModuleSignature]:
+    def get_signature(self, module_name: str) -> ModuleSignature | None:
         return self.cache.get(module_name)
 
     # ------------------------------------------------------------------ #
@@ -277,7 +280,7 @@ class IncrementalSynthesizer:
         self.cache.put(sig)
         return sig
 
-    def invalidate(self, module_name: Optional[str] = None) -> None:
+    def invalidate(self, module_name: str | None = None) -> None:
         """Invalidate cache for one module, or all when ``None``."""
         if module_name is None:
             self.cache.clear()

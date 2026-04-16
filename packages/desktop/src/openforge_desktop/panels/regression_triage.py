@@ -8,13 +8,13 @@ attach per-cluster triage notes, and export an HTML report.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import html as _html
 import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -105,11 +105,11 @@ def cluster_failures(failures: list[TriageFailure]) -> list[TriageCluster]:
 class RegressionTriagePanel(QWidget):
     """Panel that clusters regression failures for triage."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("RegressionTriagePanel")
         self._clusters: list[TriageCluster] = []
-        self._current: Optional[TriageCluster] = None
+        self._current: TriageCluster | None = None
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -183,10 +183,8 @@ class RegressionTriagePanel(QWidget):
         self._status.setStyleSheet("color:#94a3b8;")
         root.addWidget(self._status)
 
-        try:
+        with contextlib.suppress(Exception):
             self.setStyleSheet(panel_tab_qss(True))
-        except Exception:
-            pass
 
     # ------------------------------------------------------------------
     def set_results(self, failures: list[TriageFailure]) -> None:

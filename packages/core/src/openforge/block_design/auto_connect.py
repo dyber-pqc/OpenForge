@@ -19,7 +19,6 @@ from pydantic import BaseModel, Field
 from openforge.block_design.generator import (
     BlockConnection,
     BlockDesign,
-    BlockInstance,
     BlockPort,
 )
 

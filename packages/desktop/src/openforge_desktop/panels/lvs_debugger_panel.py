@@ -1,29 +1,24 @@
 """LVS Debugger dock panel for OpenForge desktop."""
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
     QGridLayout,
-    QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
-
 
 # Catppuccin Mocha palette
 _DARK = {

@@ -107,7 +107,7 @@ class LintPanel(QWidget):
         self._rule_list = QListWidget()
         self._rule_list.setSelectionMode(QListWidget.SelectionMode.MultiSelection)
         if LintEngine is not None:
-            for rid in LintEngine.BUILTIN_RULES.keys():
+            for rid in LintEngine.BUILTIN_RULES:
                 it = QListWidgetItem(rid)
                 it.setFlags(it.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 it.setCheckState(Qt.CheckState.Checked)
@@ -214,7 +214,7 @@ class LintPanel(QWidget):
             self._source_view.setTextCursor(cursor)
             self._source_view.centerCursor()
 
-    def _current_filtered(self) -> list["LintViolation"]:  # type: ignore[name-defined]
+    def _current_filtered(self) -> list[LintViolation]:  # type: ignore[name-defined]
         sev = self._sev_filter.currentText()
         rule = self._rule_filter.currentText()
         glob = self._file_filter.text().strip()

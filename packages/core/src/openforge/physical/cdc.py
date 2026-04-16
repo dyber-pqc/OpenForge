@@ -17,9 +17,12 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class CdcViolation(BaseModel):
@@ -54,7 +57,7 @@ class CdcReport(BaseModel):
         rtl_files: Sequence[str | Path],
         top: str,
         sdc: str | Path | None = None,
-    ) -> "CdcReport":
+    ) -> CdcReport:
         """Analyse RTL for CDC crossings via Yosys.
 
         Emits a Yosys script that reads the RTL, flattens the design,
@@ -126,7 +129,7 @@ class CdcReport(BaseModel):
         netlist: dict,
         top: str,
         clocks_hint: set[str],
-    ) -> "CdcReport":
+    ) -> CdcReport:
         modules = netlist.get("modules", {})
         mod = modules.get(top) or next(iter(modules.values()), None)
         if not mod:
