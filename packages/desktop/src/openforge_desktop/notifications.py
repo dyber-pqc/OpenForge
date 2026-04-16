@@ -123,22 +123,16 @@ class _Toast(QFrame):
         f.setPointSize(16)
         f.setBold(True)
         self._icon_label.setFont(f)
-        self._icon_label.setStyleSheet(
-            f"color: {style['icon_color']}; background: transparent;"
-        )
+        self._icon_label.setStyleSheet(f"color: {style['icon_color']}; background: transparent;")
         self._icon_label.setFixedWidth(24)
-        self._icon_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter
-        )
+        self._icon_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         outer.addWidget(self._icon_label)
 
         text_col = QVBoxLayout()
         text_col.setSpacing(2)
         self._text_label = QLabel(self._message)
         self._text_label.setWordWrap(True)
-        self._text_label.setStyleSheet(
-            "color: #cdd6f4; font-size: 12px; background: transparent;"
-        )
+        self._text_label.setStyleSheet("color: #cdd6f4; font-size: 12px; background: transparent;")
         text_col.addWidget(self._text_label)
 
         if self._action_text and self._on_action is not None:
@@ -170,8 +164,8 @@ class _Toast(QFrame):
         self.setStyleSheet(
             f"""
             QFrame#Toast {{
-                background: {style['bg']};
-                border: 1px solid {style['border']};
+                background: {style["bg"]};
+                border: 1px solid {style["border"]};
                 border-radius: 10px;
             }}
             """

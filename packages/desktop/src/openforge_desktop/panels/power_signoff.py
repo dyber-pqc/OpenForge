@@ -5,6 +5,7 @@ in a background QThread, and shows the aggregated results as a
 Vivado/PrimePower-style dashboard with per-corner table, per-mode
 breakdown, hot-cell list, power density heatmap and time-domain trace.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -36,6 +37,7 @@ try:
     import numpy as np
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
+
     _HAVE_MPL = True
 except Exception:  # pragma: no cover
     _HAVE_MPL = False
@@ -48,6 +50,7 @@ try:
         PowerSignoffOrchestrator,
         PowerSignoffResult,
     )
+
     _HAVE_ENGINE = True
 except Exception:  # pragma: no cover
     PowerSignoffConfig = None  # type: ignore[assignment,misc]
@@ -103,9 +106,7 @@ class _StatusTile(QFrame):
         lay.setContentsMargins(16, 12, 16, 12)
         self._status = QLabel("IDLE")
         self._status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._status.setStyleSheet(
-            "font-size: 28px; font-weight: bold; color: #888;"
-        )
+        self._status.setStyleSheet("font-size: 28px; font-weight: bold; color: #888;")
         self._score = QLabel("--")
         self._score.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._score.setStyleSheet("font-size: 48px; font-weight: bold; color: #7abaff;")
@@ -117,13 +118,9 @@ class _StatusTile(QFrame):
         lay.addWidget(self._sub)
 
     def set_result(self, status: str, score: float, subtitle: str) -> None:
-        color = {"PASS": "#2e8b57", "WARN": "#d48806", "FAIL": "#cf1322"}.get(
-            status, "#888"
-        )
+        color = {"PASS": "#2e8b57", "WARN": "#d48806", "FAIL": "#cf1322"}.get(status, "#888")
         self._status.setText(status)
-        self._status.setStyleSheet(
-            f"font-size: 28px; font-weight: bold; color: {color};"
-        )
+        self._status.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {color};")
         self._score.setText(f"{score:.1f}")
         self._score.setStyleSheet(f"font-size: 48px; font-weight: bold; color: {color};")
         self._sub.setText(subtitle)
@@ -172,9 +169,7 @@ class PowerSignoffPanel(QWidget):
 
         def _browse(edit: QLineEdit, title: str, flt: str) -> QPushButton:
             btn = QPushButton("Browse")
-            btn.clicked.connect(
-                lambda: self._pick(edit, title, flt)
-            )
+            btn.clicked.connect(lambda: self._pick(edit, title, flt))
             row = QHBoxLayout()
             w = QWidget()
             row.setContentsMargins(0, 0, 0, 0)
@@ -243,21 +238,26 @@ class PowerSignoffPanel(QWidget):
     def _build_corner_tab(self) -> None:
         self._corner_table = QTableWidget(0, 8)
         self._corner_table.setHorizontalHeaderLabels(
-            ["Corner", "Leakage mW", "Dynamic mW", "Total mW", "IR mV",
-             "EM viol", "Temp C", "Status"]
+            [
+                "Corner",
+                "Leakage mW",
+                "Dynamic mW",
+                "Total mW",
+                "IR mV",
+                "EM viol",
+                "Temp C",
+                "Status",
+            ]
         )
         self._corner_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self._corner_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
+        self._corner_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._corner_table.horizontalHeader().setStretchLastSection(True)
         self._tabs.addTab(self._corner_table, "Corners")
 
     def _build_mode_tab(self) -> None:
         self._mode_table = QTableWidget(0, 7)
         self._mode_table.setHorizontalHeaderLabels(
-            ["Mode", "Dynamic mW", "Leakage mW", "Total mW",
-             "Peak mW", "Peak ns", "Duration ns"]
+            ["Mode", "Dynamic mW", "Leakage mW", "Total mW", "Peak mW", "Peak ns", "Duration ns"]
         )
         self._mode_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._mode_table.horizontalHeader().setStretchLastSection(True)
@@ -447,8 +447,12 @@ class PowerSignoffPanel(QWidget):
                     sp.set_color("#444")
             else:
                 self._heat_ax.text(
-                    0.5, 0.5, "no density data",
-                    ha="center", va="center", color="#888",
+                    0.5,
+                    0.5,
+                    "no density data",
+                    ha="center",
+                    va="center",
+                    color="#888",
                     transform=self._heat_ax.transAxes,
                 )
             if self._heat_canvas is not None:
@@ -471,8 +475,12 @@ class PowerSignoffPanel(QWidget):
                     sp.set_color("#444")
             else:
                 self._time_ax.text(
-                    0.5, 0.5, "no VCD provided",
-                    ha="center", va="center", color="#888",
+                    0.5,
+                    0.5,
+                    "no VCD provided",
+                    ha="center",
+                    va="center",
+                    color="#888",
                     transform=self._time_ax.transAxes,
                 )
             if self._time_canvas is not None:

@@ -469,9 +469,16 @@ def _fmt_eng(x: float) -> str:
         return "0"
     abs_x = abs(x)
     units = [
-        (1e12, "T"), (1e9, "G"), (1e6, "M"), (1e3, "k"),
-        (1.0, ""), (1e-3, "m"), (1e-6, "u"), (1e-9, "n"),
-        (1e-12, "p"), (1e-15, "f"),
+        (1e12, "T"),
+        (1e9, "G"),
+        (1e6, "M"),
+        (1e3, "k"),
+        (1.0, ""),
+        (1e-3, "m"),
+        (1e-6, "u"),
+        (1e-9, "n"),
+        (1e-12, "p"),
+        (1e-15, "f"),
     ]
     for scale, suffix in units:
         if abs_x >= scale:
@@ -634,8 +641,17 @@ def _parse_eng(s: str) -> float:
     if not s:
         return 0.0
     suffixes = {
-        "f": 1e-15, "p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3,
-        "k": 1e3, "K": 1e3, "meg": 1e6, "g": 1e9, "G": 1e9, "t": 1e12,
+        "f": 1e-15,
+        "p": 1e-12,
+        "n": 1e-9,
+        "u": 1e-6,
+        "m": 1e-3,
+        "k": 1e3,
+        "K": 1e3,
+        "meg": 1e6,
+        "g": 1e9,
+        "G": 1e9,
+        "t": 1e12,
     }
     low = s.lower()
     if low.endswith("meg"):

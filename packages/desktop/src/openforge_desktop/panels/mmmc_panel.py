@@ -75,8 +75,7 @@ class MmmcPanel(QDockWidget):
     def _build_ui(self) -> None:
         root = QWidget(self)
         root.setStyleSheet(
-            f"background:{_BG.name()}; color:{_TEXT.name()};"
-            "QLabel { color:#cdd6f4; }"
+            f"background:{_BG.name()}; color:{_TEXT.name()};QLabel {{ color:#cdd6f4; }}"
         )
         layout = QVBoxLayout(root)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -84,9 +83,7 @@ class MmmcPanel(QDockWidget):
 
         # --- Toolbar ----------------------------------------------------
         tb = QToolBar()
-        tb.setStyleSheet(
-            f"QToolBar {{ background:{_PANEL.name()}; border:1px solid #313244; }}"
-        )
+        tb.setStyleSheet(f"QToolBar {{ background:{_PANEL.name()}; border:1px solid #313244; }}")
         self._preset_combo = QComboBox()
         self._preset_combo.addItems(["sky130", "asap7"])
         self._preset_combo.currentTextChanged.connect(self._on_preset_changed)
@@ -151,9 +148,7 @@ class MmmcPanel(QDockWidget):
 
     def _make_corners_table(self) -> QTableWidget:
         t = QTableWidget(0, 7)
-        t.setHorizontalHeaderLabels(
-            ["Name", "P", "V", "T", "Lib files", "RC corner", "Derate"]
-        )
+        t.setHorizontalHeaderLabels(["Name", "P", "V", "T", "Lib files", "RC corner", "Derate"])
         t.setStyleSheet(self._table_qss())
         t.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         t.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
@@ -184,8 +179,7 @@ class MmmcPanel(QDockWidget):
         self._diff_text = QTextEdit()
         self._diff_text.setReadOnly(True)
         self._diff_text.setStyleSheet(
-            f"background:{_PANEL.name()}; color:{_TEXT.name()}; "
-            "font-family: Consolas, monospace;"
+            f"background:{_PANEL.name()}; color:{_TEXT.name()}; font-family: Consolas, monospace;"
         )
         lay.addWidget(self._diff_text, 1)
         return w
@@ -323,18 +317,18 @@ class MmmcPanel(QDockWidget):
     def _on_export_tcl(self) -> None:
         if self._config is None:
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export MMMC Tcl", "mmmc.tcl", "Tcl (*.tcl)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Export MMMC Tcl", "mmmc.tcl", "Tcl (*.tcl)")
         if not path:
             return
         Path(path).write_text(self._config.to_openroad_tcl())
 
     def _on_export_reports(self) -> None:
-        path, _ = QFileDialog.getExistingDirectory(
-            self, "Choose export directory"
-        ) if False else QFileDialog.getSaveFileName(
-            self, "Export reports bundle", "mmmc_reports.txt", "Text (*.txt)"
+        path, _ = (
+            QFileDialog.getExistingDirectory(self, "Choose export directory")
+            if False
+            else QFileDialog.getSaveFileName(
+                self, "Export reports bundle", "mmmc_reports.txt", "Text (*.txt)"
+            )
         )
         if not path:
             return
@@ -365,9 +359,7 @@ class MmmcPanel(QDockWidget):
             pa = by_endpoint_a[ep]
             pb = by_endpoint_b[ep]
             if (pa.slack_ns < 0) != (pb.slack_ns < 0):
-                lines.append(
-                    f"  {ep:40s}  {a}={pa.slack_ns:+.3f}  {b}={pb.slack_ns:+.3f}"
-                )
+                lines.append(f"  {ep:40s}  {a}={pa.slack_ns:+.3f}  {b}={pb.slack_ns:+.3f}")
         if len(lines) == 2:
             lines.append("  (no sign flips)")
         self._diff_text.setPlainText("\n".join(lines))

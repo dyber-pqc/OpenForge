@@ -95,9 +95,7 @@ class SvaParser:
 
             # Block properties we've already captured -- don't double-match on
             # their anonymous tails. We do this by removing named-block spans.
-            stripped = SvaParser._RE_BLOCK.sub(
-                lambda m: " " * (m.end() - m.start()), text
-            )
+            stripped = SvaParser._RE_BLOCK.sub(lambda m: " " * (m.end() - m.start()), text)
             for m in SvaParser._RE_ANON.finditer(stripped):
                 line = stripped.count("\n", 0, m.start()) + 1
                 body = m.group("body").strip()
@@ -198,8 +196,8 @@ class SvaToVerilator:
             "    end\n"
             "  end\n"
             "  final begin\n"
-            "    $display(\"[SVA_COV] %s hits=%0d first=%0t last=%0t\",\n"
-            f"             \"{prop.name}\", hit_count, first_hit, last_hit);\n"
+            '    $display("[SVA_COV] %s hits=%0d first=%0t last=%0t",\n'
+            f'             "{prop.name}", hit_count, first_hit, last_hit);\n'
             "  end\n"
             f"endmodule : {mod}\n"
         )
@@ -255,10 +253,7 @@ class SvaCoverageMerger:
                     last_hit_time=(
                         existing.last_hit_time
                         if existing.last_hit_time is not None
-                        and (
-                            sc.last_hit_time is None
-                            or existing.last_hit_time >= sc.last_hit_time
-                        )
+                        and (sc.last_hit_time is None or existing.last_hit_time >= sc.last_hit_time)
                         else sc.last_hit_time
                     ),
                 )

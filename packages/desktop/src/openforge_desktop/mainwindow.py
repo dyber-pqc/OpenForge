@@ -46,11 +46,13 @@ from openforge_desktop.panels.hierarchy import HierarchyPanel
 try:
     from openforge_desktop.editor import EditorTabWidget as _EditorClass
     from openforge_desktop.editor import LintOverlay, VerilogNavigator
+
     _HAS_NEW_EDITOR = True
 except ImportError:
     from openforge_desktop.panels.editor import (
         EditorPanel as _EditorClass,  # type: ignore[assignment]
     )
+
     _HAS_NEW_EDITOR = False
     VerilogNavigator = None  # type: ignore[assignment,misc]
     LintOverlay = None  # type: ignore[assignment,misc]
@@ -96,6 +98,7 @@ except ImportError:
 
 try:
     from openforge_desktop.panels.pin_planner import PinPlannerPanel
+
     _HAS_PIN_PLANNER = True
 except Exception:
     PinPlannerPanel = None  # type: ignore[assignment,misc]
@@ -139,9 +142,12 @@ _OPENFORGE_ENABLE_WORKER_STATUS = _of_os_wave3.environ.get(
 import contextlib
 import os as _of_os
 
-_OPENFORGE_ENABLE_AXI_CHECKER = _of_os.environ.get(
-    "OPENFORGE_ENABLE_AXI_CHECKER", "1"
-) not in ("0", "false", "False", "")
+_OPENFORGE_ENABLE_AXI_CHECKER = _of_os.environ.get("OPENFORGE_ENABLE_AXI_CHECKER", "1") not in (
+    "0",
+    "false",
+    "False",
+    "",
+)
 
 # Crown jewel features
 try:
@@ -488,25 +494,25 @@ except Exception:
 
 # Map file extensions to colors for the project explorer
 _EXT_COLORS: dict[str, str] = {
-    ".v": "#a6e3a1",    # green -- Verilog
-    ".sv": "#a6e3a1",   # green -- SystemVerilog
+    ".v": "#a6e3a1",  # green -- Verilog
+    ".sv": "#a6e3a1",  # green -- SystemVerilog
     ".svh": "#a6e3a1",  # green
-    ".vh": "#a6e3a1",   # green
+    ".vh": "#a6e3a1",  # green
     ".vhd": "#a6e3a1",  # green -- VHDL
-    ".vhdl": "#a6e3a1", # green
+    ".vhdl": "#a6e3a1",  # green
     ".def": "#89b4fa",  # blue -- DEF layout
     ".lef": "#89b4fa",  # blue -- LEF
     ".gds": "#cba6f7",  # purple -- GDSII
-    ".gds2": "#cba6f7", # purple
+    ".gds2": "#cba6f7",  # purple
     ".vcd": "#fab387",  # orange -- waveforms
     ".fst": "#fab387",  # orange
-    ".yaml": "#6c7086", # gray -- config
+    ".yaml": "#6c7086",  # gray -- config
     ".yml": "#6c7086",  # gray
-    ".json": "#6c7086", # gray
+    ".json": "#6c7086",  # gray
     ".sdc": "#f9e2af",  # yellow -- constraints
     ".xdc": "#f9e2af",  # yellow
     ".tcl": "#f5c2e7",  # pink -- TCL scripts
-    ".py": "#f9e2af",   # yellow -- Python
+    ".py": "#f9e2af",  # yellow -- Python
     ".lib": "#94e2d5",  # teal -- liberty
 }
 
@@ -522,6 +528,7 @@ class _EdaFileIconProvider(QFileIconProvider):
         """Return a colored icon for known EDA file types."""
         try:
             from PySide6.QtCore import QFileInfo
+
             if isinstance(info_or_type, QFileInfo):
                 suffix = "." + info_or_type.suffix().lower() if info_or_type.suffix() else ""
                 color_hex = _EXT_COLORS.get(suffix)
@@ -1602,8 +1609,10 @@ class MainWindow(QMainWindow):
                 FirstRunWizard,
                 setup_complete,
             )
+
             if not setup_complete():
                 from PySide6.QtCore import QTimer as _QT
+
                 _QT.singleShot(200, lambda: FirstRunWizard(self).exec())
         except Exception:
             pass
@@ -1707,7 +1716,9 @@ class MainWindow(QMainWindow):
         # ── File ──────────────────────────────────────────────────
         file_menu: QMenu = mb.addMenu("&File")
         self._act_new = file_menu.addAction("&New...", self._on_new, QKeySequence.StandardKey.New)
-        self._act_open = file_menu.addAction("&Open...", self._on_open, QKeySequence.StandardKey.Open)
+        self._act_open = file_menu.addAction(
+            "&Open...", self._on_open, QKeySequence.StandardKey.Open
+        )
         file_menu.addSeparator()
         file_menu.addAction("New &Project...", self._on_new_project, QKeySequence("Ctrl+Shift+N"))
         file_menu.addAction("Open P&roject...", self._on_open_project, QKeySequence("Ctrl+Shift+O"))
@@ -1715,7 +1726,9 @@ class MainWindow(QMainWindow):
         self._recent_menu.addAction("(none)")
         file_menu.addSeparator()
         self._act_save = file_menu.addAction("&Save", self._on_save, QKeySequence.StandardKey.Save)
-        self._act_save_as = file_menu.addAction("Save &As...", self._on_save_as, QKeySequence("Ctrl+Shift+S"))
+        self._act_save_as = file_menu.addAction(
+            "Save &As...", self._on_save_as, QKeySequence("Ctrl+Shift+S")
+        )
         file_menu.addSeparator()
         file_menu.addAction("&Import Sources...", self._on_add_source_files)
         file_menu.addAction("Import &Project...", self._on_import_project)
@@ -1746,13 +1759,17 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         edit_menu.addAction("&Find...", self._on_find, QKeySequence.StandardKey.Find)
         edit_menu.addAction("Find && &Replace...", self._on_find_replace, QKeySequence("Ctrl+H"))
-        edit_menu.addAction("Find in &Files...", self._on_find_in_files, QKeySequence("Ctrl+Shift+F"))
+        edit_menu.addAction(
+            "Find in &Files...", self._on_find_in_files, QKeySequence("Ctrl+Shift+F")
+        )
         edit_menu.addSeparator()
         edit_menu.addAction("&Go to Line...", self._on_go_to_line, QKeySequence("Ctrl+G"))
         edit_menu.addAction("Toggle &Comment", self._on_toggle_comment, QKeySequence("Ctrl+/"))
         edit_menu.addAction("Toggle &Word Wrap", self._on_toggle_word_wrap)
         edit_menu.addSeparator()
-        edit_menu.addAction("Command &Palette", self._show_command_palette, QKeySequence("Ctrl+Shift+P"))
+        edit_menu.addAction(
+            "Command &Palette", self._show_command_palette, QKeySequence("Ctrl+Shift+P")
+        )
         edit_menu.addSeparator()
         edit_menu.addAction("P&references...", self._on_open_preferences, QKeySequence("Ctrl+,"))
 
@@ -1771,12 +1788,15 @@ class MainWindow(QMainWindow):
 
             activity_menu = view_menu.addMenu("&Activity")
             for _g in _AG_GROUPS:
+
                 def _make_activate(gid=_g.id):
                     def _do():
                         bar = getattr(self, "_activity_bar", None)
                         if bar is not None:
                             bar.activate(gid)
+
                     return _do
+
                 activity_menu.addAction(f"{_g.icon_glyph}  {_g.title}", _make_activate())
             view_menu.addSeparator()
         except Exception:
@@ -1815,6 +1835,7 @@ class MainWindow(QMainWindow):
             from openforge_desktop.layouts.presets import (
                 save_layout as _save_layout,
             )
+
             workspace_menu = view_menu.addMenu("&Workspace")
 
             def _make_apply(_p):
@@ -1827,11 +1848,11 @@ class MainWindow(QMainWindow):
 
             def _save_current():
                 from PySide6.QtWidgets import QFileDialog
-                fn, _ = QFileDialog.getSaveFileName(
-                    self, "Save Layout As", "", "Layout (*.layout)"
-                )
+
+                fn, _ = QFileDialog.getSaveFileName(self, "Save Layout As", "", "Layout (*.layout)")
                 if fn:
                     from pathlib import Path as _P
+
                     _save_layout(self, _P(fn))
 
             workspace_menu.addAction("Save Current Layout As...", _save_current)
@@ -1976,24 +1997,36 @@ class MainWindow(QMainWindow):
         tools_menu.addAction("&Install PDK...", self._on_install_pdk)
         tools_menu.addSeparator()
         reports_menu = tools_menu.addMenu("Generate &Report")
-        reports_menu.addAction("&Synthesis Report", lambda: self._on_report_requested("Synthesis Report"))
+        reports_menu.addAction(
+            "&Synthesis Report", lambda: self._on_report_requested("Synthesis Report")
+        )
         reports_menu.addAction("&Timing Report", lambda: self._on_report_requested("Timing Report"))
         reports_menu.addAction("&Power Report", lambda: self._on_report_requested("Power Report"))
         reports_menu.addAction("&DRC Report", lambda: self._on_report_requested("DRC Report"))
-        reports_menu.addAction("&Utilization Report", lambda: self._on_report_requested("Utilization Report"))
+        reports_menu.addAction(
+            "&Utilization Report", lambda: self._on_report_requested("Utilization Report")
+        )
         reports_menu.addSeparator()
-        reports_menu.addAction("Project Summary (&All)", lambda: self._on_report_requested("Summary Report"))
+        reports_menu.addAction(
+            "Project Summary (&All)", lambda: self._on_report_requested("Summary Report")
+        )
 
         # ── Help ──────────────────────────────────────────────────
         help_menu: QMenu = mb.addMenu("&Help")
         help_menu.addAction("&Documentation", self._on_documentation)
         help_menu.addAction("&Keyboard Shortcuts", self._on_shortcuts_help)
-        help_menu.addAction("&Release Notes", lambda: QDesktopServices.openUrl(QUrl("https://openforge.dev/releases")))
+        help_menu.addAction(
+            "&Release Notes",
+            lambda: QDesktopServices.openUrl(QUrl("https://openforge.dev/releases")),
+        )
         help_menu.addSeparator()
         help_menu.addSeparator()
         help_menu.addAction("Start &Tutorial...", self._on_start_tutorial)
         help_menu.addAction("Tool &Manager...", self._on_tool_manager)
-        help_menu.addAction("&Welcome / New Project...", lambda: (self._show_welcome() if hasattr(self, "_show_welcome") else None))
+        help_menu.addAction(
+            "&Welcome / New Project...",
+            lambda: self._show_welcome() if hasattr(self, "_show_welcome") else None,
+        )
         help_menu.addAction("Check for &Updates...", self._on_check_updates)
         help_menu.addSeparator()
         help_menu.addAction("&About OpenForge EDA...", self._on_about)
@@ -2123,9 +2156,7 @@ class MainWindow(QMainWindow):
                 self._log_agg_dock.setObjectName("log_aggregator_dock")
                 self._log_agg_panel = LogAggregatorPanel(parent=self._log_agg_dock)
                 self._log_agg_dock.setWidget(self._log_agg_panel)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._log_agg_dock
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._log_agg_dock)
                 self.tabifyDockWidget(self._timing, self._log_agg_dock)
             except Exception:
                 self._log_agg_dock = None  # type: ignore[assignment]
@@ -2137,9 +2168,7 @@ class MainWindow(QMainWindow):
                 self._worker_dock.setObjectName("worker_status_dock")
                 self._worker_panel = WorkerStatusPanel(parent=self._worker_dock)
                 self._worker_dock.setWidget(self._worker_panel)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._worker_dock
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._worker_dock)
                 self.tabifyDockWidget(self._timing, self._worker_dock)
             except Exception:
                 self._worker_dock = None  # type: ignore[assignment]
@@ -2209,9 +2238,7 @@ class MainWindow(QMainWindow):
                 self._pin_planner = PinPlannerPanel("Pin Planner", self)
                 self._pin_planner.setObjectName("pin_planner_dock")
                 self._pin_planner.setMinimumHeight(240)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._pin_planner
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._pin_planner)
                 self.tabifyDockWidget(self._timing, self._pin_planner)
             except Exception:
                 self._pin_planner = None
@@ -2240,9 +2267,7 @@ class MainWindow(QMainWindow):
                 self._axi_checker = AxiCheckerPanel("AXI Checker", self)
                 self._axi_checker.setObjectName("axi_checker_dock")
                 self._axi_checker.setMinimumWidth(260)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._axi_checker
-                )
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._axi_checker)
                 self.tabifyDockWidget(self._block_design, self._axi_checker)
             except Exception:
                 self._axi_checker = None
@@ -2280,16 +2305,13 @@ class MainWindow(QMainWindow):
 
         # ILA Debug Panel (feature-flagged, tabbed with Waveform)
         import os as _os
-        if IlaDebugPanel is not None and _os.environ.get(
-            "OPENFORGE_ILA_DEBUG", "1"
-        ) != "0":
+
+        if IlaDebugPanel is not None and _os.environ.get("OPENFORGE_ILA_DEBUG", "1") != "0":
             try:
                 self._ila_debug = IlaDebugPanel(self)
                 self._ila_debug.setObjectName("ila_debug_dock")
                 self._ila_debug.setMinimumWidth(320)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._ila_debug
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._ila_debug)
                 with contextlib.suppress(Exception):
                     self.tabifyDockWidget(self._waveform, self._ila_debug)
                 # Forward VCD loads to waveform viewer if it accepts one.
@@ -2365,17 +2387,13 @@ class MainWindow(QMainWindow):
             self._cell_library = None
 
         # Phase 3: KiCad Library Manager (feature-flagged, left area)
-        if LibraryManagerPanel is not None and getattr(
-            self, "_feature_flag_library_manager", True
-        ):
+        if LibraryManagerPanel is not None and getattr(self, "_feature_flag_library_manager", True):
             try:
                 _libmgr_widget = LibraryManagerPanel(self)
                 _libmgr_dock = QDockWidget("KiCad Library Manager", self)
                 _libmgr_dock.setObjectName("library_manager_dock")
                 _libmgr_dock.setWidget(_libmgr_widget)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.LeftDockWidgetArea, _libmgr_dock
-                )
+                self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, _libmgr_dock)
                 if getattr(self, "_ip_catalog", None) is not None:
                     with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._ip_catalog, _libmgr_dock)
@@ -2402,19 +2420,13 @@ class MainWindow(QMainWindow):
             self._floorplan_editor = None
 
         # Phase 2: PDN Synthesizer (tabbed behind Floorplan Editor, feature flag)
-        if PdnSynthesizerPanel is not None and getattr(
-            self, "_feature_flag_pdn_synth", True
-        ):
+        if PdnSynthesizerPanel is not None and getattr(self, "_feature_flag_pdn_synth", True):
             try:
                 self._pdn_synthesizer = PdnSynthesizerPanel(self)
                 self._pdn_synthesizer.setObjectName("pdn_synthesizer_dock")
-                self.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._pdn_synthesizer
-                )
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._pdn_synthesizer)
                 if self._floorplan_editor is not None:
-                    self.tabifyDockWidget(
-                        self._floorplan_editor, self._pdn_synthesizer
-                    )
+                    self.tabifyDockWidget(self._floorplan_editor, self._pdn_synthesizer)
             except Exception:
                 self._pdn_synthesizer = None
         else:
@@ -2431,9 +2443,7 @@ class MainWindow(QMainWindow):
                 # Cross-probing: clicking a cell highlights it in the layout
                 # viewer; selecting a path jumps the editor to the source.
                 try:
-                    self._path_browser.cell_selected.connect(
-                        self._on_path_browser_cell_selected
-                    )
+                    self._path_browser.cell_selected.connect(self._on_path_browser_cell_selected)
                     self._path_browser.source_navigate.connect(
                         self._on_path_browser_source_navigate
                     )
@@ -2456,37 +2466,25 @@ class MainWindow(QMainWindow):
                 self._signoff_dashboard = QDockWidget("Sign-off Dashboard", self)
                 self._signoff_dashboard.setObjectName("signoff_dashboard_dock")
                 self._signoff_dashboard.setWidget(_sig_widget)
-                self._signoff_dashboard.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
-                self.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._signoff_dashboard
-                )
+                self._signoff_dashboard.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._signoff_dashboard)
                 if getattr(self, "_physical_design", None) is not None:
                     with contextlib.suppress(Exception):
-                        self.tabifyDockWidget(
-                            self._physical_design, self._signoff_dashboard
-                        )
+                        self.tabifyDockWidget(self._physical_design, self._signoff_dashboard)
             except Exception:
                 self._signoff_dashboard = None
         else:
             self._signoff_dashboard = None
 
         # Phase 12 Wave 1: PBA / Crosstalk panel (bottom, tabbed with timing)
-        if PbaXtalkPanel is not None and getattr(
-            self, "_feature_flag_pba_xtalk", True
-        ):
+        if PbaXtalkPanel is not None and getattr(self, "_feature_flag_pba_xtalk", True):
             try:
                 _pba_widget = PbaXtalkPanel(self)
                 self._pba_xtalk = QDockWidget("PBA / Crosstalk", self)
                 self._pba_xtalk.setObjectName("pba_xtalk_dock")
                 self._pba_xtalk.setWidget(_pba_widget)
-                self._pba_xtalk.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._pba_xtalk
-                )
+                self._pba_xtalk.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._pba_xtalk)
                 if getattr(self, "_timing", None) is not None:
                     with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._timing, self._pba_xtalk)
@@ -2509,20 +2507,14 @@ class MainWindow(QMainWindow):
             self._ir_drop_overlay = None
 
         # Wave 2 Phase 10: Hold-fix panel (bottom, tabbed with timing)
-        if HoldFixPanel is not None and getattr(
-            self, "_feature_flag_hold_fix", True
-        ):
+        if HoldFixPanel is not None and getattr(self, "_feature_flag_hold_fix", True):
             try:
                 _hf_widget = HoldFixPanel(self)
                 self._hold_fix_dock = QDockWidget("Hold Fix", self)
                 self._hold_fix_dock.setObjectName("hold_fix_dock")
                 self._hold_fix_dock.setWidget(_hf_widget)
-                self._hold_fix_dock.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._hold_fix_dock
-                )
+                self._hold_fix_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._hold_fix_dock)
                 if getattr(self, "_timing", None) is not None:
                     with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._timing, self._hold_fix_dock)
@@ -2532,52 +2524,40 @@ class MainWindow(QMainWindow):
             self._hold_fix_dock = None
 
         # Wave 2 Phase 10: Density fill / tap / decap panel (right, tabbed w/ physical)
-        if DensityFillPanel is not None and getattr(
-            self, "_feature_flag_density_fill", True
-        ):
+        if DensityFillPanel is not None and getattr(self, "_feature_flag_density_fill", True):
             try:
                 _df_widget = DensityFillPanel(self)
                 self._density_fill_dock = QDockWidget("Density / Fill", self)
                 self._density_fill_dock.setObjectName("density_fill_dock")
                 self._density_fill_dock.setWidget(_df_widget)
-                self._density_fill_dock.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
+                self._density_fill_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
                 self.addDockWidget(
                     Qt.DockWidgetArea.RightDockWidgetArea,
                     self._density_fill_dock,
                 )
                 if getattr(self, "_physical_design", None) is not None:
                     with contextlib.suppress(Exception):
-                        self.tabifyDockWidget(
-                            self._physical_design, self._density_fill_dock
-                        )
+                        self.tabifyDockWidget(self._physical_design, self._density_fill_dock)
             except Exception:
                 self._density_fill_dock = None
         else:
             self._density_fill_dock = None
 
         # Wave 2 Phase 10: Glitch-power panel (bottom, tabbed with waveform)
-        if GlitchPowerPanel is not None and getattr(
-            self, "_feature_flag_glitch_power", True
-        ):
+        if GlitchPowerPanel is not None and getattr(self, "_feature_flag_glitch_power", True):
             try:
                 _gp_widget = GlitchPowerPanel(self)
                 self._glitch_power_dock = QDockWidget("Glitch Power", self)
                 self._glitch_power_dock.setObjectName("glitch_power_dock")
                 self._glitch_power_dock.setWidget(_gp_widget)
-                self._glitch_power_dock.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
+                self._glitch_power_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
                 self.addDockWidget(
                     Qt.DockWidgetArea.BottomDockWidgetArea,
                     self._glitch_power_dock,
                 )
                 if getattr(self, "_waveform", None) is not None:
                     with contextlib.suppress(Exception):
-                        self.tabifyDockWidget(
-                            self._waveform, self._glitch_power_dock
-                        )
+                        self.tabifyDockWidget(self._waveform, self._glitch_power_dock)
             except Exception:
                 self._glitch_power_dock = None
         else:
@@ -2606,9 +2586,7 @@ class MainWindow(QMainWindow):
             self._parasitic_heatmap_dock = None
 
         # Phase 2: DRC Browser (bottom, tabbed with reports)
-        if DrcBrowserPanel is not None and getattr(
-            self, "_feature_flag_drc_browser", True
-        ):
+        if DrcBrowserPanel is not None and getattr(self, "_feature_flag_drc_browser", True):
             try:
                 self._drc_browser = DrcBrowserPanel(self)
                 self._drc_browser.setWindowTitle("DRC Browser")
@@ -2643,6 +2621,7 @@ class MainWindow(QMainWindow):
         # ── Phase 4: verification dashboards ─────────────────────────
         # Feature-flagged via OPENFORGE_PHASE4 env var (default on).
         import os as _os_phase4
+
         _p4_enabled = _os_phase4.environ.get("OPENFORGE_PHASE4", "1") != "0"
         self._coverage_dashboard_dock = None
         self._regression_runner_dock = None
@@ -2659,9 +2638,7 @@ class MainWindow(QMainWindow):
                     self._coverage_dashboard_dock,
                 )
                 if getattr(self, "_regression_panel", None) is not None:
-                    self.tabifyDockWidget(
-                        self._regression_panel, self._coverage_dashboard_dock
-                    )
+                    self.tabifyDockWidget(self._regression_panel, self._coverage_dashboard_dock)
             except Exception:
                 self._coverage_dashboard_dock = None
         # ── Wave 2 Phase 11: CRV builder + regression triage ─────────
@@ -2679,9 +2656,7 @@ class MainWindow(QMainWindow):
                     self._crv_builder_dock,
                 )
                 if self._coverage_dashboard_dock is not None:
-                    self.tabifyDockWidget(
-                        self._coverage_dashboard_dock, self._crv_builder_dock
-                    )
+                    self.tabifyDockWidget(self._coverage_dashboard_dock, self._crv_builder_dock)
             except Exception:
                 self._crv_builder_dock = None
         if _p11_enabled and RegressionTriagePanel is not None:
@@ -2723,9 +2698,7 @@ class MainWindow(QMainWindow):
                 self._formal_dock = QDockWidget("Formal", self)
                 self._formal_dock.setObjectName("formal_dock")
                 self._formal_dock.setWidget(_fp_w)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._formal_dock
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._formal_dock)
                 if self._regression_runner_dock is not None:
                     self.tabifyDockWidget(self._regression_runner_dock, self._formal_dock)
             except Exception:
@@ -2736,9 +2709,7 @@ class MainWindow(QMainWindow):
                 self._equivalence_dock = QDockWidget("Equivalence", self)
                 self._equivalence_dock.setObjectName("equivalence_dock")
                 self._equivalence_dock.setWidget(_eq_w)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._equivalence_dock
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._equivalence_dock)
                 if self._formal_dock is not None:
                     self.tabifyDockWidget(self._formal_dock, self._equivalence_dock)
             except Exception:
@@ -2813,9 +2784,7 @@ class MainWindow(QMainWindow):
         if MmmcPanel is not None:
             try:
                 self._mmmc_panel = MmmcPanel(self)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._mmmc_panel
-                )
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._mmmc_panel)
                 self.tabifyDockWidget(self._physical_design, self._mmmc_panel)
             except Exception:
                 self._mmmc_panel = None
@@ -2826,9 +2795,7 @@ class MainWindow(QMainWindow):
         if StaWhatIfPanel is not None:
             try:
                 self._sta_whatif_panel = StaWhatIfPanel(self)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._sta_whatif_panel
-                )
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._sta_whatif_panel)
                 self.tabifyDockWidget(self._physical_design, self._sta_whatif_panel)
             except Exception:
                 self._sta_whatif_panel = None
@@ -2876,7 +2843,9 @@ class MainWindow(QMainWindow):
             try:
                 self._coverage_closure_panel = CoverageClosurePanel(self)
                 self._coverage_closure_panel.setObjectName("coverage_closure_dock")
-                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._coverage_closure_panel)
+                self.addDockWidget(
+                    Qt.DockWidgetArea.BottomDockWidgetArea, self._coverage_closure_panel
+                )
                 if getattr(self, "_regression_panel", None) is not None:
                     self.tabifyDockWidget(self._regression_panel, self._coverage_closure_panel)
                 else:
@@ -3030,7 +2999,9 @@ class MainWindow(QMainWindow):
         if self._gds_viewer is not None:
             self._dock_default_areas[self._gds_viewer] = Qt.DockWidgetArea.BottomDockWidgetArea
         if self._constraint_editor is not None:
-            self._dock_default_areas[self._constraint_editor] = Qt.DockWidgetArea.BottomDockWidgetArea
+            self._dock_default_areas[self._constraint_editor] = (
+                Qt.DockWidgetArea.BottomDockWidgetArea
+            )
         if self._block_design is not None:
             self._dock_default_areas[self._block_design] = Qt.DockWidgetArea.RightDockWidgetArea
         if self._git_panel is not None:
@@ -3048,7 +3019,9 @@ class MainWindow(QMainWindow):
         if self._ir_drop_overlay is not None:
             self._dock_default_areas[self._ir_drop_overlay] = Qt.DockWidgetArea.RightDockWidgetArea
         if self._regression_panel is not None:
-            self._dock_default_areas[self._regression_panel] = Qt.DockWidgetArea.BottomDockWidgetArea
+            self._dock_default_areas[self._regression_panel] = (
+                Qt.DockWidgetArea.BottomDockWidgetArea
+            )
         if self._fpga_target is not None:
             self._dock_default_areas[self._fpga_target] = Qt.DockWidgetArea.RightDockWidgetArea
         if self._report_viewer is not None:
@@ -3060,19 +3033,29 @@ class MainWindow(QMainWindow):
         if self._lec_panel is not None:
             self._dock_default_areas[self._lec_panel] = Qt.DockWidgetArea.BottomDockWidgetArea
         if self._clock_tree_viewer is not None:
-            self._dock_default_areas[self._clock_tree_viewer] = Qt.DockWidgetArea.RightDockWidgetArea
+            self._dock_default_areas[self._clock_tree_viewer] = (
+                Qt.DockWidgetArea.RightDockWidgetArea
+            )
         if self._cts_advanced_panel is not None:
-            self._dock_default_areas[self._cts_advanced_panel] = Qt.DockWidgetArea.RightDockWidgetArea
+            self._dock_default_areas[self._cts_advanced_panel] = (
+                Qt.DockWidgetArea.RightDockWidgetArea
+            )
         if self._spice_panel is not None:
             self._dock_default_areas[self._spice_panel] = Qt.DockWidgetArea.BottomDockWidgetArea
         if self._spice_simulator is not None:
             self._dock_default_areas[self._spice_simulator] = Qt.DockWidgetArea.BottomDockWidgetArea
         if self._transistor_layout is not None:
-            self._dock_default_areas[self._transistor_layout] = Qt.DockWidgetArea.RightDockWidgetArea
+            self._dock_default_areas[self._transistor_layout] = (
+                Qt.DockWidgetArea.RightDockWidgetArea
+            )
         if self._coverage_closure_panel is not None:
-            self._dock_default_areas[self._coverage_closure_panel] = Qt.DockWidgetArea.BottomDockWidgetArea
+            self._dock_default_areas[self._coverage_closure_panel] = (
+                Qt.DockWidgetArea.BottomDockWidgetArea
+            )
         if self._lvs_debugger_panel is not None:
-            self._dock_default_areas[self._lvs_debugger_panel] = Qt.DockWidgetArea.BottomDockWidgetArea
+            self._dock_default_areas[self._lvs_debugger_panel] = (
+                Qt.DockWidgetArea.BottomDockWidgetArea
+            )
         if self._dft_panel is not None:
             self._dock_default_areas[self._dft_panel] = Qt.DockWidgetArea.RightDockWidgetArea
         if self._thermal_panel is not None:
@@ -3080,19 +3063,21 @@ class MainWindow(QMainWindow):
         if self._em_emi_panel is not None:
             self._dock_default_areas[self._em_emi_panel] = Qt.DockWidgetArea.RightDockWidgetArea
         if self._reliability_panel is not None:
-            self._dock_default_areas[self._reliability_panel] = Qt.DockWidgetArea.RightDockWidgetArea
+            self._dock_default_areas[self._reliability_panel] = (
+                Qt.DockWidgetArea.RightDockWidgetArea
+            )
         if self._pcb_designer is not None:
             self._dock_default_areas[self._pcb_designer] = Qt.DockWidgetArea.RightDockWidgetArea
         if self._component_browser is not None:
             self._dock_default_areas[self._component_browser] = Qt.DockWidgetArea.LeftDockWidgetArea
         if self._collaboration_panel is not None:
-            self._dock_default_areas[self._collaboration_panel] = Qt.DockWidgetArea.RightDockWidgetArea
+            self._dock_default_areas[self._collaboration_panel] = (
+                Qt.DockWidgetArea.RightDockWidgetArea
+            )
 
         # Phase 10 Wave 1: Hierarchical P&R (feature-flagged)
         self._hierarchical_pnr = None
-        if HierarchicalPnrPanel is not None and getattr(
-            self, "_feature_flag_hier_pnr", True
-        ):
+        if HierarchicalPnrPanel is not None and getattr(self, "_feature_flag_hier_pnr", True):
             try:
                 self._hierarchical_pnr = HierarchicalPnrPanel(self)
                 self.addDockWidget(
@@ -3106,25 +3091,19 @@ class MainWindow(QMainWindow):
                 self._hierarchical_pnr = None
 
         self._eco_browser = None
-        if EcoBrowserPanel is not None and getattr(
-            self, "_feature_flag_eco", True
-        ):
+        if EcoBrowserPanel is not None and getattr(self, "_feature_flag_eco", True):
             try:
                 self._eco_browser = EcoBrowserPanel(self)
                 self.addDockWidget(
                     Qt.DockWidgetArea.BottomDockWidgetArea,
                     self._eco_browser,
                 )
-                self._dock_default_areas[self._eco_browser] = (
-                    Qt.DockWidgetArea.BottomDockWidgetArea
-                )
+                self._dock_default_areas[self._eco_browser] = Qt.DockWidgetArea.BottomDockWidgetArea
             except Exception:
                 self._eco_browser = None
 
         self._multi_vt_panel = None
-        if MultiVtPanel is not None and getattr(
-            self, "_feature_flag_multi_vt", True
-        ):
+        if MultiVtPanel is not None and getattr(self, "_feature_flag_multi_vt", True):
             try:
                 self._multi_vt_panel = MultiVtPanel(self)
                 self.addDockWidget(
@@ -3145,9 +3124,7 @@ class MainWindow(QMainWindow):
                 self._uvm_panel.setObjectName("uvm_panel_dock")
                 self._uvm_panel.setWidget(_uvm_widget)
                 self._uvm_panel.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._uvm_panel
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._uvm_panel)
                 if getattr(self, "_testbench", None) is not None:
                     with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._testbench, self._uvm_panel)
@@ -3163,9 +3140,7 @@ class MainWindow(QMainWindow):
                 self._cdc_panel.setObjectName("cdc_panel_dock")
                 self._cdc_panel.setWidget(_cdc_widget)
                 self._cdc_panel.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._cdc_panel
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._cdc_panel)
                 if getattr(self, "_timing", None) is not None:
                     with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._timing, self._cdc_panel)
@@ -3181,9 +3156,7 @@ class MainWindow(QMainWindow):
                 self._lint_panel.setObjectName("lint_panel_dock")
                 self._lint_panel.setWidget(_lint_widget)
                 self._lint_panel.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-                self.addDockWidget(
-                    Qt.DockWidgetArea.BottomDockWidgetArea, self._lint_panel
-                )
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._lint_panel)
                 if getattr(self, "_reports", None) is not None:
                     with contextlib.suppress(Exception):
                         self.tabifyDockWidget(self._reports, self._lint_panel)
@@ -3192,21 +3165,14 @@ class MainWindow(QMainWindow):
         else:
             self._lint_panel = None
 
-        if (
-            getattr(self, "_feature_flag_power_signoff", True)
-            and PowerSignoffPanel is not None
-        ):
+        if getattr(self, "_feature_flag_power_signoff", True) and PowerSignoffPanel is not None:
             try:
                 _power_signoff_widget = PowerSignoffPanel(self)
                 self._power_signoff_panel = QDockWidget("Power Sign-off", self)
                 self._power_signoff_panel.setObjectName("power_signoff_panel_dock")
                 self._power_signoff_panel.setWidget(_power_signoff_widget)
-                self._power_signoff_panel.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
-                self.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._power_signoff_panel
-                )
+                self._power_signoff_panel.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._power_signoff_panel)
             except Exception:
                 self._power_signoff_panel = None
         else:
@@ -3219,22 +3185,16 @@ class MainWindow(QMainWindow):
             try:
                 _violation_browser_widget = ViolationBrowserPanel(self)
                 self._violation_browser_panel = QDockWidget("Violations", self)
-                self._violation_browser_panel.setObjectName(
-                    "violation_browser_panel_dock"
-                )
+                self._violation_browser_panel.setObjectName("violation_browser_panel_dock")
                 self._violation_browser_panel.setWidget(_violation_browser_widget)
-                self._violation_browser_panel.setAllowedAreas(
-                    Qt.DockWidgetArea.AllDockWidgetAreas
-                )
+                self._violation_browser_panel.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
                 self.addDockWidget(
                     Qt.DockWidgetArea.BottomDockWidgetArea,
                     self._violation_browser_panel,
                 )
                 if getattr(self, "_reports", None) is not None:
                     with contextlib.suppress(Exception):
-                        self.tabifyDockWidget(
-                            self._reports, self._violation_browser_panel
-                        )
+                        self.tabifyDockWidget(self._reports, self._violation_browser_panel)
             except Exception:
                 self._violation_browser_panel = None
         else:
@@ -3254,6 +3214,7 @@ class MainWindow(QMainWindow):
     def eventFilter(self, obj, event) -> bool:  # type: ignore[override]
         """Re-dock a floating dock widget on double-click of its title bar."""
         from PySide6.QtCore import QEvent
+
         if (
             event.type() == QEvent.Type.MouseButtonDblClick
             and isinstance(obj, QDockWidget)
@@ -3281,10 +3242,17 @@ class MainWindow(QMainWindow):
         self._settings.setValue("windowState", self.saveState())
         self._settings.setValue("theme", self._current_theme)
         for worker in (
-            self._synth_worker, self._sim_worker, self._formal_worker,
-            self._timing_worker, self._lint_worker,
-            self._pnr_worker, self._drc_worker, self._lvs_worker,
-            self._gdsii_worker, self._fpga_worker, self._sta_worker,
+            self._synth_worker,
+            self._sim_worker,
+            self._formal_worker,
+            self._timing_worker,
+            self._lint_worker,
+            self._pnr_worker,
+            self._drc_worker,
+            self._lvs_worker,
+            self._gdsii_worker,
+            self._fpga_worker,
+            self._sta_worker,
         ):
             if worker is not None:
                 if hasattr(worker, "cancel"):
@@ -3307,6 +3275,7 @@ class MainWindow(QMainWindow):
             return
         # Make sure every dock has an objectName so the bar can find them.
         from PySide6.QtWidgets import QDockWidget as _QDW
+
         for dock in self.findChildren(_QDW):
             if not dock.objectName():
                 title = dock.windowTitle() or type(dock).__name__
@@ -3335,6 +3304,7 @@ class MainWindow(QMainWindow):
         # Wrap every dock's inner widget in a QScrollArea so content scrolls
         # instead of overlapping when the dock is too small.
         from PySide6.QtWidgets import QScrollArea as _QSA
+
         for dock in self.findChildren(_QDW):
             if dock.objectName().startswith("__"):
                 continue
@@ -3343,6 +3313,7 @@ class MainWindow(QMainWindow):
                 continue
             # Skip if already a scroll area or a QTabWidget (tabs handle their own sizing)
             from PySide6.QtWidgets import QTabWidget as _QTW
+
             if isinstance(inner, (_QSA, _QTW)):
                 continue
             # Wrap in scroll area
@@ -3359,12 +3330,21 @@ class MainWindow(QMainWindow):
                 self._activity_bar.activate_default()
 
         # Resize the remaining visible left/right/bottom docks to sensible widths/heights
-        visible_left = [d for d in self.findChildren(_QDW)
-                        if d.isVisible() and self.dockWidgetArea(d) == Qt.DockWidgetArea.LeftDockWidgetArea]
-        visible_right = [d for d in self.findChildren(_QDW)
-                         if d.isVisible() and self.dockWidgetArea(d) == Qt.DockWidgetArea.RightDockWidgetArea]
-        visible_bottom = [d for d in self.findChildren(_QDW)
-                          if d.isVisible() and self.dockWidgetArea(d) == Qt.DockWidgetArea.BottomDockWidgetArea]
+        visible_left = [
+            d
+            for d in self.findChildren(_QDW)
+            if d.isVisible() and self.dockWidgetArea(d) == Qt.DockWidgetArea.LeftDockWidgetArea
+        ]
+        visible_right = [
+            d
+            for d in self.findChildren(_QDW)
+            if d.isVisible() and self.dockWidgetArea(d) == Qt.DockWidgetArea.RightDockWidgetArea
+        ]
+        visible_bottom = [
+            d
+            for d in self.findChildren(_QDW)
+            if d.isVisible() and self.dockWidgetArea(d) == Qt.DockWidgetArea.BottomDockWidgetArea
+        ]
 
         if visible_left:
             self.resizeDocks(visible_left, [280] * len(visible_left), Qt.Orientation.Horizontal)
@@ -3408,10 +3388,16 @@ class MainWindow(QMainWindow):
         dark = self._current_theme == "dark"
         # Panels with set_theme() support
         for panel in (
-            self._flow_nav, self._ip_catalog, self._console,
-            self._synthesis, self._physical_design,
-            self._timing, self._security,
-            self._gds_viewer, self._constraint_editor, self._block_design,
+            self._flow_nav,
+            self._ip_catalog,
+            self._console,
+            self._synthesis,
+            self._physical_design,
+            self._timing,
+            self._security,
+            self._gds_viewer,
+            self._constraint_editor,
+            self._block_design,
         ):
             if panel is not None and hasattr(panel, "set_theme"):
                 panel.set_theme(dark)
@@ -3459,7 +3445,8 @@ class MainWindow(QMainWindow):
         self._settings.setValue("theme", self._current_theme)
         self._apply_theme()
         self.statusBar().showMessage(
-            f"Switched to {self._current_theme} theme", 3000,
+            f"Switched to {self._current_theme} theme",
+            3000,
         )
 
     # -- Shortcuts --------------------------------------------------
@@ -3493,7 +3480,8 @@ class MainWindow(QMainWindow):
             self._console.append_error("No project open. Open a project first.")
             return
         files, _ = QFileDialog.getOpenFileNames(
-            self, "Add Source Files",
+            self,
+            "Add Source Files",
             str(self._project_mgr.project_path),
             "Verilog/SystemVerilog (*.v *.sv *.svh);;All (*)",
         )
@@ -3511,8 +3499,9 @@ class MainWindow(QMainWindow):
     def _on_import_project(self) -> None:
         """Open the Import Project dialog (Vivado/OpenLane2/KiCad/Quartus)."""
         if ImportProjectDialog is None:
-            QMessageBox.warning(self, "Import Project",
-                                "Import Project dialog is not available in this build.")
+            QMessageBox.warning(
+                self, "Import Project", "Import Project dialog is not available in this build."
+            )
             return
         dlg = ImportProjectDialog(self)
         if dlg.exec() == dlg.DialogCode.Accepted:
@@ -3535,12 +3524,9 @@ class MainWindow(QMainWindow):
         self._security.raise_()
         # Use the LintWorker as a proxy for CT analysis
         self._console.append_info(
-            "Constant-time analysis checks for timing-dependent branches "
-            "in cryptographic modules."
+            "Constant-time analysis checks for timing-dependent branches in cryptographic modules."
         )
-        self._console.append_info(
-            f"Analyzing top module: {self._project_mgr.top_module()}"
-        )
+        self._console.append_info(f"Analyzing top module: {self._project_mgr.top_module()}")
         self._console.append_success("CT check dispatched to security panel.")
 
     def _on_sca_analysis(self) -> None:
@@ -3576,7 +3562,9 @@ class MainWindow(QMainWindow):
             self._console.append_error("No project open. Open a project first.")
             return
         self._console.append_info("Launching physical design implementation...")
-        self._console.append_info("Flow: Synthesis -> Floorplan -> Place -> CTS -> Route -> DRC/LVS")
+        self._console.append_info(
+            "Flow: Synthesis -> Floorplan -> Place -> CTS -> Route -> DRC/LVS"
+        )
         self._physical_design.setVisible(True)
         self._physical_design.raise_()
         self.statusBar().showMessage("Implementation flow launched", 3000)
@@ -3735,16 +3723,16 @@ exit
         self.statusBar().showMessage("Place & Route running...", 0)
 
         wsl_tcl = _to_wsl(tcl_script)
-        cmd = ["wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
-               f"openroad -exit {wsl_tcl}"]
+        cmd = ["wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c", f"openroad -exit {wsl_tcl}"]
 
         self._pnr_worker = PnrWorker(
-            cmd=cmd, pnr_dir=pnr_dir, top_module=top,
-            proj_path=proj_path, parent=self,
+            cmd=cmd,
+            pnr_dir=pnr_dir,
+            top_module=top,
+            proj_path=proj_path,
+            parent=self,
         )
-        self._pnr_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._pnr_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._pnr_worker.full_log.connect(self._on_pnr_log)
         self._pnr_worker.finished_result.connect(self._on_pnr_finished)
         self._pnr_worker.start()
@@ -3758,7 +3746,9 @@ exit
             top = self._project_mgr.top_module()
             routed_def = proj_path / "pnr_build" / f"{top}_routed.def"
             placed_def = proj_path / "pnr_build" / f"{top}_placed.def"
-            best_def = str(routed_def if routed_def.exists() else placed_def if placed_def.exists() else "")
+            best_def = str(
+                routed_def if routed_def.exists() else placed_def if placed_def.exists() else ""
+            )
             try:
                 self._physical_design.update_from_pnr_result(best_def, log_text)
             except Exception as exc:
@@ -3779,7 +3769,9 @@ exit
             pnr_dir = proj_path / "pnr_build"
             routed_def = pnr_dir / f"{top}_routed.def"
             placed_def = pnr_dir / f"{top}_placed.def"
-            best_def = routed_def if routed_def.exists() else placed_def if placed_def.exists() else None
+            best_def = (
+                routed_def if routed_def.exists() else placed_def if placed_def.exists() else None
+            )
             if best_def and best_def.exists():
                 self._layout_viewer.load_def(str(best_def))
                 self._layout_viewer.setVisible(True)
@@ -3793,9 +3785,15 @@ exit
         self._pnr_worker = None
 
         # Update flow navigator status
-        self._flow_nav.set_step_status("run_placement", StepStatus.COMPLETED if success else StepStatus.ERROR)
-        self._flow_nav.set_step_status("run_cts", StepStatus.COMPLETED if success else StepStatus.ERROR)
-        self._flow_nav.set_step_status("run_routing", StepStatus.COMPLETED if success else StepStatus.ERROR)
+        self._flow_nav.set_step_status(
+            "run_placement", StepStatus.COMPLETED if success else StepStatus.ERROR
+        )
+        self._flow_nav.set_step_status(
+            "run_cts", StepStatus.COMPLETED if success else StepStatus.ERROR
+        )
+        self._flow_nav.set_step_status(
+            "run_routing", StepStatus.COMPLETED if success else StepStatus.ERROR
+        )
 
         # Update reports panel
         self._reports.add_flow_step("Place & Route", "Pass" if success else "Fail", "")
@@ -3813,13 +3811,12 @@ exit
 
         netlist = proj_path / "synth_build" / "netlist.v"
         if not netlist.exists():
-            self._console.append_error(
-                "No synthesis netlist found. Run 'synth' first."
-            )
+            self._console.append_error("No synthesis netlist found. Run 'synth' first.")
             return
 
         self._console.append_info("=== Running Floorplan ===")
         from openforge.physical.openlane import OpenLaneRunner
+
         runner = OpenLaneRunner(proj_path, self._project_mgr.config)
         runner.set_callbacks(
             on_output=lambda line: self._console.append_text(line + "\n"),
@@ -3829,7 +3826,9 @@ exit
             "floorplan",
             netlist=str(netlist),
             sdc=str(sdc) if sdc.exists() else None,
-            top_module=self._project_mgr.top_module() if hasattr(self._project_mgr, "top_module") else "top",
+            top_module=self._project_mgr.top_module()
+            if hasattr(self._project_mgr, "top_module")
+            else "top",
         )
         if result.success:
             self._console.append_success(f"Floorplan complete. DEF: {result.def_path}")
@@ -3853,13 +3852,12 @@ exit
         if not def_path.exists():
             def_path = proj_path / "pnr_build" / "floorplan.def"
         if not def_path.exists():
-            self._console.append_error(
-                "No floorplan DEF found. Run 'floorplan' first."
-            )
+            self._console.append_error("No floorplan DEF found. Run 'floorplan' first.")
             return
 
         self._console.append_info("=== Running Placement ===")
         from openforge.physical.runner import PhysicalDesignRunner
+
         runner = PhysicalDesignRunner(proj_path, self._project_mgr.config)
         result = runner.run_placement(
             str(def_path),
@@ -3886,13 +3884,12 @@ exit
         if not def_path.exists():
             def_path = proj_path / "openlane_build" / "routing" / "routed.def"
         if not def_path.exists():
-            self._console.append_error(
-                "No placed DEF found. Run 'place' first."
-            )
+            self._console.append_error("No placed DEF found. Run 'place' first.")
             return
 
         self._console.append_info("=== Running Routing ===")
         from openforge.physical.runner import PhysicalDesignRunner
+
         runner = PhysicalDesignRunner(proj_path, self._project_mgr.config)
         result = runner.run_routing(
             str(def_path),
@@ -3938,9 +3935,7 @@ exit
                 break
 
         if def_path is None:
-            self._console.append_error(
-                "No DEF found. Run 'pnr' first to generate a layout."
-            )
+            self._console.append_error("No DEF found. Run 'pnr' first to generate a layout.")
             return
 
         if "placed" in def_path.name:
@@ -4009,14 +4004,17 @@ exit
 
         wsl_drc_script = _to_wsl(drc_script)
         cmd = [
-            "wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
+            "wsl",
+            "-d",
+            "Ubuntu-24.04",
+            "-e",
+            "bash",
+            "-c",
             f"klayout -b -rm {wsl_drc_script}",
         ]
 
         self._drc_worker = DrcWorker(cmd=cmd, drc_dir=drc_dir, parent=self)
-        self._drc_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._drc_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._drc_worker.finished_result.connect(self._on_drc_finished)
         self._drc_worker.start()
 
@@ -4070,15 +4068,17 @@ exit
         source_netlist = None
         if source_raw is not None:
             import re as _re
-            cleaned = _re.sub(r"\(\*[^*]*\*\)", "", source_raw.read_text(encoding="utf-8", errors="replace"))
+
+            cleaned = _re.sub(
+                r"\(\*[^*]*\*\)", "", source_raw.read_text(encoding="utf-8", errors="replace")
+            )
             source_netlist = proj_path / "pnr_build" / "netlist_clean.v"
             source_netlist.parent.mkdir(parents=True, exist_ok=True)
             source_netlist.write_text(cleaned, encoding="utf-8")
 
         if layout_netlist is None or source_netlist is None:
             self._console.append_error(
-                "LVS requires both a layout netlist and synthesis netlist. "
-                "Run 'pnr' first."
+                "LVS requires both a layout netlist and synthesis netlist. Run 'pnr' first."
             )
             return
 
@@ -4105,14 +4105,17 @@ exit
             f"{wsl_proj}/pnr_build/lvs_report.txt"
         )
         cmd = [
-            "wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
+            "wsl",
+            "-d",
+            "Ubuntu-24.04",
+            "-e",
+            "bash",
+            "-c",
             netgen_cmd,
         ]
 
         self._lvs_worker = LvsWorker(cmd=cmd, lvs_dir=lvs_dir, parent=self)
-        self._lvs_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._lvs_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._lvs_worker.finished_result.connect(self._on_lvs_finished)
         self._lvs_worker.start()
 
@@ -4156,9 +4159,7 @@ exit
                 break
 
         if def_path is None:
-            self._console.append_error(
-                "No DEF found. Run 'pnr' first to generate a layout."
-            )
+            self._console.append_error("No DEF found. Run 'pnr' first to generate a layout.")
             return
 
         if "placed" in def_path.name:
@@ -4205,14 +4206,17 @@ exit
 
         wsl_gds_script = _to_wsl(gds_script)
         cmd = [
-            "wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
+            "wsl",
+            "-d",
+            "Ubuntu-24.04",
+            "-e",
+            "bash",
+            "-c",
             f"klayout -b -rm {wsl_gds_script}",
         ]
 
         self._gdsii_worker = GdsiiWorker(cmd=cmd, gds_output=gds_output, parent=self)
-        self._gdsii_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._gdsii_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._gdsii_worker.finished_result.connect(self._on_gdsii_finished)
         self._gdsii_worker.start()
 
@@ -4336,7 +4340,12 @@ exit
 
         # Build all three command lists
         yosys_cmd = [
-            "wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
+            "wsl",
+            "-d",
+            "Ubuntu-24.04",
+            "-e",
+            "bash",
+            "-c",
             f"yosys -s {wsl_yosys}",
         ]
 
@@ -4354,7 +4363,12 @@ exit
                 pnr_args += f" --lpf {_to_wsl(lpf_path)}"
 
         pnr_cmd = [
-            "wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
+            "wsl",
+            "-d",
+            "Ubuntu-24.04",
+            "-e",
+            "bash",
+            "-c",
             f"{nextpnr} {pnr_args}",
         ]
 
@@ -4366,10 +4380,17 @@ exit
         else:  # ecp5
             config_file = fpga_dir / f"{top}.config"
             bit_file = fpga_dir / f"{top}.bit"
-            pack_args = f"--svf {wsl_proj}/fpga_build/{top}.svf {_to_wsl(config_file)} {_to_wsl(bit_file)}"
+            pack_args = (
+                f"--svf {wsl_proj}/fpga_build/{top}.svf {_to_wsl(config_file)} {_to_wsl(bit_file)}"
+            )
 
         bitstream_cmd = [
-            "wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
+            "wsl",
+            "-d",
+            "Ubuntu-24.04",
+            "-e",
+            "bash",
+            "-c",
             f"{pack_cmd} {pack_args}",
         ]
 
@@ -4386,9 +4407,7 @@ exit
             pack_cmd_name=pack_cmd,
             parent=self,
         )
-        self._fpga_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._fpga_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._fpga_worker.finished_result.connect(self._on_fpga_finished)
         self._fpga_worker.start()
 
@@ -4425,9 +4444,7 @@ exit
                 break
 
         if bit_file is None:
-            self._console.append_error(
-                "No bitstream found. Run 'synth_fpga' first."
-            )
+            self._console.append_error("No bitstream found. Run 'synth_fpga' first.")
             return
 
         target_device = getattr(self, "_fpga_target_device", "ice40-hx8k")
@@ -4471,9 +4488,7 @@ exit
             period = 10.0
             if self._project_mgr.config and self._project_mgr.config.timing:
                 period = self._project_mgr.config.timing.clock_period
-            sdc_path.write_text(
-                f"create_clock -period {period} [get_ports clk]\n"
-            )
+            sdc_path.write_text(f"create_clock -period {period} [get_ports clk]\n")
             self._console.append_warning("Generated default constraints/timing.sdc")
 
         pdk_lib = Path("share/pdk/sky130/lib/sky130_fd_sc_hd__tt_025C_1v80.lib")
@@ -4481,9 +4496,7 @@ exit
         if not pdk_lib_abs.exists():
             pdk_lib_abs = proj_path / pdk_lib
         if not pdk_lib_abs.exists():
-            self._console.append_error(
-                f"Liberty file not found: {pdk_lib}"
-            )
+            self._console.append_error(f"Liberty file not found: {pdk_lib}")
             return
 
         top = self._project_mgr.top_module()
@@ -4499,6 +4512,7 @@ exit
 
         try:
             from openforge_desktop.workers import PowerWorker
+
             self._power_worker = PowerWorker(
                 liberty_path=pdk_lib_abs,
                 netlist_path=netlist,
@@ -4662,15 +4676,16 @@ exit
         if dlg.exec() == NewProjectDialog.DialogCode.Accepted:
             name, path, template, pdk = dlg.result_data()
             self._console.append_success(
-                f"Created project '{name}' at {path} "
-                f"(template={template}, pdk={pdk})"
+                f"Created project '{name}' at {path} (template={template}, pdk={pdk})"
             )
             self.statusBar().showMessage(f"Project '{name}' created", 5000)
             self._project_mgr.open_project(Path(path))
 
     def _on_open_project(self) -> None:
         directory = QFileDialog.getExistingDirectory(
-            self, "Open OpenForge Project", str(Path.home()),
+            self,
+            "Open OpenForge Project",
+            str(Path.home()),
         )
         if directory:
             try:
@@ -4678,7 +4693,8 @@ exit
             except Exception as exc:
                 self._console.append_error(f"Failed to open project: {exc}")
                 QMessageBox.critical(
-                    self, "Open Project Error",
+                    self,
+                    "Open Project Error",
                     f"Could not open project at:\n{directory}\n\n{exc}",
                 )
 
@@ -4730,8 +4746,9 @@ exit
                 if json_netlist.exists() and hasattr(self._cross_probe, "parse_yosys_json"):
                     self._cross_probe.parse_yosys_json(json_netlist)
                     self._console.append_info("Cross-probe map loaded from synthesis JSON")
-                def_file = next(iter(path.glob("pnr_build/*_routed.def")), None) or \
-                           next(iter(path.glob("pnr_build/*_placed.def")), None)
+                def_file = next(iter(path.glob("pnr_build/*_routed.def")), None) or next(
+                    iter(path.glob("pnr_build/*_placed.def")), None
+                )
                 if def_file and hasattr(self._cross_probe, "parse_def"):
                     self._cross_probe.parse_def(def_file)
                     self._console.append_info(f"Cross-probe layout loaded from {def_file.name}")
@@ -4779,11 +4796,21 @@ exit
             # Update file type in status bar
             suffix = Path(file_path).suffix.lower()
             ftypes = {
-                ".v": "Verilog", ".sv": "SystemVerilog", ".svh": "SystemVerilog",
-                ".vh": "Verilog Header", ".vhd": "VHDL", ".vhdl": "VHDL",
-                ".sdc": "SDC Constraints", ".xdc": "XDC Constraints",
-                ".py": "Python", ".tcl": "Tcl", ".yaml": "YAML", ".yml": "YAML",
-                ".json": "JSON", ".md": "Markdown", ".txt": "Plain Text",
+                ".v": "Verilog",
+                ".sv": "SystemVerilog",
+                ".svh": "SystemVerilog",
+                ".vh": "Verilog Header",
+                ".vhd": "VHDL",
+                ".vhdl": "VHDL",
+                ".sdc": "SDC Constraints",
+                ".xdc": "XDC Constraints",
+                ".py": "Python",
+                ".tcl": "Tcl",
+                ".yaml": "YAML",
+                ".yml": "YAML",
+                ".json": "JSON",
+                ".md": "Markdown",
+                ".txt": "Plain Text",
             }
             self._status_filetype.setText(ftypes.get(suffix, "Plain Text"))
 
@@ -4802,30 +4829,44 @@ exit
             suffix = Path(file_path).suffix.lower()
             if suffix in (".v", ".sv", ".svh", ".vh"):
                 menu.addAction("Lint This File", lambda: self._lint_single_file(file_path))
-                menu.addAction("Set as Top Module", lambda: self._console.append_info(f"Set top module from: {file_path}"))
+                menu.addAction(
+                    "Set as Top Module",
+                    lambda: self._console.append_info(f"Set top module from: {file_path}"),
+                )
             if suffix in (".vcd", ".fst"):
                 menu.addAction("Open in Waveform Viewer", lambda: self._open_waveform(file_path))
             if suffix in (".def",):
                 menu.addAction("Open in Layout Viewer", lambda: self._open_layout(file_path))
             menu.addSeparator()
             menu.addAction("Copy Path", lambda: QApplication.clipboard().setText(file_path))
-            menu.addAction("Copy Name", lambda: QApplication.clipboard().setText(Path(file_path).name))
+            menu.addAction(
+                "Copy Name", lambda: QApplication.clipboard().setText(Path(file_path).name)
+            )
             menu.addSeparator()
-            menu.addAction("Rename...", lambda: self._console.append_info("Rename not yet implemented"))
+            menu.addAction(
+                "Rename...", lambda: self._console.append_info("Rename not yet implemented")
+            )
             menu.addAction("Delete", lambda: self._delete_file(file_path))
         elif is_dir:
             menu.addAction("New File...", lambda: self._new_file_in_dir(file_path))
             menu.addAction("New Folder...", lambda: self._new_folder_in_dir(file_path))
             menu.addSeparator()
-            menu.addAction("Open as Project", lambda: self._project_mgr.open_project(Path(file_path)))
+            menu.addAction(
+                "Open as Project", lambda: self._project_mgr.open_project(Path(file_path))
+            )
             menu.addSeparator()
             menu.addAction("Copy Path", lambda: QApplication.clipboard().setText(file_path))
-            menu.addAction("Open in Terminal", lambda: subprocess.Popen(
-                ["cmd", "/k", f"cd /d {file_path}"] if sys.platform == "win32" else ["xterm"],
-                cwd=file_path,
-            ))
+            menu.addAction(
+                "Open in Terminal",
+                lambda: subprocess.Popen(
+                    ["cmd", "/k", f"cd /d {file_path}"] if sys.platform == "win32" else ["xterm"],
+                    cwd=file_path,
+                ),
+            )
         else:
-            menu.addAction("New File...", lambda: self._console.append_info("Select a directory first"))
+            menu.addAction(
+                "New File...", lambda: self._console.append_info("Select a directory first")
+            )
             menu.addAction("Open Project...", self._on_open_project)
 
         menu.addSeparator()
@@ -4860,7 +4901,8 @@ exit
     def _delete_file(self, path: str) -> None:
         """Delete a file with confirmation."""
         reply = QMessageBox.question(
-            self, "Delete File",
+            self,
+            "Delete File",
             f"Are you sure you want to delete:\n{Path(path).name}?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -4871,6 +4913,7 @@ exit
     def _new_file_in_dir(self, dir_path: str) -> None:
         """Create a new file in a directory."""
         from PySide6.QtWidgets import QInputDialog
+
         name, ok = QInputDialog.getText(self, "New File", "File name:")
         if ok and name:
             new_path = Path(dir_path) / name
@@ -4880,6 +4923,7 @@ exit
     def _new_folder_in_dir(self, dir_path: str) -> None:
         """Create a new folder."""
         from PySide6.QtWidgets import QInputDialog
+
         name, ok = QInputDialog.getText(self, "New Folder", "Folder name:")
         if ok and name:
             (Path(dir_path) / name).mkdir(parents=True, exist_ok=True)
@@ -4967,12 +5011,14 @@ exit
         self._sim_worker.start()
         self._flow_nav.set_step_status("run_simulation", StepStatus.IN_PROGRESS)
 
-        self._reports.update_results({
-            "steps": [
-                {"name": "Compile", "status": "Running", "duration": "..."},
-                {"name": "Simulate", "status": "Pending", "duration": "-"},
-            ],
-        })
+        self._reports.update_results(
+            {
+                "steps": [
+                    {"name": "Compile", "status": "Running", "duration": "..."},
+                    {"name": "Simulate", "status": "Pending", "duration": "-"},
+                ],
+            }
+        )
 
     @Slot(object)
     def _on_compile_complete(self, result) -> None:  # type: ignore[no-untyped-def]
@@ -5101,14 +5147,16 @@ exit
                 self._synthesis.update_from_synthesis_result(result)
             except Exception:
                 # Fallback: use the raw dict approach
-                self._synthesis.update_results({
-                    "gate_count": result.gate_count,
-                    "area_um2": result.area_um2,
-                    "timing_ns": result.timing_estimate_ns,
-                    "cell_usage": result.cell_usage,
-                    "warnings": result.warnings,
-                    "netlist_path": result.netlist_path,
-                })
+                self._synthesis.update_results(
+                    {
+                        "gate_count": result.gate_count,
+                        "area_um2": result.area_um2,
+                        "timing_ns": result.timing_estimate_ns,
+                        "cell_usage": result.cell_usage,
+                        "warnings": result.warnings,
+                        "netlist_path": result.netlist_path,
+                    }
+                )
 
             # Auto-load gate-level netlist into schematic viewer
             self._try_load_schematic_after_synth()
@@ -5124,9 +5172,7 @@ exit
                 pass
 
             # Update Reports panel with synthesis step
-            self._reports.add_flow_step(
-                "Synthesis", "Pass", f"{result.duration:.1f}s"
-            )
+            self._reports.add_flow_step("Synthesis", "Pass", f"{result.duration:.1f}s")
         else:
             self._console.append_error(
                 f"Synthesis failed with {len(result.errors)} error(s)",
@@ -5143,10 +5189,12 @@ exit
                 {"severity": "Warning", "code": "", "message": w, "file": "", "line": 0}
                 for w in result.warnings
             ]
-            self._synthesis.update_results({
-                "stage": 0,
-                "messages": messages,
-            })
+            self._synthesis.update_results(
+                {
+                    "stage": 0,
+                    "messages": messages,
+                }
+            )
 
     @Slot(str)
     def _on_synth_error(self, msg: str) -> None:
@@ -5166,6 +5214,7 @@ exit
         if netlist_json.exists():
             try:
                 import json
+
                 with open(netlist_json, encoding="utf-8") as f:
                     raw = json.load(f)
                 self._load_schematic_from_json_netlist(raw)
@@ -5191,13 +5240,20 @@ exit
                 cell_type_raw = cell_info.get("type", "BUF")
                 ctype_upper = (
                     cell_type_raw.split("__")[-1].split("_")[0].upper()
-                    if "__" in cell_type_raw else cell_type_raw.upper()
+                    if "__" in cell_type_raw
+                    else cell_type_raw.upper()
                 )
                 x, y = col * 140, row * 70
-                cells_list.append({
-                    "name": inst_name, "type": ctype_upper,
-                    "x": x, "y": y, "w": 100, "h": 50,
-                })
+                cells_list.append(
+                    {
+                        "name": inst_name,
+                        "type": ctype_upper,
+                        "x": x,
+                        "y": y,
+                        "w": 100,
+                        "h": 50,
+                    }
+                )
                 row += 1
                 if row >= max_per_col:
                     row, col = 0, col + 1
@@ -5222,6 +5278,7 @@ exit
     def _load_schematic_from_verilog(self, netlist_path: Path) -> None:
         """Parse Verilog netlist and load into schematic viewer."""
         from openforge.parsers.verilog_netlist import VerilogNetlistParser
+
         parser = VerilogNetlistParser()
         data = parser.parse(netlist_path)
         top = data.top_module()
@@ -5234,13 +5291,20 @@ exit
             ctype_raw = inst.cell_type
             ctype_upper = (
                 ctype_raw.split("__")[-1].split("_")[0].upper()
-                if "__" in ctype_raw else ctype_raw.upper()
+                if "__" in ctype_raw
+                else ctype_raw.upper()
             )
             x, y = col * 140, row * 70
-            cells_list.append({
-                "name": inst.name, "type": ctype_upper,
-                "x": x, "y": y, "w": 100, "h": 50,
-            })
+            cells_list.append(
+                {
+                    "name": inst.name,
+                    "type": ctype_upper,
+                    "x": x,
+                    "y": y,
+                    "w": 100,
+                    "h": 50,
+                }
+            )
             row += 1
             if row >= max_per_col:
                 row, col = 0, col + 1
@@ -5358,8 +5422,7 @@ exit
         netlist = proj_path / "synth_build" / "netlist.v"
         if not netlist.exists():
             self._console.append_error(
-                "Timing analysis requires synth_build/netlist.v. "
-                "Run synthesis first.",
+                "Timing analysis requires synth_build/netlist.v. Run synthesis first.",
             )
             self.statusBar().showMessage("Run synthesis first", 3000)
             return
@@ -5374,9 +5437,7 @@ exit
             period = 10.0
             if self._project_mgr.config and self._project_mgr.config.timing:
                 period = self._project_mgr.config.timing.clock_period
-            sdc_path.write_text(
-                f"create_clock -period {period} [get_ports clk]\n"
-            )
+            sdc_path.write_text(f"create_clock -period {period} [get_ports clk]\n")
 
         # Liberty file path (inside Docker the PDK is mounted at /pdk)
         pdk_lib = Path("share/pdk/sky130/lib/sky130_fd_sc_hd__tt_025C_1v80.lib")
@@ -5404,9 +5465,7 @@ exit
             encoding="utf-8",
         )
 
-        self._console.append_info(
-            "=== OpenSTA Timing Analysis (Docker) ==="
-        )
+        self._console.append_info("=== OpenSTA Timing Analysis (Docker) ===")
         self._console.append_info(f"  Project:  {proj_path}")
         self._console.append_info("  Netlist:  synth_build/netlist.v")
         self._console.append_info("  SDC:      constraints/timing.sdc")
@@ -5421,18 +5480,26 @@ exit
         proj_str = str(proj_path).replace("\\", "/")
         pdk_str = str(pdk_lib_dir).replace("\\", "/")
         docker_cmd = [
-            "docker", "run", "--rm",
-            "-v", f"{proj_str}:/work",
-            "-v", f"{pdk_str}:/pdk",
-            "-w", "/work",
-            "--entrypoint", "/OpenSTA/app/sta",
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{proj_str}:/work",
+            "-v",
+            f"{pdk_str}:/pdk",
+            "-w",
+            "/work",
+            "--entrypoint",
+            "/OpenSTA/app/sta",
             "openroad/opensta:latest",
-            "-exit", "/work/synth_build/run_sta.tcl",
+            "-exit",
+            "/work/synth_build/run_sta.tcl",
         ]
 
         self._console.append_text("Running OpenSTA...\n")
 
         import os
+
         env = dict(os.environ)
         env["MSYS_NO_PATHCONV"] = "1"
 
@@ -5441,12 +5508,12 @@ exit
             clock_period = self._project_mgr.config.timing.clock_period
 
         self._sta_worker = StaWorker(
-            docker_cmd=docker_cmd, env=env,
-            clock_period=clock_period, parent=self,
+            docker_cmd=docker_cmd,
+            env=env,
+            clock_period=clock_period,
+            parent=self,
         )
-        self._sta_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._sta_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._sta_worker.finished_result.connect(self._on_sta_finished)
         self._sta_worker.timing_parsed.connect(self._on_sta_timing_parsed)
         self._sta_worker.raw_output.connect(self._on_sta_raw_output)
@@ -5457,6 +5524,7 @@ exit
         """Parse the full OpenSTA report into a StaReport and dispatch."""
         try:
             from openforge.physical.sta_parser import parse_sta_report
+
             sta_report = parse_sta_report(output)
             self._timing.update_from_sta_report(sta_report)
             if getattr(self, "_path_browser", None) is not None:
@@ -5508,9 +5576,7 @@ exit
         self._on_synthesize()
         self._console.append_info("Step 2/3: Simulation (queued after synthesis)")
         self._console.append_info("Step 3/3: Formal verification (queued)")
-        self._console.append_info(
-            "Note: Each step runs asynchronously. Check console for results."
-        )
+        self._console.append_info("Note: Each step runs asynchronously. Check console for results.")
 
     # -- Security Analysis ------------------------------------------
 
@@ -5542,9 +5608,7 @@ exit
                 sources = []
 
         if not sources:
-            self._console.append_warning(
-                "No source files found; showing demo data."
-            )
+            self._console.append_warning("No source files found; showing demo data.")
             self._security.show_demo_data()
             return
 
@@ -5553,6 +5617,7 @@ exit
 
         try:
             from openforge_desktop.workers import CryptoWorker
+
             self._crypto_worker = CryptoWorker(
                 source_files=sources,
                 parent=self,
@@ -5560,23 +5625,13 @@ exit
             self._crypto_worker.output_line.connect(
                 lambda line: self._console.append_text(line + "\n")
             )
-            self._crypto_worker.constant_time_done.connect(
-                self._on_crypto_ct_done
-            )
-            self._crypto_worker.power_sca_done.connect(
-                self._on_crypto_sca_done
-            )
-            self._crypto_worker.fault_injection_done.connect(
-                self._on_crypto_fault_done
-            )
+            self._crypto_worker.constant_time_done.connect(self._on_crypto_ct_done)
+            self._crypto_worker.power_sca_done.connect(self._on_crypto_sca_done)
+            self._crypto_worker.fault_injection_done.connect(self._on_crypto_fault_done)
             self._crypto_worker.fips_done.connect(self._on_crypto_fips_done)
             self._crypto_worker.ntt_done.connect(self._on_crypto_ntt_done)
-            self._crypto_worker.entropy_done.connect(
-                self._on_crypto_entropy_done
-            )
-            self._crypto_worker.finished_result.connect(
-                self._on_crypto_finished
-            )
+            self._crypto_worker.entropy_done.connect(self._on_crypto_entropy_done)
+            self._crypto_worker.finished_result.connect(self._on_crypto_finished)
             self._crypto_worker.start()
         except Exception as exc:
             self._console.append_error(
@@ -5593,15 +5648,11 @@ exit
 
     @Slot(dict)
     def _on_crypto_sca_done(self, data: dict) -> None:
-        self._console.append_info(
-            f"  Power SCA Risk: {data.get('risk_score', 0):.0f}/100"
-        )
+        self._console.append_info(f"  Power SCA Risk: {data.get('risk_score', 0):.0f}/100")
 
     @Slot(dict)
     def _on_crypto_fault_done(self, data: dict) -> None:
-        self._console.append_info(
-            f"  Fault Resistance: {data.get('redundancy_score', 0):.0f}/100"
-        )
+        self._console.append_info(f"  Fault Resistance: {data.get('redundancy_score', 0):.0f}/100")
 
     @Slot(dict)
     def _on_crypto_fips_done(self, data: dict) -> None:
@@ -5620,9 +5671,7 @@ exit
             srcs.append("TRNG")
         if data.get("has_prng"):
             srcs.append("PRNG")
-        self._console.append_info(
-            f"  Entropy: {', '.join(srcs) if srcs else 'None'}"
-        )
+        self._console.append_info(f"  Entropy: {', '.join(srcs) if srcs else 'None'}")
 
     @Slot(bool, str)
     def _on_crypto_finished(self, success: bool, summary: str) -> None:
@@ -5689,7 +5738,11 @@ exit
     def _on_toggle_word_wrap(self) -> None:
         """Toggle word wrap in the editor."""
         self._editor.toggle_word_wrap()
-        state = "enabled" if self._editor._current_editor() and self._editor._current_editor().word_wrap_enabled else "disabled"
+        state = (
+            "enabled"
+            if self._editor._current_editor() and self._editor._current_editor().word_wrap_enabled
+            else "disabled"
+        )
         self.statusBar().showMessage(f"Word wrap {state}", 3000)
 
     def _on_zoom_in(self) -> None:
@@ -5714,6 +5767,7 @@ exit
     def _on_set_top_module(self) -> None:
         """Set the top module for the project."""
         from PySide6.QtWidgets import QInputDialog
+
         current = self._project_mgr.top_module() if self._project_mgr.is_open() else ""
         name, ok = QInputDialog.getText(self, "Set Top Module", "Module name:", text=current)
         if ok and name:
@@ -5731,6 +5785,7 @@ exit
         if not proj:
             return
         import shutil as _shutil
+
         cleaned = 0
         for d in ("synth_build", "pnr_build", "openlane_build", "sim_build"):
             build_dir = proj / d
@@ -5779,7 +5834,11 @@ exit
 
     def _on_open_terminal(self) -> None:
         """Open a system terminal at the project directory."""
-        cwd = str(self._project_mgr.project_path) if self._project_mgr.is_open() and self._project_mgr.project_path else None
+        cwd = (
+            str(self._project_mgr.project_path)
+            if self._project_mgr.is_open() and self._project_mgr.project_path
+            else None
+        )
         if sys.platform == "win32":
             subprocess.Popen(["cmd", "/k", f"cd /d {cwd}"] if cwd else ["cmd"], cwd=cwd)
         elif sys.platform == "darwin":
@@ -5851,6 +5910,7 @@ exit
         # Fallback: ask user
         if not rtl:
             from PySide6.QtWidgets import QInputDialog
+
             text, ok = QInputDialog.getText(
                 self,
                 "Run Full Flow",
@@ -5880,9 +5940,7 @@ exit
             sdc = sdc_file or ""
 
         if not sdc:
-            self._console.append_warning(
-                "No SDC file specified; STA stage may fail."
-            )
+            self._console.append_warning("No SDC file specified; STA stage may fail.")
 
         work_dir = getattr(proj, "root_dir", None) or Path.cwd()
         flow_cfg = FullFlowConfig(
@@ -5898,9 +5956,7 @@ exit
         for sid in STAGE_IDS:
             self._flow_nav.set_step_status(sid, StepStatus.NOT_STARTED)
 
-        self._console.append_info(
-            f"Starting full RTL-to-GDS flow for '{top}' ..."
-        )
+        self._console.append_info(f"Starting full RTL-to-GDS flow for '{top}' ...")
         self.statusBar().showMessage("Running full flow...")
 
         worker = FullFlowWorker(flow_cfg, Path(work_dir), parent=self)
@@ -5991,9 +6047,9 @@ exit
         if overall == "success":
             self.statusBar().showMessage("Full flow completed successfully!")
             QMessageBox.information(
-                self, "Full Flow Complete",
-                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\n"
-                f"GDS: {gds or 'N/A'}",
+                self,
+                "Full Flow Complete",
+                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\nGDS: {gds or 'N/A'}",
             )
         else:
             self.statusBar().showMessage("Full flow completed with errors.")
@@ -6004,7 +6060,8 @@ exit
                     errs.append(e[:200])
             err_text = "\n".join(errs[:5]) if errs else "Check console for details."
             QMessageBox.warning(
-                self, "Full Flow Failed",
+                self,
+                "Full Flow Failed",
                 f"RTL-to-GDS flow {overall} in {total_s:.1f}s.\n\n{err_text}",
             )
 
@@ -6162,9 +6219,21 @@ exit
             "sdc": self._on_open_constraint_editor,
             "blockdesign": self._on_open_block_design,
             "bd": self._on_open_block_design,
-            "git": lambda: (self._git_panel.setVisible(True), self._git_panel.raise_()) if self._git_panel else None,
-            "ai": lambda: (self._ai_assistant.setVisible(True), self._ai_assistant.raise_()) if self._ai_assistant else None,
-            "assistant": lambda: (self._ai_assistant.setVisible(True), self._ai_assistant.raise_()) if self._ai_assistant else None,
+            "git": lambda: (
+                (self._git_panel.setVisible(True), self._git_panel.raise_())
+                if self._git_panel
+                else None
+            ),
+            "ai": lambda: (
+                (self._ai_assistant.setVisible(True), self._ai_assistant.raise_())
+                if self._ai_assistant
+                else None
+            ),
+            "assistant": lambda: (
+                (self._ai_assistant.setVisible(True), self._ai_assistant.raise_())
+                if self._ai_assistant
+                else None
+            ),
         }
 
         if cmd == "help":
@@ -6234,7 +6303,11 @@ exit
                             break
                     else:
                         # If just the filename was given, search for it
-                        if not gds_path.exists() and "/" not in gds_path_str and "\\" not in gds_path_str:
+                        if (
+                            not gds_path.exists()
+                            and "/" not in gds_path_str
+                            and "\\" not in gds_path_str
+                        ):
                             found = next(iter(proj_path.glob(f"**/{gds_path_str}")), None)
                             if found:
                                 gds_path = found
@@ -6271,7 +6344,7 @@ exit
             elif result == "__TRIGGER_SYNTH_FPGA__":
                 self._on_synth_fpga()
             elif result.startswith("__OPEN_WAVEFORM__"):
-                waveform_path = result[len("__OPEN_WAVEFORM__"):]
+                waveform_path = result[len("__OPEN_WAVEFORM__") :]
                 self._waveform.load_vcd(waveform_path)
                 self._waveform.raise_()
             else:
@@ -6293,9 +6366,7 @@ exit
                 capture_output=True,
                 text=True,
                 timeout=30,
-                cwd=str(self._project_mgr.project_path)
-                if self._project_mgr.is_open()
-                else None,
+                cwd=str(self._project_mgr.project_path) if self._project_mgr.is_open() else None,
             )
             if result.stdout:
                 self._console.append_text(result.stdout)
@@ -6366,11 +6437,20 @@ exit
 
         # All dock widgets
         all_docks = [
-            self._flow_nav, self._hierarchy, self._ip_catalog,
-            self._project_explorer, self._console, self._waveform,
-            self._testbench, self._reports, self._timing,
-            self._properties, self._synthesis, self._physical_design,
-            self._security, self._layout_viewer,
+            self._flow_nav,
+            self._hierarchy,
+            self._ip_catalog,
+            self._project_explorer,
+            self._console,
+            self._waveform,
+            self._testbench,
+            self._reports,
+            self._timing,
+            self._properties,
+            self._synthesis,
+            self._physical_design,
+            self._security,
+            self._layout_viewer,
         ]
         # Include new panels if available
         for panel in (self._gds_viewer, self._constraint_editor, self._block_design):
@@ -6603,30 +6683,41 @@ exit
                     self._console.append_error("No synthesis result. Run 'synth' first.")
                     return
                 from openforge.reports.synthesis_report import generate_synthesis_report
+
                 report_path = generate_synthesis_report(result, project_name, output_dir)
 
             elif "timing" in rtype:
                 from openforge.reports.timing_report import generate_timing_report
+
                 timing_data = getattr(self._project_mgr, "last_timing", None) or {
-                    "wns": 0.0, "tns": 0.0, "clocks": [], "paths": [],
+                    "wns": 0.0,
+                    "tns": 0.0,
+                    "clocks": [],
+                    "paths": [],
                 }
                 report_path = generate_timing_report(timing_data, project_name, output_dir)
 
             elif "power" in rtype:
                 from openforge.reports.power_report import generate_power_report
+
                 power_data = getattr(self._project_mgr, "last_power", None) or {
-                    "total_mw": 0.0, "dynamic_mw": 0.0, "leakage_mw": 0.0,
-                    "internal_mw": 0.0, "switching_mw": 0.0,
+                    "total_mw": 0.0,
+                    "dynamic_mw": 0.0,
+                    "leakage_mw": 0.0,
+                    "internal_mw": 0.0,
+                    "switching_mw": 0.0,
                 }
                 report_path = generate_power_report(power_data, project_name, output_dir)
 
             elif "drc" in rtype:
                 from openforge.reports.drc_report import generate_drc_report
+
                 drc_data = {"violations": [], "total": 0}
                 report_path = generate_drc_report(drc_data, project_name, output_dir)
 
             elif "utilization" in rtype:
                 from openforge.reports.utilization_report import generate_utilization_report
+
                 util_data = {}
                 if self._project_mgr.last_synth:
                     util_data = {
@@ -6637,6 +6728,7 @@ exit
 
             elif "summary" in rtype:
                 from openforge.reports.summary_report import generate_summary_report
+
                 summary_data = {
                     "synthesis": self._project_mgr.last_synth,
                     "timing": getattr(self._project_mgr, "last_timing", None),
@@ -6646,7 +6738,9 @@ exit
 
             if report_path:
                 self._console.append_success(f"Report generated: {report_path}")
-                if self._report_viewer is not None and hasattr(self._report_viewer, "refresh_reports"):
+                if self._report_viewer is not None and hasattr(
+                    self._report_viewer, "refresh_reports"
+                ):
                     self._report_viewer.refresh_reports()
             else:
                 self._console.append_warning(f"Unknown report type: {report_type}")
@@ -6728,6 +6822,7 @@ exit
                 TutorialPickerDialog,
                 TutorialPlayerDialog,
             )
+
             if tutorial_id and tutorial_id in _LIB:
                 TutorialPlayerDialog(_LIB[tutorial_id], self).exec()
             else:
@@ -6757,6 +6852,7 @@ exit
 
     def _on_welcome_open_project(self, path: str) -> None:
         from pathlib import Path as _P
+
         try:
             self._project_mgr.open_project(_P(path))
         except Exception as e:
@@ -6764,6 +6860,7 @@ exit
 
     def _on_welcome_open_example(self, name: str) -> None:
         from pathlib import Path as _P
+
         try:
             example_path = _P(__file__).resolve().parents[4] / "examples" / name
             if example_path.exists():
@@ -6777,85 +6874,233 @@ exit
         if self._command_palette is None or Command is None:
             return
         commands = [
-            Command(id="file.openProject", title="Open Project...", category="File",
-                    shortcut="Ctrl+Shift+O", handler=self._on_open_project),
-            Command(id="file.newProject", title="New Project...", category="File",
-                    shortcut="Ctrl+Shift+N", handler=self._on_new_project),
-            Command(id="file.closeProject", title="Close Project", category="File",
-                    handler=self._on_close_project),
-            Command(id="file.save", title="Save", category="File",
-                    shortcut="Ctrl+S", handler=self._on_save),
-            Command(id="edit.find", title="Find in File", category="Edit",
-                    shortcut="Ctrl+F", handler=self._on_find),
-            Command(id="edit.findInFiles", title="Find in Files", category="Edit",
-                    shortcut="Ctrl+Shift+F", handler=self._on_find_in_files),
-            Command(id="synth.run", title="Run Synthesis", category="Synthesis",
-                    handler=self._on_synthesize),
-            Command(id="synth.strategy", title="Choose Synthesis Strategy...",
-                    category="Synthesis", handler=self._on_choose_synth_strategy),
-            Command(id="synth.attributes", title="Add Synthesis Attribute...",
-                    category="Synthesis", handler=self._on_add_synth_attribute),
-            Command(id="sim.run", title="Run Simulation", category="Simulation",
-                    handler=self._on_run_sim),
-            Command(id="sta.run", title="Run Timing Analysis", category="Timing",
-                    handler=self._on_timing_analysis),
-            Command(id="sta.multicorner", title="Run Multi-Corner STA",
-                    category="Timing", handler=self._on_multicorner_sta),
-            Command(id="sta.pathBrowser", title="Open Path Browser",
-                    category="Timing", handler=self._show_path_browser),
-            Command(id="pnr.run", title="Run Place & Route", category="Physical",
-                    handler=self._on_pnr_flow),
-            Command(id="pnr.floorplan", title="Open Floorplan Editor",
-                    category="Physical", handler=self._show_floorplan_editor),
-            Command(id="pnr.irDrop", title="Show IR Drop",
-                    category="Physical", handler=self._show_ir_drop),
-            Command(id="drc.run", title="Run DRC", category="Physical",
-                    handler=self._on_run_drc),
-            Command(id="lvs.run", title="Run LVS", category="Physical",
-                    handler=self._on_run_lvs),
-            Command(id="gds.export", title="Export GDSII", category="Physical",
-                    handler=self._on_export_gds),
-            Command(id="power.run", title="Run Power Analysis",
-                    category="Analysis", handler=self._on_power_analysis),
-            Command(id="cdc.run", title="Run CDC Analysis",
-                    category="Analysis", handler=self._on_cdc_analysis),
-            Command(id="verify.regression", title="Run Regression Suite",
-                    category="Verification", handler=self._show_regression_panel),
-            Command(id="verify.crypto", title="Run Crypto Security Analysis",
-                    category="Verification", handler=self._on_security_analysis),
-            Command(id="verify.formal", title="Run Formal Verification",
-                    category="Verification", handler=self._on_run_formal),
-            Command(id="fpga.target", title="Open FPGA Target Panel",
-                    category="FPGA", handler=self._show_fpga_target),
-            Command(id="fpga.synth", title="Synthesize for FPGA",
-                    category="FPGA", handler=self._on_synth_fpga),
-            Command(id="fpga.program", title="Program FPGA Device",
-                    category="FPGA", handler=self._on_program_fpga),
-            Command(id="pdk.manager", title="Open PDK Manager",
-                    category="PDK", handler=self._show_pdk_manager),
-            Command(id="pdk.cellLibrary", title="Open Cell Library",
-                    category="PDK", handler=self._show_cell_library),
-            Command(id="pdk.install", title="Install PDK...",
-                    category="PDK", handler=self._on_install_pdk),
-            Command(id="view.resetLayout", title="Reset Layout",
-                    category="View", shortcut="Ctrl+Shift+R",
-                    handler=self._reset_layout),
-            Command(id="view.toggleDarkMode", title="Toggle Dark/Light Theme",
-                    category="View", handler=self._toggle_theme),
-            Command(id="view.welcome", title="Show Welcome",
-                    category="View", handler=self._show_welcome),
-            Command(id="tools.manager", title="Open Tool Manager",
-                    category="Tools", handler=self._on_tool_manager),
-            Command(id="tools.wslSetup", title="Setup WSL2...",
-                    category="Tools", handler=self._on_wsl_setup),
-            Command(id="tools.extensions", title="Extension Manager",
-                    category="Tools", handler=self._on_extension_manager),
-            Command(id="help.tutorial", title="Start Tutorial...",
-                    category="Help", handler=self._on_start_tutorial),
-            Command(id="help.checkUpdates", title="Check for Updates...",
-                    category="Help", handler=self._on_check_updates),
-            Command(id="help.about", title="About OpenForge EDA",
-                    category="Help", handler=self._on_about),
+            Command(
+                id="file.openProject",
+                title="Open Project...",
+                category="File",
+                shortcut="Ctrl+Shift+O",
+                handler=self._on_open_project,
+            ),
+            Command(
+                id="file.newProject",
+                title="New Project...",
+                category="File",
+                shortcut="Ctrl+Shift+N",
+                handler=self._on_new_project,
+            ),
+            Command(
+                id="file.closeProject",
+                title="Close Project",
+                category="File",
+                handler=self._on_close_project,
+            ),
+            Command(
+                id="file.save",
+                title="Save",
+                category="File",
+                shortcut="Ctrl+S",
+                handler=self._on_save,
+            ),
+            Command(
+                id="edit.find",
+                title="Find in File",
+                category="Edit",
+                shortcut="Ctrl+F",
+                handler=self._on_find,
+            ),
+            Command(
+                id="edit.findInFiles",
+                title="Find in Files",
+                category="Edit",
+                shortcut="Ctrl+Shift+F",
+                handler=self._on_find_in_files,
+            ),
+            Command(
+                id="synth.run",
+                title="Run Synthesis",
+                category="Synthesis",
+                handler=self._on_synthesize,
+            ),
+            Command(
+                id="synth.strategy",
+                title="Choose Synthesis Strategy...",
+                category="Synthesis",
+                handler=self._on_choose_synth_strategy,
+            ),
+            Command(
+                id="synth.attributes",
+                title="Add Synthesis Attribute...",
+                category="Synthesis",
+                handler=self._on_add_synth_attribute,
+            ),
+            Command(
+                id="sim.run",
+                title="Run Simulation",
+                category="Simulation",
+                handler=self._on_run_sim,
+            ),
+            Command(
+                id="sta.run",
+                title="Run Timing Analysis",
+                category="Timing",
+                handler=self._on_timing_analysis,
+            ),
+            Command(
+                id="sta.multicorner",
+                title="Run Multi-Corner STA",
+                category="Timing",
+                handler=self._on_multicorner_sta,
+            ),
+            Command(
+                id="sta.pathBrowser",
+                title="Open Path Browser",
+                category="Timing",
+                handler=self._show_path_browser,
+            ),
+            Command(
+                id="pnr.run",
+                title="Run Place & Route",
+                category="Physical",
+                handler=self._on_pnr_flow,
+            ),
+            Command(
+                id="pnr.floorplan",
+                title="Open Floorplan Editor",
+                category="Physical",
+                handler=self._show_floorplan_editor,
+            ),
+            Command(
+                id="pnr.irDrop",
+                title="Show IR Drop",
+                category="Physical",
+                handler=self._show_ir_drop,
+            ),
+            Command(id="drc.run", title="Run DRC", category="Physical", handler=self._on_run_drc),
+            Command(id="lvs.run", title="Run LVS", category="Physical", handler=self._on_run_lvs),
+            Command(
+                id="gds.export",
+                title="Export GDSII",
+                category="Physical",
+                handler=self._on_export_gds,
+            ),
+            Command(
+                id="power.run",
+                title="Run Power Analysis",
+                category="Analysis",
+                handler=self._on_power_analysis,
+            ),
+            Command(
+                id="cdc.run",
+                title="Run CDC Analysis",
+                category="Analysis",
+                handler=self._on_cdc_analysis,
+            ),
+            Command(
+                id="verify.regression",
+                title="Run Regression Suite",
+                category="Verification",
+                handler=self._show_regression_panel,
+            ),
+            Command(
+                id="verify.crypto",
+                title="Run Crypto Security Analysis",
+                category="Verification",
+                handler=self._on_security_analysis,
+            ),
+            Command(
+                id="verify.formal",
+                title="Run Formal Verification",
+                category="Verification",
+                handler=self._on_run_formal,
+            ),
+            Command(
+                id="fpga.target",
+                title="Open FPGA Target Panel",
+                category="FPGA",
+                handler=self._show_fpga_target,
+            ),
+            Command(
+                id="fpga.synth",
+                title="Synthesize for FPGA",
+                category="FPGA",
+                handler=self._on_synth_fpga,
+            ),
+            Command(
+                id="fpga.program",
+                title="Program FPGA Device",
+                category="FPGA",
+                handler=self._on_program_fpga,
+            ),
+            Command(
+                id="pdk.manager",
+                title="Open PDK Manager",
+                category="PDK",
+                handler=self._show_pdk_manager,
+            ),
+            Command(
+                id="pdk.cellLibrary",
+                title="Open Cell Library",
+                category="PDK",
+                handler=self._show_cell_library,
+            ),
+            Command(
+                id="pdk.install",
+                title="Install PDK...",
+                category="PDK",
+                handler=self._on_install_pdk,
+            ),
+            Command(
+                id="view.resetLayout",
+                title="Reset Layout",
+                category="View",
+                shortcut="Ctrl+Shift+R",
+                handler=self._reset_layout,
+            ),
+            Command(
+                id="view.toggleDarkMode",
+                title="Toggle Dark/Light Theme",
+                category="View",
+                handler=self._toggle_theme,
+            ),
+            Command(
+                id="view.welcome", title="Show Welcome", category="View", handler=self._show_welcome
+            ),
+            Command(
+                id="tools.manager",
+                title="Open Tool Manager",
+                category="Tools",
+                handler=self._on_tool_manager,
+            ),
+            Command(
+                id="tools.wslSetup",
+                title="Setup WSL2...",
+                category="Tools",
+                handler=self._on_wsl_setup,
+            ),
+            Command(
+                id="tools.extensions",
+                title="Extension Manager",
+                category="Tools",
+                handler=self._on_extension_manager,
+            ),
+            Command(
+                id="help.tutorial",
+                title="Start Tutorial...",
+                category="Help",
+                handler=self._on_start_tutorial,
+            ),
+            Command(
+                id="help.checkUpdates",
+                title="Check for Updates...",
+                category="Help",
+                handler=self._on_check_updates,
+            ),
+            Command(
+                id="help.about",
+                title="About OpenForge EDA",
+                category="Help",
+                handler=self._on_about,
+            ),
         ]
         for cmd in commands:
             if hasattr(self._command_palette, "register_command"):
@@ -6877,7 +7122,9 @@ exit
             self._console.append_error("No netlist found. Run synthesis first.")
             return
         dest, _ = QFileDialog.getSaveFileName(
-            self, "Export Netlist", str(Path.home() / netlist.name),
+            self,
+            "Export Netlist",
+            str(Path.home() / netlist.name),
             "Verilog Files (*.v);;All Files (*)",
         )
         if dest:
@@ -6908,7 +7155,9 @@ exit
             self._console.append_error("No DEF file found. Run P&R first.")
             return
         dest, _ = QFileDialog.getSaveFileName(
-            self, "Export DEF", str(Path.home() / def_path.name),
+            self,
+            "Export DEF",
+            str(Path.home() / def_path.name),
             "DEF Files (*.def);;All Files (*)",
         )
         if dest:
@@ -6919,12 +7168,16 @@ exit
     def _on_export_report(self) -> None:
         """Export console log or timing report to file."""
         dest, _ = QFileDialog.getSaveFileName(
-            self, "Export Report", str(Path.home() / "openforge_report.txt"),
+            self,
+            "Export Report",
+            str(Path.home() / "openforge_report.txt"),
             "Text Files (*.txt);;All Files (*)",
         )
         if dest:
             # Grab console content
-            console_text = self._console.get_log_text() if hasattr(self._console, "get_log_text") else ""
+            console_text = (
+                self._console.get_log_text() if hasattr(self._console, "get_log_text") else ""
+            )
             if not console_text:
                 # Fallback: try reading the QPlainTextEdit directly
                 widget = self._console.widget() if hasattr(self._console, "widget") else None
@@ -6940,10 +7193,15 @@ exit
         """Print current editor content via QPrintDialog."""
         try:
             from PySide6.QtPrintSupport import QPrintDialog, QPrinter
+
             printer = QPrinter(QPrinter.PrinterMode.HighResolution)
             dlg = QPrintDialog(printer, self)
             if dlg.exec() == QPrintDialog.DialogCode.Accepted:
-                editor = self._editor._current_editor() if hasattr(self._editor, "_current_editor") else None
+                editor = (
+                    self._editor._current_editor()
+                    if hasattr(self._editor, "_current_editor")
+                    else None
+                )
                 if editor and hasattr(editor, "print_"):
                     editor.print_(printer)
                     self._console.append_success("Print job sent.")
@@ -6958,6 +7216,7 @@ exit
     def _on_find_in_files(self) -> None:
         """Simple grep-like find in project files."""
         from PySide6.QtWidgets import QInputDialog
+
         if not self._project_mgr.is_open():
             self._console.append_error("No project open.")
             return
@@ -6969,8 +7228,18 @@ exit
             return
         self._console.append_info(f"Searching for '{search_text}' in project files...")
         results_count = 0
-        for pattern in ("**/*.v", "**/*.sv", "**/*.svh", "**/*.vh", "**/*.vhd",
-                        "**/*.tcl", "**/*.sdc", "**/*.xdc", "**/*.py", "**/*.yaml"):
+        for pattern in (
+            "**/*.v",
+            "**/*.sv",
+            "**/*.svh",
+            "**/*.vh",
+            "**/*.vhd",
+            "**/*.tcl",
+            "**/*.sdc",
+            "**/*.xdc",
+            "**/*.py",
+            "**/*.yaml",
+        ):
             for fpath in proj_path.glob(pattern):
                 if any(d in fpath.parts for d in ("synth_build", "pnr_build", "sim_build", ".git")):
                     continue
@@ -6995,7 +7264,9 @@ exit
 
     def _on_toggle_line_numbers(self) -> None:
         """Toggle line numbers on the code editor."""
-        editor = self._editor._current_editor() if hasattr(self._editor, "_current_editor") else None
+        editor = (
+            self._editor._current_editor() if hasattr(self._editor, "_current_editor") else None
+        )
         if editor and hasattr(editor, "_line_area"):
             visible = editor._line_area.isVisible()
             editor._line_area.setVisible(not visible)
@@ -7014,7 +7285,8 @@ exit
             self._console.append_error("No project open.")
             return
         files, _ = QFileDialog.getOpenFileNames(
-            self, "Add Constraint Files",
+            self,
+            "Add Constraint Files",
             str(self._project_mgr.project_path),
             "Constraint Files (*.sdc *.xdc);;All (*)",
         )
@@ -7038,11 +7310,19 @@ exit
     def _on_change_target_pdk(self) -> None:
         """Dialog with PDK selection."""
         from PySide6.QtWidgets import QInputDialog
+
         pdks = ["sky130", "gf180mcu", "asap7"]
-        current_pdk = self._project_mgr.target_pdk() if hasattr(self._project_mgr, "target_pdk") else "sky130"
+        current_pdk = (
+            self._project_mgr.target_pdk() if hasattr(self._project_mgr, "target_pdk") else "sky130"
+        )
         current_idx = pdks.index(current_pdk) if current_pdk in pdks else 0
         pdk, ok = QInputDialog.getItem(
-            self, "Change Target PDK", "Select PDK:", pdks, current_idx, False,
+            self,
+            "Change Target PDK",
+            "Select PDK:",
+            pdks,
+            current_idx,
+            False,
         )
         if ok and pdk:
             if hasattr(self._project_mgr, "set_target_pdk"):
@@ -7138,7 +7418,7 @@ exit
             f"clock_tree_synthesis -buf_list {{sky130_fd_sc_hd__buf_1 sky130_fd_sc_hd__buf_2 sky130_fd_sc_hd__buf_4}}\n"
             f"repair_clock_nets\n"
             f"write_def {wsl_proj}/pnr_build/{top}_cts.def\n"
-            f"puts \"CTS complete\"\n"
+            f'puts "CTS complete"\n'
             f"exit\n",
             encoding="utf-8",
         )
@@ -7147,17 +7427,17 @@ exit
         self.statusBar().showMessage("CTS running...", 0)
 
         wsl_cts = _to_wsl(cts_tcl)
-        cmd = ["wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c",
-               f"openroad -exit {wsl_cts}"]
+        cmd = ["wsl", "-d", "Ubuntu-24.04", "-e", "bash", "-c", f"openroad -exit {wsl_cts}"]
 
         pnr_dir = proj_path / "pnr_build"
         self._pnr_worker = PnrWorker(
-            cmd=cmd, pnr_dir=pnr_dir, top_module=top,
-            proj_path=proj_path, parent=self,
+            cmd=cmd,
+            pnr_dir=pnr_dir,
+            top_module=top,
+            proj_path=proj_path,
+            parent=self,
         )
-        self._pnr_worker.output_line.connect(
-            lambda line: self._console.append_text(line + "\n")
-        )
+        self._pnr_worker.output_line.connect(lambda line: self._console.append_text(line + "\n"))
         self._pnr_worker.finished_result.connect(self._on_pnr_finished)
         self._pnr_worker.start()
 
@@ -7206,6 +7486,7 @@ exit
 
         try:
             from openforge_desktop.workers import CdcWorker
+
             self._cdc_worker = CdcWorker(
                 source_files=sources,
                 top_module=top,
@@ -7241,10 +7522,7 @@ exit
         self._console.append_info(f"  Crossings: {len(crossings)}")
         for c in crossings:
             sync = "synced" if c.get("synchronized") else "UNSYNCED"
-            line = (
-                f"    {c.get('signal')}: "
-                f"{c.get('from_domain')} -> {c.get('to_domain')} [{sync}]"
-            )
+            line = f"    {c.get('signal')}: {c.get('from_domain')} -> {c.get('to_domain')} [{sync}]"
             if c.get("synchronized"):
                 self._console.append_text(line + "\n")
             else:
@@ -7307,9 +7585,7 @@ exit
 
         available = [p for p in (tt_lib, ss_lib, ff_lib) if p.exists()]
         if not available:
-            self._console.append_error(
-                f"No Liberty corner files found in {lib_dir}"
-            )
+            self._console.append_error(f"No Liberty corner files found in {lib_dir}")
             return
 
         self._console.append_info("=== Multi-Corner STA ===")
@@ -7331,6 +7607,7 @@ exit
 
         try:
             from openforge_desktop.workers import MultiCornerWorker
+
             self._multicorner_worker = MultiCornerWorker(
                 netlist_path=netlist,
                 sdc_path=sdc_path,
@@ -7345,9 +7622,7 @@ exit
                 lambda line: self._console.append_text(line + "\n")
             )
             self._multicorner_worker.corner_done.connect(self._on_corner_done)
-            self._multicorner_worker.finished_result.connect(
-                self._on_multicorner_finished
-            )
+            self._multicorner_worker.finished_result.connect(self._on_multicorner_finished)
             self._multicorner_worker.start()
         except Exception as exc:
             self._console.append_error(f"Failed to start multi-corner STA: {exc}")
@@ -7360,8 +7635,7 @@ exit
         fmax = data.get("fmax_mhz", 0.0)
         nv = data.get("num_violated", 0)
         self._console.append_info(
-            f"  [{name}] WNS={wns:.3f}ns TNS={tns:.3f}ns "
-            f"Fmax={fmax:.1f}MHz Violated={nv}"
+            f"  [{name}] WNS={wns:.3f}ns TNS={tns:.3f}ns Fmax={fmax:.1f}MHz Violated={nv}"
         )
 
     @Slot(bool, str)
@@ -7384,8 +7658,7 @@ exit
             self._console.append_info("Block Design Editor opened.")
         else:
             self._console.append_warning(
-                "Block Design Editor panel not available. "
-                "It will be available in a future update."
+                "Block Design Editor panel not available. It will be available in a future update."
             )
 
     def _on_generate_output_products(self) -> None:
@@ -7410,6 +7683,5 @@ exit
             self._console.append_info("Constraint Editor opened.")
         else:
             self._console.append_warning(
-                "Constraint Editor panel not available. "
-                "It will be available in a future update."
+                "Constraint Editor panel not available. It will be available in a future update."
             )

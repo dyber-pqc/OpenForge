@@ -221,7 +221,13 @@ class FmaxDial(QFrame):
         p.drawArc(rect, start, span)
         # value arc
         ratio = max(0.0, min(1.0, self._fmax / self._target))
-        color = _GREEN if self._fmax >= self._target else _PEACH if self._fmax >= self._target * 0.7 else _RED
+        color = (
+            _GREEN
+            if self._fmax >= self._target
+            else _PEACH
+            if self._fmax >= self._target * 0.7
+            else _RED
+        )
         pen2 = QPen(QColor(color))
         pen2.setWidth(8)
         p.setPen(pen2)
@@ -321,8 +327,7 @@ class FpgaTargetPanel(QDockWidget):
         self._photo = QFrame()
         self._photo.setMinimumHeight(140)
         self._photo.setStyleSheet(
-            f"background-color:{_MANTLE};border:1px dashed {_SURFACE2};"
-            f"border-radius:6px;"
+            f"background-color:{_MANTLE};border:1px dashed {_SURFACE2};border-radius:6px;"
         )
         photo_lay = QVBoxLayout(self._photo)
         self._photo_label = QLabel("Select a board")
@@ -653,9 +658,7 @@ class FpgaTargetPanel(QDockWidget):
         form.addRow("Board:", self._litex_board)
 
         self._litex_cpu = QComboBox()
-        self._litex_cpu.addItems(
-            ["vexriscv", "picorv32", "serv", "neorv32", "naxriscv", "none"]
-        )
+        self._litex_cpu.addItems(["vexriscv", "picorv32", "serv", "neorv32", "naxriscv", "none"])
         form.addRow("CPU type:", self._litex_cpu)
 
         self._litex_variant = QLineEdit("standard")
@@ -741,8 +744,7 @@ class FpgaTargetPanel(QDockWidget):
     def _on_generate_litex(self) -> None:
         if LiteXBuilder is None or LiteXSocConfig is None:
             self._litex_log.setPlainText(
-                "openforge.litex.integration is not importable. "
-                "Install dependencies and retry."
+                "openforge.litex.integration is not importable. Install dependencies and retry."
             )
             return
         board = self._litex_board.currentText().strip()

@@ -136,34 +136,38 @@ class NetlistParser:
         """Parse a single module entry from the JSON."""
         ports: list[Port] = []
         for port_name, port_data in data.get("ports", {}).items():
-            ports.append(Port(
-                name=port_name,
-                direction=port_data.get("direction", "input"),
-                bits=port_data.get("bits", []),
-            ))
+            ports.append(
+                Port(
+                    name=port_name,
+                    direction=port_data.get("direction", "input"),
+                    bits=port_data.get("bits", []),
+                )
+            )
 
         cells: list[Cell] = []
         for cell_name, cell_data in data.get("cells", {}).items():
             connections: dict[str, list[int]] = {}
             for conn_name, conn_bits in cell_data.get("connections", {}).items():
-                connections[conn_name] = [
-                    b for b in conn_bits if isinstance(b, int)
-                ]
+                connections[conn_name] = [b for b in conn_bits if isinstance(b, int)]
 
-            cells.append(Cell(
-                name=cell_name,
-                type=cell_data.get("type", ""),
-                connections=connections,
-                parameters=cell_data.get("parameters", {}),
-                attributes=cell_data.get("attributes", {}),
-            ))
+            cells.append(
+                Cell(
+                    name=cell_name,
+                    type=cell_data.get("type", ""),
+                    connections=connections,
+                    parameters=cell_data.get("parameters", {}),
+                    attributes=cell_data.get("attributes", {}),
+                )
+            )
 
         nets: list[Net] = []
         for net_name, net_data in data.get("netnames", {}).items():
-            nets.append(Net(
-                name=net_name,
-                bits=net_data.get("bits", []),
-            ))
+            nets.append(
+                Net(
+                    name=net_name,
+                    bits=net_data.get("bits", []),
+                )
+            )
 
         return Module(name=name, cells=cells, nets=nets, ports=ports)
 
@@ -226,19 +230,27 @@ class NetlistParser:
             cell_name = m.group(2)
             # Skip wire/reg/input/output/assign keywords
             if cell_type in (
-                "wire", "reg", "input", "output", "inout",
-                "assign", "endmodule", "module",
+                "wire",
+                "reg",
+                "input",
+                "output",
+                "inout",
+                "assign",
+                "endmodule",
+                "module",
             ):
                 continue
             connections: dict[str, list[int]] = {}
             conn_text = m.group(3)
             for cm in re.finditer(r"\.(\w+)\s*\(([^)]*)\)", conn_text):
                 connections[cm.group(1)] = []  # bit-level tracking not available
-            cells.append(Cell(
-                name=cell_name,
-                type=cell_type,
-                connections=connections,
-            ))
+            cells.append(
+                Cell(
+                    name=cell_name,
+                    type=cell_type,
+                    connections=connections,
+                )
+            )
 
         return Module(name=mod_name, cells=cells, nets=nets, ports=ports)
 
@@ -366,9 +378,7 @@ class NetlistParser:
         for module in self._modules:
             for port in module.ports:
                 if port.name == output_port and port.direction == "output":
-                    target_bits.update(
-                        b for b in port.bits if isinstance(b, int)
-                    )
+                    target_bits.update(b for b in port.bits if isinstance(b, int))
 
         if not target_bits:
             return []
@@ -443,10 +453,10 @@ class NetlistParser:
                 if port.direction == "output":
                     cone = self.get_critical_cone(port.name)
                     comb_depth = sum(
-                        1 for c in cone
+                        1
+                        for c in cone
                         if not any(
-                            kw in c.type.lower()
-                            for kw in ("dff", "sdff", "adff", "latch", "flop")
+                            kw in c.type.lower() for kw in ("dff", "sdff", "adff", "latch", "flop")
                         )
                     )
                     max_depth = max(max_depth, comb_depth)

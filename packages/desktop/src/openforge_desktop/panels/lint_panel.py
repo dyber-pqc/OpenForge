@@ -28,8 +28,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.lint import LintEngine, LintViolation
@@ -195,9 +197,7 @@ class LintPanel(QWidget):
                 continue
             fix = self._engine.auto_fix(v[r])
             if fix is not None:
-                self._source_view.appendPlainText(
-                    f"[auto-fix] {v[r].file}:{v[r].line} -> {fix}"
-                )
+                self._source_view.appendPlainText(f"[auto-fix] {v[r].file}:{v[r].line} -> {fix}")
 
     # -- helpers ----------------------------------------------
 

@@ -3,6 +3,7 @@
 A real, hierarchical PCB data model built on Pydantic v2 suitable for
 round-tripping through a layout editor and exporting to Gerber/ODB++.
 """
+
 from __future__ import annotations
 
 import json
@@ -129,6 +130,7 @@ class PcbFootprint(BaseModel):
 
     def pad_world_xy(self, pad: PcbPad) -> tuple[float, float]:
         import math
+
         rot = math.radians(self.rotation_deg)
         cx, sx = math.cos(rot), math.sin(rot)
         xw = self.x_mm + pad.x_mm * cx - pad.y_mm * sx

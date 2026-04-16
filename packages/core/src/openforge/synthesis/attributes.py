@@ -183,7 +183,7 @@ def insert_attribute_inline(
         return source_text
     target = lines[line_num - 1]
     indent = _leading_indent(target)
-    rest = target[len(indent):]
+    rest = target[len(indent) :]
     lines[line_num - 1] = f"{indent}{attr.to_verilog()} {rest}"
     suffix = "\n" if source_text.endswith("\n") else ""
     return "\n".join(lines) + suffix

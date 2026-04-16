@@ -4,6 +4,7 @@ Card-grid PDK browser with Install / Uninstall / Verify / Set Active
 actions backed by :class:`openforge.pdk.installer.PdkInstaller`
 (volare + git).
 """
+
 from __future__ import annotations
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
@@ -373,9 +374,7 @@ class PdkManagerPanel(QWidget):
         if self._installer is None:
             return
         ok = self._installer.uninstall(name)
-        self._status.setText(
-            f"Uninstalled {name}" if ok else f"Could not uninstall {name}"
-        )
+        self._status.setText(f"Uninstalled {name}" if ok else f"Could not uninstall {name}")
         self.refresh()
 
     def _on_verify(self, name: str) -> None:

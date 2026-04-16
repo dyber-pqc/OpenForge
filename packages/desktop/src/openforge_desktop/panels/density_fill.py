@@ -34,6 +34,7 @@ try:
         DecapInserter,
         TapInserter,
     )
+
     _HAS_CORE = True
 except Exception:  # pragma: no cover
     DensityFiller = None  # type: ignore[assignment]
@@ -48,12 +49,15 @@ except Exception:  # pragma: no cover
 try:
     from openforge_desktop.panels._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore[misc]
         return ""
+
 
 try:
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
     from matplotlib.figure import Figure
+
     _HAS_MPL = True
 except Exception:  # pragma: no cover
     FigureCanvasQTAgg = None  # type: ignore[assignment]
@@ -178,9 +182,7 @@ class DensityFillPanel(QWidget):
     # --------------------------------------------------------------- slots
 
     def _on_open_def(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Open DEF", "", "DEF (*.def);;All Files (*)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Open DEF", "", "DEF (*.def);;All Files (*)")
         if path:
             self._def_path = Path(path)
 
@@ -242,9 +244,7 @@ class DensityFillPanel(QWidget):
             ax.set_title(f"{layer} density (%)")
         self._canvas.draw_idle()
 
-    def _append_row(
-        self, op: str, label: str, before: str, after: str, inserted: int
-    ) -> None:
+    def _append_row(self, op: str, label: str, before: str, after: str, inserted: int) -> None:
         row = self._table.rowCount()
         self._table.insertRow(row)
         self._table.setItem(row, 0, QTableWidgetItem(op))
@@ -292,9 +292,7 @@ class DensityFillPanel(QWidget):
             return
         try:
             d = DecapInserter(self._def_path, self._lef_path)
-            res = d.insert_decaps(
-                SKY130_DECAP_CELLS, target_per_row_pct=self._decap_pct.value()
-            )
+            res = d.insert_decaps(SKY130_DECAP_CELLS, target_per_row_pct=self._decap_pct.value())
         except Exception:
             self._append_row("Decap", "-", "-", "ERROR", 0)
             return

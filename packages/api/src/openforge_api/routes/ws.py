@@ -32,15 +32,19 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 case "subscribe":
                     # Subscribe to job updates
                     job_id = msg.get("job_id")
-                    await websocket.send_json({
-                        "type": "subscribed",
-                        "job_id": job_id,
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "subscribed",
+                            "job_id": job_id,
+                        }
+                    )
                 case _:
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": f"Unknown message type: {msg.get('type')}",
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "message": f"Unknown message type: {msg.get('type')}",
+                        }
+                    )
     except WebSocketDisconnect:
         _connections.discard(websocket)
     except Exception:
@@ -65,13 +69,15 @@ async def send_job_update(
     output: str | None = None,
 ) -> None:
     """Send a job status update to all connected clients."""
-    await broadcast({
-        "type": "job_update",
-        "job_id": job_id,
-        "status": status,
-        "step": step,
-        "output": output,
-    })
+    await broadcast(
+        {
+            "type": "job_update",
+            "job_id": job_id,
+            "status": status,
+            "step": step,
+            "output": output,
+        }
+    )
 
 
 async def send_tool_output(
@@ -81,10 +87,12 @@ async def send_tool_output(
     level: str = "info",
 ) -> None:
     """Stream a line of tool output to connected clients."""
-    await broadcast({
-        "type": "tool_output",
-        "job_id": job_id,
-        "tool": tool,
-        "line": line,
-        "level": level,
-    })
+    await broadcast(
+        {
+            "type": "tool_output",
+            "job_id": job_id,
+            "tool": tool,
+            "line": line,
+            "level": level,
+        }
+    )

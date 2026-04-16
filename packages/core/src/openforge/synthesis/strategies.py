@@ -186,10 +186,7 @@ BUILTIN_STRATEGIES: dict[str, SynthesisStrategy] = {
         yosys_flatten=True,
         opt_share=True,
         opt_demorgan=True,
-        yosys_abc_script=(
-            "strash; ifraig; scorr; dc2; dretime; strash; dch -f; "
-            "map -m -B 0.2"
-        ),
+        yosys_abc_script=("strash; ifraig; scorr; dc2; dretime; strash; dch -f; map -m -B 0.2"),
         area_impact=1,
         speed_impact=-1,
         power_impact=0,
@@ -203,8 +200,7 @@ BUILTIN_STRATEGIES: dict[str, SynthesisStrategy] = {
         goal=OptimizationGoal.SPEED,
         yosys_retime=True,
         yosys_abc_script=(
-            "strash; dch; map -B 0.9; topo; stime -p; buffer; upsize; "
-            "dnsize; stime -p"
+            "strash; dch; map -B 0.9; topo; stime -p; buffer; upsize; dnsize; stime -p"
         ),
         area_impact=-1,
         speed_impact=1,
@@ -374,9 +370,7 @@ def generate_yosys_script(
         lines.append("abc -fast")
 
     if strategy.yosys_abc_script:
-        lines.append(
-            f"abc -liberty {liberty} -script {{{strategy.yosys_abc_script}}}"
-        )
+        lines.append(f"abc -liberty {liberty} -script {{{strategy.yosys_abc_script}}}")
     else:
         lines.append(f"abc -liberty {liberty}")
 

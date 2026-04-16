@@ -8,6 +8,7 @@ freerouting.
 
 Reference: Specctra Design/Session file formats (Cadence).
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -70,7 +71,7 @@ def board_to_dsn(
     name = board.name or "board"
     w(f"(pcb {name}")
     w("  (parser")
-    w("    (string_quote \")")
+    w('    (string_quote ")')
     w("    (space_in_quoted_tokens on)")
     w("    (host_cad OpenForge)")
     w("    (host_version 1.0)")
@@ -120,9 +121,7 @@ def board_to_dsn(
         side = "front" if fp.layer == "top" else "back"
         image = f"IMG_{fp.ref}"
         w(f"    (component {image}")
-        w(
-            f"      (place {fp.ref} {_fmt(fp.x_mm)} {_fmt(fp.y_mm)} {side} {fp.rotation_deg:.1f})"
-        )
+        w(f"      (place {fp.ref} {_fmt(fp.x_mm)} {_fmt(fp.y_mm)} {side} {fp.rotation_deg:.1f})")
         w("    )")
     w("  )")
 
@@ -150,16 +149,11 @@ def board_to_dsn(
             w(f"    (padstack {ps_name}")
             for layer in _signal_layers(board):
                 if pad.shape == "round":
-                    w(
-                        f"      (shape (circle {layer} {_fmt(pad.size_x_mm)}))"
-                    )
+                    w(f"      (shape (circle {layer} {_fmt(pad.size_x_mm)}))")
                 else:
                     hx = pad.size_x_mm / 2
                     hy = pad.size_y_mm / 2
-                    w(
-                        f"      (shape (rect {layer} "
-                        f"{_fmt(-hx)} {_fmt(-hy)} {_fmt(hx)} {_fmt(hy)}))"
-                    )
+                    w(f"      (shape (rect {layer} {_fmt(-hx)} {_fmt(-hy)} {_fmt(hx)} {_fmt(hy)}))")
             w("      (attach off)")
             w("    )")
     # Default via padstack
@@ -177,7 +171,7 @@ def board_to_dsn(
         net_name = board.net_name(net_id) or f"N${net_id}"
         if not net_name:
             continue
-        w(f"    (net \"{net_name}\"")
+        w(f'    (net "{net_name}"')
         pinstr = " ".join(f"{r}-{p}" for r, p in pads)
         w(f"      (pins {pinstr})")
         w("    )")
@@ -217,13 +211,11 @@ def board_to_dsn(
         w(
             f"    (wire (path {t.layer} {_fmt(t.width_mm)} "
             f"{_fmt(t.x1_mm)} {_fmt(t.y1_mm)} "
-            f"{_fmt(t.x2_mm)} {_fmt(t.y2_mm)}) (net \"{nm}\"))"
+            f'{_fmt(t.x2_mm)} {_fmt(t.y2_mm)}) (net "{nm}"))'
         )
     for v in board.vias:
         nm = board.net_name(v.net) or f"N${v.net}"
-        w(
-            f"    (via VIA_STD {_fmt(v.x_mm)} {_fmt(v.y_mm)} (net \"{nm}\"))"
-        )
+        w(f'    (via VIA_STD {_fmt(v.x_mm)} {_fmt(v.y_mm)} (net "{nm}"))')
     w("  )")
 
     w(")")
@@ -347,9 +339,7 @@ def parse_ses(ses_path: Path, board: PcbBoard) -> PcbBoard:
                 y = float(via[3]) * inv
             except (ValueError, TypeError):
                 continue
-            board.vias.append(
-                PcbVia(x_mm=x, y_mm=y, drill_mm=0.3, diameter_mm=0.6, net=net_id)
-            )
+            board.vias.append(PcbVia(x_mm=x, y_mm=y, drill_mm=0.3, diameter_mm=0.6, net=net_id))
     return board
 
 

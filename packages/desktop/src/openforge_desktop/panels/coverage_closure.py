@@ -78,8 +78,7 @@ class ModuleCoverage:
     holes: list[tuple[str, int, str]] = field(default_factory=list)
 
     def overall(self) -> float:
-        metrics = [self.line, self.branch, self.toggle, self.fsm,
-                   self.functional, self.assertions]
+        metrics = [self.line, self.branch, self.toggle, self.fsm, self.functional, self.assertions]
         nonzero = [m for m in metrics if m > 0]
         if not nonzero:
             return 0.0
@@ -137,8 +136,7 @@ class DonutChart(QWidget):
         rect = QRectF((self.width() - side) / 2, (self.height() - side) / 2, side, side)
         # Background ring
         p.setPen(QPen(_OVERLAY, side * 0.12))
-        p.drawArc(rect.adjusted(side * 0.06, side * 0.06, -side * 0.06, -side * 0.06),
-                  0, 360 * 16)
+        p.drawArc(rect.adjusted(side * 0.06, side * 0.06, -side * 0.06, -side * 0.06), 0, 360 * 16)
         # Foreground arc
         if self._value >= 80:
             color = _GREEN
@@ -152,7 +150,8 @@ class DonutChart(QWidget):
         span = int(-self._value / 100 * 360 * 16)
         p.drawArc(
             rect.adjusted(side * 0.06, side * 0.06, -side * 0.06, -side * 0.06),
-            90 * 16, span,
+            90 * 16,
+            span,
         )
         # Center text
         p.setPen(_TEXT)
@@ -198,8 +197,7 @@ class TrendChart(QWidget):
         p.setFont(QFont("Inter", 9, QFont.Weight.Bold))
         p.drawText(QPointF(margin, margin - 6), self._title)
         p.setPen(QPen(_OVERLAY, 1))
-        p.drawLine(QPointF(plot.left(), plot.bottom()),
-                   QPointF(plot.right(), plot.bottom()))
+        p.drawLine(QPointF(plot.left(), plot.bottom()), QPointF(plot.right(), plot.bottom()))
         for i in range(1, 5):
             y = plot.top() + plot.height() * i / 5
             p.setPen(QPen(_OVERLAY, 1, Qt.PenStyle.DotLine))
@@ -258,8 +256,9 @@ class BurndownChart(QWidget):
         p.end()
 
     @staticmethod
-    def _draw_series(p: QPainter, plot: QRectF, data: list[float],
-                     color: QColor, dashed: bool = False) -> None:
+    def _draw_series(
+        p: QPainter, plot: QRectF, data: list[float], color: QColor, dashed: bool = False
+    ) -> None:
         if len(data) < 2:
             return
         max_v = max(data) if data else 1.0
@@ -343,12 +342,18 @@ class CoverageClosurePanel(QDockWidget):
         bg = QVBoxLayout(breakdown_group)
         self.breakdown_table = QTableWidget(0, 8)
         self.breakdown_table.setHorizontalHeaderLabels(
-            ["Module", "Line%", "Branch%", "Toggle%", "FSM%",
-             "Functional%", "Assertions%", "Overall%"]
+            [
+                "Module",
+                "Line%",
+                "Branch%",
+                "Toggle%",
+                "FSM%",
+                "Functional%",
+                "Assertions%",
+                "Overall%",
+            ]
         )
-        self.breakdown_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.breakdown_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.breakdown_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.breakdown_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         bg.addWidget(self.breakdown_table)
@@ -372,9 +377,7 @@ class CoverageClosurePanel(QDockWidget):
         pl.addWidget(QLabel("Test plan goals"))
         self.plan_table = QTableWidget(0, 4)
         self.plan_table.setHorizontalHeaderLabels(["Goal", "Tests", "Status", "Coverage delivered"])
-        self.plan_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.plan_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         pl.addWidget(self.plan_table)
 
         plan_buttons = QHBoxLayout()
@@ -508,9 +511,7 @@ class CoverageClosurePanel(QDockWidget):
         days_to_close = remaining / rate
         eta_date = (self._snapshots[-1].timestamp + timedelta(days=days_to_close)).date()
         self.eta_label.setText(f"ETA: {eta_date.isoformat()}")
-        self.eta_detail.setText(
-            f"Rate {rate:.2f} %/day · {remaining:.1f}% remaining"
-        )
+        self.eta_detail.setText(f"Rate {rate:.2f} %/day · {remaining:.1f}% remaining")
 
     def _refresh_burndown(self) -> None:
         if not self._snapshots:
@@ -573,21 +574,57 @@ class CoverageClosurePanel(QDockWidget):
 
     def _load_demo(self) -> None:
         modules = [
-            ModuleCoverage("cpu_core", line=92.5, branch=88.0, toggle=85.0,
-                           fsm=100.0, functional=78.0, assertions=95.0,
-                           holes=[("cpu_core.v", 142, "branch not taken"),
-                                  ("cpu_core.v", 233, "uncovered FSM transition")]),
-            ModuleCoverage("alu", line=98.0, branch=96.0, toggle=92.0,
-                           fsm=100.0, functional=88.0, assertions=100.0),
-            ModuleCoverage("decoder", line=84.0, branch=72.0, toggle=78.0,
-                           fsm=90.0, functional=68.0, assertions=80.0,
-                           holes=[("decoder.v", 56, "missing illegal-op test")]),
-            ModuleCoverage("regfile", line=100.0, branch=100.0, toggle=98.0,
-                           fsm=0.0, functional=95.0, assertions=100.0),
-            ModuleCoverage("uart", line=70.0, branch=58.0, toggle=64.0,
-                           fsm=80.0, functional=50.0, assertions=72.0,
-                           holes=[("uart.v", 89, "parity error path"),
-                                  ("uart.v", 113, "break detect")]),
+            ModuleCoverage(
+                "cpu_core",
+                line=92.5,
+                branch=88.0,
+                toggle=85.0,
+                fsm=100.0,
+                functional=78.0,
+                assertions=95.0,
+                holes=[
+                    ("cpu_core.v", 142, "branch not taken"),
+                    ("cpu_core.v", 233, "uncovered FSM transition"),
+                ],
+            ),
+            ModuleCoverage(
+                "alu",
+                line=98.0,
+                branch=96.0,
+                toggle=92.0,
+                fsm=100.0,
+                functional=88.0,
+                assertions=100.0,
+            ),
+            ModuleCoverage(
+                "decoder",
+                line=84.0,
+                branch=72.0,
+                toggle=78.0,
+                fsm=90.0,
+                functional=68.0,
+                assertions=80.0,
+                holes=[("decoder.v", 56, "missing illegal-op test")],
+            ),
+            ModuleCoverage(
+                "regfile",
+                line=100.0,
+                branch=100.0,
+                toggle=98.0,
+                fsm=0.0,
+                functional=95.0,
+                assertions=100.0,
+            ),
+            ModuleCoverage(
+                "uart",
+                line=70.0,
+                branch=58.0,
+                toggle=64.0,
+                fsm=80.0,
+                functional=50.0,
+                assertions=72.0,
+                holes=[("uart.v", 89, "parity error path"), ("uart.v", 113, "break detect")],
+            ),
         ]
         self.set_modules(modules)
         # Fake history of 8 snapshots increasing toward closure
@@ -628,15 +665,18 @@ class CoverageClosurePanel(QDockWidget):
         with open(path, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             w.writerow(
-                ["module", "line", "branch", "toggle", "fsm",
-                 "functional", "assertions", "overall"]
+                ["module", "line", "branch", "toggle", "fsm", "functional", "assertions", "overall"]
             )
             for m in self._modules:
                 w.writerow(
                     [
-                        m.name, f"{m.line:.2f}", f"{m.branch:.2f}",
-                        f"{m.toggle:.2f}", f"{m.fsm:.2f}",
-                        f"{m.functional:.2f}", f"{m.assertions:.2f}",
+                        m.name,
+                        f"{m.line:.2f}",
+                        f"{m.branch:.2f}",
+                        f"{m.toggle:.2f}",
+                        f"{m.fsm:.2f}",
+                        f"{m.functional:.2f}",
+                        f"{m.assertions:.2f}",
                         f"{m.overall():.2f}",
                     ]
                 )

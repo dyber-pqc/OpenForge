@@ -25,7 +25,16 @@ from openforge.ai.ollama_client import OllamaClient
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-DEFAULT_GLOBS = ["**/*.v", "**/*.sv", "**/*.svh", "**/*.vh", "**/*.sdc", "**/*.yaml", "**/*.yml", "**/*.md"]
+DEFAULT_GLOBS = [
+    "**/*.v",
+    "**/*.sv",
+    "**/*.svh",
+    "**/*.vh",
+    "**/*.sdc",
+    "**/*.yaml",
+    "**/*.yml",
+    "**/*.md",
+]
 DEFAULT_EMBED_MODEL = "nomic-embed-text"
 CHUNK_MAX_CHARS = 1800
 

@@ -59,8 +59,8 @@ def _scale_jet(t: float) -> tuple[int, int, int]:
 
 def _scale_inferno(t: float) -> tuple[int, int, int]:
     t = max(0.0, min(1.0, t))
-    r = int(255 * (t ** 0.6))
-    g = int(255 * (t ** 2.2) * 0.7)
+    r = int(255 * (t**0.6))
+    g = int(255 * (t**2.2) * 0.7)
     b = int(255 * max(0.0, 0.3 - t * 0.3))
     return (r, g, b)
 
@@ -263,11 +263,7 @@ class _HeatmapCanvas(QFrame):
         x_um, y_um = coord
         drop = self._ir_map.get_drop_at(x_um, y_um)
         v = self._ir_map.vdd - drop / 1000.0
-        self.setToolTip(
-            f"x={x_um:.1f}um  y={y_um:.1f}um\n"
-            f"drop={drop:.2f} mV\n"
-            f"V={v:.4f} V"
-        )
+        self.setToolTip(f"x={x_um:.1f}um  y={y_um:.1f}um\ndrop={drop:.2f} mV\nV={v:.4f} V")
         self.point_hovered.emit(x_um, y_um, drop)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
@@ -426,9 +422,7 @@ class IrDropOverlayPanel(QDockWidget):
         hot_title.setFont(f)
         sb.addWidget(hot_title)
         self.hotspot_list = QListWidget()
-        self.hotspot_list.setSelectionMode(
-            QAbstractItemView.SelectionMode.SingleSelection
-        )
+        self.hotspot_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         sb.addWidget(self.hotspot_list, 1)
 
         # Hover info
@@ -530,9 +524,7 @@ class IrDropOverlayPanel(QDockWidget):
             return
         v = self._ir_map.vdd - drop / 1000.0
         self.hover_label.setText(
-            f"Position: ({x:.1f}, {y:.1f}) um\n"
-            f"Drop: {drop:.2f} mV\n"
-            f"Voltage: {v:.4f} V"
+            f"Position: ({x:.1f}, {y:.1f}) um\nDrop: {drop:.2f} mV\nVoltage: {v:.4f} V"
         )
 
     def _on_canvas_click(self, x: float, y: float, drop: float) -> None:
@@ -568,9 +560,7 @@ class IrDropOverlayPanel(QDockWidget):
         if self._ir_map is None:
             return
         for hp in self._ir_map.hotspots[:100]:
-            item = QListWidgetItem(
-                f"({hp.x:7.1f}, {hp.y:7.1f}) um   {hp.drop_mv:6.2f} mV"
-            )
+            item = QListWidgetItem(f"({hp.x:7.1f}, {hp.y:7.1f}) um   {hp.drop_mv:6.2f} mV")
             item.setData(Qt.ItemDataRole.UserRole, (hp.x, hp.y))
             color = QColor("#e74c3c") if hp.drop_mv > 100 else QColor("#f39c12")
             item.setForeground(color)

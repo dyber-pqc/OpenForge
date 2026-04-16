@@ -65,9 +65,7 @@ def test_caravel_and_pcb_and_mixed() -> None:
 
 def test_yaml_round_trip(tmp_path: Path) -> None:
     p = sky130_asic_template("bar")
-    p.constraints.append(
-        Constraint(kind=ConstraintKind.FALSE_PATH, paths=["a", "b"])
-    )
+    p.constraints.append(Constraint(kind=ConstraintKind.FALSE_PATH, paths=["a", "b"]))
     out = tmp_path / "openforge.yaml"
     p.save(out)
     loaded = Project.load(out)

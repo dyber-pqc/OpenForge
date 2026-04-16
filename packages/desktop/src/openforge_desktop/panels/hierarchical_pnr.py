@@ -116,9 +116,7 @@ class HierarchicalPnrPanel(QDockWidget):
         rlayout.setContentsMargins(0, 0, 0, 0)
 
         self._detail_label = QLabel("Select a block")
-        self._detail_label.setStyleSheet(
-            f"color: {_BLUE}; font-weight: bold; padding: 4px;"
-        )
+        self._detail_label.setStyleSheet(f"color: {_BLUE}; font-weight: bold; padding: 4px;")
         rlayout.addWidget(self._detail_label)
 
         form_holder = QWidget(right)
@@ -155,9 +153,7 @@ class HierarchicalPnrPanel(QDockWidget):
 
         # Top integration / timing table
         self._integration_table = QTableWidget(0, 4, right)
-        self._integration_table.setHorizontalHeaderLabels(
-            ["Block", "X um", "Y um", "State"]
-        )
+        self._integration_table.setHorizontalHeaderLabels(["Block", "X um", "Y um", "State"])
         self._integration_table.horizontalHeader().setStretchLastSection(True)
         rlayout.addWidget(QLabel("Top integration view"))
         rlayout.addWidget(self._integration_table)
@@ -269,9 +265,7 @@ class HierarchicalPnrPanel(QDockWidget):
             block = self._design.blocks[name]
             item = QTableWidgetItem(f"{name}\n{block.state}")
             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            item.setForeground(
-                QBrush(QColor(_STATE_COLOR.get(block.state, _SUBTLE)))
-            )
+            item.setForeground(QBrush(QColor(_STATE_COLOR.get(block.state, _SUBTLE))))
             self._strip.setItem(0, i, item)
             self._strip.setColumnWidth(i, 110)
 
@@ -283,14 +277,10 @@ class HierarchicalPnrPanel(QDockWidget):
             if name == self._design.top:
                 continue
             self._integration_table.insertRow(row)
-            self._integration_table.setItem(
-                row, 0, QTableWidgetItem(name)
-            )
+            self._integration_table.setItem(row, 0, QTableWidgetItem(name))
             self._integration_table.setItem(row, 1, QTableWidgetItem("-"))
             self._integration_table.setItem(row, 2, QTableWidgetItem("-"))
-            self._integration_table.setItem(
-                row, 3, QTableWidgetItem(block.state)
-            )
+            self._integration_table.setItem(row, 3, QTableWidgetItem(block.state))
 
     def _on_block_selected(self) -> None:
         items = self._tree.selectedItems()
@@ -382,9 +372,7 @@ class HierarchicalPnrPanel(QDockWidget):
             return
         try:
             result = self._flow.integrate_top()
-            self._log.append(
-                f"Integrated top {result['top']} with {result['block_count']} blocks"
-            )
+            self._log.append(f"Integrated top {result['top']} with {result['block_count']} blocks")
         except Exception as exc:
             self._log.append(f"Integration failed: {exc}")
         self._rebuild_integration()

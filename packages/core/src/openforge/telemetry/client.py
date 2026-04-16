@@ -123,7 +123,10 @@ class TelemetryClient:
             req = urllib.request.Request(
                 self.endpoint,
                 data=payload,
-                headers={"Content-Type": "application/json", "User-Agent": f"openforge/{self.version}"},
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": f"openforge/{self.version}",
+                },
                 method="POST",
             )
             urllib.request.urlopen(req, timeout=5)  # noqa: S310
@@ -138,7 +141,15 @@ class TelemetryClient:
         """Remove obvious PII. Drops any value that looks like a path."""
         clean: dict = {}
         for k, v in (props or {}).items():
-            if k.lower() in {"path", "file", "filename", "project", "project_name", "user", "email"}:
+            if k.lower() in {
+                "path",
+                "file",
+                "filename",
+                "project",
+                "project_name",
+                "user",
+                "email",
+            }:
                 continue
             if isinstance(v, str) and (("/" in v) or ("\\" in v)):
                 continue
@@ -151,7 +162,9 @@ class TelemetryClient:
     # ------------------------------------------------------------------
     def _start_worker(self) -> None:
         self._stop.clear()
-        self._thread = threading.Thread(target=self._worker, name="openforge-telemetry", daemon=True)
+        self._thread = threading.Thread(
+            target=self._worker, name="openforge-telemetry", daemon=True
+        )
         self._thread.start()
 
     def _worker(self) -> None:
@@ -180,7 +193,9 @@ def get_client() -> TelemetryClient:
     return _client_singleton
 
 
-def configure(enabled: bool, endpoint: str | None = None, version: str = _VERSION) -> TelemetryClient:
+def configure(
+    enabled: bool, endpoint: str | None = None, version: str = _VERSION
+) -> TelemetryClient:
     global _client_singleton
     _client_singleton = TelemetryClient(endpoint=endpoint, enabled=enabled, version=version)
     return _client_singleton

@@ -16,6 +16,7 @@ documentation, including width, spacing, enclosure, density, and antenna
 rules. The runner generates a KLayout DRC script (Ruby) that implements
 the rules and parses results back into structured violation objects.
 """
+
 from __future__ import annotations
 
 import re
@@ -291,9 +292,7 @@ def _add_multi_patterning_rules(rules: list[DrcRule]) -> None:
         ("MET3.MP.1", "met3", "Min same-color spacing met3", 0.60),
     ]
     for rid, layer, desc, val in mpc:
-        rules.append(
-            DrcRule(rid, layer, "multipattern", desc, val, severity=DrcSeverity.WARNING)
-        )
+        rules.append(DrcRule(rid, layer, "multipattern", desc, val, severity=DrcSeverity.WARNING))
 
 
 def _add_misc_rules(rules: list[DrcRule]) -> None:
@@ -381,9 +380,7 @@ class SignoffDrcRunner:
         ]
         start = time.time()
         try:
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=3600, check=False
-            )
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=3600, check=False)
             output = proc.stdout + "\n" + proc.stderr
         except FileNotFoundError:
             output = "klayout not found in PATH; producing empty result"
@@ -411,7 +408,7 @@ class SignoffDrcRunner:
         lines.append("")
         # Layer declarations
         for layer in self.deck.layers():
-            lines.append(f"{layer} = input(\"{layer}\")")
+            lines.append(f'{layer} = input("{layer}")')
         lines.append("")
         # Emit rule blocks per category
         for rtype in self.deck.rule_types():
@@ -435,18 +432,18 @@ class SignoffDrcRunner:
         if rule.rule_type == "notch":
             return f'{layer}.notch({c}).output("{rid}", "{rule.description}")'
         if rule.rule_type == "enclosure":
-            return f'# enclosure {rid}: {rule.description} ({c}um)'
+            return f"# enclosure {rid}: {rule.description} ({c}um)"
         if rule.rule_type == "density":
-            return f'# density {rid}: {rule.description} target={c}'
+            return f"# density {rid}: {rule.description} target={c}"
         if rule.rule_type == "antenna":
-            return f'# antenna {rid}: {rule.description} AR<{c}'
+            return f"# antenna {rid}: {rule.description} AR<{c}"
         if rule.rule_type == "endcap":
-            return f'# endcap {rid}: {rule.description} ({c}um)'
+            return f"# endcap {rid}: {rule.description} ({c}um)"
         if rule.rule_type == "exact_size":
-            return f'# exact_size {rid}: {rule.description} ({c}um)'
+            return f"# exact_size {rid}: {rule.description} ({c}um)"
         if rule.rule_type == "multipattern":
-            return f'# multipattern {rid}: {rule.description} ({c}um)'
-        return f'# {rid}: {rule.description}'
+            return f"# multipattern {rid}: {rule.description} ({c}um)"
+        return f"# {rid}: {rule.description}"
 
     def parse_klayout_results(self, output: str) -> list[DrcViolation]:
         """Parse KLayout report output into DrcViolation objects."""
@@ -467,32 +464,24 @@ class SignoffDrcRunner:
             x = float(m.group("x"))
             y = float(m.group("y"))
             measured = float(m.group("m") or 0.0)
-            violations.append(
-                DrcViolation(rule=rule, x_um=x, y_um=y, measured_um=measured)
-            )
+            violations.append(DrcViolation(rule=rule, x_um=x, y_um=y, measured_um=measured))
         return violations
 
-    def categorize_violations(
-        self, violations: list[DrcViolation]
-    ) -> dict[str, int]:
+    def categorize_violations(self, violations: list[DrcViolation]) -> dict[str, int]:
         """Group violation counts by rule category."""
         counts: dict[str, int] = {}
         for v in violations:
             counts[v.rule.rule_type] = counts.get(v.rule.rule_type, 0) + 1
         return counts
 
-    def violations_by_layer(
-        self, violations: list[DrcViolation]
-    ) -> dict[str, int]:
+    def violations_by_layer(self, violations: list[DrcViolation]) -> dict[str, int]:
         """Group violation counts by layer."""
         counts: dict[str, int] = {}
         for v in violations:
             counts[v.rule.layer] = counts.get(v.rule.layer, 0) + 1
         return counts
 
-    def violations_by_severity(
-        self, violations: list[DrcViolation]
-    ) -> dict[str, int]:
+    def violations_by_severity(self, violations: list[DrcViolation]) -> dict[str, int]:
         """Group violation counts by severity classification."""
         counts: dict[str, int] = {}
         for v in violations:

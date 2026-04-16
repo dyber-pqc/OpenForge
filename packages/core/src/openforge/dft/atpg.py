@@ -6,6 +6,7 @@ gate-level Verilog netlists. It enumerates stuck-at-0 and stuck-at-1
 faults on every signal, then performs random + heuristic pattern
 generation followed by fault simulation to record coverage.
 """
+
 from __future__ import annotations
 
 import random
@@ -121,9 +122,7 @@ def _parse_verilog(text: str) -> _Module:
             if s:
                 mod.wires.append(s)
 
-    gate_pat = re.compile(
-        r"\b(and|or|not|xor|nand|nor|xnor|buf)\b\s*\w*\s*\(([^)]+)\)\s*;"
-    )
+    gate_pat = re.compile(r"\b(and|or|not|xor|nand|nor|xnor|buf)\b\s*\w*\s*\(([^)]+)\)\s*;")
     for m in gate_pat.finditer(text):
         kind = m.group(1)
         terms = [t.strip() for t in m.group(2).split(",") if t.strip()]
@@ -324,9 +323,7 @@ class AtpgGenerator:
                     break
         return detected_now
 
-    def fault_simulate(
-        self, patterns: list[TestPattern], faults: list[StuckAtFault]
-    ) -> dict:
+    def fault_simulate(self, patterns: list[TestPattern], faults: list[StuckAtFault]) -> dict:
         """Public fault simulator entry point used for verification."""
         detected = sum(1 for f in faults if f.detected)
         return {

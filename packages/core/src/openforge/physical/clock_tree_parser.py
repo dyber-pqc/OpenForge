@@ -232,8 +232,11 @@ class CtsParser:
 
             if in_sinks:
                 sm = re.match(
-                    r"\s*(\S+?)/(\S+?)\s+level=(\d+)\s+arrival=" + _NUM
-                    + r"(?:\s+trans=" + _NUM + r")?",
+                    r"\s*(\S+?)/(\S+?)\s+level=(\d+)\s+arrival="
+                    + _NUM
+                    + r"(?:\s+trans="
+                    + _NUM
+                    + r")?",
                     line,
                 )
                 if sm:
@@ -394,8 +397,7 @@ class CtsParser:
         sinks: list[CtsSink] = []
 
         row_re = re.compile(
-            r"\|\s*(\S+)\s*\|\s*(\S+)\s*\|\s*(\d+)\s*\|\s*" + _NUM
-            + r"\s*\|\s*" + _NUM + r"\s*\|"
+            r"\|\s*(\S+)\s*\|\s*(\S+)\s*\|\s*(\d+)\s*\|\s*" + _NUM + r"\s*\|\s*" + _NUM + r"\s*\|"
         )
         for line in text.splitlines():
             rm = row_re.search(line)
@@ -410,8 +412,7 @@ class CtsParser:
                 )
 
         sink_re = re.compile(
-            r"^\s*(\S+)/(\S+)\s+level=(\d+)\s+arrival=" + _NUM
-            + r"(?:\s+trans=" + _NUM + r")?"
+            r"^\s*(\S+)/(\S+)\s+level=(\d+)\s+arrival=" + _NUM + r"(?:\s+trans=" + _NUM + r")?"
         )
         in_sinks = False
         for line in text.splitlines():

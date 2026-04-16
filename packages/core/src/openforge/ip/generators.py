@@ -125,9 +125,7 @@ def axi_smartconnect(
     src.append("    // Address decoder generates per-slave select")
     if address_map is not None and getattr(address_map, "ranges", None):
         for idx, r in enumerate(address_map.ranges):
-            src.append(
-                f"    localparam [AW-1:0] BASE_{idx} = {addr_width}'h{r.base_addr:08X};"
-            )
+            src.append(f"    localparam [AW-1:0] BASE_{idx} = {addr_width}'h{r.base_addr:08X};")
             src.append(
                 f"    localparam [AW-1:0] MASK_{idx} = "
                 f"{addr_width}'h{(~(r.range_size - 1)) & ((1 << addr_width) - 1):08X};"
@@ -209,9 +207,9 @@ def axi_smartconnect(
             BlockPort(f"{p}_rready", "output", 1),
         ]
     inst = BlockInstance(
-        name=mod, module=mod,
-        params={"NUM_M": num_masters, "NUM_S": num_slaves,
-                "DW": data_width, "AW": addr_width},
+        name=mod,
+        module=mod,
+        params={"NUM_M": num_masters, "NUM_S": num_slaves, "DW": data_width, "AW": addr_width},
         ports=ports,
         description=f"AXI4 {num_masters}x{num_slaves} SmartConnect crossbar",
     )
@@ -306,7 +304,8 @@ def axi_lite_to_full_bridge(
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"DW": data_width, "AW": addr_width},
         ports=[
             BlockPort("aclk", "input", 1),
@@ -404,7 +403,8 @@ def axi_stream_fifo(width: int, depth: int) -> tuple[str, BlockInstance]:
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"DW": width, "DEPTH": depth},
         ports=[
             BlockPort("aclk", "input", 1),
@@ -450,9 +450,11 @@ def axi_stream_mux(num_inputs: int, width: int) -> tuple[str, BlockInstance]:
     for i in range(num_inputs):
         src.append(f"    assign s{i:02d}_axis_tready = sel[{i}] ? m_axis_tready : 1'b0;")
     # OR-mux of selected input
-    src.append("    assign m_axis_tvalid = |{" + ", ".join(
-        f"(sel[{i}] & s{i:02d}_axis_tvalid)" for i in range(num_inputs)
-    ) + "};")
+    src.append(
+        "    assign m_axis_tvalid = |{"
+        + ", ".join(f"(sel[{i}] & s{i:02d}_axis_tvalid)" for i in range(num_inputs))
+        + "};"
+    )
     # data/last pick first active selected
     src.append("    reg [DW-1:0] _d;")
     src.append("    reg _l;")
@@ -461,7 +463,9 @@ def axi_stream_mux(num_inputs: int, width: int) -> tuple[str, BlockInstance]:
     src.append("        _d = {DW{1'b0}};")
     src.append("        _l = 1'b0;")
     for i in range(num_inputs):
-        src.append(f"        if (sel[{i}]) begin _d = s{i:02d}_axis_tdata; _l = s{i:02d}_axis_tlast; end")
+        src.append(
+            f"        if (sel[{i}]) begin _d = s{i:02d}_axis_tdata; _l = s{i:02d}_axis_tlast; end"
+        )
     src.append("    end")
     src.append("    assign m_axis_tdata = _d;")
     src.append("    assign m_axis_tlast = _l;")
@@ -474,8 +478,10 @@ def axi_stream_mux(num_inputs: int, width: int) -> tuple[str, BlockInstance]:
         BlockPort("m_axis_tlast", "output", 1),
     ]
     inst = BlockInstance(
-        name=mod, module=mod,
-        params={"DW": width}, ports=ports,
+        name=mod,
+        module=mod,
+        params={"DW": width},
+        ports=ports,
         description=f"AXI-Stream {num_inputs}:1 mux",
     )
     return "\n".join(src), inst
@@ -504,9 +510,11 @@ def axi_stream_demux(num_outputs: int, width: int) -> tuple[str, BlockInstance]:
         src.append(f"    assign m{j:02d}_axis_tdata  = s_axis_tdata;")
         src.append(f"    assign m{j:02d}_axis_tvalid = sel[{j}] & s_axis_tvalid;")
         src.append(f"    assign m{j:02d}_axis_tlast  = s_axis_tlast;")
-    src.append("    assign s_axis_tready = |{" + ", ".join(
-        f"(sel[{j}] & m{j:02d}_axis_tready)" for j in range(num_outputs)
-    ) + "};")
+    src.append(
+        "    assign s_axis_tready = |{"
+        + ", ".join(f"(sel[{j}] & m{j:02d}_axis_tready)" for j in range(num_outputs))
+        + "};"
+    )
     src.append(_footer())
     ports = [
         BlockPort("aclk", "input", 1),
@@ -525,7 +533,10 @@ def axi_stream_demux(num_outputs: int, width: int) -> tuple[str, BlockInstance]:
             BlockPort(f"m{j:02d}_axis_tlast", "output", 1),
         ]
     inst = BlockInstance(
-        name=mod, module=mod, params={"DW": width}, ports=ports,
+        name=mod,
+        module=mod,
+        params={"DW": width},
+        ports=ports,
         description=f"AXI-Stream 1:{num_outputs} demux",
     )
     return "\n".join(src), inst
@@ -553,9 +564,11 @@ def axi_stream_broadcast(num_outputs: int, width: int) -> tuple[str, BlockInstan
         src.append(f"    assign m{j:02d}_axis_tdata  = s_axis_tdata;")
         src.append(f"    assign m{j:02d}_axis_tvalid = s_axis_tvalid;")
         src.append(f"    assign m{j:02d}_axis_tlast  = s_axis_tlast;")
-    src.append("    assign s_axis_tready = &{" + ", ".join(
-        f"m{j:02d}_axis_tready" for j in range(num_outputs)
-    ) + "};")
+    src.append(
+        "    assign s_axis_tready = &{"
+        + ", ".join(f"m{j:02d}_axis_tready" for j in range(num_outputs))
+        + "};"
+    )
     src.append(_footer())
     ports = [
         BlockPort("aclk", "input", 1),
@@ -573,7 +586,10 @@ def axi_stream_broadcast(num_outputs: int, width: int) -> tuple[str, BlockInstan
             BlockPort(f"m{j:02d}_axis_tlast", "output", 1),
         ]
     inst = BlockInstance(
-        name=mod, module=mod, params={"DW": width}, ports=ports,
+        name=mod,
+        module=mod,
+        params={"DW": width},
+        ports=ports,
         description=f"AXI-Stream 1:{num_outputs} broadcaster",
     )
     return "\n".join(src), inst
@@ -632,7 +648,10 @@ def axi_stream_switch(
             BlockPort(f"m{j:02d}_axis_tlast", "output", 1),
         ]
     inst = BlockInstance(
-        name=mod, module=mod, params={"DW": width}, ports=ports,
+        name=mod,
+        module=mod,
+        params={"DW": width},
+        ports=ports,
         description=f"AXI-Stream {num_inputs}x{num_outputs} switch",
     )
     return "\n".join(src), inst
@@ -699,7 +718,8 @@ def clock_wizard(
         BlockPort("locked", "output", 1),
     ] + [BlockPort(f"clk_out{i}", "output", 1) for i in range(n_out)]
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"FIN_MHZ": input_freq_mhz, "N_OUT": n_out},
         ports=ports,
         description=f"{vendor} clock wizard {input_freq_mhz}MHz -> {outputs}",
@@ -712,9 +732,7 @@ def clock_wizard(
 # ---------------------------------------------------------------------------
 
 
-def reset_synchronizer(
-    num_resets: int = 1, polarity: str = "low"
-) -> tuple[str, BlockInstance]:
+def reset_synchronizer(num_resets: int = 1, polarity: str = "low") -> tuple[str, BlockInstance]:
     mod = f"reset_sync_x{num_resets}"
     released = "1'b1" if polarity == "low" else "1'b0"
     src = [_banner(mod, f"Async assert, sync release reset synchronizer (x{num_resets})")]
@@ -738,7 +756,8 @@ def reset_synchronizer(
     for i in range(num_resets):
         ports.append(BlockPort(f"sync_rst{i}", "output", 1))
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"STAGES": 2, "POLARITY": polarity},
         ports=ports,
         description="Two-FF reset synchronizer",
@@ -746,7 +765,9 @@ def reset_synchronizer(
     return "\n".join(src), inst
 
 
-def reset_bridge(src_clock: str = "src_clk", dst_clock: str = "dst_clk") -> tuple[str, BlockInstance]:
+def reset_bridge(
+    src_clock: str = "src_clk", dst_clock: str = "dst_clk"
+) -> tuple[str, BlockInstance]:
     mod = "reset_bridge"
     v = _banner(mod, "Cross-domain reset bridge")
     v += f"""module {mod} (
@@ -763,7 +784,9 @@ def reset_bridge(src_clock: str = "src_clk", dst_clock: str = "dst_clk") -> tupl
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod, params={},
+        name=mod,
+        module=mod,
+        params={},
         ports=[
             BlockPort("src_rstn", "input", 1),
             BlockPort("dst_clk", "input", 1),
@@ -803,7 +826,8 @@ def bram_controller(
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"AW": addr_width, "DW": data_width},
         ports=[
             BlockPort("clk", "input", 1),
@@ -834,7 +858,8 @@ def rom_init(addr_width: int, data_width: int, hex_file: str) -> tuple[str, Bloc
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"AW": addr_width, "DW": data_width, "HEX": hex_file},
         ports=[
             BlockPort("clk", "input", 1),
@@ -941,7 +966,8 @@ def dma_engine(
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"AW": addr_width, "DW": data_width, "FIFO": fifo_depth},
         ports=[
             BlockPort("aclk", "input", 1),
@@ -1024,7 +1050,8 @@ def interrupt_controller_plic(
 """
     v += _footer()
     inst = BlockInstance(
-        name=mod, module=mod,
+        name=mod,
+        module=mod,
         params={"N_IRQ": num_irqs, "N_TARGET": num_targets, "N_PRIO": num_priorities},
         ports=[
             BlockPort("clk", "input", 1),

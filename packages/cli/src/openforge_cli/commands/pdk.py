@@ -32,18 +32,22 @@ def list_pdks(
     pdks = mgr.list_pdks()
 
     if json_output:
-        console.print(json_mod.dumps([
-            {
-                "name": p.name,
-                "display_name": p.display_name,
-                "foundry": p.foundry,
-                "node_nm": p.process_node_nm,
-                "installed": p.installed,
-                "path": str(p.install_path) if p.install_path else None,
-                "libraries": p.cell_libraries,
-            }
-            for p in pdks
-        ]))
+        console.print(
+            json_mod.dumps(
+                [
+                    {
+                        "name": p.name,
+                        "display_name": p.display_name,
+                        "foundry": p.foundry,
+                        "node_nm": p.process_node_nm,
+                        "installed": p.installed,
+                        "path": str(p.install_path) if p.install_path else None,
+                        "libraries": p.cell_libraries,
+                    }
+                    for p in pdks
+                ]
+            )
+        )
         return
 
     table = Table(title="OpenForge PDKs", show_header=True, header_style="bold cyan")
@@ -140,7 +144,9 @@ def install(
         else:
             console.print(f"[green bold]PDK {pdk_name} installed successfully![/]")
     else:
-        console.print("[red]PDK installation failed.[/] Check network connection and git availability.")
+        console.print(
+            "[red]PDK installation failed.[/] Check network connection and git availability."
+        )
         raise typer.Exit(code=1)
 
 
@@ -168,17 +174,23 @@ def info(
             if pdk_name in installer.KNOWN_PDKS:
                 inst_info = installer.KNOWN_PDKS[pdk_name]
                 if json_output:
-                    console.print(json_mod.dumps({
-                        "name": inst_info.name,
-                        "foundry": inst_info.foundry,
-                        "vendor": inst_info.vendor,
-                        "node_nm": inst_info.node_nm,
-                        "license": inst_info.license,
-                        "url": inst_info.sources_url,
-                        "supported_libs": inst_info.supported_libs,
-                    }))
+                    console.print(
+                        json_mod.dumps(
+                            {
+                                "name": inst_info.name,
+                                "foundry": inst_info.foundry,
+                                "vendor": inst_info.vendor,
+                                "node_nm": inst_info.node_nm,
+                                "license": inst_info.license,
+                                "url": inst_info.sources_url,
+                                "supported_libs": inst_info.supported_libs,
+                            }
+                        )
+                    )
                 else:
-                    table = Table(title=f"PDK: {pdk_name}", show_header=True, header_style="bold cyan")
+                    table = Table(
+                        title=f"PDK: {pdk_name}", show_header=True, header_style="bold cyan"
+                    )
                     table.add_column("Property", style="bold")
                     table.add_column("Value")
                     table.add_row("Name", inst_info.name)
@@ -197,22 +209,33 @@ def info(
         raise typer.Exit(code=1)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "name": pdk_info.name,
-            "display_name": pdk_info.display_name,
-            "foundry": pdk_info.foundry,
-            "node_nm": pdk_info.process_node_nm,
-            "installed": pdk_info.installed,
-            "install_path": str(pdk_info.install_path) if pdk_info.install_path else None,
-            "libraries": pdk_info.cell_libraries,
-            "tech_lef": str(pdk_info.tech_lef) if pdk_info.tech_lef else None,
-            "merged_lef": str(pdk_info.merged_lef) if pdk_info.merged_lef else None,
-            "corners": {
-                lib: [{"name": c.name, "process": c.process, "temp": c.temperature, "voltage": c.voltage}
-                      for c in corners]
-                for lib, corners in pdk_info.corners.items()
-            },
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "name": pdk_info.name,
+                    "display_name": pdk_info.display_name,
+                    "foundry": pdk_info.foundry,
+                    "node_nm": pdk_info.process_node_nm,
+                    "installed": pdk_info.installed,
+                    "install_path": str(pdk_info.install_path) if pdk_info.install_path else None,
+                    "libraries": pdk_info.cell_libraries,
+                    "tech_lef": str(pdk_info.tech_lef) if pdk_info.tech_lef else None,
+                    "merged_lef": str(pdk_info.merged_lef) if pdk_info.merged_lef else None,
+                    "corners": {
+                        lib: [
+                            {
+                                "name": c.name,
+                                "process": c.process,
+                                "temp": c.temperature,
+                                "voltage": c.voltage,
+                            }
+                            for c in corners
+                        ]
+                        for lib, corners in pdk_info.corners.items()
+                    },
+                }
+            )
+        )
         return
 
     table = Table(title=f"PDK: {pdk_info.display_name}", show_header=True, header_style="bold cyan")
@@ -248,6 +271,8 @@ def info(
             corner_table.add_column("Voltage", justify="right")
 
             for c in corners:
-                corner_table.add_row(c.name, c.process, f"{c.temperature:.0f} C", f"{c.voltage:.2f} V")
+                corner_table.add_row(
+                    c.name, c.process, f"{c.temperature:.0f} C", f"{c.voltage:.2f} V"
+                )
 
             console.print(corner_table)

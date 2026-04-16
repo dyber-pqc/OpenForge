@@ -77,7 +77,11 @@ _ALT_ROW: Final[str] = "#1a1a2e"
 
 # Synthesis progress stages
 _SYNTH_STAGES: Final[list[str]] = [
-    "Read", "Elaborate", "Map", "Optimize", "Write",
+    "Read",
+    "Elaborate",
+    "Map",
+    "Optimize",
+    "Write",
 ]
 
 # ── Shared helpers ──────────────────────────────────────────────────────────
@@ -197,7 +201,9 @@ class _PieChartWidget(QWidget):
 class _BarColumnWidget(QWidget):
     """Horizontal bar for use in a table cell."""
 
-    def __init__(self, value: float, max_value: float, color: str, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, value: float, max_value: float, color: str, parent: QWidget | None = None
+    ) -> None:
         super().__init__(parent)
         self._value = value
         self._max = max_value
@@ -294,19 +300,26 @@ class _SynthProgressWidget(QWidget):
             # Checkmark or number
             painter.setPen(QColor(_CRUST))
             if i in self._completed:
-                painter.drawText(QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
-                                 Qt.AlignmentFlag.AlignCenter, "\u2713")
+                painter.drawText(
+                    QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
+                    Qt.AlignmentFlag.AlignCenter,
+                    "\u2713",
+                )
             else:
-                painter.drawText(QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
-                                 Qt.AlignmentFlag.AlignCenter, str(i + 1))
+                painter.drawText(
+                    QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
+                    Qt.AlignmentFlag.AlignCenter,
+                    str(i + 1),
+                )
 
             # Label below
             painter.setPen(QColor(_SUBTEXT if i != self._current_stage else _TEXT))
             font2 = QFont()
             font2.setPointSize(7)
             painter.setFont(font2)
-            painter.drawText(QRectF(cx - 30, cy + node_r + 2, 60, 20),
-                             Qt.AlignmentFlag.AlignCenter, label)
+            painter.drawText(
+                QRectF(cx - 30, cy + node_r + 2, 60, 20), Qt.AlignmentFlag.AlignCenter, label
+            )
             painter.setFont(font)
 
 
@@ -358,8 +371,12 @@ class _SummaryTab(QWidget):
         self._res_table.setHorizontalHeaderLabels(["Cell Type", "Count", "Area (um\u00b2)", ""])
         _configure_table(self._res_table)
         self._res_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self._res_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        self._res_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self._res_table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self._res_table.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeMode.ResizeToContents
+        )
         self._res_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         self._res_table.setColumnWidth(3, 120)
         tc_layout.addWidget(self._res_table)
@@ -450,9 +467,16 @@ class _CellUsageTab(QWidget):
 
         # Detail table
         self._table = QTableWidget(0, 6)
-        self._table.setHorizontalHeaderLabels([
-            "Cell Name", "Count", "Area (um\u00b2)", "Leakage (nW)", "Function", "Library",
-        ])
+        self._table.setHorizontalHeaderLabels(
+            [
+                "Cell Name",
+                "Count",
+                "Area (um\u00b2)",
+                "Leakage (nW)",
+                "Function",
+                "Library",
+            ]
+        )
         _configure_table(self._table)
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         root.addWidget(self._table)
@@ -529,9 +553,11 @@ class _CellBarChart(QWidget):
             y = 4 + i * row_h
             # Label
             painter.setPen(QColor(_SUBTEXT))
-            painter.drawText(QRectF(2, y, label_w - 4, row_h),
-                             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                             name[:14])
+            painter.drawText(
+                QRectF(2, y, label_w - 4, row_h),
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                name[:14],
+            )
             # Bar
             ratio = count / max_val
             bar_w = int(bar_area * ratio)
@@ -540,9 +566,11 @@ class _CellBarChart(QWidget):
             painter.drawRoundedRect(QRectF(label_w, y + 2, bar_w, row_h - 4), 2, 2)
             # Count label
             painter.setPen(QColor(_TEXT))
-            painter.drawText(QRectF(label_w + bar_w + 4, y, 60, row_h),
-                             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                             f"{count:,}")
+            painter.drawText(
+                QRectF(label_w + bar_w + 4, y, 60, row_h),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                f"{count:,}",
+            )
 
 
 # ── Hierarchy Tab ───────────────────────────────────────────────────────────
@@ -656,7 +684,9 @@ class _MessagesTab(QWidget):
         self._lbl_errors = QLabel("0 errors")
         self._lbl_errors.setStyleSheet(f"color: {_CLR_RED}; font-weight: bold; font-size: 12px;")
         self._lbl_warnings = QLabel("0 warnings")
-        self._lbl_warnings.setStyleSheet(f"color: {_CLR_YELLOW}; font-weight: bold; font-size: 12px;")
+        self._lbl_warnings.setStyleSheet(
+            f"color: {_CLR_YELLOW}; font-weight: bold; font-size: 12px;"
+        )
         filter_row.addWidget(self._lbl_errors)
         filter_row.addWidget(self._lbl_warnings)
 
@@ -666,10 +696,16 @@ class _MessagesTab(QWidget):
         self._table = QTableWidget(0, 4)
         self._table.setHorizontalHeaderLabels(["Severity", "Code", "Message", "Location"])
         _configure_table(self._table)
-        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        self._table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self._table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.ResizeToContents
+        )
         self._table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self._table.horizontalHeader().setSectionResizeMode(
+            3, QHeaderView.ResizeMode.ResizeToContents
+        )
         self._table.doubleClicked.connect(self._on_double_click)
         root.addWidget(self._table)
 
@@ -868,8 +904,7 @@ class _SchematicTab(QWidget):
         else:
             self.view = None
             label = QLabel(
-                "SchematicView is not available.\n"
-                "Run synthesis to generate a Yosys JSON netlist."
+                "SchematicView is not available.\nRun synthesis to generate a Yosys JSON netlist."
             )
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setStyleSheet(f"color: {_SUBTEXT}; padding: 24px;")
@@ -1048,6 +1083,7 @@ class SynthesisPanel(QDockWidget):
 
         # Wrap each tab in a QScrollArea so content scrolls when dock is short
         from PySide6.QtWidgets import QScrollArea
+
         def _scrollable(widget: QWidget) -> QScrollArea:
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)
@@ -1070,6 +1106,7 @@ class SynthesisPanel(QDockWidget):
     def set_theme(self, dark: bool) -> None:
         """Switch panel QSS between dark and light themes."""
         from openforge_desktop.panels._theme import panel_tab_qss
+
         self._tabs.setStyleSheet(panel_tab_qss(dark))
 
     @property
@@ -1171,7 +1208,12 @@ class SynthesisPanel(QDockWidget):
 
         # Build resource summary
         resources = [
-            {"type": "Total Gates", "count": result.gate_count, "area": result.area_um2, "color": _CLR_BLUE},
+            {
+                "type": "Total Gates",
+                "count": result.gate_count,
+                "area": result.area_um2,
+                "color": _CLR_BLUE,
+            },
         ]
 
         # Estimate timing target from timing estimate
@@ -1184,7 +1226,9 @@ class SynthesisPanel(QDockWidget):
         # Collect messages from warnings/errors
         messages = []
         for w in result.warnings:
-            messages.append({"severity": "Warning", "code": "", "message": w, "file": "", "line": 0})
+            messages.append(
+                {"severity": "Warning", "code": "", "message": w, "file": "", "line": 0}
+            )
         for e in result.errors:
             messages.append({"severity": "Error", "code": "", "message": e, "file": "", "line": 0})
 
@@ -1200,67 +1244,222 @@ class SynthesisPanel(QDockWidget):
 
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""
-        self.update_results({
-            "target_mhz": 200.0,
-            "wns_ns": 0.342,
-            "stage": "complete",
-            "resources": [
-                {"type": "Flip-Flops", "count": 4256, "area": 12768.0, "color": _CLR_TEAL},
-                {"type": "LUTs / Gates", "count": 8192, "area": 24576.0, "color": _CLR_BLUE},
-                {"type": "Memory Bits", "count": 32768, "area": 8192.0, "color": _CLR_MAUVE},
-                {"type": "DSP Blocks", "count": 16, "area": 4800.0, "color": _CLR_PEACH},
-                {"type": "I/O Pads", "count": 128, "area": 3840.0, "color": _CLR_GREEN},
-            ],
-            "cells": [
-                {"name": "sky130_fd_sc_hd__inv_1", "count": 1024, "area": 1.44, "leakage": 0.12, "function": "Y=!A", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__nand2_1", "count": 892, "area": 2.88, "leakage": 0.18, "function": "Y=!(A&B)", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__dfxtp_1", "count": 768, "area": 7.20, "leakage": 0.42, "function": "DFF", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__nor2_1", "count": 645, "area": 2.88, "leakage": 0.15, "function": "Y=!(A|B)", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__mux2_1", "count": 512, "area": 5.76, "leakage": 0.28, "function": "MUX", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__buf_2", "count": 384, "area": 2.88, "leakage": 0.10, "function": "Y=A", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__and2_1", "count": 256, "area": 2.88, "leakage": 0.16, "function": "Y=A&B", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__or2_1", "count": 198, "area": 2.88, "leakage": 0.14, "function": "Y=A|B", "library": "sky130"},
-                {"name": "sky130_fd_sc_hd__xor2_1", "count": 128, "area": 5.76, "leakage": 0.32, "function": "Y=A^B", "library": "sky130"},
-            ],
-            "hierarchy": [
-                {"name": "top", "cells": 8192, "ffs": 4256, "area": 54176.0, "children": [
-                    {"name": "cpu_core", "cells": 4096, "ffs": 2048, "area": 28800.0, "children": [
-                        {"name": "alu", "cells": 1024, "ffs": 128, "area": 7200.0, "children": []},
-                        {"name": "register_file", "cells": 1536, "ffs": 1024, "area": 10800.0, "children": []},
-                        {"name": "control", "cells": 512, "ffs": 256, "area": 3600.0, "children": []},
-                        {"name": "decoder", "cells": 1024, "ffs": 640, "area": 7200.0, "children": []},
-                    ]},
-                    {"name": "cache", "cells": 2048, "ffs": 1024, "area": 14400.0, "children": [
-                        {"name": "tag_ram", "cells": 512, "ffs": 256, "area": 3600.0, "children": []},
-                        {"name": "data_ram", "cells": 1536, "ffs": 768, "area": 10800.0, "children": []},
-                    ]},
-                    {"name": "bus_interface", "cells": 2048, "ffs": 1184, "area": 10976.0, "children": []},
-                ]},
-            ],
-            "total_area": 54176.0,
-            "messages": [
-                {"severity": "warning", "code": "SYNTH-4", "message": "Signal 'data_in[7:0]' is unconnected.", "file": "cpu_core.v", "line": 42},
-                {"severity": "warning", "code": "SYNTH-6", "message": "Latch inferred for 'state_reg'.", "file": "control.v", "line": 87},
-                {"severity": "error", "code": "SYNTH-1", "message": "Multi-driven net 'clk_div' detected.", "file": "top.v", "line": 15},
-                {"severity": "info", "code": "SYNTH-99", "message": "Synthesis completed in 4.2 seconds.", "file": "", "line": 0},
-                {"severity": "warning", "code": "SYNTH-12", "message": "Black-box module 'pll' has no definition.", "file": "top.v", "line": 8},
-            ],
-            "netlist": {
+        self.update_results(
+            {
+                "target_mhz": 200.0,
+                "wns_ns": 0.342,
+                "stage": "complete",
+                "resources": [
+                    {"type": "Flip-Flops", "count": 4256, "area": 12768.0, "color": _CLR_TEAL},
+                    {"type": "LUTs / Gates", "count": 8192, "area": 24576.0, "color": _CLR_BLUE},
+                    {"type": "Memory Bits", "count": 32768, "area": 8192.0, "color": _CLR_MAUVE},
+                    {"type": "DSP Blocks", "count": 16, "area": 4800.0, "color": _CLR_PEACH},
+                    {"type": "I/O Pads", "count": 128, "area": 3840.0, "color": _CLR_GREEN},
+                ],
                 "cells": [
-                    {"name": "clk_buf", "type": "BUF", "x": 0, "y": 60, "w": 70, "h": 40},
-                    {"name": "and_0", "type": "AND", "x": 120, "y": 0, "w": 70, "h": 40},
-                    {"name": "or_0", "type": "OR", "x": 120, "y": 80, "w": 70, "h": 40},
-                    {"name": "mux_0", "type": "MUX", "x": 240, "y": 40, "w": 70, "h": 50},
-                    {"name": "ff_0", "type": "DFF", "x": 360, "y": 45, "w": 70, "h": 40},
-                    {"name": "out", "type": "OUTPUT", "x": 480, "y": 50, "w": 60, "h": 30},
+                    {
+                        "name": "sky130_fd_sc_hd__inv_1",
+                        "count": 1024,
+                        "area": 1.44,
+                        "leakage": 0.12,
+                        "function": "Y=!A",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__nand2_1",
+                        "count": 892,
+                        "area": 2.88,
+                        "leakage": 0.18,
+                        "function": "Y=!(A&B)",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__dfxtp_1",
+                        "count": 768,
+                        "area": 7.20,
+                        "leakage": 0.42,
+                        "function": "DFF",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__nor2_1",
+                        "count": 645,
+                        "area": 2.88,
+                        "leakage": 0.15,
+                        "function": "Y=!(A|B)",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__mux2_1",
+                        "count": 512,
+                        "area": 5.76,
+                        "leakage": 0.28,
+                        "function": "MUX",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__buf_2",
+                        "count": 384,
+                        "area": 2.88,
+                        "leakage": 0.10,
+                        "function": "Y=A",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__and2_1",
+                        "count": 256,
+                        "area": 2.88,
+                        "leakage": 0.16,
+                        "function": "Y=A&B",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__or2_1",
+                        "count": 198,
+                        "area": 2.88,
+                        "leakage": 0.14,
+                        "function": "Y=A|B",
+                        "library": "sky130",
+                    },
+                    {
+                        "name": "sky130_fd_sc_hd__xor2_1",
+                        "count": 128,
+                        "area": 5.76,
+                        "leakage": 0.32,
+                        "function": "Y=A^B",
+                        "library": "sky130",
+                    },
                 ],
-                "nets": [
-                    {"from": "clk_buf", "to": "and_0"},
-                    {"from": "clk_buf", "to": "or_0"},
-                    {"from": "and_0", "to": "mux_0"},
-                    {"from": "or_0", "to": "mux_0"},
-                    {"from": "mux_0", "to": "ff_0"},
-                    {"from": "ff_0", "to": "out"},
+                "hierarchy": [
+                    {
+                        "name": "top",
+                        "cells": 8192,
+                        "ffs": 4256,
+                        "area": 54176.0,
+                        "children": [
+                            {
+                                "name": "cpu_core",
+                                "cells": 4096,
+                                "ffs": 2048,
+                                "area": 28800.0,
+                                "children": [
+                                    {
+                                        "name": "alu",
+                                        "cells": 1024,
+                                        "ffs": 128,
+                                        "area": 7200.0,
+                                        "children": [],
+                                    },
+                                    {
+                                        "name": "register_file",
+                                        "cells": 1536,
+                                        "ffs": 1024,
+                                        "area": 10800.0,
+                                        "children": [],
+                                    },
+                                    {
+                                        "name": "control",
+                                        "cells": 512,
+                                        "ffs": 256,
+                                        "area": 3600.0,
+                                        "children": [],
+                                    },
+                                    {
+                                        "name": "decoder",
+                                        "cells": 1024,
+                                        "ffs": 640,
+                                        "area": 7200.0,
+                                        "children": [],
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "cache",
+                                "cells": 2048,
+                                "ffs": 1024,
+                                "area": 14400.0,
+                                "children": [
+                                    {
+                                        "name": "tag_ram",
+                                        "cells": 512,
+                                        "ffs": 256,
+                                        "area": 3600.0,
+                                        "children": [],
+                                    },
+                                    {
+                                        "name": "data_ram",
+                                        "cells": 1536,
+                                        "ffs": 768,
+                                        "area": 10800.0,
+                                        "children": [],
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "bus_interface",
+                                "cells": 2048,
+                                "ffs": 1184,
+                                "area": 10976.0,
+                                "children": [],
+                            },
+                        ],
+                    },
                 ],
-            },
-        })
+                "total_area": 54176.0,
+                "messages": [
+                    {
+                        "severity": "warning",
+                        "code": "SYNTH-4",
+                        "message": "Signal 'data_in[7:0]' is unconnected.",
+                        "file": "cpu_core.v",
+                        "line": 42,
+                    },
+                    {
+                        "severity": "warning",
+                        "code": "SYNTH-6",
+                        "message": "Latch inferred for 'state_reg'.",
+                        "file": "control.v",
+                        "line": 87,
+                    },
+                    {
+                        "severity": "error",
+                        "code": "SYNTH-1",
+                        "message": "Multi-driven net 'clk_div' detected.",
+                        "file": "top.v",
+                        "line": 15,
+                    },
+                    {
+                        "severity": "info",
+                        "code": "SYNTH-99",
+                        "message": "Synthesis completed in 4.2 seconds.",
+                        "file": "",
+                        "line": 0,
+                    },
+                    {
+                        "severity": "warning",
+                        "code": "SYNTH-12",
+                        "message": "Black-box module 'pll' has no definition.",
+                        "file": "top.v",
+                        "line": 8,
+                    },
+                ],
+                "netlist": {
+                    "cells": [
+                        {"name": "clk_buf", "type": "BUF", "x": 0, "y": 60, "w": 70, "h": 40},
+                        {"name": "and_0", "type": "AND", "x": 120, "y": 0, "w": 70, "h": 40},
+                        {"name": "or_0", "type": "OR", "x": 120, "y": 80, "w": 70, "h": 40},
+                        {"name": "mux_0", "type": "MUX", "x": 240, "y": 40, "w": 70, "h": 50},
+                        {"name": "ff_0", "type": "DFF", "x": 360, "y": 45, "w": 70, "h": 40},
+                        {"name": "out", "type": "OUTPUT", "x": 480, "y": 50, "w": 60, "h": 30},
+                    ],
+                    "nets": [
+                        {"from": "clk_buf", "to": "and_0"},
+                        {"from": "clk_buf", "to": "or_0"},
+                        {"from": "and_0", "to": "mux_0"},
+                        {"from": "or_0", "to": "mux_0"},
+                        {"from": "mux_0", "to": "ff_0"},
+                        {"from": "ff_0", "to": "out"},
+                    ],
+                },
+            }
+        )

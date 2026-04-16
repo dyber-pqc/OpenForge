@@ -1,4 +1,5 @@
 """Clock tree synthesis visualization panel with useful-skew display."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -98,9 +99,7 @@ class _SkewHistogram(QWidget):
         painter.fillRect(self.rect(), QColor(20, 20, 20))
         if not self._values:
             painter.setPen(QColor(180, 180, 180))
-            painter.drawText(
-                rect, Qt.AlignmentFlag.AlignCenter, "(no data)"
-            )
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, "(no data)")
             return
 
         lo = min(self._values)
@@ -238,12 +237,8 @@ class CtsAdvancedPanel(QDockWidget):
         self.scene.setBackgroundBrush(QBrush(QColor(25, 25, 35)))
         self.view = QGraphicsView(self.scene, container)
         self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
-        self.view.setDragMode(
-            QGraphicsView.DragMode.ScrollHandDrag
-        )
-        self.view.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         layout.addWidget(self.view)
         return container
 
@@ -283,16 +278,10 @@ class CtsAdvancedPanel(QDockWidget):
         sinks_group = QGroupBox("Sinks", container)
         sinks_layout = QVBoxLayout(sinks_group)
         self.sink_table = QTableWidget(0, 3, sinks_group)
-        self.sink_table.setHorizontalHeaderLabels(
-            ["Sink", "Skew (ps)", "Level"]
-        )
-        self.sink_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.sink_table.setHorizontalHeaderLabels(["Sink", "Skew (ps)", "Level"])
+        self.sink_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.sink_table.setAlternatingRowColors(True)
-        self.sink_table.setEditTriggers(
-            QTableWidget.EditTrigger.NoEditTriggers
-        )
+        self.sink_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.sink_table.itemSelectionChanged.connect(self._on_sink_selected)
         sinks_layout.addWidget(self.sink_table)
         layout.addWidget(sinks_group, 1)
@@ -342,10 +331,7 @@ class CtsAdvancedPanel(QDockWidget):
         row = next(iter(rows))
         if 0 <= row < len(self._sinks):
             sink = self._sinks[row]
-            self.status_label.setText(
-                f"{sink.name}: skew={sink.skew_ps:.2f} ps "
-                f"level={sink.level}"
-            )
+            self.status_label.setText(f"{sink.name}: skew={sink.skew_ps:.2f} ps level={sink.level}")
 
     # ------------------------------------------------------------------
     # Public API
@@ -357,19 +343,11 @@ class CtsAdvancedPanel(QDockWidget):
         self.progress.setRange(0, 100)
         self.progress.setValue(100)
         self.stat_buffers.setText(str(getattr(result, "num_buffers", 0)))
-        self.stat_max_skew.setText(
-            f"{getattr(result, 'max_skew_ps', 0.0):.1f} ps"
-        )
-        self.stat_avg_skew.setText(
-            f"{getattr(result, 'avg_skew_ps', 0.0):.1f} ps"
-        )
-        self.stat_wirelength.setText(
-            f"{getattr(result, 'wirelength_um', 0.0):.0f} um"
-        )
+        self.stat_max_skew.setText(f"{getattr(result, 'max_skew_ps', 0.0):.1f} ps")
+        self.stat_avg_skew.setText(f"{getattr(result, 'avg_skew_ps', 0.0):.1f} ps")
+        self.stat_wirelength.setText(f"{getattr(result, 'wirelength_um', 0.0):.0f} um")
         self.stat_levels.setText(str(getattr(result, "levels", 0)))
-        self.stat_savings.setText(
-            f"{getattr(result, 'skew_savings_ps', 0.0):.1f} ps"
-        )
+        self.stat_savings.setText(f"{getattr(result, 'skew_savings_ps', 0.0):.1f} ps")
 
         sinks_raw = list(getattr(result, "sinks", []) or [])
         self._sinks = []
@@ -398,9 +376,7 @@ class CtsAdvancedPanel(QDockWidget):
             self.sink_table.setItem(row, 0, QTableWidgetItem(sink.name))
             skew_item = QTableWidgetItem(f"{sink.skew_ps:.1f}")
             skew_item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
-            max_abs = max(
-                (abs(s.skew_ps) for s in self._sinks), default=1.0
-            )
+            max_abs = max((abs(s.skew_ps) for s in self._sinks), default=1.0)
             skew_item.setBackground(_skew_color(sink.skew_ps, max_abs))
             self.sink_table.setItem(row, 1, skew_item)
             self.sink_table.setItem(row, 2, QTableWidgetItem(str(sink.level)))
@@ -411,9 +387,7 @@ class CtsAdvancedPanel(QDockWidget):
     def _redraw_scene(self) -> None:
         self.scene.clear()
         if not self._sinks:
-            item = self.scene.addText(
-                "No clock tree loaded. Click 'Run CTS' to synthesize."
-            )
+            item = self.scene.addText("No clock tree loaded. Click 'Run CTS' to synthesize.")
             item.setDefaultTextColor(QColor(180, 180, 180))
             return
         if self._view_mode == self.VIEW_LAYOUT:
@@ -432,9 +406,7 @@ class CtsAdvancedPanel(QDockWidget):
         w = 600.0
         h = 400.0
         # Bounding rect
-        self.scene.addRect(
-            0, 0, w, h, QPen(QColor(80, 80, 120)), QBrush(QColor(15, 15, 25))
-        )
+        self.scene.addRect(0, 0, w, h, QPen(QColor(80, 80, 120)), QBrush(QColor(15, 15, 25)))
         root_x = w / 2
         root_y = 20
         root = QGraphicsRectItem(root_x - 12, root_y - 8, 24, 16)
@@ -449,9 +421,7 @@ class CtsAdvancedPanel(QDockWidget):
             dot = QGraphicsEllipseItem(sx - 4, sy - 4, 8, 8)
             dot.setBrush(QBrush(color))
             dot.setPen(QPen(QColor(0, 0, 0)))
-            dot.setToolTip(
-                f"{sink.name}\nskew={sink.skew_ps:.2f} ps"
-            )
+            dot.setToolTip(f"{sink.name}\nskew={sink.skew_ps:.2f} ps")
             self.scene.addItem(dot)
             # Line from root to sink
             line = QGraphicsLineItem(root_x, root_y + 8, sx, sy)
@@ -470,9 +440,7 @@ class CtsAdvancedPanel(QDockWidget):
         # Rough H-tree: distribute sinks evenly across the bottom.
         w = max(600.0, 20.0 * n)
         h = 420.0
-        self.scene.addRect(
-            0, 0, w, h, QPen(QColor(80, 80, 120)), QBrush(QColor(15, 15, 25))
-        )
+        self.scene.addRect(0, 0, w, h, QPen(QColor(80, 80, 120)), QBrush(QColor(15, 15, 25)))
         root_x = w / 2
         root_y = 20
         mid_y = h / 2
@@ -509,13 +477,9 @@ class CtsAdvancedPanel(QDockWidget):
             dot = QGraphicsEllipseItem(sx - 5, bottom_y - 5, 10, 10)
             dot.setBrush(QBrush(color))
             dot.setPen(QPen(QColor(0, 0, 0)))
-            dot.setToolTip(
-                f"{sink.name}\nskew={sink.skew_ps:.2f} ps\nlevel={sink.level}"
-            )
+            dot.setToolTip(f"{sink.name}\nskew={sink.skew_ps:.2f} ps\nlevel={sink.level}")
             self.scene.addItem(dot)
-            line = QGraphicsLineItem(
-                parent.x(), parent.y() + 6, sx, bottom_y - 5
-            )
+            line = QGraphicsLineItem(parent.x(), parent.y() + 6, sx, bottom_y - 5)
             line.setPen(QPen(QColor(140, 140, 180), 0.7))
             self.scene.addItem(line)
 

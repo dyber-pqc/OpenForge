@@ -54,11 +54,11 @@ def panel_tab_qss(dark: bool, *, extra: str = "") -> str:
     return f"""
         QTabWidget::pane {{
             border: none;
-            background-color: {p['bg']};
+            background-color: {p["bg"]};
         }}
         QTabBar::tab {{
-            background-color: {p['surface0']};
-            color: {p['subtext']};
+            background-color: {p["surface0"]};
+            color: {p["subtext"]};
             border: none;
             padding: 6px 16px;
             font-size: 11px;
@@ -66,23 +66,23 @@ def panel_tab_qss(dark: bool, *, extra: str = "") -> str:
             min-width: 60px;
         }}
         QTabBar::tab:selected {{
-            background-color: {p['bg']};
-            color: {p['text']};
-            border-bottom: 2px solid {p['blue']};
+            background-color: {p["bg"]};
+            color: {p["text"]};
+            border-bottom: 2px solid {p["blue"]};
         }}
         QTabBar::tab:hover:!selected {{
-            background-color: {p['surface1']};
-            color: {p['text']};
+            background-color: {p["surface1"]};
+            color: {p["text"]};
         }}
         QGroupBox {{
-            background-color: {p['mantle']};
-            border: 1px solid {p['surface0']};
+            background-color: {p["mantle"]};
+            border: 1px solid {p["surface0"]};
             border-radius: 4px;
             margin-top: 14px;
             padding: 10px 8px 8px 8px;
             font-size: 11px;
             font-weight: bold;
-            color: {p['blue']};
+            color: {p["blue"]};
         }}
         QGroupBox::title {{
             subcontrol-origin: margin;
@@ -90,103 +90,103 @@ def panel_tab_qss(dark: bool, *, extra: str = "") -> str:
             padding: 2px 8px;
         }}
         QPushButton {{
-            background-color: {p['surface0']};
-            color: {p['text']};
-            border: 1px solid {p['surface1']};
+            background-color: {p["surface0"]};
+            color: {p["text"]};
+            border: 1px solid {p["surface1"]};
             border-radius: 4px;
             padding: 4px 12px;
             font-size: 11px;
         }}
         QPushButton:hover {{
-            background-color: {p['surface1']};
-            border-color: {p['blue']};
+            background-color: {p["surface1"]};
+            border-color: {p["blue"]};
         }}
         QPushButton:pressed {{
-            background-color: {p['surface2']};
+            background-color: {p["surface2"]};
         }}
         QPushButton:checked {{
-            background-color: {p['blue']};
-            color: {p['crust']};
-            border-color: {p['blue']};
+            background-color: {p["blue"]};
+            color: {p["crust"]};
+            border-color: {p["blue"]};
         }}
         QPushButton:disabled {{
-            background-color: {p['crust']};
-            color: {p['surface1']};
-            border-color: {p['surface0']};
+            background-color: {p["crust"]};
+            color: {p["surface1"]};
+            border-color: {p["surface0"]};
         }}
         QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {{
-            background-color: {p['surface0']};
-            color: {p['text']};
-            border: 1px solid {p['surface1']};
+            background-color: {p["surface0"]};
+            color: {p["text"]};
+            border: 1px solid {p["surface1"]};
             border-radius: 3px;
             padding: 3px 6px;
             font-size: 11px;
         }}
         QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
-            border-color: {p['blue']};
+            border-color: {p["blue"]};
         }}
         QComboBox::drop-down {{
             border: none;
             width: 20px;
         }}
         QComboBox QAbstractItemView {{
-            background-color: {p['surface0']};
-            color: {p['text']};
-            selection-background-color: {p['surface1']};
-            border: 1px solid {p['surface1']};
+            background-color: {p["surface0"]};
+            color: {p["text"]};
+            selection-background-color: {p["surface1"]};
+            border: 1px solid {p["surface1"]};
         }}
         QLabel {{
-            color: {p['text']};
+            color: {p["text"]};
             font-size: 11px;
         }}
         QProgressBar {{
-            background-color: {p['surface0']};
+            background-color: {p["surface0"]};
             border: none;
             border-radius: 3px;
             text-align: center;
-            color: {p['text']};
+            color: {p["text"]};
             font-size: 10px;
             max-height: 18px;
         }}
         QProgressBar::chunk {{
-            background-color: {p['blue']};
+            background-color: {p["blue"]};
             border-radius: 3px;
         }}
         QSlider::groove:horizontal {{
-            background: {p['surface0']};
+            background: {p["surface0"]};
             height: 6px;
             border-radius: 3px;
         }}
         QSlider::handle:horizontal {{
-            background: {p['blue']};
+            background: {p["blue"]};
             width: 14px;
             margin: -4px 0;
             border-radius: 7px;
         }}
         QSlider::sub-page:horizontal {{
-            background: {p['blue']};
+            background: {p["blue"]};
             border-radius: 3px;
         }}
         QSplitter::handle {{
-            background-color: {p['surface0']};
+            background-color: {p["surface0"]};
             height: 2px;
             width: 2px;
         }}
         QHeaderView::section {{
-            background-color: {p['mantle']};
-            color: {p['subtext']};
+            background-color: {p["mantle"]};
+            color: {p["subtext"]};
             border: none;
-            border-right: 1px solid {p['surface0']};
-            border-bottom: 1px solid {p['surface0']};
+            border-right: 1px solid {p["surface0"]};
+            border-bottom: 1px solid {p["surface0"]};
             padding: 4px 6px;
             font-size: 11px;
             font-weight: bold;
         }}
         QTableWidget {{
-            alternate-background-color: {p['alt_row']};
+            alternate-background-color: {p["alt_row"]};
         }}
         QTreeWidget {{
-            alternate-background-color: {p['alt_row']};
+            alternate-background-color: {p["alt_row"]};
         }}
         {extra}
     """

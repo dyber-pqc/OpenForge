@@ -156,10 +156,12 @@ class DEFData:
 
     # Lookup caches (built lazily)
     _comp_index: dict[str, DEFComponent] = field(
-        default_factory=dict, repr=False,
+        default_factory=dict,
+        repr=False,
     )
     _net_index: dict[str, DEFNet] = field(
-        default_factory=dict, repr=False,
+        default_factory=dict,
+        repr=False,
     )
 
     def get_component(self, name: str) -> DEFComponent | None:
@@ -238,8 +240,12 @@ class DEFParser:
     def _is_section_start(line: str) -> bool:
         upper = line.split()[0].upper() if line.split() else ""
         return upper in (
-            "COMPONENTS", "PINS", "NETS", "SPECIALNETS",
-            "BLOCKAGES", "END",
+            "COMPONENTS",
+            "PINS",
+            "NETS",
+            "SPECIALNETS",
+            "BLOCKAGES",
+            "END",
         )
 
     def _dispatch(self, stmt: str, data: DEFData, f) -> None:
@@ -264,8 +270,10 @@ class DEFParser:
             nums = re.findall(r"-?\d+", stmt)
             if len(nums) >= 4:
                 data.die_area = (
-                    int(nums[0]), int(nums[1]),
-                    int(nums[2]), int(nums[3]),
+                    int(nums[0]),
+                    int(nums[1]),
+                    int(nums[2]),
+                    int(nums[3]),
                 )
 
         elif kw == "ROW":
@@ -439,7 +447,11 @@ class DEFParser:
         return pin
 
     def _parse_nets_section(
-        self, f, data: DEFData, *, is_special: bool,
+        self,
+        f,
+        data: DEFData,
+        *,
+        is_special: bool,
     ) -> None:
         """Parse NETS or SPECIALNETS section."""
         end_kw = "END SPECIALNETS" if is_special else "END NETS"
@@ -521,8 +533,20 @@ class DEFParser:
                         i += 1  # skip )
                         if len(pts) >= 2:
                             try:
-                                px = int(pts[0]) if pts[0] != "*" else seg.points[-1][0] if seg.points else 0
-                                py = int(pts[1]) if pts[1] != "*" else seg.points[-1][1] if seg.points else 0
+                                px = (
+                                    int(pts[0])
+                                    if pts[0] != "*"
+                                    else seg.points[-1][0]
+                                    if seg.points
+                                    else 0
+                                )
+                                py = (
+                                    int(pts[1])
+                                    if pts[1] != "*"
+                                    else seg.points[-1][1]
+                                    if seg.points
+                                    else 0
+                                )
                                 seg.points.append((px, py))
                             except (ValueError, IndexError):
                                 pass

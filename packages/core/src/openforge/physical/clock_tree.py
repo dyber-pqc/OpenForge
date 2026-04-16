@@ -4,6 +4,7 @@ Provides H-tree construction, k-means sink clustering, buffer insertion
 under fanout constraints, and a useful-skew optimizer that borrows time
 between setup- and hold-critical sinks.
 """
+
 from __future__ import annotations
 
 import math
@@ -70,9 +71,7 @@ class ClockTree:
         if not self.sinks:
             self.insertion_delay_ns = 0.0
             return 0.0
-        self.insertion_delay_ns = sum(s.arrival_ns for s in self.sinks) / len(
-            self.sinks
-        )
+        self.insertion_delay_ns = sum(s.arrival_ns for s in self.sinks) / len(self.sinks)
         return self.insertion_delay_ns
 
     def histogram(self, bins: int = 10) -> list[int]:
@@ -108,13 +107,9 @@ class ClockTreeOptimizer:
 
     # ---------- H-tree ----------
 
-    def build_h_tree(
-        self, sinks: list[ClockSink], root_x: float, root_y: float
-    ) -> ClockTree:
+    def build_h_tree(self, sinks: list[ClockSink], root_x: float, root_y: float) -> ClockTree:
         """Build a balanced H-tree clock distribution."""
-        tree = ClockTree(
-            name="clk", period_ns=10.0, root_pin="clk", sinks=list(sinks)
-        )
+        tree = ClockTree(name="clk", period_ns=10.0, root_pin="clk", sinks=list(sinks))
         if not sinks:
             return tree
         root = self._new_buffer(root_x, root_y, level=0)
@@ -233,9 +228,7 @@ class ClockTreeOptimizer:
 
     # ---------- buffer insertion ----------
 
-    def insert_buffers(
-        self, tree: ClockTree, max_fanout: int = 16
-    ) -> ClockTree:
+    def insert_buffers(self, tree: ClockTree, max_fanout: int = 16) -> ClockTree:
         """Split any buffer that exceeds max_fanout."""
         changed = True
         while changed:
@@ -321,13 +314,10 @@ class ClockTreeOptimizer:
         out: list[str] = []
         out.append(f"# OpenForge CTS - tree {tree.name}")
         out.append(
-            f"create_clock -name {tree.name} -period {tree.period_ns} "
-            f"[get_pins {tree.root_pin}]"
+            f"create_clock -name {tree.name} -period {tree.period_ns} [get_pins {tree.root_pin}]"
         )
         for b in tree.buffers:
-            out.append(
-                f"# place {b.instance} {b.cell_type} ({b.x:.2f}, {b.y:.2f})"
-            )
+            out.append(f"# place {b.instance} {b.cell_type} ({b.x:.2f}, {b.y:.2f})")
         out.append(f"set_clock_tree_options -target_skew {tree.target_skew_ps}ps")
         out.append("clock_tree_synthesis")
         return "\n".join(out) + "\n"

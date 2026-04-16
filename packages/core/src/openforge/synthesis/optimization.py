@@ -55,10 +55,7 @@ def generate_abc_script(
 
         case OptimizationPass.SPEED:
             delay_flag = f" -D {int(target_delay)}" if target_delay else ""
-            return (
-                f"strash; dch -f; map{delay_flag}; "
-                "topo; buffer -p; upsize -p; dnsize -p"
-            )
+            return f"strash; dch -f; map{delay_flag}; topo; buffer -p; upsize -p; dnsize -p"
 
         case OptimizationPass.BALANCED:
             return "strash; dch; map; topo; buffer"
@@ -172,7 +169,9 @@ def generate_synth_script(
 
     # ---- Stage 10: Statistics --------------------------------------------
     if lib:
-        lines.append(f"tee -o {(out / 'stats.txt').as_posix()} stat -liberty {Path(lib).as_posix()}")
+        lines.append(
+            f"tee -o {(out / 'stats.txt').as_posix()} stat -liberty {Path(lib).as_posix()}"
+        )
     else:
         lines.append(f"tee -o {(out / 'stats.txt').as_posix()} stat")
     lines.append("stat")

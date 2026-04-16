@@ -28,6 +28,7 @@ try:
         GlitchPowerAnalyzer,
         GlitchPowerResult,
     )
+
     _HAS_CORE = True
 except Exception:  # pragma: no cover
     GlitchPowerAnalyzer = None  # type: ignore[assignment]
@@ -37,12 +38,15 @@ except Exception:  # pragma: no cover
 try:
     from openforge_desktop.panels._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore[misc]
         return ""
+
 
 try:
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
     from matplotlib.figure import Figure
+
     _HAS_MPL = True
 except Exception:  # pragma: no cover
     FigureCanvasQTAgg = None  # type: ignore[assignment]
@@ -105,9 +109,7 @@ class GlitchPowerPanel(QWidget):
         table_box = QGroupBox("Top glitchy signals")
         tbl_layout = QVBoxLayout(table_box)
         self._table = QTableWidget(0, 3, self)
-        self._table.setHorizontalHeaderLabels(
-            ["Signal", "Glitches", "Energy (pJ)"]
-        )
+        self._table.setHorizontalHeaderLabels(["Signal", "Glitches", "Energy (pJ)"])
         self._table.horizontalHeader().setStretchLastSection(True)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         tbl_layout.addWidget(self._table)
@@ -140,9 +142,7 @@ class GlitchPowerPanel(QWidget):
     # --------------------------------------------------------------- slots
 
     def _on_load(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Open VCD", "", "VCD (*.vcd);;All Files (*)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Open VCD", "", "VCD (*.vcd);;All Files (*)")
         if path:
             self.load_vcd(path)
 
@@ -151,9 +151,7 @@ class GlitchPowerPanel(QWidget):
             self._summary.setText("No VCD loaded.")
             return
         try:
-            self._analyzer.detect_glitches(
-                min_pulse_width_ns=self._min_pulse.value()
-            )
+            self._analyzer.detect_glitches(min_pulse_width_ns=self._min_pulse.value())
             result = self._analyzer.estimate_power(vdd=self._vdd.value())
         except Exception as exc:  # pragma: no cover
             self._summary.setText(f"Analysis failed: {exc}")
@@ -161,7 +159,7 @@ class GlitchPowerPanel(QWidget):
         self._result = result
 
         self._summary.setText(
-            f"Glitch power: {result.total_glitch_power_mw*1000:.2f} µW   "
+            f"Glitch power: {result.total_glitch_power_mw * 1000:.2f} µW   "
             f"Glitches: {result.glitch_count}   "
             f"Energy: {result.total_energy_pj:.3f} pJ   "
             f"Duration: {result.simulation_duration_ns:.1f} ns"

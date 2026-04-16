@@ -17,9 +17,9 @@ from PySide6.QtWidgets import (
 )
 
 # Catppuccin Mocha accent colours for section headers
-_CLR_SECTION: Final[str] = "#89b4fa"   # blue
-_CLR_KEY: Final[str] = "#a6adc8"       # subtext0
-_CLR_VALUE: Final[str] = "#cdd6f4"     # text
+_CLR_SECTION: Final[str] = "#89b4fa"  # blue
+_CLR_KEY: Final[str] = "#a6adc8"  # subtext0
+_CLR_VALUE: Final[str] = "#cdd6f4"  # text
 _CLR_SECTION_BG: Final[str] = "#181825"  # mantle
 
 
@@ -45,9 +45,7 @@ def _key_item(text: str) -> QTableWidgetItem:
 def _value_item(text: str) -> QTableWidgetItem:
     item = QTableWidgetItem(text)
     item.setFlags(
-        Qt.ItemFlag.ItemIsEnabled
-        | Qt.ItemFlag.ItemIsSelectable
-        | Qt.ItemFlag.ItemIsEditable
+        Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
     )
     item.setForeground(QColor(_CLR_VALUE))
     return item

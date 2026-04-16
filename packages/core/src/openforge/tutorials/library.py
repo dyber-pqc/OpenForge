@@ -110,14 +110,43 @@ _FPGA_UART_ECP5 = Tutorial(
     difficulty="beginner",
     prerequisites=["yosys", "nextpnr-ecp5", "ecppack", "openFPGALoader"],
     steps=[
-        TutorialStep(title="New ECP5 project", content="File > New Project > **ECP5 FPGA** > ULX3S 85F preset."),
-        TutorialStep(title="Import UART core", content="Right-click `rtl/`, choose **Import IP**, and pick the `uart_tx` / `uart_rx` pair from the IP catalog."),
-        TutorialStep(title="Wire top module", content="Edit `top.v` to wire RX directly to TX through a 16-byte FIFO."),
-        TutorialStep(title="Constraints", content="Open `ulx3s_v20.lpf` and verify `LOCATE COMP \"rx\"` and `LOCATE COMP \"tx\"` are on the USB-UART pins."),
-        TutorialStep(title="Synthesize", content="Click **Synthesize**. Inspect the generated `synth.json`.", target_panel="synthesis", action="click"),
-        TutorialStep(title="Place and route", content="Click **Place & Route**. nextpnr-ecp5 will target `LFE5U-85F` at 25 MHz.", target_panel="physical", action="click"),
-        TutorialStep(title="Pack bitstream", content="`ecppack` emits `top.bit`. Verify in Reports.", target_panel="reports"),
-        TutorialStep(title="Program and test", content="Click **Program** then open a terminal at 115200 8N1 on the USB port. Anything you type should echo back."),
+        TutorialStep(
+            title="New ECP5 project",
+            content="File > New Project > **ECP5 FPGA** > ULX3S 85F preset.",
+        ),
+        TutorialStep(
+            title="Import UART core",
+            content="Right-click `rtl/`, choose **Import IP**, and pick the `uart_tx` / `uart_rx` pair from the IP catalog.",
+        ),
+        TutorialStep(
+            title="Wire top module",
+            content="Edit `top.v` to wire RX directly to TX through a 16-byte FIFO.",
+        ),
+        TutorialStep(
+            title="Constraints",
+            content='Open `ulx3s_v20.lpf` and verify `LOCATE COMP "rx"` and `LOCATE COMP "tx"` are on the USB-UART pins.',
+        ),
+        TutorialStep(
+            title="Synthesize",
+            content="Click **Synthesize**. Inspect the generated `synth.json`.",
+            target_panel="synthesis",
+            action="click",
+        ),
+        TutorialStep(
+            title="Place and route",
+            content="Click **Place & Route**. nextpnr-ecp5 will target `LFE5U-85F` at 25 MHz.",
+            target_panel="physical",
+            action="click",
+        ),
+        TutorialStep(
+            title="Pack bitstream",
+            content="`ecppack` emits `top.bit`. Verify in Reports.",
+            target_panel="reports",
+        ),
+        TutorialStep(
+            title="Program and test",
+            content="Click **Program** then open a terminal at 115200 8N1 on the USB port. Anything you type should echo back.",
+        ),
     ],
 )
 
@@ -133,14 +162,36 @@ _FPGA_LITEX = Tutorial(
     difficulty="intermediate",
     prerequisites=["yosys", "nextpnr-gowin", "gowin_pack", "python3", "litex"],
     steps=[
-        TutorialStep(title="LiteX project", content="File > New > **Gowin FPGA** > Tang Nano 9K > *LiteX SoC*."),
-        TutorialStep(title="SoC config", content="The wizard emits `soc.py`. Edit to pick the CPU (vexriscv, femtorv, picorv32)."),
-        TutorialStep(title="Generate HDL", content="Click **Generate SoC**. LiteX runs and drops `build/gateware/top.v`."),
-        TutorialStep(title="Synthesize", content="Synthesize with yosys + Gowin plugin.", target_panel="synthesis"),
-        TutorialStep(title="PnR", content="nextpnr-gowin places and routes.", target_panel="physical"),
+        TutorialStep(
+            title="LiteX project",
+            content="File > New > **Gowin FPGA** > Tang Nano 9K > *LiteX SoC*.",
+        ),
+        TutorialStep(
+            title="SoC config",
+            content="The wizard emits `soc.py`. Edit to pick the CPU (vexriscv, femtorv, picorv32).",
+        ),
+        TutorialStep(
+            title="Generate HDL",
+            content="Click **Generate SoC**. LiteX runs and drops `build/gateware/top.v`.",
+        ),
+        TutorialStep(
+            title="Synthesize",
+            content="Synthesize with yosys + Gowin plugin.",
+            target_panel="synthesis",
+        ),
+        TutorialStep(
+            title="PnR", content="nextpnr-gowin places and routes.", target_panel="physical"
+        ),
         TutorialStep(title="Pack", content="gowin_pack writes `top.fs`.", target_panel="reports"),
-        TutorialStep(title="Program", content="Use **openFPGALoader -b tangnano9k** to flash.", target_panel="fpga_target"),
-        TutorialStep(title="Talk to the SoC", content="Open a serial monitor at 115200 and press Enter to get the LiteX BIOS prompt."),
+        TutorialStep(
+            title="Program",
+            content="Use **openFPGALoader -b tangnano9k** to flash.",
+            target_panel="fpga_target",
+        ),
+        TutorialStep(
+            title="Talk to the SoC",
+            content="Open a serial monitor at 115200 and press Enter to get the LiteX BIOS prompt.",
+        ),
     ],
 )
 
@@ -232,14 +283,37 @@ _ASIC_CARAVEL = Tutorial(
     difficulty="advanced",
     prerequisites=["yosys", "openroad", "magic", "git"],
     steps=[
-        TutorialStep(title="Start Caravel wrapper", content="File > New > **Caravel MPW** template."),
-        TutorialStep(title="Import counter as submodule", content="Right-click `ip/`, **Import Design**, pick the simple-counter project."),
-        TutorialStep(title="Wire user_project_wrapper", content="OpenForge auto-generates `user_project_wrapper.v` connecting the Wishbone/logic analyzer ports."),
-        TutorialStep(title="Hardened macro", content="Click **Harden Macro**. Runs full RTL-to-GDS for the inner block."),
-        TutorialStep(title="Top-level integration", content="Click **Harden Top**. Integrates the hardened macro into the Caravel user area."),
-        TutorialStep(title="Pre-check", content="Click **Run Precheck** - executes the Efabless tape-out checks."),
-        TutorialStep(title="Make manifest", content="OpenForge writes `manifest.json` and computes `info.yaml` for the MPW submission."),
-        TutorialStep(title="Tag and submit", content="Commit, tag `mpw-submission`, and push. Caravel CI picks up the release."),
+        TutorialStep(
+            title="Start Caravel wrapper", content="File > New > **Caravel MPW** template."
+        ),
+        TutorialStep(
+            title="Import counter as submodule",
+            content="Right-click `ip/`, **Import Design**, pick the simple-counter project.",
+        ),
+        TutorialStep(
+            title="Wire user_project_wrapper",
+            content="OpenForge auto-generates `user_project_wrapper.v` connecting the Wishbone/logic analyzer ports.",
+        ),
+        TutorialStep(
+            title="Hardened macro",
+            content="Click **Harden Macro**. Runs full RTL-to-GDS for the inner block.",
+        ),
+        TutorialStep(
+            title="Top-level integration",
+            content="Click **Harden Top**. Integrates the hardened macro into the Caravel user area.",
+        ),
+        TutorialStep(
+            title="Pre-check",
+            content="Click **Run Precheck** - executes the Efabless tape-out checks.",
+        ),
+        TutorialStep(
+            title="Make manifest",
+            content="OpenForge writes `manifest.json` and computes `info.yaml` for the MPW submission.",
+        ),
+        TutorialStep(
+            title="Tag and submit",
+            content="Commit, tag `mpw-submission`, and push. Caravel CI picks up the release.",
+        ),
     ],
 )
 
@@ -248,21 +322,38 @@ _ASIC_CARAVEL = Tutorial(
 # ---------------------------------------------------------------------------
 _PCB_BREAKOUT = Tutorial(
     id="pcb_breakout_board",
-    title="0.1\" Breakout PCB",
-    description="Design a simple 0.1\" pitch breakout board with headers. Covers schematic, layout, and gerber export.",
+    title='0.1" Breakout PCB',
+    description='Design a simple 0.1" pitch breakout board with headers. Covers schematic, layout, and gerber export.',
     persona="pcb",
     duration_minutes=25,
     difficulty="beginner",
     prerequisites=["kicad"],
     steps=[
         TutorialStep(title="New PCB project", content="File > New > **PCB only** template."),
-        TutorialStep(title="Schematic", content="Drop a pin header (2x10) and a decoupling cap. Wire them up.", target_panel="schematic"),
-        TutorialStep(title="Footprints", content="Assign `Pin_Header_2x10_P2.54mm_Vertical` and `C_0805`."),
-        TutorialStep(title="Update PCB", content="Import netlist into the layout editor.", target_panel="pcb_designer"),
+        TutorialStep(
+            title="Schematic",
+            content="Drop a pin header (2x10) and a decoupling cap. Wire them up.",
+            target_panel="schematic",
+        ),
+        TutorialStep(
+            title="Footprints", content="Assign `Pin_Header_2x10_P2.54mm_Vertical` and `C_0805`."
+        ),
+        TutorialStep(
+            title="Update PCB",
+            content="Import netlist into the layout editor.",
+            target_panel="pcb_designer",
+        ),
         TutorialStep(title="Place", content="Position the header and the cap."),
-        TutorialStep(title="Route", content="Auto-route with the built-in router, or hand-route the traces."),
-        TutorialStep(title="DRC", content="Run the built-in PCB DRC - must be clean before export."),
-        TutorialStep(title="Export Gerbers", content="Click **Export Gerbers** to get a zip suitable for JLCPCB / PCBWay."),
+        TutorialStep(
+            title="Route", content="Auto-route with the built-in router, or hand-route the traces."
+        ),
+        TutorialStep(
+            title="DRC", content="Run the built-in PCB DRC - must be clean before export."
+        ),
+        TutorialStep(
+            title="Export Gerbers",
+            content="Click **Export Gerbers** to get a zip suitable for JLCPCB / PCBWay.",
+        ),
     ],
 )
 
@@ -279,12 +370,25 @@ _PCB_PICO = Tutorial(
     prerequisites=["kicad"],
     steps=[
         TutorialStep(title="New project", content="File > New > **PCB only** > blank 4-layer."),
-        TutorialStep(title="Import Pico footprint", content="Use the IP catalog to drop a Pico-shaped module."),
+        TutorialStep(
+            title="Import Pico footprint",
+            content="Use the IP catalog to drop a Pico-shaped module.",
+        ),
         TutorialStep(title="USB-C connector", content="Add a USB-C receptacle, configure as UFP."),
-        TutorialStep(title="Decoupling", content="Add 100 nF per power pin, plus a 10 uF bulk cap."),
-        TutorialStep(title="Pin-outs", content="Break out UART0, I2C0, and 4 GPIOs to a 2x6 header."),
-        TutorialStep(title="Impedance", content="Check the USB differential pair impedance with the built-in calculator (target 90 ohms)."),
-        TutorialStep(title="Route 4 layers", content="Signal / GND / PWR / Signal stackup. Route diff pairs on top."),
+        TutorialStep(
+            title="Decoupling", content="Add 100 nF per power pin, plus a 10 uF bulk cap."
+        ),
+        TutorialStep(
+            title="Pin-outs", content="Break out UART0, I2C0, and 4 GPIOs to a 2x6 header."
+        ),
+        TutorialStep(
+            title="Impedance",
+            content="Check the USB differential pair impedance with the built-in calculator (target 90 ohms).",
+        ),
+        TutorialStep(
+            title="Route 4 layers",
+            content="Signal / GND / PWR / Signal stackup. Route diff pairs on top.",
+        ),
         TutorialStep(title="3D preview", content="Switch to 3D view to verify the board visually."),
     ],
 )
@@ -302,13 +406,36 @@ _VERIF_ASSERT = Tutorial(
     prerequisites=["verilator"],
     steps=[
         TutorialStep(title="Open example", content="File > Open Example > simple-counter."),
-        TutorialStep(title="Add assertions file", content="Create `rtl/counter_sva.sv` with a concurrent assertion checking the counter never skips values."),
-        TutorialStep(title="Bind assertions", content="Use `bind counter counter_sva u_sva(.*);` in the testbench."),
-        TutorialStep(title="Cover properties", content="Add `cover property` for the overflow case."),
-        TutorialStep(title="Run Verilator", content="Click **Simulate**. Verilator runs with `--assert --cov`.", target_panel="testbench"),
-        TutorialStep(title="View coverage", content="Open the Coverage panel - you should see the overflow bin hit.", target_panel="coverage_closure"),
-        TutorialStep(title="Break the design", content="Change `count <= count + 1` to `count <= count + 2` and re-simulate. The assertion should fire."),
-        TutorialStep(title="Waveform", content="Inspect the waveform at the failing time - the GTKWave panel auto-jumps to the assertion.", target_panel="waveform"),
+        TutorialStep(
+            title="Add assertions file",
+            content="Create `rtl/counter_sva.sv` with a concurrent assertion checking the counter never skips values.",
+        ),
+        TutorialStep(
+            title="Bind assertions",
+            content="Use `bind counter counter_sva u_sva(.*);` in the testbench.",
+        ),
+        TutorialStep(
+            title="Cover properties", content="Add `cover property` for the overflow case."
+        ),
+        TutorialStep(
+            title="Run Verilator",
+            content="Click **Simulate**. Verilator runs with `--assert --cov`.",
+            target_panel="testbench",
+        ),
+        TutorialStep(
+            title="View coverage",
+            content="Open the Coverage panel - you should see the overflow bin hit.",
+            target_panel="coverage_closure",
+        ),
+        TutorialStep(
+            title="Break the design",
+            content="Change `count <= count + 1` to `count <= count + 2` and re-simulate. The assertion should fire.",
+        ),
+        TutorialStep(
+            title="Waveform",
+            content="Inspect the waveform at the failing time - the GTKWave panel auto-jumps to the assertion.",
+            target_panel="waveform",
+        ),
     ],
 )
 
@@ -324,14 +451,33 @@ _VERIF_UVM = Tutorial(
     difficulty="advanced",
     prerequisites=["verilator"],
     steps=[
-        TutorialStep(title="UVM-lite skeleton", content="File > New > **Verification** > *UVM-Lite testbench*. The template drops driver/monitor/scoreboard stubs."),
-        TutorialStep(title="Interface", content="Define a `clocking block` in `dut_if.sv` around the DUT ports."),
-        TutorialStep(title="Driver", content="Implement the `run_phase` to pull transactions off the sequencer and drive them onto the interface."),
-        TutorialStep(title="Monitor", content="Sample the interface and publish transactions on an analysis port."),
-        TutorialStep(title="Scoreboard", content="Compare monitored transactions against a golden reference model."),
+        TutorialStep(
+            title="UVM-lite skeleton",
+            content="File > New > **Verification** > *UVM-Lite testbench*. The template drops driver/monitor/scoreboard stubs.",
+        ),
+        TutorialStep(
+            title="Interface",
+            content="Define a `clocking block` in `dut_if.sv` around the DUT ports.",
+        ),
+        TutorialStep(
+            title="Driver",
+            content="Implement the `run_phase` to pull transactions off the sequencer and drive them onto the interface.",
+        ),
+        TutorialStep(
+            title="Monitor",
+            content="Sample the interface and publish transactions on an analysis port.",
+        ),
+        TutorialStep(
+            title="Scoreboard",
+            content="Compare monitored transactions against a golden reference model.",
+        ),
         TutorialStep(title="Sequences", content="Write a smoke sequence and a random sequence."),
-        TutorialStep(title="Run", content="Simulate with Verilator. Check the test summary in the console."),
-        TutorialStep(title="Regression", content="Add the tests to the Regression panel and run overnight."),
+        TutorialStep(
+            title="Run", content="Simulate with Verilator. Check the test summary in the console."
+        ),
+        TutorialStep(
+            title="Regression", content="Add the tests to the Regression panel and run overnight."
+        ),
     ],
 )
 
@@ -347,14 +493,35 @@ _ANALOG_TIA = Tutorial(
     difficulty="advanced",
     prerequisites=["ngspice", "magic", "xschem"],
     steps=[
-        TutorialStep(title="Analog project", content="File > New > **Analog** > *sky130 opamp template*."),
-        TutorialStep(title="Schematic", content="Open the schematic editor. Place a 5-transistor OTA and feedback resistor.", target_panel="spice_panel"),
+        TutorialStep(
+            title="Analog project", content="File > New > **Analog** > *sky130 opamp template*."
+        ),
+        TutorialStep(
+            title="Schematic",
+            content="Open the schematic editor. Place a 5-transistor OTA and feedback resistor.",
+            target_panel="spice_panel",
+        ),
         TutorialStep(title="Bias", content="Set Vdd=1.8, Ibias=5uA, input common-mode = Vdd/2."),
-        TutorialStep(title="DC op point", content="Run **DC operating point**. Verify all transistors are in saturation.", target_panel="spice_simulator"),
-        TutorialStep(title="AC sweep", content="Run an AC sweep from 10 Hz to 1 GHz. Plot gain and phase."),
-        TutorialStep(title="Compensation", content="Adjust Cc until you get >60 degrees phase margin."),
-        TutorialStep(title="Layout", content="Run **Auto Layout** to generate a sized, DRC-clean layout in magic.", target_panel="transistor_layout"),
-        TutorialStep(title="Post-layout sim", content="Extract parasitics and re-run the AC sweep. Compare pre and post-layout."),
+        TutorialStep(
+            title="DC op point",
+            content="Run **DC operating point**. Verify all transistors are in saturation.",
+            target_panel="spice_simulator",
+        ),
+        TutorialStep(
+            title="AC sweep", content="Run an AC sweep from 10 Hz to 1 GHz. Plot gain and phase."
+        ),
+        TutorialStep(
+            title="Compensation", content="Adjust Cc until you get >60 degrees phase margin."
+        ),
+        TutorialStep(
+            title="Layout",
+            content="Run **Auto Layout** to generate a sized, DRC-clean layout in magic.",
+            target_panel="transistor_layout",
+        ),
+        TutorialStep(
+            title="Post-layout sim",
+            content="Extract parasitics and re-run the AC sweep. Compare pre and post-layout.",
+        ),
     ],
 )
 

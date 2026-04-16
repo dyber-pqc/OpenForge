@@ -113,7 +113,7 @@ def emit_random_class_sv(
     lines.append("")
     lines.append("  function new(); endfunction")
     lines.append("  function void post_randomize();")
-    lines.append(f"    $display(\"[{name}_rand] randomized\");")
+    lines.append(f'    $display("[{name}_rand] randomized");')
     lines.append("  endfunction")
     lines.append("endclass")
     return "\n".join(lines)
@@ -144,7 +144,7 @@ def generate_axi_random_sequence(
         data = rng.random_int(0, (1 << data_width) - 1)
         kind = "W" if is_write else "R"
         lines.append(
-            f"  $display(\"[%0t] AXI {kind} #{i} addr=%0h len=%0d data=%0h\", "
+            f'  $display("[%0t] AXI {kind} #{i} addr=%0h len=%0d data=%0h", '
             f"$time, 32'h{addr:08x}, {length}, {data_width}'h{data:0x});"
         )
         lines.append("  #10;")
@@ -166,7 +166,7 @@ def generate_apb_random_sequence(
         data = rng.random_int(0, 0xFFFF_FFFF)
         kind = "W" if pwrite else "R"
         lines.append(
-            f"  $display(\"[%0t] APB {kind} #{i} addr=%0h data=%0h\", "
+            f'  $display("[%0t] APB {kind} #{i} addr=%0h data=%0h", '
             f"$time, 32'h{addr:08x}, 32'h{data:08x});"
         )
         lines.append("  #10; #10;")
@@ -187,9 +187,7 @@ def generate_uart_random_sequence(
     ]
     for i in range(int(char_count)):
         ch = rng.random_int(0x20, 0x7E)
-        lines.append(
-            f"  $display(\"[%0t] UART #{i} ch=%0h\", $time, 8'h{ch:02x});"
-        )
+        lines.append(f'  $display("[%0t] UART #{i} ch=%0h", $time, 8\'h{ch:02x});')
         lines.append(f"  #{bit_period * 10};")
     lines.append("end")
     return "\n".join(lines)
@@ -211,7 +209,7 @@ def generate_i2c_random_sequence(
         rw = rng.random_int(0, 1)
         data = rng.random_int(0, 0xFF)
         lines.append(
-            f"  $display(\"[%0t] I2C #{i} addr=%0h rw=%0d data=%0h\", "
+            f'  $display("[%0t] I2C #{i} addr=%0h rw=%0d data=%0h", '
             f"$time, 7'h{addr:02x}, {rw}, 8'h{data:02x});"
         )
         lines.append("  #5000;")

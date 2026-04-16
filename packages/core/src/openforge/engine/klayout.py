@@ -82,8 +82,10 @@ class KLayoutEngine(ToolEngine):
         """
         args: list[str] = [
             "-b",
-            "-r", str(drc_script),
-            "-rd", f"input={gds_file}",
+            "-r",
+            str(drc_script),
+            "-rd",
+            f"input={gds_file}",
         ]
         args.extend(extra_args)
 
@@ -163,17 +165,19 @@ class KLayoutEngine(ToolEngine):
         ]
         if layer_props:
             export_script_lines.append("lv.load_layer_props($lyp)")
-        export_script_lines.append(
-            "lv.save_image($output, $width.to_i, $height.to_i)"
-        )
+        export_script_lines.append("lv.save_image($output, $width.to_i, $height.to_i)")
         export_ruby = "; ".join(export_script_lines)
 
         args: list[str] = [
             "-b",
-            "-rd", f"input={gds_file}",
-            "-rd", f"output={output_png}",
-            "-rd", f"width={width}",
-            "-rd", f"height={height}",
+            "-rd",
+            f"input={gds_file}",
+            "-rd",
+            f"output={output_png}",
+            "-rd",
+            f"width={width}",
+            "-rd",
+            f"height={height}",
         ]
         if layer_props:
             args.extend(["-rd", f"lyp={layer_props}"])

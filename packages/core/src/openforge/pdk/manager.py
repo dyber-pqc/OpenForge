@@ -1,4 +1,5 @@
 """PDK Manager - central registry of supported PDKs with install/discover."""
+
 from __future__ import annotations
 
 import contextlib

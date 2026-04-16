@@ -35,8 +35,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.regression_v2 import (
@@ -127,9 +129,7 @@ class RegressionRunnerPanel(QWidget):
         flt.addWidget(self._tag_filter, 1)
         flt.addWidget(QLabel("Status:"))
         self._status_filter = QComboBox()
-        self._status_filter.addItems(
-            ["all", "pass", "fail", "error", "timeout", "skip"]
-        )
+        self._status_filter.addItems(["all", "pass", "fail", "error", "timeout", "skip"])
         self._status_filter.currentTextChanged.connect(self._refresh_results)
         flt.addWidget(self._status_filter)
         root.addLayout(flt)
@@ -167,9 +167,7 @@ class RegressionRunnerPanel(QWidget):
         self._results_tbl.setHorizontalHeaderLabels(
             ["Test", "Seed", "Status", "Runtime", "Flake", "Error"]
         )
-        self._results_tbl.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
+        self._results_tbl.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._results_tbl.itemDoubleClicked.connect(self._on_open_log)
         tabs.addTab(self._results_tbl, "Results")
 
@@ -261,9 +259,7 @@ class RegressionRunnerPanel(QWidget):
     def _on_run_failures(self) -> None:
         if self._suite is None:
             return
-        failed = {
-            r.test_name for r in self._results.values() if r.status != "pass"
-        }
+        failed = {r.test_name for r in self._results.values() if r.status != "pass"}
         picks = [t for t in self._suite.tests if t.name in failed]
         if picks:
             self._start_run(picks)
@@ -364,16 +360,10 @@ class RegressionRunnerPanel(QWidget):
                 self._results_tbl.setItem(row, 0, QTableWidgetItem(name))
                 self._results_tbl.setItem(row, 1, QTableWidgetItem(str(r.seed)))
                 status_cell = QTableWidgetItem(r.status)
-                status_cell.setForeground(
-                    QBrush(QColor(STATUS_COLOURS.get(r.status, "#cdd6f4")))
-                )
+                status_cell.setForeground(QBrush(QColor(STATUS_COLOURS.get(r.status, "#cdd6f4"))))
                 self._results_tbl.setItem(row, 2, status_cell)
-                self._results_tbl.setItem(
-                    row, 3, QTableWidgetItem(f"{r.runtime_s:.2f}s")
-                )
-                self._results_tbl.setItem(
-                    row, 4, QTableWidgetItem(f"{flake_rate * 100:.0f}%")
-                )
+                self._results_tbl.setItem(row, 3, QTableWidgetItem(f"{r.runtime_s:.2f}s"))
+                self._results_tbl.setItem(row, 4, QTableWidgetItem(f"{flake_rate * 100:.0f}%"))
                 err_item = QTableWidgetItem(r.error_msg[:160])
                 err_item.setData(Qt.ItemDataRole.UserRole, r.log_path)
                 self._results_tbl.setItem(row, 5, err_item)
@@ -392,9 +382,7 @@ class RegressionRunnerPanel(QWidget):
                 cell = QTableWidgetItem("")
                 if r is not None:
                     cell.setText(r.status[:1].upper())
-                    cell.setBackground(
-                        QBrush(QColor(STATUS_COLOURS.get(r.status, "#1e1e2e")))
-                    )
+                    cell.setBackground(QBrush(QColor(STATUS_COLOURS.get(r.status, "#1e1e2e"))))
                 self._matrix.setItem(i, j, cell)
 
     # ------------------------------------------------------------------

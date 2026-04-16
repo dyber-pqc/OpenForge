@@ -47,38 +47,38 @@ from PySide6.QtWidgets import (
 # older DEF parser so both vocabularies render consistently in the viewer.
 LAYER_COLORS: Final[dict[str, str]] = {
     # SKY130 real metal layers
-    "li1":  "#7c3aed",   # purple
-    "met1": "#3993dd",   # blue
-    "met2": "#a1c659",   # green
-    "met3": "#e1b73a",   # yellow
-    "met4": "#e07b3a",   # orange
-    "met5": "#c93c5b",   # red
+    "li1": "#7c3aed",  # purple
+    "met1": "#3993dd",  # blue
+    "met2": "#a1c659",  # green
+    "met3": "#e1b73a",  # yellow
+    "met4": "#e07b3a",  # orange
+    "met5": "#c93c5b",  # red
     # Legacy / alternate names
     "Metal1": "#3993dd",
     "Metal2": "#a1c659",
     "Metal3": "#e1b73a",
     "Metal4": "#e07b3a",
     "Metal5": "#c93c5b",
-    "Via1": "#f9e2af",     # yellow
-    "Via2": "#94e2d5",     # teal
-    "Via3": "#f5c2e7",     # pink
-    "Poly": "#eba0ac",     # maroon
+    "Via1": "#f9e2af",  # yellow
+    "Via2": "#94e2d5",  # teal
+    "Via3": "#f5c2e7",  # pink
+    "Poly": "#eba0ac",  # maroon
     "Diffusion": "#74c7ec",  # sapphire
-    "NWell": "#585b70",    # overlay0
-    "PWell": "#45475a",    # surface1
+    "NWell": "#585b70",  # overlay0
+    "PWell": "#45475a",  # surface1
     "placement": "#b4befe",  # lavender -- placed cells
-    "power":  "#f38ba8",     # red -- VPWR stripes
-    "ground": "#89b4fa",     # blue -- VGND stripes
-    "pin":    "#f9e2af",     # yellow -- I/O pin markers
+    "power": "#f38ba8",  # red -- VPWR stripes
+    "ground": "#89b4fa",  # blue -- VGND stripes
+    "pin": "#f9e2af",  # yellow -- I/O pin markers
 }
 
 # Cell type color coding
 CELL_TYPE_COLORS: Final[dict[str, tuple[str, str]]] = {
     # (fill_color, label)
-    "flipflop": ("#89b4fa", "Flip-Flop"),       # blue
+    "flipflop": ("#89b4fa", "Flip-Flop"),  # blue
     "combinational": ("#a6e3a1", "Combinational"),  # green
-    "complex": ("#f9e2af", "Complex Gate"),       # yellow
-    "other": ("#6c7086", "Other"),                # gray/overlay0
+    "complex": ("#f9e2af", "Complex Gate"),  # yellow
+    "other": ("#6c7086", "Other"),  # gray/overlay0
 }
 
 # Patterns for cell type classification
@@ -228,16 +228,16 @@ class _LayoutView(QGraphicsView):
                 # Convert from scene coords to microns
                 dist_um = dist_scene / self._scale * (1.0 / self._units) if self._scale > 0 else 0
                 # If scale already divided by units, just invert it
-                dist_um = dist_scene / self._scale / (self._units / 1000000.0) if self._scale > 0 else 0
+                dist_um = (
+                    dist_scene / self._scale / (self._units / 1000000.0) if self._scale > 0 else 0
+                )
                 # Simpler: scene coord / scale = DEF units; DEF units / self._units = microns
                 dist_um = dist_scene / self._scale / self._units if self._scale > 0 else 0
 
                 pen = QPen(QColor("#f9e2af"), 2.0)
                 pen.setCosmetic(True)
                 pen.setStyle(Qt.PenStyle.DashLine)
-                self._ruler_line = self.scene().addLine(
-                    start.x(), start.y(), end.x(), end.y(), pen
-                )
+                self._ruler_line = self.scene().addLine(start.x(), start.y(), end.x(), end.y(), pen)
                 font = QFont("Segoe UI", 8)
                 self._ruler_text = self.scene().addSimpleText(f"{dist_um:.2f} um", font)
                 self._ruler_text.setBrush(QColor("#f9e2af"))
@@ -259,12 +259,8 @@ class _LayoutView(QGraphicsView):
         if self._panning:
             delta = event.position().toPoint() - self._pan_start
             self._pan_start = event.position().toPoint()
-            self.horizontalScrollBar().setValue(
-                self.horizontalScrollBar().value() - delta.x()
-            )
-            self.verticalScrollBar().setValue(
-                self.verticalScrollBar().value() - delta.y()
-            )
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
             event.accept()
         else:
             # Cell hover tooltip
@@ -328,9 +324,7 @@ class LayoutPanel(QDockWidget):
 
     def __init__(self, title: str = "Layout Viewer", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
-        self.setAllowedAreas(
-            Qt.DockWidgetArea.AllDockWidgetAreas
-        )
+        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
 
         container = QWidget()
         layout = QVBoxLayout(container)
@@ -450,9 +444,7 @@ class LayoutPanel(QDockWidget):
 
         # Cell type filter
         self._type_filter = QComboBox()
-        self._type_filter.addItems(
-            ["All cells", "Flip-flops", "Buffers", "Fillers", "Logic only"]
-        )
+        self._type_filter.addItems(["All cells", "Flip-flops", "Buffers", "Fillers", "Logic only"])
         self._type_filter.setFixedHeight(26)
         self._type_filter.currentTextChanged.connect(self._on_type_filter)
         toolbar.addWidget(self._type_filter)
@@ -543,15 +535,19 @@ class LayoutPanel(QDockWidget):
             die_brush = QBrush(QColor(88, 91, 112, 20))
             self._scene.addRect(
                 QRectF(
-                    x0 * scale, y0 * scale,
-                    (x1 - x0) * scale, (y1 - y0) * scale,
+                    x0 * scale,
+                    y0 * scale,
+                    (x1 - x0) * scale,
+                    (y1 - y0) * scale,
                 ),
-                die_pen, die_brush,
+                die_pen,
+                die_brush,
             )
             # Adjust scene rect to die area with margin
             margin = max((x1 - x0), (y1 - y0)) * scale * 0.05
             self._scene.setSceneRect(
-                x0 * scale - margin, y0 * scale - margin,
+                x0 * scale - margin,
+                y0 * scale - margin,
                 (x1 - x0) * scale + 2 * margin,
                 (y1 - y0) * scale + 2 * margin,
             )
@@ -582,12 +578,16 @@ class LayoutPanel(QDockWidget):
                     h = 10.0
 
                 self._add_placed_cell(
-                    comp.name, comp.cell_type,
-                    comp.x * scale, comp.y * scale,
-                    w, h,
+                    comp.name,
+                    comp.cell_type,
+                    comp.x * scale,
+                    comp.y * scale,
+                    w,
+                    h,
                     fill_color,
                     comp.orientation,
-                    comp.x / data.units, comp.y / data.units,
+                    comp.x / data.units,
+                    comp.y / data.units,
                 )
 
         # Draw routed nets
@@ -611,6 +611,7 @@ class LayoutPanel(QDockWidget):
         # drive density/congestion overlays, pin markers, and power stripes.
         try:
             from openforge.format.def_parser import parse_def as _parse_def_full
+
             self._design = _parse_def_full(def_file)
             self._draw_pin_markers()
             self._draw_special_nets()
@@ -770,7 +771,9 @@ class LayoutPanel(QDockWidget):
     def _on_load_def_dialog(self) -> None:
         """Open file dialog to select a DEF file."""
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open DEF File", "",
+            self,
+            "Open DEF File",
+            "",
             "DEF Files (*.def);;All Files (*)",
         )
         if path:
@@ -935,6 +938,7 @@ class LayoutPanel(QDockWidget):
 
     def _wrap_view_move(self, original):
         """Wrap the view's mouseMoveEvent to also update the status bar."""
+
         def handler(event):  # type: ignore[no-untyped-def]
             original(event)
             try:
@@ -942,11 +946,10 @@ class LayoutPanel(QDockWidget):
                 if self._scale > 0 and self._units > 0:
                     x_um = sp.x() / self._scale / self._units
                     y_um = sp.y() / self._scale / self._units
-                    self._status.setText(
-                        f"  x = {x_um:9.3f} um    y = {y_um:9.3f} um"
-                    )
+                    self._status.setText(f"  x = {x_um:9.3f} um    y = {y_um:9.3f} um")
             except Exception:
                 pass
+
         return handler
 
     def _draw_pin_markers(self) -> None:
@@ -964,18 +967,17 @@ class LayoutPanel(QDockWidget):
             cx = pin.x * scale
             cy = pin.y * scale
             s = 6.0
-            poly = QPolygonF([
-                QPointF(cx, cy - s),
-                QPointF(cx + s, cy),
-                QPointF(cx, cy + s),
-                QPointF(cx - s, cy),
-            ])
+            poly = QPolygonF(
+                [
+                    QPointF(cx, cy - s),
+                    QPointF(cx + s, cy),
+                    QPointF(cx, cy + s),
+                    QPointF(cx - s, cy),
+                ]
+            )
             item = self._scene.addPolygon(poly, pen, brush)
             item.setToolTip(
-                f"Pin: {pin.name}\n"
-                f"Net: {pin.net}\n"
-                f"Direction: {pin.direction}\n"
-                f"Use: {pin.use}"
+                f"Pin: {pin.name}\nNet: {pin.net}\nDirection: {pin.direction}\nUse: {pin.use}"
             )
             item.setZValue(50)
             item.setData(_ROLE_LAYER, "pin")
@@ -1001,7 +1003,11 @@ class LayoutPanel(QDockWidget):
                     x1, y1, _ = seg.points[i]
                     x2, y2, _ = seg.points[i + 1]
                     line = self._scene.addLine(
-                        x1 * scale, y1 * scale, x2 * scale, y2 * scale, pen,
+                        x1 * scale,
+                        y1 * scale,
+                        x2 * scale,
+                        y2 * scale,
+                        pen,
                     )
                     line.setToolTip(f"{snet.name} ({snet.use}) -- {seg.layer}")
                     line.setZValue(-5)
@@ -1026,7 +1032,9 @@ class LayoutPanel(QDockWidget):
             self._design.die_area.x1 * self._scale,
             self._design.die_area.y1 * self._scale,
         )
-        item.setScale(min(w / pix.width(), h / pix.height()) if pix.width() and pix.height() else 1.0)
+        item.setScale(
+            min(w / pix.width(), h / pix.height()) if pix.width() and pix.height() else 1.0
+        )
         item.setOpacity(0.45)
         item.setZValue(5)
         self._density_item = item
@@ -1049,7 +1057,9 @@ class LayoutPanel(QDockWidget):
             self._design.die_area.x1 * self._scale,
             self._design.die_area.y1 * self._scale,
         )
-        item.setScale(min(w / pix.width(), h / pix.height()) if pix.width() and pix.height() else 1.0)
+        item.setScale(
+            min(w / pix.width(), h / pix.height()) if pix.width() and pix.height() else 1.0
+        )
         item.setOpacity(0.4)
         item.setZValue(6)
         self._congestion_item = item

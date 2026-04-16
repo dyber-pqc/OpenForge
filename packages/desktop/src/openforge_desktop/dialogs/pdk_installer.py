@@ -130,8 +130,13 @@ class _CloneWorker(QObject):
                 cmd = ["git", "-C", str(target), "pull", "--ff-only"]
             else:
                 cmd = [
-                    "git", "clone", "--depth", "1", "--progress",
-                    self._pdk.git_url, str(target),
+                    "git",
+                    "clone",
+                    "--depth",
+                    "1",
+                    "--progress",
+                    self._pdk.git_url,
+                    str(target),
                 ]
             self.progress.emit("$ " + " ".join(cmd))
             proc = subprocess.Popen(
@@ -197,13 +202,9 @@ class _PdkRow(QFrame):
         text_col.addWidget(desc)
         layout.addLayout(text_col, stretch=1)
 
-        self._install_btn = QPushButton(
-            "Reinstall" if self._installed else "Install"
-        )
+        self._install_btn = QPushButton("Reinstall" if self._installed else "Install")
         self._install_btn.setFixedWidth(110)
-        self._install_btn.clicked.connect(
-            lambda: self.install_clicked.emit(self._pdk.name)
-        )
+        self._install_btn.clicked.connect(lambda: self.install_clicked.emit(self._pdk.name))
         layout.addWidget(self._install_btn)
 
         self.setStyleSheet(

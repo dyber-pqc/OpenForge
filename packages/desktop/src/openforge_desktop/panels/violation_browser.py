@@ -6,6 +6,7 @@ filter-by-kind/severity/instance, a heatmap thumbnail of filtered
 violations, cross-probing to layout viewer, waiver creation, and
 import from other panels.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -36,6 +37,7 @@ try:
     import numpy as np
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
+
     _HAVE_MPL = True
 except Exception:  # pragma: no cover
     _HAVE_MPL = False
@@ -50,6 +52,7 @@ try:
         ViolationDb,
         ViolationImporter,
     )
+
     _HAVE_DB = True
 except Exception:  # pragma: no cover
     VALID_KINDS = set()  # type: ignore[assignment]
@@ -81,9 +84,7 @@ class _ScoreTile(QFrame):
     def set_score(self, score: float, total: int) -> None:
         color = "#2e8b57" if score > 90 else ("#d48806" if score > 70 else "#cf1322")
         self._score.setText(f"{score:.1f}")
-        self._score.setStyleSheet(
-            f"font-size: 48px; font-weight: bold; color: {color};"
-        )
+        self._score.setStyleSheet(f"font-size: 48px; font-weight: bold; color: {color};")
         self._sub.setText(f"Sign-off score  |  {total} violations")
 
 
@@ -152,8 +153,12 @@ class ViolationBrowserPanel(QWidget):
         self._clear_btn = QPushButton("Clear")
         self._clear_btn.clicked.connect(self._clear_db)
         for b in (
-            self._import_btn, self._waive_btn, self._export_json_btn,
-            self._export_csv_btn, self._export_html_btn, self._clear_btn,
+            self._import_btn,
+            self._waive_btn,
+            self._export_json_btn,
+            self._export_csv_btn,
+            self._export_html_btn,
+            self._clear_btn,
         ):
             action_row.addWidget(b)
         action_row.addStretch(1)
@@ -164,15 +169,20 @@ class ViolationBrowserPanel(QWidget):
 
         self._table = QTableWidget(0, 9)
         self._table.setHorizontalHeaderLabels(
-            ["Kind", "Sev", "Location", "Instance", "Net/Layer",
-             "Value", "Unit", "Delta", "Suggestion"]
+            [
+                "Kind",
+                "Sev",
+                "Location",
+                "Instance",
+                "Net/Layer",
+                "Value",
+                "Unit",
+                "Delta",
+                "Suggestion",
+            ]
         )
-        self._table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        self._table.setSelectionMode(
-            QAbstractItemView.SelectionMode.ExtendedSelection
-        )
+        self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self._table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self._table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._table.setSortingEnabled(True)
         self._table.horizontalHeader().setStretchLastSection(True)
@@ -219,8 +229,12 @@ class ViolationBrowserPanel(QWidget):
             warn.setStyleSheet("color:#cf1322;")
             root.addWidget(warn)
             for b in (
-                self._import_btn, self._waive_btn, self._export_json_btn,
-                self._export_csv_btn, self._export_html_btn, self._clear_btn,
+                self._import_btn,
+                self._waive_btn,
+                self._export_json_btn,
+                self._export_csv_btn,
+                self._export_html_btn,
+                self._clear_btn,
             ):
                 b.setEnabled(False)
 
@@ -250,8 +264,15 @@ class ViolationBrowserPanel(QWidget):
             return 0
         count = ViolationImporter.import_all(
             self._db,
-            sta=sta, drc=drc, ir=ir, em=em, thermal=thermal,
-            antenna=antenna, glitch=glitch, crosstalk=crosstalk, lvs=lvs,
+            sta=sta,
+            drc=drc,
+            ir=ir,
+            em=em,
+            thermal=thermal,
+            antenna=antenna,
+            glitch=glitch,
+            crosstalk=crosstalk,
+            lvs=lvs,
         )
         self._refresh()
         return count
@@ -303,12 +324,18 @@ class ViolationBrowserPanel(QWidget):
         query = self._search.text().strip().lower()
         out = self._db.query(kind=kind, severity=sev)
         if query:
+
             def _match(v: Violation) -> bool:
-                hay = " ".join([
-                    (v.instance or ""), (v.net or ""), (v.layer or ""),
-                    v.suggestion or "",
-                ]).lower()
+                hay = " ".join(
+                    [
+                        (v.instance or ""),
+                        (v.net or ""),
+                        (v.layer or ""),
+                        v.suggestion or "",
+                    ]
+                ).lower()
                 return query in hay
+
             out = [v for v in out if _match(v)]
         return out
 
@@ -382,15 +409,23 @@ class ViolationBrowserPanel(QWidget):
             weights.append(w_map.get(v.severity, 1.0))
         if pts_x:
             self._heat_ax.hexbin(
-                pts_x, pts_y, C=weights, reduce_C_function=np.sum,
-                gridsize=30, cmap="inferno",
+                pts_x,
+                pts_y,
+                C=weights,
+                reduce_C_function=np.sum,
+                gridsize=30,
+                cmap="inferno",
             )
             self._heat_ax.set_xlabel("x (um)", color="#ccc")
             self._heat_ax.set_ylabel("y (um)", color="#ccc")
         else:
             self._heat_ax.text(
-                0.5, 0.5, "no located violations",
-                ha="center", va="center", color="#888",
+                0.5,
+                0.5,
+                "no located violations",
+                ha="center",
+                va="center",
+                color="#888",
                 transform=self._heat_ax.transAxes,
             )
         self._heat_ax.tick_params(colors="#ccc")
@@ -427,9 +462,7 @@ class ViolationBrowserPanel(QWidget):
             if v.layer:
                 lines.append(f"  layer    : {v.layer}")
             if v.location:
-                lines.append(
-                    f"  location : ({v.location[0]:.2f}, {v.location[1]:.2f}) um"
-                )
+                lines.append(f"  location : ({v.location[0]:.2f}, {v.location[1]:.2f}) um")
             lines.append(
                 f"  value    : {v.metric_value:.3f} {v.metric_unit}"
                 f"  (threshold {v.threshold:.3f}, delta {v.delta:+.3f})"
@@ -452,9 +485,7 @@ class ViolationBrowserPanel(QWidget):
                 continue
             if v.location is not None:
                 label = f"{v.kind}: {v.instance or v.net or ''}"
-                self.cross_probe.emit(
-                    float(v.location[0]), float(v.location[1]), label
-                )
+                self.cross_probe.emit(float(v.location[0]), float(v.location[1]), label)
             break
 
     # ------------------------------------------------------------------
@@ -485,7 +516,9 @@ class ViolationBrowserPanel(QWidget):
             return
         default = f"violations.{fmt}"
         path, _ = QFileDialog.getSaveFileName(
-            self, f"Export {fmt.upper()}", default,
+            self,
+            f"Export {fmt.upper()}",
+            default,
             f"{fmt.upper()} (*.{fmt})",
         )
         if not path:

@@ -8,6 +8,7 @@ Provides Altium-parity PCB design capabilities:
 - Component database
 - BOM generation
 """
+
 from openforge.pcb.board import (
     Board,
     BoardComponent,

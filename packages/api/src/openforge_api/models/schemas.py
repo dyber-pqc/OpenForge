@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 # Common / Job infrastructure
 # ---------------------------------------------------------------------------
 
+
 class JobStatus(StrEnum):
     """Lifecycle state for any asynchronous job."""
 
@@ -38,6 +39,7 @@ class JobBase(BaseModel):
 # ---------------------------------------------------------------------------
 # Projects
 # ---------------------------------------------------------------------------
+
 
 class ProjectCreate(BaseModel):
     """Request body for creating a project."""
@@ -70,6 +72,7 @@ class ProjectDetail(BaseModel):
 # Synthesis
 # ---------------------------------------------------------------------------
 
+
 class SynthesisOptimization(StrEnum):
     """Optimisation target for synthesis."""
 
@@ -93,7 +96,9 @@ class SynthesisResult(BaseModel):
     job_id: UUID
     gate_count: int
     area_um2: float = Field(..., description="Total cell area in um^2")
-    cell_usage: dict[str, int] = Field(default_factory=dict, description="Cell name -> instance count")
+    cell_usage: dict[str, int] = Field(
+        default_factory=dict, description="Cell name -> instance count"
+    )
     timing_met: bool
     worst_slack_ns: float | None = None
     netlist_url: str | None = None
@@ -102,6 +107,7 @@ class SynthesisResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Timing / STA
 # ---------------------------------------------------------------------------
+
 
 class TimingRequest(BaseModel):
     """Request body to run static timing analysis."""
@@ -138,6 +144,7 @@ class TimingResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Power / DRC / LVS  (request bodies)
 # ---------------------------------------------------------------------------
+
 
 class PowerRequest(BaseModel):
     """Request body for power analysis."""
@@ -197,6 +204,7 @@ class LvsResult(BaseModel):
 # Waveforms
 # ---------------------------------------------------------------------------
 
+
 class SignalInfo(BaseModel):
     """Metadata for a single signal in a waveform file."""
 
@@ -235,6 +243,7 @@ class SignalData(BaseModel):
 # ---------------------------------------------------------------------------
 # Crypto verification
 # ---------------------------------------------------------------------------
+
 
 class CryptoAnalysisType(StrEnum):
     """Kind of crypto analysis."""
@@ -283,6 +292,7 @@ class SecurityScore(BaseModel):
 # File management
 # ---------------------------------------------------------------------------
 
+
 class FileNode(BaseModel):
     """A node in the project file tree."""
 
@@ -320,6 +330,7 @@ class FileSearchResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool management
 # ---------------------------------------------------------------------------
+
 
 class ToolInfo(BaseModel):
     """Information about an EDA tool."""

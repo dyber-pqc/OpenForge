@@ -191,7 +191,9 @@ class SignalBrowserDialog(QDialog):
         if self._scope_tree.topLevelItemCount() > 0:
             self._scope_tree.setCurrentItem(self._scope_tree.topLevelItem(0))
 
-    def _on_scope_selected(self, current: QTreeWidgetItem | None, _prev: QTreeWidgetItem | None) -> None:
+    def _on_scope_selected(
+        self, current: QTreeWidgetItem | None, _prev: QTreeWidgetItem | None
+    ) -> None:
         if not current:
             return
         scope = current.data(0, Qt.ItemDataRole.UserRole)
@@ -207,10 +209,17 @@ class SignalBrowserDialog(QDialog):
             if filter_text and filter_text not in name.lower():
                 continue
 
-            item = QTreeWidgetItem([name, sig.get("width", "1"), sig.get("type", "wire"), sig.get("direction", "")])
+            item = QTreeWidgetItem(
+                [name, sig.get("width", "1"), sig.get("type", "wire"), sig.get("direction", "")]
+            )
 
             # Color by type
-            type_colors = {"input": "#a6e3a1", "output": "#f9e2af", "internal": "#89b4fa", "inout": "#f5c2e7"}
+            type_colors = {
+                "input": "#a6e3a1",
+                "output": "#f9e2af",
+                "internal": "#89b4fa",
+                "inout": "#f5c2e7",
+            }
             color = type_colors.get(sig.get("direction", ""), "#cdd6f4")
             for col in range(4):
                 item.setForeground(col, QColor(color))

@@ -15,6 +15,7 @@ from typing import Any
 
 # ── Enums ─────────────────────────────────────────────────────────────
 
+
 class FaultModel(Enum):
     """Types of hardware fault injection."""
 
@@ -29,13 +30,14 @@ class FaultModel(Enum):
 class FaultClassification(Enum):
     """Classification of a fault injection result."""
 
-    SAFE_ERROR = auto()       # Fault did not affect output
-    DETECTED = auto()         # Fault was detected by countermeasures
-    UNDETECTED = auto()       # Fault changed output, not detected
-    CRITICAL = auto()         # Fault leaked key information
+    SAFE_ERROR = auto()  # Fault did not affect output
+    DETECTED = auto()  # Fault was detected by countermeasures
+    UNDETECTED = auto()  # Fault changed output, not detected
+    CRITICAL = auto()  # Fault leaked key information
 
 
 # ── Data classes ──────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True, slots=True)
 class FaultConfig:
@@ -48,10 +50,8 @@ class FaultConfig:
 
     def describe(self) -> str:
         params = ", ".join(f"{k}={v}" for k, v in self.parameters.items())
-        return (
-            f"{self.model.name} on {self.target_signal} "
-            f"at cycle {self.target_cycle}"
-            + (f" ({params})" if params else "")
+        return f"{self.model.name} on {self.target_signal} at cycle {self.target_cycle}" + (
+            f" ({params})" if params else ""
         )
 
 
@@ -95,31 +95,19 @@ class FaultResilienceReport:
 
     @property
     def detected_count(self) -> int:
-        return sum(
-            1 for r in self.results
-            if r.classification == FaultClassification.DETECTED
-        )
+        return sum(1 for r in self.results if r.classification == FaultClassification.DETECTED)
 
     @property
     def safe_error_count(self) -> int:
-        return sum(
-            1 for r in self.results
-            if r.classification == FaultClassification.SAFE_ERROR
-        )
+        return sum(1 for r in self.results if r.classification == FaultClassification.SAFE_ERROR)
 
     @property
     def undetected_count(self) -> int:
-        return sum(
-            1 for r in self.results
-            if r.classification == FaultClassification.UNDETECTED
-        )
+        return sum(1 for r in self.results if r.classification == FaultClassification.UNDETECTED)
 
     @property
     def critical_count(self) -> int:
-        return sum(
-            1 for r in self.results
-            if r.classification == FaultClassification.CRITICAL
-        )
+        return sum(1 for r in self.results if r.classification == FaultClassification.CRITICAL)
 
     @property
     def detected_pct(self) -> float:
@@ -165,13 +153,10 @@ class FaultResilienceReport:
         lines = [
             f"Fault Resilience Report (score: {self.overall_score}/100)",
             f"  Total campaigns: {self.total_campaigns}",
-            f"  Safe errors:  {self.safe_error_count} "
-            f"({self.safe_error_pct:.1f}%)",
-            f"  Detected:     {self.detected_count} "
-            f"({self.detected_pct:.1f}%)",
+            f"  Safe errors:  {self.safe_error_count} ({self.safe_error_pct:.1f}%)",
+            f"  Detected:     {self.detected_count} ({self.detected_pct:.1f}%)",
             f"  Undetected:   {self.undetected_count}",
-            f"  Critical:     {self.critical_count} "
-            f"({self.critical_pct:.1f}%)",
+            f"  Critical:     {self.critical_count} ({self.critical_pct:.1f}%)",
         ]
         if self.recommendations:
             lines.append("  Recommendations:")
@@ -181,6 +166,7 @@ class FaultResilienceReport:
 
 
 # ── Fault Injection Simulator ─────────────────────────────────────────
+
 
 class FaultInjectionSimulator:
     """Simulate hardware fault injection and evaluate design resilience.
@@ -247,9 +233,7 @@ class FaultInjectionSimulator:
             parameters={
                 "drop_voltage": drop_voltage,
                 "duration_ns": duration_ns,
-                "affected_signals": self._estimate_affected_signals(
-                    drop_voltage
-                ),
+                "affected_signals": self._estimate_affected_signals(drop_voltage),
             },
         )
         self._fault_log.append(config)
@@ -337,7 +321,7 @@ class FaultInjectionSimulator:
                 "x_um": x_um,
                 "y_um": y_um,
                 "radius_um": radius_um,
-                "affected_area_um2": math.pi * radius_um ** 2,
+                "affected_area_um2": math.pi * radius_um**2,
             },
         )
         self._fault_log.append(config)
@@ -377,15 +361,11 @@ class FaultInjectionSimulator:
         # Compute differential bytes between correct and each faulty output
         differentials: list[list[int]] = []
         for faulty in faulty_outputs:
-            diff = [
-                c ^ f for c, f in zip(correct_output, faulty, strict=False)
-            ]
+            diff = [c ^ f for c, f in zip(correct_output, faulty, strict=False)]
             differentials.append(diff)
 
         # Count how many bytes differ per fault
-        affected_byte_counts = [
-            sum(1 for d in diff if d != 0) for diff in differentials
-        ]
+        affected_byte_counts = [sum(1 for d in diff if d != 0) for diff in differentials]
 
         # DFA vulnerability heuristics
         single_byte_faults = sum(1 for c in affected_byte_counts if c == 1)
@@ -463,8 +443,8 @@ class FaultInjectionSimulator:
             f"({voter_signal} == {signal_a});\n"
             f"endproperty\n"
             f"assert property (tmr_voter_correct)\n"
-            f"  else $error(\"TMR: voter output disagrees with "
-            f"matching inputs\");\n"
+            f'  else $error("TMR: voter output disagrees with '
+            f'matching inputs");\n'
             f"\n"
             f"// Detect disagreement\n"
             f"property tmr_detect_fault;\n"
@@ -473,14 +453,12 @@ class FaultInjectionSimulator:
             f"(fault_detected == 1'b1);\n"
             f"endproperty\n"
             f"assert property (tmr_detect_fault)\n"
-            f"  else $error(\"TMR: fault not detected on disagreement\");\n"
+            f'  else $error("TMR: fault not detected on disagreement");\n'
         )
 
         return CheckResult(
             name="redundancy_check",
-            description=(
-                f"TMR/dual-rail: {signal_a}, {signal_b} -> {voter_signal}"
-            ),
+            description=(f"TMR/dual-rail: {signal_a}, {signal_b} -> {voter_signal}"),
             sva_property=sva,
             detected=True,
         )
@@ -501,14 +479,10 @@ class FaultInjectionSimulator:
 
         if results:
             report.results = list(results)
-        report.total_campaigns = max(
-            num_campaigns, len(report.results)
-        )
+        report.total_campaigns = max(num_campaigns, len(report.results))
 
         # Generate recommendations based on results
-        report.recommendations = self.generate_countermeasure_report(
-            report.results
-        )
+        report.recommendations = self.generate_countermeasure_report(report.results)
 
         return report
 
@@ -540,146 +514,141 @@ class FaultInjectionSimulator:
 
         if fault_config.model == FaultModel.BIT_FLIP:
             bit_idx = fault_config.parameters.get("bit_index", 0)
-            lines.extend([
-                "@cocotb.test()",
-                f"async def test_bit_flip_{fault_config.target_signal}"
-                f"_b{bit_idx}(dut):",
-                f'    """Inject single-bit flip on '
-                f'{fault_config.target_signal}[{bit_idx}] at cycle '
-                f'{fault_config.target_cycle}."""',
-                f"    clock = Clock(dut.{clock_signal}, "
-                f"{self._clock_period_ns}, units='ns')",
-                "    cocotb.start_soon(clock.start())",
-                "",
-                "    # Reset",
-                f"    dut.{reset_signal}.value = 0",
-                f"    await ClockCycles(dut.{clock_signal}, 5)",
-                f"    dut.{reset_signal}.value = 1",
-                f"    await ClockCycles(dut.{clock_signal}, 5)",
-                "",
-                "    # Run to target cycle",
-                f"    await ClockCycles(dut.{clock_signal}, "
-                f"{fault_config.target_cycle})",
-                "",
-                "    # Capture correct value",
-                f"    correct = int(dut.{fault_config.target_signal}.value)",
-                "",
-                "    # Inject bit flip",
-                f"    faulty = correct ^ (1 << {bit_idx})",
-                f"    dut.{fault_config.target_signal}.value = faulty",
-                f"    await RisingEdge(dut.{clock_signal})",
-                "",
-                "    # Restore (transient fault)",
-                f"    dut.{fault_config.target_signal}.value = correct",
-                "",
-                "    # Continue and capture output",
-                f"    await ClockCycles(dut.{clock_signal}, 100)",
-                "    # TODO: Check output and fault detection signals",
-                "",
-            ])
+            lines.extend(
+                [
+                    "@cocotb.test()",
+                    f"async def test_bit_flip_{fault_config.target_signal}_b{bit_idx}(dut):",
+                    f'    """Inject single-bit flip on '
+                    f"{fault_config.target_signal}[{bit_idx}] at cycle "
+                    f'{fault_config.target_cycle}."""',
+                    f"    clock = Clock(dut.{clock_signal}, {self._clock_period_ns}, units='ns')",
+                    "    cocotb.start_soon(clock.start())",
+                    "",
+                    "    # Reset",
+                    f"    dut.{reset_signal}.value = 0",
+                    f"    await ClockCycles(dut.{clock_signal}, 5)",
+                    f"    dut.{reset_signal}.value = 1",
+                    f"    await ClockCycles(dut.{clock_signal}, 5)",
+                    "",
+                    "    # Run to target cycle",
+                    f"    await ClockCycles(dut.{clock_signal}, {fault_config.target_cycle})",
+                    "",
+                    "    # Capture correct value",
+                    f"    correct = int(dut.{fault_config.target_signal}.value)",
+                    "",
+                    "    # Inject bit flip",
+                    f"    faulty = correct ^ (1 << {bit_idx})",
+                    f"    dut.{fault_config.target_signal}.value = faulty",
+                    f"    await RisingEdge(dut.{clock_signal})",
+                    "",
+                    "    # Restore (transient fault)",
+                    f"    dut.{fault_config.target_signal}.value = correct",
+                    "",
+                    "    # Continue and capture output",
+                    f"    await ClockCycles(dut.{clock_signal}, 100)",
+                    "    # TODO: Check output and fault detection signals",
+                    "",
+                ]
+            )
 
         elif fault_config.model == FaultModel.CLOCK_GLITCH:
             width = fault_config.parameters.get("glitch_width_ns", 1.0)
             offset = fault_config.parameters.get("glitch_offset_ns", 0.0)
-            lines.extend([
-                "@cocotb.test()",
-                f"async def test_clock_glitch_cycle"
-                f"_{fault_config.target_cycle}(dut):",
-                f'    """Inject clock glitch at cycle '
-                f'{fault_config.target_cycle}."""',
-                f"    clock = Clock(dut.{clock_signal}, "
-                f"{self._clock_period_ns}, units='ns')",
-                "    cocotb.start_soon(clock.start())",
-                "",
-                "    # Reset",
-                f"    dut.{reset_signal}.value = 0",
-                f"    await ClockCycles(dut.{clock_signal}, 5)",
-                f"    dut.{reset_signal}.value = 1",
-                "",
-                "    # Run to target cycle",
-                f"    await ClockCycles(dut.{clock_signal}, "
-                f"{fault_config.target_cycle})",
-                "",
-                "    # Inject glitch: extra rising edge within the cycle",
-                f"    await Timer({offset}, units='ns')",
-                f"    dut.{clock_signal}.value = 1",
-                f"    await Timer({width}, units='ns')",
-                f"    dut.{clock_signal}.value = 0",
-                "",
-                "    # Continue normal operation",
-                f"    await ClockCycles(dut.{clock_signal}, 100)",
-                "    # TODO: Check output and fault detection signals",
-                "",
-            ])
+            lines.extend(
+                [
+                    "@cocotb.test()",
+                    f"async def test_clock_glitch_cycle_{fault_config.target_cycle}(dut):",
+                    f'    """Inject clock glitch at cycle {fault_config.target_cycle}."""',
+                    f"    clock = Clock(dut.{clock_signal}, {self._clock_period_ns}, units='ns')",
+                    "    cocotb.start_soon(clock.start())",
+                    "",
+                    "    # Reset",
+                    f"    dut.{reset_signal}.value = 0",
+                    f"    await ClockCycles(dut.{clock_signal}, 5)",
+                    f"    dut.{reset_signal}.value = 1",
+                    "",
+                    "    # Run to target cycle",
+                    f"    await ClockCycles(dut.{clock_signal}, {fault_config.target_cycle})",
+                    "",
+                    "    # Inject glitch: extra rising edge within the cycle",
+                    f"    await Timer({offset}, units='ns')",
+                    f"    dut.{clock_signal}.value = 1",
+                    f"    await Timer({width}, units='ns')",
+                    f"    dut.{clock_signal}.value = 0",
+                    "",
+                    "    # Continue normal operation",
+                    f"    await ClockCycles(dut.{clock_signal}, 100)",
+                    "    # TODO: Check output and fault detection signals",
+                    "",
+                ]
+            )
 
         elif fault_config.model == FaultModel.STUCK_AT:
             bit_idx = fault_config.parameters.get("bit_index", 0)
             stuck_val = fault_config.parameters.get("stuck_value", 0)
-            end_cycle = fault_config.parameters.get(
-                "end_cycle", fault_config.target_cycle + 10
-            )
+            end_cycle = fault_config.parameters.get("end_cycle", fault_config.target_cycle + 10)
             duration = end_cycle - fault_config.target_cycle
-            lines.extend([
-                "@cocotb.test()",
-                f"async def test_stuck_at_{fault_config.target_signal}"
-                f"_b{bit_idx}_v{stuck_val}(dut):",
-                f'    """Inject stuck-at-{stuck_val} on '
-                f'{fault_config.target_signal}[{bit_idx}]."""',
-                f"    clock = Clock(dut.{clock_signal}, "
-                f"{self._clock_period_ns}, units='ns')",
-                "    cocotb.start_soon(clock.start())",
-                "",
-                "    # Reset",
-                f"    dut.{reset_signal}.value = 0",
-                f"    await ClockCycles(dut.{clock_signal}, 5)",
-                f"    dut.{reset_signal}.value = 1",
-                "",
-                "    # Run to target cycle",
-                f"    await ClockCycles(dut.{clock_signal}, "
-                f"{fault_config.target_cycle})",
-                "",
-                f"    # Apply stuck-at fault for {duration} cycles",
-                f"    for _ in range({duration}):",
-                f"        val = int(dut.{fault_config.target_signal}.value)",
-                f"        if {stuck_val}:",
-                f"            val = val | (1 << {bit_idx})",
-                "        else:",
-                f"            val = val & ~(1 << {bit_idx})",
-                f"        dut.{fault_config.target_signal}.value = val",
-                f"        await RisingEdge(dut.{clock_signal})",
-                "",
-                "    # Continue normal operation",
-                f"    await ClockCycles(dut.{clock_signal}, 100)",
-                "    # TODO: Check output and fault detection signals",
-                "",
-            ])
+            lines.extend(
+                [
+                    "@cocotb.test()",
+                    f"async def test_stuck_at_{fault_config.target_signal}"
+                    f"_b{bit_idx}_v{stuck_val}(dut):",
+                    f'    """Inject stuck-at-{stuck_val} on '
+                    f'{fault_config.target_signal}[{bit_idx}]."""',
+                    f"    clock = Clock(dut.{clock_signal}, {self._clock_period_ns}, units='ns')",
+                    "    cocotb.start_soon(clock.start())",
+                    "",
+                    "    # Reset",
+                    f"    dut.{reset_signal}.value = 0",
+                    f"    await ClockCycles(dut.{clock_signal}, 5)",
+                    f"    dut.{reset_signal}.value = 1",
+                    "",
+                    "    # Run to target cycle",
+                    f"    await ClockCycles(dut.{clock_signal}, {fault_config.target_cycle})",
+                    "",
+                    f"    # Apply stuck-at fault for {duration} cycles",
+                    f"    for _ in range({duration}):",
+                    f"        val = int(dut.{fault_config.target_signal}.value)",
+                    f"        if {stuck_val}:",
+                    f"            val = val | (1 << {bit_idx})",
+                    "        else:",
+                    f"            val = val & ~(1 << {bit_idx})",
+                    f"        dut.{fault_config.target_signal}.value = val",
+                    f"        await RisingEdge(dut.{clock_signal})",
+                    "",
+                    "    # Continue normal operation",
+                    f"    await ClockCycles(dut.{clock_signal}, 100)",
+                    "    # TODO: Check output and fault detection signals",
+                    "",
+                ]
+            )
 
         else:
             # Generic template for other fault models
-            lines.extend([
-                "@cocotb.test()",
-                f"async def test_{fault_config.model.name.lower()}_"
-                f"{fault_config.target_cycle}(dut):",
-                f'    """Inject {fault_config.model.name} fault at cycle '
-                f'{fault_config.target_cycle}."""',
-                f"    clock = Clock(dut.{clock_signal}, "
-                f"{self._clock_period_ns}, units='ns')",
-                "    cocotb.start_soon(clock.start())",
-                "",
-                "    # Reset",
-                f"    dut.{reset_signal}.value = 0",
-                f"    await ClockCycles(dut.{clock_signal}, 5)",
-                f"    dut.{reset_signal}.value = 1",
-                "",
-                f"    await ClockCycles(dut.{clock_signal}, "
-                f"{fault_config.target_cycle})",
-                "",
-                f"    # TODO: Implement {fault_config.model.name} injection",
-                f"    # Parameters: {fault_config.parameters}",
-                "",
-                f"    await ClockCycles(dut.{clock_signal}, 100)",
-                "",
-            ])
+            lines.extend(
+                [
+                    "@cocotb.test()",
+                    f"async def test_{fault_config.model.name.lower()}_"
+                    f"{fault_config.target_cycle}(dut):",
+                    f'    """Inject {fault_config.model.name} fault at cycle '
+                    f'{fault_config.target_cycle}."""',
+                    f"    clock = Clock(dut.{clock_signal}, {self._clock_period_ns}, units='ns')",
+                    "    cocotb.start_soon(clock.start())",
+                    "",
+                    "    # Reset",
+                    f"    dut.{reset_signal}.value = 0",
+                    f"    await ClockCycles(dut.{clock_signal}, 5)",
+                    f"    dut.{reset_signal}.value = 1",
+                    "",
+                    f"    await ClockCycles(dut.{clock_signal}, {fault_config.target_cycle})",
+                    "",
+                    f"    # TODO: Implement {fault_config.model.name} injection",
+                    f"    # Parameters: {fault_config.parameters}",
+                    "",
+                    f"    await ClockCycles(dut.{clock_signal}, 100)",
+                    "",
+                ]
+            )
 
         return "\n".join(lines)
 
@@ -696,19 +665,11 @@ class FaultInjectionSimulator:
         recommendations: list[str] = []
 
         if not results:
-            recommendations.append(
-                "Run fault injection campaigns to generate recommendations."
-            )
+            recommendations.append("Run fault injection campaigns to generate recommendations.")
             return recommendations
 
-        critical = [
-            r for r in results
-            if r.classification == FaultClassification.CRITICAL
-        ]
-        undetected = [
-            r for r in results
-            if r.classification == FaultClassification.UNDETECTED
-        ]
+        critical = [r for r in results if r.classification == FaultClassification.CRITICAL]
+        undetected = [r for r in results if r.classification == FaultClassification.UNDETECTED]
 
         # TMR recommendation
         if critical or undetected:
@@ -722,10 +683,7 @@ class FaultInjectionSimulator:
             )
 
         # Dual-rail logic
-        if any(
-            r.config.model in (FaultModel.BIT_FLIP, FaultModel.MULTI_BIT)
-            for r in critical
-        ):
+        if any(r.config.model in (FaultModel.BIT_FLIP, FaultModel.MULTI_BIT) for r in critical):
             recommendations.append(
                 "Implement dual-rail logic with complementary signals "
                 "and precharge for fault detection."
@@ -747,7 +705,8 @@ class FaultInjectionSimulator:
 
         # Clock glitch detection
         clock_faults = [
-            r for r in results
+            r
+            for r in results
             if r.config.model == FaultModel.CLOCK_GLITCH
             and r.classification != FaultClassification.SAFE_ERROR
         ]
@@ -759,7 +718,8 @@ class FaultInjectionSimulator:
 
         # Voltage glitch detection
         voltage_faults = [
-            r for r in results
+            r
+            for r in results
             if r.config.model == FaultModel.VOLTAGE_GLITCH
             and r.classification != FaultClassification.SAFE_ERROR
         ]
@@ -771,20 +731,18 @@ class FaultInjectionSimulator:
 
         # Laser fault protection
         laser_faults = [
-            r for r in results
+            r
+            for r in results
             if r.config.model == FaultModel.LASER
             and r.classification != FaultClassification.SAFE_ERROR
         ]
         if laser_faults:
             recommendations.append(
-                "Add active mesh/shield layer over sensitive logic "
-                "to detect laser fault injection."
+                "Add active mesh/shield layer over sensitive logic to detect laser fault injection."
             )
 
         if not recommendations:
-            recommendations.append(
-                "Design shows good fault resilience. Continue monitoring."
-            )
+            recommendations.append("Design shows good fault resilience. Continue monitoring.")
 
         return recommendations
 

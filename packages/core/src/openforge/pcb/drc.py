@@ -3,6 +3,7 @@
 Uses shapely when available; otherwise falls back to bounding-box and
 segment-segment distance math.
 """
+
 from __future__ import annotations
 
 import math
@@ -20,8 +21,12 @@ except Exception:  # pragma: no cover
 
 
 RuleKind = Literal[
-    "clearance", "track_width", "drill_to_drill",
-    "annular_ring", "silkscreen_overlap", "courtyard_overlap",
+    "clearance",
+    "track_width",
+    "drill_to_drill",
+    "annular_ring",
+    "silkscreen_overlap",
+    "courtyard_overlap",
     "unconnected_net",
 ]
 
@@ -42,8 +47,10 @@ class PcbDrcViolation(BaseModel):
 
 # ----------------------------------------------------------------------
 def _seg_seg_distance(
-    a: tuple[float, float], b: tuple[float, float],
-    c: tuple[float, float], d: tuple[float, float],
+    a: tuple[float, float],
+    b: tuple[float, float],
+    c: tuple[float, float],
+    d: tuple[float, float],
 ) -> float:
     def pt_seg(p, s, e):
         sx, sy = s
@@ -101,11 +108,14 @@ class PcbDrcChecker:
         out: list[PcbDrcViolation] = []
         for t in self.board.tracks:
             if t.width_mm + 1e-9 < rule.value_mm:
-                out.append(PcbDrcViolation(
-                    rule="track_width", x_mm=(t.x1_mm + t.x2_mm) / 2,
-                    y_mm=(t.y1_mm + t.y2_mm) / 2,
-                    message=f"Track width {t.width_mm:.3f}mm < min {rule.value_mm:.3f}mm",
-                ))
+                out.append(
+                    PcbDrcViolation(
+                        rule="track_width",
+                        x_mm=(t.x1_mm + t.x2_mm) / 2,
+                        y_mm=(t.y1_mm + t.y2_mm) / 2,
+                        message=f"Track width {t.width_mm:.3f}mm < min {rule.value_mm:.3f}mm",
+                    )
+                )
         return out
 
     def check_clearance(self) -> list[PcbDrcViolation]:
@@ -124,16 +134,21 @@ class PcbDrcChecker:
                 if a.net != 0 and a.net == b.net:
                     continue
                 dist = _seg_seg_distance(
-                    (a.x1_mm, a.y1_mm), (a.x2_mm, a.y2_mm),
-                    (b.x1_mm, b.y1_mm), (b.x2_mm, b.y2_mm),
+                    (a.x1_mm, a.y1_mm),
+                    (a.x2_mm, a.y2_mm),
+                    (b.x1_mm, b.y1_mm),
+                    (b.x2_mm, b.y2_mm),
                 )
                 min_d = (a.width_mm + b.width_mm) / 2 + clr
                 if dist + 1e-9 < min_d:
-                    out.append(PcbDrcViolation(
-                        rule="clearance", x_mm=(a.x1_mm + a.x2_mm) / 2,
-                        y_mm=(a.y1_mm + a.y2_mm) / 2,
-                        message=f"Track clearance {dist:.3f}mm < {min_d:.3f}mm",
-                    ))
+                    out.append(
+                        PcbDrcViolation(
+                            rule="clearance",
+                            x_mm=(a.x1_mm + a.x2_mm) / 2,
+                            y_mm=(a.y1_mm + a.y2_mm) / 2,
+                            message=f"Track clearance {dist:.3f}mm < {min_d:.3f}mm",
+                        )
+                    )
         return out
 
     def check_drill_to_drill(self) -> list[PcbDrcViolation]:
@@ -158,10 +173,14 @@ class PcbDrcChecker:
                 dist = math.hypot(x1 - x2, y1 - y2)
                 min_d = (d1 + d2) / 2 + clr
                 if dist + 1e-9 < min_d:
-                    out.append(PcbDrcViolation(
-                        rule="drill_to_drill", x_mm=(x1 + x2) / 2, y_mm=(y1 + y2) / 2,
-                        message=f"Drill clearance {dist:.3f}mm < {min_d:.3f}mm",
-                    ))
+                    out.append(
+                        PcbDrcViolation(
+                            rule="drill_to_drill",
+                            x_mm=(x1 + x2) / 2,
+                            y_mm=(y1 + y2) / 2,
+                            message=f"Drill clearance {dist:.3f}mm < {min_d:.3f}mm",
+                        )
+                    )
         return out
 
     def check_annular_ring(self) -> list[PcbDrcViolation]:
@@ -176,17 +195,25 @@ class PcbDrcChecker:
                     ann = (min(pad.size_x_mm, pad.size_y_mm) - pad.drill_mm) / 2
                     if ann + 1e-9 < min_ann:
                         x, y = fp.pad_world_xy(pad)
-                        out.append(PcbDrcViolation(
-                            rule="annular_ring", x_mm=x, y_mm=y,
-                            message=f"{fp.ref}.{pad.name} annular ring {ann:.3f}mm < {min_ann:.3f}mm",
-                        ))
+                        out.append(
+                            PcbDrcViolation(
+                                rule="annular_ring",
+                                x_mm=x,
+                                y_mm=y,
+                                message=f"{fp.ref}.{pad.name} annular ring {ann:.3f}mm < {min_ann:.3f}mm",
+                            )
+                        )
         for via in self.board.vias:
             ann = (via.diameter_mm - via.drill_mm) / 2
             if ann + 1e-9 < min_ann:
-                out.append(PcbDrcViolation(
-                    rule="annular_ring", x_mm=via.x_mm, y_mm=via.y_mm,
-                    message=f"Via annular ring {ann:.3f}mm < {min_ann:.3f}mm",
-                ))
+                out.append(
+                    PcbDrcViolation(
+                        rule="annular_ring",
+                        x_mm=via.x_mm,
+                        y_mm=via.y_mm,
+                        message=f"Via annular ring {ann:.3f}mm < {min_ann:.3f}mm",
+                    )
+                )
         return out
 
     def check_silkscreen_overlap(self) -> list[PcbDrcViolation]:
@@ -200,12 +227,16 @@ class PcbDrcChecker:
         for fp in self.board.footprints:
             for pad in fp.pads:
                 x, y = fp.pad_world_xy(pad)
-                pad_boxes.append((
-                    x - pad.size_x_mm / 2 - clr, y - pad.size_y_mm / 2 - clr,
-                    x + pad.size_x_mm / 2 + clr, y + pad.size_y_mm / 2 + clr,
-                ))
+                pad_boxes.append(
+                    (
+                        x - pad.size_x_mm / 2 - clr,
+                        y - pad.size_y_mm / 2 - clr,
+                        x + pad.size_x_mm / 2 + clr,
+                        y + pad.size_y_mm / 2 + clr,
+                    )
+                )
         for fp in self.board.footprints:
-            for (x1, y1, x2, y2) in fp.silkscreen:
+            for x1, y1, x2, y2 in fp.silkscreen:
                 # to world
                 rot = math.radians(fp.rotation_deg)
                 cs, sn = math.cos(rot), math.sin(rot)
@@ -216,12 +247,15 @@ class PcbDrcChecker:
                 sbox = (min(wx1, wx2), min(wy1, wy2), max(wx1, wx2), max(wy1, wy2))
                 for pb in pad_boxes:
                     if _bbox_overlap(sbox, pb):
-                        out.append(PcbDrcViolation(
-                            rule="silkscreen_overlap",
-                            x_mm=(wx1 + wx2) / 2, y_mm=(wy1 + wy2) / 2,
-                            message=f"Silkscreen overlaps pad near {fp.ref}",
-                            severity="warning",
-                        ))
+                        out.append(
+                            PcbDrcViolation(
+                                rule="silkscreen_overlap",
+                                x_mm=(wx1 + wx2) / 2,
+                                y_mm=(wy1 + wy2) / 2,
+                                message=f"Silkscreen overlaps pad near {fp.ref}",
+                                severity="warning",
+                            )
+                        )
                         break
         return out
 
@@ -243,13 +277,15 @@ class PcbDrcChecker:
         for i in range(len(boxes)):
             for j in range(i + 1, len(boxes)):
                 if _bbox_overlap(boxes[i], boxes[j]):
-                    out.append(PcbDrcViolation(
-                        rule="courtyard_overlap",
-                        x_mm=(boxes[i][0] + boxes[i][2]) / 2,
-                        y_mm=(boxes[i][1] + boxes[i][3]) / 2,
-                        message=f"Courtyards overlap: {fps[i].ref} and {fps[j].ref}",
-                        severity="warning",
-                    ))
+                    out.append(
+                        PcbDrcViolation(
+                            rule="courtyard_overlap",
+                            x_mm=(boxes[i][0] + boxes[i][2]) / 2,
+                            y_mm=(boxes[i][1] + boxes[i][3]) / 2,
+                            message=f"Courtyards overlap: {fps[i].ref} and {fps[j].ref}",
+                            severity="warning",
+                        )
+                    )
         return out
 
     def check_unconnected_nets(self) -> list[PcbDrcViolation]:
@@ -263,10 +299,14 @@ class PcbDrcChecker:
         for net_id, count in pad_nets.items():
             if count >= 2 and net_id not in track_nets:
                 name = self.board.net_name(net_id)
-                out.append(PcbDrcViolation(
-                    rule="unconnected_net", x_mm=0, y_mm=0,
-                    message=f"Net {name or net_id} has no routed tracks",
-                ))
+                out.append(
+                    PcbDrcViolation(
+                        rule="unconnected_net",
+                        x_mm=0,
+                        y_mm=0,
+                        message=f"Net {name or net_id} has no routed tracks",
+                    )
+                )
         return out
 
     def check_all(self) -> list[PcbDrcViolation]:

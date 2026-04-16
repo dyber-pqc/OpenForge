@@ -121,12 +121,31 @@ class KatParser:
         inputs: dict[str, bytes] = {}
         outputs: dict[str, bytes] = {}
         input_keys = {
-            "KEY", "PT", "PLAINTEXT", "IV", "MSG", "MESSAGE", "SEED",
-            "PK", "SK", "D", "Z", "AD", "NONCE", "COUNT",
+            "KEY",
+            "PT",
+            "PLAINTEXT",
+            "IV",
+            "MSG",
+            "MESSAGE",
+            "SEED",
+            "PK",
+            "SK",
+            "D",
+            "Z",
+            "AD",
+            "NONCE",
+            "COUNT",
         }
         output_keys = {
-            "CT", "CIPHERTEXT", "MD", "HASH", "DIGEST", "SIG", "SIGNATURE",
-            "SS", "SHARED_SECRET",
+            "CT",
+            "CIPHERTEXT",
+            "MD",
+            "HASH",
+            "DIGEST",
+            "SIG",
+            "SIGNATURE",
+            "SS",
+            "SHARED_SECRET",
         }
         for k, v in fields.items():
             up = k.upper()
@@ -137,7 +156,11 @@ class KatParser:
             elif up in ("LEN", "KLEN", "MSGLEN", "PKLEN", "SKLEN", "CTLEN"):
                 inputs[up] = v.encode()
             else:
-                inputs[up] = _hex_to_bytes(v) if all(c in "0123456789abcdefABCDEF " for c in v) else v.encode()
+                inputs[up] = (
+                    _hex_to_bytes(v)
+                    if all(c in "0123456789abcdefABCDEF " for c in v)
+                    else v.encode()
+                )
         algo = header.get("ALGORITHM", "UNKNOWN") or "GENERIC"
         return CavpTestVector(
             algorithm=algo,
@@ -202,7 +225,7 @@ class TbGenerator:
             lines.append(f"        if (ct === 128'h{exp_hex}) passes = passes + 1;")
             lines.append("        else fails = fails + 1;")
             lines.append("")
-        lines.append("        $display(\"CAVP: pass=%0d fail=%0d\", passes, fails);")
+        lines.append('        $display("CAVP: pass=%0d fail=%0d", passes, fails);')
         lines.append("        $finish;")
         lines.append("    end")
         lines.append("endmodule")
@@ -244,7 +267,7 @@ class TbGenerator:
             lines.append("        wait(done); @(posedge clk);")
             lines.append(f"        if (digest === {digest_bits}'h{md_hex}) passes = passes + 1;")
             lines.append("        else fails = fails + 1;")
-        lines.append("        $display(\"CAVP: pass=%0d fail=%0d\", passes, fails);")
+        lines.append('        $display("CAVP: pass=%0d fail=%0d", passes, fails);')
         lines.append("        $finish;")
         lines.append("    end")
         lines.append("endmodule")
@@ -277,7 +300,7 @@ class TbGenerator:
         lines.append("            // Compare expected")
         lines.append("            passes = passes + 1;")
         lines.append("        end")
-        lines.append("        $display(\"PQC CAVP: pass=%0d fail=%0d\", passes, fails);")
+        lines.append('        $display("PQC CAVP: pass=%0d fail=%0d", passes, fails);')
         lines.append("        $finish;")
         lines.append("    end")
         lines.append("endmodule")
@@ -400,9 +423,7 @@ class CavpRunner:
 
     # -- Reporting -----------------------------------------------------------
 
-    def summarize(
-        self, results: list[CavpTestResult], algorithm: str = ""
-    ) -> CavpCampaignResult:
+    def summarize(self, results: list[CavpTestResult], algorithm: str = "") -> CavpCampaignResult:
         total = len(results)
         passed = sum(1 for r in results if r.passed)
         failed = total - passed
@@ -470,7 +491,13 @@ class CavpRunner:
         algo_l = algorithm.lower()
         if algo_l.startswith("aes"):
             tb = self.tb_gen.generate_aes_tb(dut_top, vectors)
-        elif algo_l.startswith("sha2") or algo_l.startswith("sha-2") or algo_l == "sha256" or algo_l.startswith("sha3") or algo_l.startswith("sha-3"):
+        elif (
+            algo_l.startswith("sha2")
+            or algo_l.startswith("sha-2")
+            or algo_l == "sha256"
+            or algo_l.startswith("sha3")
+            or algo_l.startswith("sha-3")
+        ):
             tb = self.tb_gen.generate_sha_tb(dut_top, vectors, digest_bits=256)
         else:
             tb = self.tb_gen.generate_pqc_tb(dut_top, vectors, algorithm)

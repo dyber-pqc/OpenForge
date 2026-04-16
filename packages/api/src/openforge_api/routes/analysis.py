@@ -41,6 +41,7 @@ _lvs_results: dict[UUID, LvsResult] = {}
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _create_job(project_id: UUID) -> JobBase:
     """Create and store a new analysis job."""
     job_id = uuid4()
@@ -78,6 +79,7 @@ def _finish_job(job_id: UUID, success: bool) -> None:
 # ---------------------------------------------------------------------------
 # Timing (STA) -- dispatches OpenSTAEngine via asyncio
 # ---------------------------------------------------------------------------
+
 
 async def _dispatch_timing(job_id: UUID, body: TimingRequest) -> None:
     """Background task: run STA engine and store results."""
@@ -152,6 +154,7 @@ async def get_timing_results(job_id: UUID) -> TimingResult:
 # Power -- dispatches PowerAnalyzer via asyncio
 # ---------------------------------------------------------------------------
 
+
 async def _dispatch_power(job_id: UUID, body: PowerRequest) -> None:
     """Background task: run power analysis and store results."""
     try:
@@ -218,6 +221,7 @@ async def get_power_results(job_id: UUID) -> PowerResult:
 # DRC -- dispatches Magic DRC engine via asyncio
 # ---------------------------------------------------------------------------
 
+
 async def _dispatch_drc(job_id: UUID, body: DrcRequest) -> None:
     """Background task: run DRC and store results."""
     try:
@@ -283,6 +287,7 @@ async def get_drc_results(job_id: UUID) -> DrcResult:
 # ---------------------------------------------------------------------------
 # LVS -- dispatches Netgen LVS engine via asyncio
 # ---------------------------------------------------------------------------
+
 
 async def _dispatch_lvs(job_id: UUID, body: LvsRequest) -> None:
     """Background task: run LVS and store results."""

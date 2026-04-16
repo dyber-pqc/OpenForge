@@ -6,6 +6,7 @@ and file lock indicators. The backend is a WebSocket endpoint at
 /ws/collab; actual CRDT document merging is a future project, so
 this panel focuses on presence, comments and chat.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -474,9 +475,7 @@ class CollaborationPanel(QDockWidget):
         self._comments_tree = QTreeWidget()
         self._comments_tree.setHeaderLabels(["Author", "File:Line", "Comment", "Time"])
         self._comments_tree.header().setStretchLastSection(False)
-        self._comments_tree.header().setSectionResizeMode(
-            2, QHeaderView.ResizeMode.Stretch
-        )
+        self._comments_tree.header().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         lay.addWidget(self._comments_tree, 1)
 
         form = QGroupBox("Add comment")
@@ -591,12 +590,8 @@ class CollaborationPanel(QDockWidget):
         self._locks_table = QTableWidget(0, 3)
         self._locks_table.setHorizontalHeaderLabels(["File", "Locked By", "Since"])
         self._locks_table.horizontalHeader().setStretchLastSection(False)
-        self._locks_table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        self._locks_table.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
+        self._locks_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._locks_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         lay.addWidget(self._locks_table, 1)
 
         bar = QHBoxLayout()
@@ -608,9 +603,7 @@ class CollaborationPanel(QDockWidget):
         return w
 
     def set_lock(self, file: str, user: str) -> None:
-        self._locks[file] = FileLock(
-            file=file, locked_by=user, acquired=datetime.now()
-        )
+        self._locks[file] = FileLock(file=file, locked_by=user, acquired=datetime.now())
         self._refresh_locks()
 
     def release_lock(self, file: str) -> None:
@@ -622,9 +615,7 @@ class CollaborationPanel(QDockWidget):
         for i, lock in enumerate(self._locks.values()):
             self._locks_table.setItem(i, 0, QTableWidgetItem(lock.file))
             self._locks_table.setItem(i, 1, QTableWidgetItem(lock.locked_by))
-            self._locks_table.setItem(
-                i, 2, QTableWidgetItem(lock.acquired.strftime("%H:%M:%S"))
-            )
+            self._locks_table.setItem(i, 2, QTableWidgetItem(lock.acquired.strftime("%H:%M:%S")))
 
     def _release_selected_lock(self) -> None:
         row = self._locks_table.currentRow()
@@ -650,13 +641,7 @@ class CollaborationPanel(QDockWidget):
                     display_name=display,
                     online=(i < 3),
                     color=AVATAR_COLORS[i % len(AVATAR_COLORS)],
-                    current_file=(
-                        "src/top.v"
-                        if i == 1
-                        else "tb/top_tb.sv"
-                        if i == 2
-                        else ""
-                    ),
+                    current_file=("src/top.v" if i == 1 else "tb/top_tb.sv" if i == 2 else ""),
                 )
             )
         now = datetime.now()
@@ -684,10 +669,6 @@ class CollaborationPanel(QDockWidget):
                 resolved=True,
             )
         )
-        self._append_chat(
-            ChatMessage(author="alice", text="pushed a fix for the overflow bug")
-        )
-        self._append_chat(
-            ChatMessage(author="bob", text="nice, running sim now")
-        )
+        self._append_chat(ChatMessage(author="alice", text="pushed a fix for the overflow bug"))
+        self._append_chat(ChatMessage(author="bob", text="nice, running sim now"))
         self.set_lock("src/top.v", "alice")

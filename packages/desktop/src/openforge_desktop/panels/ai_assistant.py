@@ -171,9 +171,7 @@ class OllamaClient:
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         if body is not None:
             data = json.dumps(body).encode("utf-8")
-        req = urllib.request.Request(
-            self._url(path), data=data, method=method, headers=headers
-        )
+        req = urllib.request.Request(self._url(path), data=data, method=method, headers=headers)
         return urllib.request.urlopen(req, timeout=timeout or self.timeout)
 
     def is_available(self) -> bool:
@@ -476,17 +474,78 @@ class ConversationStore:
 
 class VerilogHighlighter(QSyntaxHighlighter):
     KEYWORDS = {
-        "module", "endmodule", "input", "output", "inout", "wire", "reg", "logic",
-        "always", "always_comb", "always_ff", "always_latch", "begin", "end",
-        "if", "else", "case", "endcase", "default", "for", "while", "assign",
-        "parameter", "localparam", "generate", "endgenerate", "genvar",
-        "posedge", "negedge", "or", "and", "not", "xor", "nand", "nor",
-        "function", "endfunction", "task", "endtask", "return", "void",
-        "typedef", "struct", "enum", "package", "endpackage", "import",
-        "interface", "endinterface", "modport", "class", "endclass",
-        "initial", "final", "fork", "join", "wait", "disable",
-        "integer", "real", "time", "bit", "byte", "shortint", "int", "longint",
-        "signed", "unsigned", "string", "automatic", "static", "const",
+        "module",
+        "endmodule",
+        "input",
+        "output",
+        "inout",
+        "wire",
+        "reg",
+        "logic",
+        "always",
+        "always_comb",
+        "always_ff",
+        "always_latch",
+        "begin",
+        "end",
+        "if",
+        "else",
+        "case",
+        "endcase",
+        "default",
+        "for",
+        "while",
+        "assign",
+        "parameter",
+        "localparam",
+        "generate",
+        "endgenerate",
+        "genvar",
+        "posedge",
+        "negedge",
+        "or",
+        "and",
+        "not",
+        "xor",
+        "nand",
+        "nor",
+        "function",
+        "endfunction",
+        "task",
+        "endtask",
+        "return",
+        "void",
+        "typedef",
+        "struct",
+        "enum",
+        "package",
+        "endpackage",
+        "import",
+        "interface",
+        "endinterface",
+        "modport",
+        "class",
+        "endclass",
+        "initial",
+        "final",
+        "fork",
+        "join",
+        "wait",
+        "disable",
+        "integer",
+        "real",
+        "time",
+        "bit",
+        "byte",
+        "shortint",
+        "int",
+        "longint",
+        "signed",
+        "unsigned",
+        "string",
+        "automatic",
+        "static",
+        "const",
     }
 
     def __init__(self, document) -> None:
@@ -711,14 +770,10 @@ class MessageBubble(QFrame):
         def repl_code(match: re.Match) -> str:
             lang = match.group(1) or ""
             code = match.group(2)
-            esc = (
-                code.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
+            esc = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             return (
                 f'<pre style="background:{CAT_SURFACE0};color:{CAT_TEXT};'
-                f'padding:8px;border-radius:6px;font-family:Cascadia Code,Consolas,monospace;'
+                f"padding:8px;border-radius:6px;font-family:Cascadia Code,Consolas,monospace;"
                 f'font-size:12px;white-space:pre-wrap;">'
                 f'<span style="color:{CAT_LAVENDER};font-size:10px;">{lang.upper()}</span>\n{esc}'
                 f"</pre>"
@@ -727,8 +782,10 @@ class MessageBubble(QFrame):
         body = re.sub(r"```(\w+)?\n(.*?)```", repl_code, text, flags=re.DOTALL)
         body = re.sub(
             r"`([^`]+)`",
-            lambda m: f'<code style="background:{CAT_SURFACE0};color:{CAT_PEACH};'
-            f'padding:1px 4px;border-radius:3px;">{m.group(1)}</code>',
+            lambda m: (
+                f'<code style="background:{CAT_SURFACE0};color:{CAT_PEACH};'
+                f'padding:1px 4px;border-radius:3px;">{m.group(1)}</code>'
+            ),
             body,
         )
         body = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", body)
@@ -976,13 +1033,9 @@ class AiSettingsDialog(QDialog):
         temp_row = QHBoxLayout()
         self.temp_slider = QSlider(Qt.Horizontal)
         self.temp_slider.setRange(0, 200)
-        self.temp_slider.setValue(
-            int(float(settings.value("ai_assistant/temperature", 0.7)) * 100)
-        )
+        self.temp_slider.setValue(int(float(settings.value("ai_assistant/temperature", 0.7)) * 100))
         self.temp_label = QLabel(f"{self.temp_slider.value() / 100:.2f}")
-        self.temp_slider.valueChanged.connect(
-            lambda v: self.temp_label.setText(f"{v / 100:.2f}")
-        )
+        self.temp_slider.valueChanged.connect(lambda v: self.temp_label.setText(f"{v / 100:.2f}"))
         temp_row.addWidget(self.temp_slider)
         temp_row.addWidget(self.temp_label)
         form.addRow("Temperature:", temp_row)
@@ -1209,9 +1262,7 @@ class AiAssistantPanel(QDockWidget):
         self.settings = QSettings("OpenForge", "Desktop")
         self.store = ConversationStore()
         self.client = OllamaClient(
-            base_url=self.settings.value(
-                "ai_assistant/ollama_url", "http://localhost:11434"
-            ),
+            base_url=self.settings.value("ai_assistant/ollama_url", "http://localhost:11434"),
             model=self.settings.value("ai_assistant/model", "llama3.2"),
         )
 
@@ -1289,9 +1340,7 @@ class AiAssistantPanel(QDockWidget):
         hl.addWidget(self.status_label)
         hl.addStretch(1)
         self.model_label = QLabel("")
-        self.model_label.setStyleSheet(
-            f"color:{CAT_LAVENDER};font-size:11px;font-weight:bold;"
-        )
+        self.model_label.setStyleSheet(f"color:{CAT_LAVENDER};font-size:11px;font-weight:bold;")
         hl.addWidget(self.model_label)
         toggle_sidebar = QToolButton()
         toggle_sidebar.setText("Sidebar")
@@ -1335,7 +1384,10 @@ class AiAssistantPanel(QDockWidget):
         for label, prompt in [
             ("Explain Selection", "Explain this Verilog code in detail:"),
             ("Fix Errors", "Help me fix these errors:"),
-            ("Generate Testbench", "Generate a comprehensive SystemVerilog testbench for this module:"),
+            (
+                "Generate Testbench",
+                "Generate a comprehensive SystemVerilog testbench for this module:",
+            ),
             ("Review Code", "Review this code for bugs and best practices:"),
             ("Optimize", "Suggest optimizations for area, power and timing:"),
             ("Add Comments", "Add detailed comments to this code:"),
@@ -1615,9 +1667,7 @@ class AiAssistantPanel(QDockWidget):
             lambda s, c, t, n=name: self.setup_wizard.update_model_progress(n, s, c, t)
         )
         self._pull_worker.finished_ok.connect(self._on_pull_done)
-        self._pull_worker.error.connect(
-            lambda msg: QMessageBox.warning(self, "Pull failed", msg)
-        )
+        self._pull_worker.error.connect(lambda msg: QMessageBox.warning(self, "Pull failed", msg))
         self._pull_worker.start()
 
     def _on_pull_done(self, name: str) -> None:
@@ -1637,9 +1687,7 @@ class AiAssistantPanel(QDockWidget):
             self.client.base_url = self.settings.value(
                 "ai_assistant/ollama_url", "http://localhost:11434"
             ).rstrip("/")
-            self.client.model = self.settings.value(
-                "ai_assistant/model", self.client.model
-            )
+            self.client.model = self.settings.value("ai_assistant/model", self.client.model)
             self.model_label.setText(self.client.model)
 
     # -- Conversation management ------------------------------------------
@@ -1701,9 +1749,7 @@ class AiAssistantPanel(QDockWidget):
         if not convo:
             return
         if chosen == rename:
-            new_title, ok = QInputDialog.getText(
-                self, "Rename", "Title:", text=convo.title
-            )
+            new_title, ok = QInputDialog.getText(self, "Rename", "Title:", text=convo.title)
             if ok and new_title.strip():
                 convo.title = new_title.strip()
                 item.setText(convo.title)
@@ -1780,9 +1826,7 @@ class AiAssistantPanel(QDockWidget):
             self._attached_files.clear()
         if self._attached_errors:
             full_user_text += (
-                "\n\nRecent errors:\n```\n"
-                + "\n".join(self._attached_errors)
-                + "\n```"
+                "\n\nRecent errors:\n```\n" + "\n".join(self._attached_errors) + "\n```"
             )
             self._attached_errors.clear()
         self._update_context_label()
@@ -1820,9 +1864,7 @@ class AiAssistantPanel(QDockWidget):
 
     def _build_llm_messages(self) -> list[dict]:
         messages: list[dict] = []
-        sys_prompt = self.settings.value(
-            "ai_assistant/system_prompt", DEFAULT_SYSTEM_PROMPT
-        )
+        sys_prompt = self.settings.value("ai_assistant/system_prompt", DEFAULT_SYSTEM_PROMPT)
         ctx_lines = []
         if self._project_path:
             ctx_lines.append(f"Current project: {self._project_path}")
@@ -1911,9 +1953,7 @@ class AiAssistantPanel(QDockWidget):
 
     # -- Context attachment ----------------------------------------------
 
-    def set_project_context(
-        self, project_path: Path, top_module: str, sources: list[Path]
-    ) -> None:
+    def set_project_context(self, project_path: Path, top_module: str, sources: list[Path]) -> None:
         self._project_path = Path(project_path)
         self._top_module = top_module
         self._sources = list(sources)
@@ -1958,9 +1998,7 @@ class AiAssistantPanel(QDockWidget):
         self.input_edit.setFocus()
 
     def _explain_code_block(self, code: str) -> None:
-        self.input_edit.setPlainText(
-            f"Explain this code in detail:\n\n```verilog\n{code}\n```"
-        )
+        self.input_edit.setPlainText(f"Explain this code in detail:\n\n```verilog\n{code}\n```")
         self._on_send_clicked()
 
     # -- Public chat helpers ---------------------------------------------

@@ -68,6 +68,8 @@ def _scrollable(widget: QWidget) -> QScrollArea:
     scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     scroll.setWidget(widget)
     return scroll
+
+
 _TEXT: Final[str] = "#cdd6f4"
 _SUBTEXT: Final[str] = "#a6adc8"
 _OVERLAY0: Final[str] = "#6c7086"
@@ -102,60 +104,90 @@ _CATEGORIES: Final[list[tuple[str, str]]] = [
 # ── FIPS 140-3 requirement groups ──────────────────────────────────────────
 
 _FIPS_GROUPS: Final[list[tuple[str, list[tuple[str, str]]]]] = [
-    ("Cryptographic Module Specification", [
-        ("CMS-01", "Module boundary clearly defined"),
-        ("CMS-02", "Hardware/software/firmware components identified"),
-        ("CMS-03", "Security level documented for each interface"),
-    ]),
-    ("Module Interfaces", [
-        ("MI-01", "Data input interface isolated"),
-        ("MI-02", "Data output interface isolated"),
-        ("MI-03", "Control input interface defined"),
-        ("MI-04", "Status output interface defined"),
-    ]),
-    ("Roles, Services, and Authentication", [
-        ("RSA-01", "Crypto Officer role implemented"),
-        ("RSA-02", "User role implemented"),
-        ("RSA-03", "Role-based authentication enforced"),
-    ]),
-    ("Finite State Model", [
-        ("FSM-01", "State diagram documented"),
-        ("FSM-02", "All transitions validated"),
-        ("FSM-03", "Error states handled correctly"),
-    ]),
-    ("Physical Security", [
-        ("PS-01", "Tamper evidence mechanisms"),
-        ("PS-02", "Tamper response (zeroization) implemented"),
-        ("PS-03", "EFP/EFT protection"),
-    ]),
-    ("Non-Invasive Security", [
-        ("NIS-01", "SPA countermeasures implemented"),
-        ("NIS-02", "DPA countermeasures implemented"),
-        ("NIS-03", "Timing attack countermeasures implemented"),
-        ("NIS-04", "Fault injection countermeasures implemented"),
-    ]),
-    ("Key Management", [
-        ("KM-01", "Key generation uses approved RNG"),
-        ("KM-02", "Key storage uses approved method"),
-        ("KM-03", "Key transport uses approved method"),
-        ("KM-04", "Key zeroization implemented"),
-        ("KM-05", "Key separation enforced"),
-    ]),
-    ("Self-Tests", [
-        ("ST-01", "Power-on self-tests implemented"),
-        ("ST-02", "Conditional self-tests implemented"),
-        ("ST-03", "Known-answer tests for algorithms"),
-        ("ST-04", "Integrity test of module firmware"),
-    ]),
-    ("Design Assurance", [
-        ("DA-01", "Configuration management documented"),
-        ("DA-02", "Delivery and operation guidance"),
-        ("DA-03", "Development documentation complete"),
-    ]),
-    ("Mitigation of Other Attacks", [
-        ("MOA-01", "Side-channel mitigations documented"),
-        ("MOA-02", "Fault attack mitigations documented"),
-    ]),
+    (
+        "Cryptographic Module Specification",
+        [
+            ("CMS-01", "Module boundary clearly defined"),
+            ("CMS-02", "Hardware/software/firmware components identified"),
+            ("CMS-03", "Security level documented for each interface"),
+        ],
+    ),
+    (
+        "Module Interfaces",
+        [
+            ("MI-01", "Data input interface isolated"),
+            ("MI-02", "Data output interface isolated"),
+            ("MI-03", "Control input interface defined"),
+            ("MI-04", "Status output interface defined"),
+        ],
+    ),
+    (
+        "Roles, Services, and Authentication",
+        [
+            ("RSA-01", "Crypto Officer role implemented"),
+            ("RSA-02", "User role implemented"),
+            ("RSA-03", "Role-based authentication enforced"),
+        ],
+    ),
+    (
+        "Finite State Model",
+        [
+            ("FSM-01", "State diagram documented"),
+            ("FSM-02", "All transitions validated"),
+            ("FSM-03", "Error states handled correctly"),
+        ],
+    ),
+    (
+        "Physical Security",
+        [
+            ("PS-01", "Tamper evidence mechanisms"),
+            ("PS-02", "Tamper response (zeroization) implemented"),
+            ("PS-03", "EFP/EFT protection"),
+        ],
+    ),
+    (
+        "Non-Invasive Security",
+        [
+            ("NIS-01", "SPA countermeasures implemented"),
+            ("NIS-02", "DPA countermeasures implemented"),
+            ("NIS-03", "Timing attack countermeasures implemented"),
+            ("NIS-04", "Fault injection countermeasures implemented"),
+        ],
+    ),
+    (
+        "Key Management",
+        [
+            ("KM-01", "Key generation uses approved RNG"),
+            ("KM-02", "Key storage uses approved method"),
+            ("KM-03", "Key transport uses approved method"),
+            ("KM-04", "Key zeroization implemented"),
+            ("KM-05", "Key separation enforced"),
+        ],
+    ),
+    (
+        "Self-Tests",
+        [
+            ("ST-01", "Power-on self-tests implemented"),
+            ("ST-02", "Conditional self-tests implemented"),
+            ("ST-03", "Known-answer tests for algorithms"),
+            ("ST-04", "Integrity test of module firmware"),
+        ],
+    ),
+    (
+        "Design Assurance",
+        [
+            ("DA-01", "Configuration management documented"),
+            ("DA-02", "Delivery and operation guidance"),
+            ("DA-03", "Development documentation complete"),
+        ],
+    ),
+    (
+        "Mitigation of Other Attacks",
+        [
+            ("MOA-01", "Side-channel mitigations documented"),
+            ("MOA-02", "Fault attack mitigations documented"),
+        ],
+    ),
 ]
 
 # ── Shared helpers ─────────────────────────────────────────────────────────
@@ -259,7 +291,9 @@ class _ScoreGaugeWidget(QWidget):
         arc_rect = rect.adjusted(pen_width / 2, pen_width / 2, -pen_width / 2, -pen_width / 2)
 
         # Background track
-        track_pen = QPen(QColor(_SURFACE0), pen_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        track_pen = QPen(
+            QColor(_SURFACE0), pen_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap
+        )
         painter.setPen(track_pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawArc(arc_rect, 225 * 16, -270 * 16)
@@ -294,7 +328,9 @@ class _ScoreGaugeWidget(QWidget):
         font.setBold(False)
         painter.setFont(font)
         label_rect = QRectF(rect.left(), rect.center().y() + size * 0.15, rect.width(), size * 0.15)
-        painter.drawText(label_rect, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop, self._label)
+        painter.drawText(
+            label_rect, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop, self._label
+        )
 
 
 # ── Radar / Spider Chart ──────────────────────────────────────────────────
@@ -344,8 +380,10 @@ class _RadarChartWidget(QWidget):
         painter.setPen(QPen(QColor(_SURFACE1), 1))
         for i in range(n):
             angle = -math.pi / 2 + i * angle_step
-            painter.drawLine(QPointF(cx, cy),
-                             QPointF(cx + radius * math.cos(angle), cy + radius * math.sin(angle)))
+            painter.drawLine(
+                QPointF(cx, cy),
+                QPointF(cx + radius * math.cos(angle), cy + radius * math.sin(angle)),
+            )
 
         # Data polygon fill
         data_pts = QPolygonF()
@@ -471,16 +509,30 @@ class _PowerTraceWidget(QWidget):
         font.setPointSize(7)
         painter.setFont(font)
         painter.setPen(QColor(_SUBTEXT))
-        painter.drawText(QRectF(0, mt, ml - 4, 16), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, f"{y_max:.2f}")
-        painter.drawText(QRectF(0, h - mb - 8, ml - 4, 16), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, f"{y_min:.2f}")
+        painter.drawText(
+            QRectF(0, mt, ml - 4, 16),
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            f"{y_max:.2f}",
+        )
+        painter.drawText(
+            QRectF(0, h - mb - 8, ml - 4, 16),
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            f"{y_min:.2f}",
+        )
         painter.drawText(QRectF(ml, h - mb + 2, pw, 16), Qt.AlignmentFlag.AlignLeft, "0")
-        painter.drawText(QRectF(ml, h - mb + 2, pw, 16), Qt.AlignmentFlag.AlignRight, f"{trace_len}")
+        painter.drawText(
+            QRectF(ml, h - mb + 2, pw, 16), Qt.AlignmentFlag.AlignRight, f"{trace_len}"
+        )
 
         # Title
         font.setPointSize(8)
         font.setBold(True)
         painter.setFont(font)
-        painter.drawText(QRectF(ml, mt - 2, pw, 14), Qt.AlignmentFlag.AlignCenter, "Power Traces (Hamming Weight Model)")
+        painter.drawText(
+            QRectF(ml, mt - 2, pw, 14),
+            Qt.AlignmentFlag.AlignCenter,
+            "Power Traces (Hamming Weight Model)",
+        )
 
 
 # ── T-Statistic Plot ──────────────────────────────────────────────────────
@@ -555,14 +607,26 @@ class _TStatPlotWidget(QWidget):
         font.setPointSize(7)
         painter.setFont(font)
         painter.setPen(QColor(_SUBTEXT))
-        painter.drawText(QRectF(0, mt, ml - 4, 16), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, f"+{y_max:.1f}")
-        painter.drawText(QRectF(0, h - mb - 8, ml - 4, 16), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, f"-{y_max:.1f}")
+        painter.drawText(
+            QRectF(0, mt, ml - 4, 16),
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            f"+{y_max:.1f}",
+        )
+        painter.drawText(
+            QRectF(0, h - mb - 8, ml - 4, 16),
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            f"-{y_max:.1f}",
+        )
 
         # Title
         font.setPointSize(8)
         font.setBold(True)
         painter.setFont(font)
-        painter.drawText(QRectF(ml, mt - 2, pw, 14), Qt.AlignmentFlag.AlignCenter, "TVLA T-Statistic (threshold = +/-4.5)")
+        painter.drawText(
+            QRectF(ml, mt - 2, pw, 14),
+            Qt.AlignmentFlag.AlignCenter,
+            "TVLA T-Statistic (threshold = +/-4.5)",
+        )
 
 
 # ── Donut Pie Chart ───────────────────────────────────────────────────────
@@ -661,8 +725,11 @@ class _EntropyFlowScene(QGraphicsScene):
         source_nodes = []
         for i, name in enumerate(sources):
             y = 30 + i * y_step
-            self.addRect(QRectF(col_x[0], y, node_w, node_h),
-                             QPen(QColor(_CLR_GREEN), 2), QBrush(QColor(_SURFACE0)))
+            self.addRect(
+                QRectF(col_x[0], y, node_w, node_h),
+                QPen(QColor(_CLR_GREEN), 2),
+                QBrush(QColor(_SURFACE0)),
+            )
             t = self.addSimpleText(name, font)
             t.setBrush(QColor(_CLR_GREEN))
             t.setPos(col_x[0] + 8, y + 10)
@@ -671,8 +738,11 @@ class _EntropyFlowScene(QGraphicsScene):
         cond_nodes = []
         for i, name in enumerate(conditioners):
             y = 50 + i * y_step
-            self.addRect(QRectF(col_x[1], y, node_w, node_h),
-                             QPen(QColor(_CLR_YELLOW), 2), QBrush(QColor(_SURFACE0)))
+            self.addRect(
+                QRectF(col_x[1], y, node_w, node_h),
+                QPen(QColor(_CLR_YELLOW), 2),
+                QBrush(QColor(_SURFACE0)),
+            )
             t = self.addSimpleText(name, font)
             t.setBrush(QColor(_CLR_YELLOW))
             t.setPos(col_x[1] + 8, y + 10)
@@ -682,8 +752,11 @@ class _EntropyFlowScene(QGraphicsScene):
         for i, name in enumerate(sinks):
             y = 30 + i * y_step
             color = _CLR_GREEN if i < 2 else _CLR_RED
-            self.addRect(QRectF(col_x[2], y, node_w, node_h),
-                             QPen(QColor(color), 2), QBrush(QColor(_SURFACE0)))
+            self.addRect(
+                QRectF(col_x[2], y, node_w, node_h),
+                QPen(QColor(color), 2),
+                QBrush(QColor(_SURFACE0)),
+            )
             t = self.addSimpleText(name, font)
             t.setBrush(QColor(color))
             t.setPos(col_x[2] + 8, y + 10)
@@ -757,11 +830,17 @@ class _OverviewTab(QWidget):
         # Findings summary
         findings_row = QHBoxLayout()
         self._lbl_critical = QLabel("0 Critical")
-        self._lbl_critical.setStyleSheet(f"color: {_CLR_RED}; font-weight: bold; font-size: 14px; padding: 4px 12px;")
+        self._lbl_critical.setStyleSheet(
+            f"color: {_CLR_RED}; font-weight: bold; font-size: 14px; padding: 4px 12px;"
+        )
         self._lbl_warnings = QLabel("0 Warnings")
-        self._lbl_warnings.setStyleSheet(f"color: {_CLR_YELLOW}; font-weight: bold; font-size: 14px; padding: 4px 12px;")
+        self._lbl_warnings.setStyleSheet(
+            f"color: {_CLR_YELLOW}; font-weight: bold; font-size: 14px; padding: 4px 12px;"
+        )
         self._lbl_info = QLabel("0 Info")
-        self._lbl_info.setStyleSheet(f"color: {_CLR_BLUE}; font-weight: bold; font-size: 14px; padding: 4px 12px;")
+        self._lbl_info.setStyleSheet(
+            f"color: {_CLR_BLUE}; font-weight: bold; font-size: 14px; padding: 4px 12px;"
+        )
         findings_row.addWidget(self._lbl_critical)
         findings_row.addWidget(self._lbl_warnings)
         findings_row.addWidget(self._lbl_info)
@@ -795,7 +874,9 @@ class _OverviewTab(QWidget):
         for row, (name, score, issues, status, color) in enumerate(categories):
             self._cat_table.setItem(row, 0, _text_item(name, color))
             self._cat_table.setItem(row, 1, _numeric_item(score, "{:.0f}", _score_color(score)))
-            self._cat_table.setItem(row, 2, _numeric_item(issues, "{:.0f}", _CLR_YELLOW if issues > 0 else _CLR_GREEN))
+            self._cat_table.setItem(
+                row, 2, _numeric_item(issues, "{:.0f}", _CLR_YELLOW if issues > 0 else _CLR_GREEN)
+            )
             self._cat_table.setItem(row, 3, _text_item(status, _status_color(status)))
 
         self._lbl_critical.setText(f"{critical} Critical")
@@ -842,10 +923,16 @@ class _ConstantTimeTab(QWidget):
         bot_layout.addWidget(_header_label("Violations"))
 
         self._violations_table = QTableWidget(0, 5)
-        self._violations_table.setHorizontalHeaderLabels(["Signal", "Location", "Type", "Severity", "Description"])
+        self._violations_table.setHorizontalHeaderLabels(
+            ["Signal", "Location", "Type", "Severity", "Description"]
+        )
         _configure_table(self._violations_table)
-        self._violations_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
-        self._violations_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        self._violations_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Interactive
+        )
+        self._violations_table.horizontalHeader().setSectionResizeMode(
+            4, QHeaderView.ResizeMode.Stretch
+        )
         bot_layout.addWidget(self._violations_table)
 
         # SVA output area
@@ -903,12 +990,19 @@ class _ConstantTimeTab(QWidget):
                 item.addChild(child)
 
         self._violations_table.setRowCount(len(violations))
-        severity_colors = {"CRITICAL": _CLR_RED, "HIGH": _CLR_PEACH, "MEDIUM": _CLR_YELLOW, "LOW": _CLR_BLUE}
+        severity_colors = {
+            "CRITICAL": _CLR_RED,
+            "HIGH": _CLR_PEACH,
+            "MEDIUM": _CLR_YELLOW,
+            "LOW": _CLR_BLUE,
+        }
         for row, v in enumerate(violations):
             self._violations_table.setItem(row, 0, _text_item(v["signal"], _CLR_RED))
             self._violations_table.setItem(row, 1, _text_item(v["location"]))
             self._violations_table.setItem(row, 2, _text_item(v["type"], _CLR_MAUVE))
-            self._violations_table.setItem(row, 3, _text_item(v["severity"], severity_colors.get(v["severity"], _TEXT)))
+            self._violations_table.setItem(
+                row, 3, _text_item(v["severity"], severity_colors.get(v["severity"], _TEXT))
+            )
             self._violations_table.setItem(row, 4, _text_item(v["description"]))
 
         self._sva_output.setPlainText(sva_text)
@@ -968,7 +1062,9 @@ class _SideChannelTab(QWidget):
 
         # Verdict
         self._verdict_label = QLabel("Verdict: --")
-        self._verdict_label.setStyleSheet(f"color: {_SUBTEXT}; font-size: 14px; font-weight: bold; padding: 4px;")
+        self._verdict_label.setStyleSheet(
+            f"color: {_SUBTEXT}; font-size: 14px; font-weight: bold; padding: 4px;"
+        )
         bot_layout.addWidget(self._verdict_label)
 
         # Controls row
@@ -1027,7 +1123,9 @@ class _SideChannelTab(QWidget):
 
         v_color = _CLR_RED if "Vulnerable" in verdict else _CLR_GREEN
         self._verdict_label.setText(f"Verdict: {verdict}")
-        self._verdict_label.setStyleSheet(f"color: {v_color}; font-size: 14px; font-weight: bold; padding: 4px;")
+        self._verdict_label.setStyleSheet(
+            f"color: {v_color}; font-size: 14px; font-weight: bold; padding: 4px;"
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -1166,7 +1264,9 @@ class _EntropyTab(QWidget):
 
         bot_layout.addWidget(_header_label("Entropy Issues"))
         self._issues_table = QTableWidget(0, 4)
-        self._issues_table.setHorizontalHeaderLabels(["Source", "Issue", "Severity", "Recommendation"])
+        self._issues_table.setHorizontalHeaderLabels(
+            ["Source", "Issue", "Severity", "Recommendation"]
+        )
         _configure_table(self._issues_table)
         self._issues_table.setMaximumHeight(120)
         bot_layout.addWidget(self._issues_table)
@@ -1190,10 +1290,17 @@ class _EntropyTab(QWidget):
 
         self._issues_table.setRowCount(len(issues))
         for row, issue in enumerate(issues):
-            sev_color = {"CRITICAL": _CLR_RED, "HIGH": _CLR_PEACH, "MEDIUM": _CLR_YELLOW, "LOW": _CLR_GREEN}
+            sev_color = {
+                "CRITICAL": _CLR_RED,
+                "HIGH": _CLR_PEACH,
+                "MEDIUM": _CLR_YELLOW,
+                "LOW": _CLR_GREEN,
+            }
             self._issues_table.setItem(row, 0, _text_item(issue["source"]))
             self._issues_table.setItem(row, 1, _text_item(issue["issue"], _CLR_YELLOW))
-            self._issues_table.setItem(row, 2, _text_item(issue["severity"], sev_color.get(issue["severity"], _TEXT)))
+            self._issues_table.setItem(
+                row, 2, _text_item(issue["severity"], sev_color.get(issue["severity"], _TEXT))
+            )
             self._issues_table.setItem(row, 3, _text_item(issue["recommendation"]))
 
         self._nist_table.setRowCount(len(nist_results))
@@ -1244,7 +1351,9 @@ class _FaultInjectionTab(QWidget):
         chart_box.addWidget(self._pie, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._resilience_label = QLabel("Resilience Score: --")
-        self._resilience_label.setStyleSheet(f"color: {_TEXT}; font-size: 16px; font-weight: bold; padding: 4px;")
+        self._resilience_label.setStyleSheet(
+            f"color: {_TEXT}; font-size: 16px; font-weight: bold; padding: 4px;"
+        )
         self._resilience_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         chart_box.addWidget(self._resilience_label)
 
@@ -1287,7 +1396,9 @@ class _FaultInjectionTab(QWidget):
         ctrl_row = QHBoxLayout()
         ctrl_row.addWidget(_dim_label("Fault Model:"))
         self._model_combo = QComboBox()
-        self._model_combo.addItems(["Glitch (clock/voltage)", "Bit Flip (SEU)", "Laser (spatial)", "All Models"])
+        self._model_combo.addItems(
+            ["Glitch (clock/voltage)", "Bit Flip (SEU)", "Laser (spatial)", "All Models"]
+        )
         ctrl_row.addWidget(self._model_combo)
         ctrl_row.addStretch()
         self._btn_run_fault = _accent_button("Run Fault Campaign", _CLR_RED)
@@ -1308,13 +1419,34 @@ class _FaultInjectionTab(QWidget):
     ) -> None:
         self._fault_table.setRowCount(len(faults))
         for row, f in enumerate(faults):
-            cls_colors = {"critical": _CLR_RED, "undetected": _CLR_PEACH, "detected": _CLR_YELLOW, "safe_error": _CLR_GREEN}
+            cls_colors = {
+                "critical": _CLR_RED,
+                "undetected": _CLR_PEACH,
+                "detected": _CLR_YELLOW,
+                "safe_error": _CLR_GREEN,
+            }
             self._fault_table.setItem(row, 0, _text_item(f["model"]))
             self._fault_table.setItem(row, 1, _text_item(f["target"]))
-            self._fault_table.setItem(row, 2, _text_item(f["detected"], _CLR_GREEN if f["detected"] == "Yes" else _CLR_RED))
-            self._fault_table.setItem(row, 3, _text_item(f["output_affected"], _CLR_RED if f["output_affected"] == "Yes" else _CLR_GREEN))
-            self._fault_table.setItem(row, 4, _text_item(f["key_leaked"], _CLR_RED if f["key_leaked"] == "Yes" else _CLR_GREEN))
-            self._fault_table.setItem(row, 5, _text_item(f["classification"], cls_colors.get(f["classification"], _TEXT)))
+            self._fault_table.setItem(
+                row,
+                2,
+                _text_item(f["detected"], _CLR_GREEN if f["detected"] == "Yes" else _CLR_RED),
+            )
+            self._fault_table.setItem(
+                row,
+                3,
+                _text_item(
+                    f["output_affected"], _CLR_RED if f["output_affected"] == "Yes" else _CLR_GREEN
+                ),
+            )
+            self._fault_table.setItem(
+                row,
+                4,
+                _text_item(f["key_leaked"], _CLR_RED if f["key_leaked"] == "Yes" else _CLR_GREEN),
+            )
+            self._fault_table.setItem(
+                row, 5, _text_item(f["classification"], cls_colors.get(f["classification"], _TEXT))
+            )
 
         slices = [
             ("Safe Error", classification.get("safe_error", 0), _CLR_GREEN),
@@ -1326,7 +1458,9 @@ class _FaultInjectionTab(QWidget):
 
         r_color = _score_color(resilience_score)
         self._resilience_label.setText(f"Resilience Score: {resilience_score:.0f}/100")
-        self._resilience_label.setStyleSheet(f"color: {r_color}; font-size: 16px; font-weight: bold; padding: 4px;")
+        self._resilience_label.setStyleSheet(
+            f"color: {r_color}; font-size: 16px; font-weight: bold; padding: 4px;"
+        )
         self._recommendation.setText(recommendation)
 
         if active_countermeasures:
@@ -1519,9 +1653,10 @@ class SecurityPanel(QDockWidget):
     def set_theme(self, dark: bool) -> None:
         """Switch panel QSS between dark and light themes."""
         from openforge_desktop.panels._theme import panel_tab_qss
+
         extra = f"""
             QCheckBox {{
-                color: {'#cdd6f4' if dark else '#212529'};
+                color: {"#cdd6f4" if dark else "#212529"};
                 font-size: 11px;
                 spacing: 6px;
             }}
@@ -1529,12 +1664,12 @@ class SecurityPanel(QDockWidget):
                 width: 14px;
                 height: 14px;
                 border-radius: 3px;
-                border: 1px solid {'#45475a' if dark else '#ced4da'};
-                background-color: {'#313244' if dark else '#dee2e6'};
+                border: 1px solid {"#45475a" if dark else "#ced4da"};
+                background-color: {"#313244" if dark else "#dee2e6"};
             }}
             QCheckBox::indicator:checked {{
-                background-color: {'#89b4fa' if dark else '#0d6efd'};
-                border-color: {'#89b4fa' if dark else '#0d6efd'};
+                background-color: {"#89b4fa" if dark else "#0d6efd"};
+                border-color: {"#89b4fa" if dark else "#0d6efd"};
             }}
         """
         self._tabs.setStyleSheet(panel_tab_qss(dark, extra=extra))
@@ -1548,6 +1683,7 @@ class SecurityPanel(QDockWidget):
         """
         try:
             from openforge_desktop.workers import CryptoWorker
+
             self._crypto_worker = CryptoWorker(
                 source_files=source_files,
                 top_module=top_module,
@@ -1678,24 +1814,64 @@ class SecurityPanel(QDockWidget):
 
     def _populate_ct_demo(self) -> None:
         signals = [
-            {"name": "aes_core.key_reg", "status": "SECRET", "module": "aes_core",
-             "path": "key_in -> key_reg", "path_steps": ["key_in", "key_expand.round_key", "key_reg"]},
-            {"name": "aes_core.sbox_out", "status": "SECRET", "module": "aes_core",
-             "path": "key_reg -> sbox_in -> sbox_out", "path_steps": ["key_reg", "sbox_in", "sbox_out"]},
-            {"name": "aes_core.plaintext", "status": "PUBLIC", "module": "aes_core",
-             "path": "", "path_steps": []},
-            {"name": "aes_core.round_sel", "status": "MIXED", "module": "aes_core",
-             "path": "state -> round_sel", "path_steps": ["state_reg", "round_logic", "round_sel"]},
-            {"name": "aes_core.done", "status": "PUBLIC", "module": "aes_core",
-             "path": "", "path_steps": []},
+            {
+                "name": "aes_core.key_reg",
+                "status": "SECRET",
+                "module": "aes_core",
+                "path": "key_in -> key_reg",
+                "path_steps": ["key_in", "key_expand.round_key", "key_reg"],
+            },
+            {
+                "name": "aes_core.sbox_out",
+                "status": "SECRET",
+                "module": "aes_core",
+                "path": "key_reg -> sbox_in -> sbox_out",
+                "path_steps": ["key_reg", "sbox_in", "sbox_out"],
+            },
+            {
+                "name": "aes_core.plaintext",
+                "status": "PUBLIC",
+                "module": "aes_core",
+                "path": "",
+                "path_steps": [],
+            },
+            {
+                "name": "aes_core.round_sel",
+                "status": "MIXED",
+                "module": "aes_core",
+                "path": "state -> round_sel",
+                "path_steps": ["state_reg", "round_logic", "round_sel"],
+            },
+            {
+                "name": "aes_core.done",
+                "status": "PUBLIC",
+                "module": "aes_core",
+                "path": "",
+                "path_steps": [],
+            },
         ]
         violations = [
-            {"signal": "aes_core.round_sel", "location": "aes_core.sv:142", "type": "branch",
-             "severity": "CRITICAL", "description": "If condition depends on tainted signal 'round_sel'"},
-            {"signal": "aes_core.sbox_addr", "location": "aes_sbox.sv:38", "type": "address",
-             "severity": "HIGH", "description": "Memory index derived from secret key byte"},
-            {"signal": "aes_core.mul_op", "location": "gf_mult.sv:12", "type": "variable-latency",
-             "severity": "MEDIUM", "description": "GF multiply with data-dependent timing path"},
+            {
+                "signal": "aes_core.round_sel",
+                "location": "aes_core.sv:142",
+                "type": "branch",
+                "severity": "CRITICAL",
+                "description": "If condition depends on tainted signal 'round_sel'",
+            },
+            {
+                "signal": "aes_core.sbox_addr",
+                "location": "aes_sbox.sv:38",
+                "type": "address",
+                "severity": "HIGH",
+                "description": "Memory index derived from secret key byte",
+            },
+            {
+                "signal": "aes_core.mul_op",
+                "location": "gf_mult.sv:12",
+                "type": "variable-latency",
+                "severity": "MEDIUM",
+                "description": "GF multiply with data-dependent timing path",
+            },
         ]
         sva = (
             "// Auto-generated CT non-interference properties\n"
@@ -1718,7 +1894,9 @@ class SecurityPanel(QDockWidget):
         n_samples = 200
         traces = []
         for _ in range(8):
-            trace = [3.0 + 0.5 * math.sin(i / 10.0) + random.gauss(0, 0.3) for i in range(n_samples)]
+            trace = [
+                3.0 + 0.5 * math.sin(i / 10.0) + random.gauss(0, 0.3) for i in range(n_samples)
+            ]
             # Add leakage bump
             for lp in [45, 120, 175]:
                 if lp < n_samples:
@@ -1775,16 +1953,39 @@ class SecurityPanel(QDockWidget):
 
     def _populate_entropy_demo(self) -> None:
         issues = [
-            {"source": "PLL Jitter", "issue": "Entropy rate below 0.5 bits/sample",
-             "severity": "HIGH", "recommendation": "Increase PLL free-running frequency"},
-            {"source": "Key Gen", "issue": "Insufficient conditioning before use",
-             "severity": "MEDIUM", "recommendation": "Add SHA-256 conditioning stage"},
+            {
+                "source": "PLL Jitter",
+                "issue": "Entropy rate below 0.5 bits/sample",
+                "severity": "HIGH",
+                "recommendation": "Increase PLL free-running frequency",
+            },
+            {
+                "source": "Key Gen",
+                "issue": "Insufficient conditioning before use",
+                "severity": "MEDIUM",
+                "recommendation": "Add SHA-256 conditioning stage",
+            },
         ]
         nist_results = [
             {"test": "Excursion", "statistic": 0.0312, "threshold": 0.0500, "result": "PASS"},
-            {"test": "numDirectionalRuns", "statistic": 0.0289, "threshold": 0.0500, "result": "PASS"},
-            {"test": "lenDirectionalRuns", "statistic": 0.0478, "threshold": 0.0500, "result": "PASS"},
-            {"test": "numIncreasesDecreases", "statistic": 0.0612, "threshold": 0.0500, "result": "FAIL"},
+            {
+                "test": "numDirectionalRuns",
+                "statistic": 0.0289,
+                "threshold": 0.0500,
+                "result": "PASS",
+            },
+            {
+                "test": "lenDirectionalRuns",
+                "statistic": 0.0478,
+                "threshold": 0.0500,
+                "result": "PASS",
+            },
+            {
+                "test": "numIncreasesDecreases",
+                "statistic": 0.0612,
+                "threshold": 0.0500,
+                "result": "FAIL",
+            },
             {"test": "numRunsMedian", "statistic": 0.0198, "threshold": 0.0500, "result": "PASS"},
             {"test": "lenRunsMedian", "statistic": 0.0345, "threshold": 0.0500, "result": "PASS"},
             {"test": "avgCollision", "statistic": 0.0267, "threshold": 0.0500, "result": "PASS"},
@@ -1798,14 +1999,70 @@ class SecurityPanel(QDockWidget):
 
     def _populate_fault_demo(self) -> None:
         faults = [
-            {"model": "Glitch", "target": "aes_core.round_ctr", "detected": "Yes", "output_affected": "No", "key_leaked": "No", "classification": "detected"},
-            {"model": "Glitch", "target": "aes_core.key_reg[7]", "detected": "No", "output_affected": "Yes", "key_leaked": "Yes", "classification": "critical"},
-            {"model": "Bit Flip", "target": "aes_core.sbox_out[3]", "detected": "Yes", "output_affected": "Yes", "key_leaked": "No", "classification": "detected"},
-            {"model": "Bit Flip", "target": "aes_core.state[127]", "detected": "No", "output_affected": "No", "key_leaked": "No", "classification": "safe_error"},
-            {"model": "Laser", "target": "aes_core.mix_col", "detected": "No", "output_affected": "Yes", "key_leaked": "No", "classification": "undetected"},
-            {"model": "Laser", "target": "aes_core.key_sched", "detected": "No", "output_affected": "Yes", "key_leaked": "Yes", "classification": "critical"},
-            {"model": "Glitch", "target": "aes_core.done_flag", "detected": "No", "output_affected": "No", "key_leaked": "No", "classification": "safe_error"},
-            {"model": "Bit Flip", "target": "aes_core.round_key[0]", "detected": "Yes", "output_affected": "No", "key_leaked": "No", "classification": "detected"},
+            {
+                "model": "Glitch",
+                "target": "aes_core.round_ctr",
+                "detected": "Yes",
+                "output_affected": "No",
+                "key_leaked": "No",
+                "classification": "detected",
+            },
+            {
+                "model": "Glitch",
+                "target": "aes_core.key_reg[7]",
+                "detected": "No",
+                "output_affected": "Yes",
+                "key_leaked": "Yes",
+                "classification": "critical",
+            },
+            {
+                "model": "Bit Flip",
+                "target": "aes_core.sbox_out[3]",
+                "detected": "Yes",
+                "output_affected": "Yes",
+                "key_leaked": "No",
+                "classification": "detected",
+            },
+            {
+                "model": "Bit Flip",
+                "target": "aes_core.state[127]",
+                "detected": "No",
+                "output_affected": "No",
+                "key_leaked": "No",
+                "classification": "safe_error",
+            },
+            {
+                "model": "Laser",
+                "target": "aes_core.mix_col",
+                "detected": "No",
+                "output_affected": "Yes",
+                "key_leaked": "No",
+                "classification": "undetected",
+            },
+            {
+                "model": "Laser",
+                "target": "aes_core.key_sched",
+                "detected": "No",
+                "output_affected": "Yes",
+                "key_leaked": "Yes",
+                "classification": "critical",
+            },
+            {
+                "model": "Glitch",
+                "target": "aes_core.done_flag",
+                "detected": "No",
+                "output_affected": "No",
+                "key_leaked": "No",
+                "classification": "safe_error",
+            },
+            {
+                "model": "Bit Flip",
+                "target": "aes_core.round_key[0]",
+                "detected": "Yes",
+                "output_affected": "No",
+                "key_leaked": "No",
+                "classification": "detected",
+            },
         ]
         classification = {"safe_error": 25, "detected": 38, "undetected": 12, "critical": 25}
         self._fault_tab.populate(

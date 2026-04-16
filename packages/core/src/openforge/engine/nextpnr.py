@@ -27,7 +27,9 @@ _RESOURCE_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     "LUTs": [
         re.compile(r"ICESTORM_LC:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
         re.compile(r"TRELLIS_(?:COMB|SLICE)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
-        re.compile(r"(?:OXIDE_COMB|LUT4|SLICE_LUTX)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
+        re.compile(
+            r"(?:OXIDE_COMB|LUT4|SLICE_LUTX)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE
+        ),
         re.compile(r"LUT[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
     ],
     "FFs": [
@@ -37,10 +39,15 @@ _RESOURCE_PATTERNS: dict[str, list[re.Pattern[str]]] = {
         re.compile(r"(?:FF|DFF|FLIPFLOP)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
     ],
     "BRAMs": [
-        re.compile(r"(?:ICESTORM_RAM|SB_RAM[^:]*|DP16KD|PDPSC16K|EBR|BRAM)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
+        re.compile(
+            r"(?:ICESTORM_RAM|SB_RAM[^:]*|DP16KD|PDPSC16K|EBR|BRAM)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%",
+            re.IGNORECASE,
+        ),
     ],
     "DSPs": [
-        re.compile(r"(?:MULT18X18D|ALU54B|DSP|MULT)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
+        re.compile(
+            r"(?:MULT18X18D|ALU54B|DSP|MULT)[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE
+        ),
     ],
     "IOs": [
         re.compile(r"SB_IO[^:]*:\s*(\d+)/\s*(\d+)\s+(\d+)%", re.IGNORECASE),
@@ -49,9 +56,7 @@ _RESOURCE_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     ],
 }
 
-_FMAX_RE = re.compile(
-    r"Max frequency for clock\s+'?([^':]+)'?:\s*([\d.]+)\s*MHz", re.IGNORECASE
-)
+_FMAX_RE = re.compile(r"Max frequency for clock\s+'?([^':]+)'?:\s*([\d.]+)\s*MHz", re.IGNORECASE)
 _FMAX_RESTRICTED_RE = re.compile(
     r"Max frequency for clock\s+'?([^':]+)'?\s*\(.*?\):\s*([\d.]+)\s*MHz",
     re.IGNORECASE,
@@ -150,6 +155,7 @@ class NextpnrEngine(ToolEngine):
     def check_installed(self) -> bool:
         """True if at least one nextpnr-* binary is on ``$PATH``."""
         import shutil
+
         return any(shutil.which(b) is not None for b in self._family_binaries.values())
 
     def version(self, family: str = "ice40") -> str:
@@ -169,11 +175,8 @@ class NextpnrEngine(ToolEngine):
 
     def list_installed_families(self) -> list[str]:
         import shutil
-        return [
-            fam
-            for fam, b in self._family_binaries.items()
-            if shutil.which(b) is not None
-        ]
+
+        return [fam for fam, b in self._family_binaries.items() if shutil.which(b) is not None]
 
     # ------------------------------------------------------------------
     # Internal helpers

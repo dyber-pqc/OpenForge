@@ -80,7 +80,9 @@ app.add_typer(pnr_app, name="pnr", help="Place and route -- floorplan, place, CT
 app.add_typer(fpga_app, name="fpga", help="FPGA flow -- synth, PnR, pack, flash.")
 
 # Signoff: openforge signoff {sta,drc,lvs,ir-drop,em,thermal,antenna,all,report}
-app.add_typer(signoff_app, name="signoff", help="Signoff -- STA, DRC, LVS, IR drop, EM, thermal, antenna.")
+app.add_typer(
+    signoff_app, name="signoff", help="Signoff -- STA, DRC, LVS, IR drop, EM, thermal, antenna."
+)
 
 # Verification: openforge verify {sim,formal,eqy,lint,cdc,regression}
 app.add_typer(verify_app, name="verify", help="Verification -- sim, formal, lint, CDC, regression.")
@@ -114,9 +116,16 @@ app.command(name="serve")(serve)
 def init(
     name: str = typer.Argument(..., help="Project name."),
     kind: str = typer.Option("asic", "--kind", "-k", help="Project type: asic, fpga, pcb, mixed."),
-    template: str = typer.Option("empty", "--template", "-t", help="Template: sky130, ice40, ecp5, gowin, caravel, pcb, empty."),
+    template: str = typer.Option(
+        "empty",
+        "--template",
+        "-t",
+        help="Template: sky130, ice40, ecp5, gowin, caravel, pcb, empty.",
+    ),
     from_vivado: str | None = typer.Option(None, "--from-vivado", help="Import Vivado .xpr."),
-    from_openlane: str | None = typer.Option(None, "--from-openlane", help="Import OpenLane directory."),
+    from_openlane: str | None = typer.Option(
+        None, "--from-openlane", help="Import OpenLane directory."
+    ),
     from_kicad: str | None = typer.Option(None, "--from-kicad", help="Import KiCad .kicad_pro."),
     from_quartus: str | None = typer.Option(None, "--from-quartus", help="Import Quartus .qpf."),
 ) -> None:
@@ -172,7 +181,9 @@ def sim(
     path: str = typer.Argument(".", help="Path to the design directory."),
     top: str | None = typer.Option(None, "--top", help="Top-level module."),
     tb: str | None = typer.Option(None, "--tb", help="Testbench file."),
-    sim_tool: str = typer.Option("icarus", "--sim", "-s", help="Simulator: verilator, icarus, ghdl."),
+    sim_tool: str = typer.Option(
+        "icarus", "--sim", "-s", help="Simulator: verilator, icarus, ghdl."
+    ),
     waves: bool = typer.Option(True, "--waves/--no-waves", "-w", help="Waveform tracing."),
     timeout: int = typer.Option(300, "--timeout", help="Timeout in seconds."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
@@ -270,7 +281,9 @@ def regression(
     """Run regression tests (shortcut for 'openforge verify regression')."""
     from openforge_cli.commands.verify import regression as verify_regression
 
-    verify_regression(path=path, suite=suite, parallel=parallel, seeds=seeds, json_output=json_output)
+    verify_regression(
+        path=path, suite=suite, parallel=parallel, seeds=seeds, json_output=json_output
+    )
 
 
 @app.command(name="ir-drop")

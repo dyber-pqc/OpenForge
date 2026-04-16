@@ -45,9 +45,7 @@ class SourceSettingsDialog(QDialog):
         files_layout = QVBoxLayout(files_box)
 
         self.files_table = QTableWidget(0, 4, self)
-        self.files_table.setHorizontalHeaderLabels(
-            ["File", "Language", "Library", "Testbench"]
-        )
+        self.files_table.setHorizontalHeaderLabels(["File", "Language", "Library", "Testbench"])
         header = self.files_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
@@ -87,9 +85,7 @@ class SourceSettingsDialog(QDialog):
         def_layout = QVBoxLayout(def_box)
         self.defines_table = QTableWidget(0, 2, self)
         self.defines_table.setHorizontalHeaderLabels(["Name", "Value"])
-        self.defines_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.defines_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         def_layout.addWidget(self.defines_table)
         def_buttons = QHBoxLayout()
         self.add_def_btn = QPushButton("Add")
@@ -137,8 +133,10 @@ class SourceSettingsDialog(QDialog):
         if sources is None:
             design = getattr(cfg, "design", None)
             raw = list(getattr(design, "sources", []) or []) if design else []
-            sources = [{"path": s, "library": "work", "language": "auto",
-                        "is_testbench": False} for s in raw]
+            sources = [
+                {"path": s, "library": "work", "language": "auto", "is_testbench": False}
+                for s in raw
+            ]
 
         for src in sources:
             if hasattr(src, "path"):
@@ -247,8 +245,7 @@ class SourceSettingsDialog(QDialog):
                     "language": lang_cb.currentText() if lang_cb else "auto",
                     "library": lib_item.text() if lib_item else "work",
                     "is_testbench": (
-                        tb_item is not None
-                        and tb_item.checkState() == Qt.CheckState.Checked
+                        tb_item is not None and tb_item.checkState() == Qt.CheckState.Checked
                     ),
                 }
             )

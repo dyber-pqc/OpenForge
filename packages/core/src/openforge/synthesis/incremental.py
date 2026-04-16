@@ -115,9 +115,7 @@ class IncrementalCache:
     def __contains__(self, name: object) -> bool:
         return isinstance(name, str) and name in self.modules
 
-    def is_valid(
-        self, module_name: str, source_hash: str, config_hash: str
-    ) -> bool:
+    def is_valid(self, module_name: str, source_hash: str, config_hash: str) -> bool:
         """True if cache hit and netlist still exists on disk."""
         sig = self.get(module_name)
         if sig is None:
@@ -289,11 +287,7 @@ class IncrementalSynthesizer:
 
     def prune_missing_netlists(self) -> int:
         """Drop entries whose netlist file no longer exists. Returns count."""
-        stale = [
-            name
-            for name, sig in self.cache.modules.items()
-            if not sig.netlist_path.exists()
-        ]
+        stale = [name for name, sig in self.cache.modules.items() if not sig.netlist_path.exists()]
         for name in stale:
             self.cache.remove(name)
         return len(stale)

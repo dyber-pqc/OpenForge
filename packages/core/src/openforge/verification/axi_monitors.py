@@ -48,9 +48,7 @@ def _proto_common(module_name: str, prefix: str) -> list[str]:
     ]
 
 
-def _handshake_asserts(
-    chan: str, valid: str, ready: str, clk: str, rst: str
-) -> list[str]:
+def _handshake_asserts(chan: str, valid: str, ready: str, clk: str, rst: str) -> list[str]:
     lo = chan.lower()
     return [
         f"    // {chan}: VALID must remain high until READY",
@@ -115,10 +113,10 @@ def generate_axi4_lite_monitor(prefix: str = "S_AXI") -> str:
         "",
     ]
     lines += _handshake_asserts("AW", f"{lo}_awvalid", f"{lo}_awready", clk, rst)
-    lines += _handshake_asserts("W",  f"{lo}_wvalid",  f"{lo}_wready",  clk, rst)
-    lines += _handshake_asserts("B",  f"{lo}_bvalid",  f"{lo}_bready",  clk, rst)
+    lines += _handshake_asserts("W", f"{lo}_wvalid", f"{lo}_wready", clk, rst)
+    lines += _handshake_asserts("B", f"{lo}_bvalid", f"{lo}_bready", clk, rst)
     lines += _handshake_asserts("AR", f"{lo}_arvalid", f"{lo}_arready", clk, rst)
-    lines += _handshake_asserts("R",  f"{lo}_rvalid",  f"{lo}_rready",  clk, rst)
+    lines += _handshake_asserts("R", f"{lo}_rvalid", f"{lo}_rready", clk, rst)
 
     # Ordering: BRESP requires a preceding W transaction
     lines += [
@@ -174,10 +172,10 @@ def generate_axi4_full_monitor(prefix: str = "S_AXI") -> str:
     ]
     for ch, v, r in [
         ("AW", f"{lo}_awvalid", f"{lo}_awready"),
-        ("W",  f"{lo}_wvalid",  f"{lo}_wready"),
-        ("B",  f"{lo}_bvalid",  f"{lo}_bready"),
+        ("W", f"{lo}_wvalid", f"{lo}_wready"),
+        ("B", f"{lo}_bvalid", f"{lo}_bready"),
         ("AR", f"{lo}_arvalid", f"{lo}_arready"),
-        ("R",  f"{lo}_rvalid",  f"{lo}_rready"),
+        ("R", f"{lo}_rvalid", f"{lo}_rready"),
     ]:
         lines += _handshake_asserts(ch, v, r, clk, rst)
 

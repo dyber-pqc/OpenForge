@@ -7,6 +7,7 @@ Common use cases:
     - Pre-CTS vs post-CTS netlists
     - ECO verification
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -105,9 +106,7 @@ class LecRunner:
         """
         cwd = Path(cwd) if cwd else Path.cwd()
         cwd.mkdir(parents=True, exist_ok=True)
-        script = self._build_equiv_script(
-            gold_sources, gold_top, rev_sources, rev_top
-        )
+        script = self._build_equiv_script(gold_sources, gold_top, rev_sources, rev_top)
         start = time.time()
         log, error = self._run_yosys(script, cwd, on_output)
         duration = time.time() - start
@@ -139,9 +138,7 @@ class LecRunner:
         """Verify that an RTL description matches its synthesized netlist."""
         cwd = Path(cwd) if cwd else Path.cwd()
         cwd.mkdir(parents=True, exist_ok=True)
-        script = self._build_rtl_vs_gates_script(
-            rtl_sources, netlist_path, top_module, liberty
-        )
+        script = self._build_rtl_vs_gates_script(rtl_sources, netlist_path, top_module, liberty)
         start = time.time()
         log, error = self._run_yosys(script, cwd, None)
         duration = time.time() - start
@@ -190,10 +187,7 @@ class LecRunner:
             rev_top=top_module,
         )
         if ignored_signals:
-            filtered = [
-                d for d in result.diff_points
-                if d.get("signal") not in ignored_signals
-            ]
+            filtered = [d for d in result.diff_points if d.get("signal") not in ignored_signals]
             result.diff_points = filtered
             if len(filtered) == 0 and not result.equivalent:
                 result.equivalent = True
@@ -309,9 +303,7 @@ class LecRunner:
     # ---------- log parsing ----------
 
     _RE_POINTS = re.compile(r"Found\s+(\d+)\s+equiv\s+cells", re.IGNORECASE)
-    _RE_REMAINING = re.compile(
-        r"Found\s+(\d+)\s+unproven\s+\$equiv\s+cells", re.IGNORECASE
-    )
+    _RE_REMAINING = re.compile(r"Found\s+(\d+)\s+unproven\s+\$equiv\s+cells", re.IGNORECASE)
     _RE_PROVEN = re.compile(r"Successfully\s+proved\s+(\d+)", re.IGNORECASE)
     _RE_NO_DIFF = re.compile(r"Equivalence successfully proven", re.IGNORECASE)
 
@@ -344,9 +336,7 @@ class LecRunner:
                     }
                 )
             elif line.startswith("ERROR"):
-                diffs.append(
-                    {"type": "error", "signal": "", "reason": line}
-                )
+                diffs.append({"type": "error", "signal": "", "reason": line})
 
         return equivalent, points, matched, diffs
 
@@ -355,9 +345,7 @@ class LecRunner:
         return Path(p).as_posix()
 
 
-def quick_check(
-    gold: Path, rev: Path, top: str, cwd: Path | None = None
-) -> LecResult:
+def quick_check(gold: Path, rev: Path, top: str, cwd: Path | None = None) -> LecResult:
     """One-shot helper used by tests and the CLI."""
     return LecRunner().check_equivalence(
         gold_sources=[Path(gold)],

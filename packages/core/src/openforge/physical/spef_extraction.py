@@ -5,6 +5,7 @@ including coupling capacitances between adjacent nets. The implementation
 operates on a parsed DEF + LEF view of the design and emits an industry
 standard SPEF file consumable by static timing tools (OpenSTA, PrimeTime).
 """
+
 from __future__ import annotations
 
 import math
@@ -252,17 +253,13 @@ class ParasiticExtractor:
             total += math.sqrt(dx * dx + dy * dy)
         return total
 
-    def compute_segment_resistance(
-        self, layer: str, length_um: float, width_um: float
-    ) -> float:
+    def compute_segment_resistance(self, layer: str, length_um: float, width_um: float) -> float:
         sheet = self._sheet_r.get(layer, 0.1)
         if width_um <= 0:
             return 0.0
         return sheet * (length_um / width_um)
 
-    def compute_segment_capacitance(
-        self, layer: str, length_um: float, width_um: float
-    ) -> float:
+    def compute_segment_capacitance(self, layer: str, length_um: float, width_um: float) -> float:
         area_c = self._cap_per_um2.get(layer, 0.07) * (length_um * width_um)
         fringe_c = self._fringe.get(layer, 0.04) * (2.0 * length_um)
         return area_c + fringe_c
@@ -286,9 +283,7 @@ class ParasiticExtractor:
             total += self.compute_segment_capacitance(layer, length, width)
         return total
 
-    def compute_coupling_capacitance(
-        self, net_a, net_b, distance_um: float
-    ) -> float:
+    def compute_coupling_capacitance(self, net_a, net_b, distance_um: float) -> float:
         """Approximate coupling cap between two parallel wires."""
         if distance_um <= 0:
             distance_um = 0.05
@@ -304,9 +299,7 @@ class ParasiticExtractor:
 
     # -------------------- coupling extraction --------------------
 
-    def _compute_all_coupling(
-        self, data: SpefData, net_wires: dict[str, list[_Wire]]
-    ) -> None:
+    def _compute_all_coupling(self, data: SpefData, net_wires: dict[str, list[_Wire]]) -> None:
         """O(N^2) approximate coupling extraction."""
         names = list(net_wires.keys())
         boxes: dict[str, tuple[float, float, float, float]] = {}
@@ -361,9 +354,9 @@ class ParasiticExtractor:
         lines.append('*PROGRAM "openforge-xrc"')
         lines.append('*VERSION "1.0"')
         lines.append('*DESIGN_FLOW "EXTERNAL_LOADS" "EXTERNAL_SLEWS"')
-        lines.append('*DIVIDER /')
-        lines.append('*DELIMITER :')
-        lines.append('*BUS_DELIMITER [ ]')
+        lines.append("*DIVIDER /")
+        lines.append("*DELIMITER :")
+        lines.append("*BUS_DELIMITER [ ]")
         lines.append(f"*T_UNIT 1 {data.units_t}")
         lines.append(f"*C_UNIT 1 {data.units_c}")
         lines.append(f"*R_UNIT 1 {data.units_r}")

@@ -22,25 +22,25 @@ ARROW_DOWN_RIGHT = "\u2198"
 ARROW_LEFT_RIGHT = "\u2194"
 ARROW_UP_DOWN = "\u2195"
 
-ARROW_LEFT_HEAVY = "\u2B05"
-ARROW_RIGHT_HEAVY = "\u27A1"
-ARROW_UP_HEAVY = "\u2B06"
-ARROW_DOWN_HEAVY = "\u2B07"
+ARROW_LEFT_HEAVY = "\u2b05"
+ARROW_RIGHT_HEAVY = "\u27a1"
+ARROW_UP_HEAVY = "\u2b06"
+ARROW_DOWN_HEAVY = "\u2b07"
 
 CHEVRON_LEFT = "\u2039"
-CHEVRON_RIGHT = "\u203A"
-CHEVRON_UP = "\u02C4"
-CHEVRON_DOWN = "\u02C5"
+CHEVRON_RIGHT = "\u203a"
+CHEVRON_UP = "\u02c4"
+CHEVRON_DOWN = "\u02c5"
 
-DOUBLE_CHEVRON_LEFT = "\u00AB"
-DOUBLE_CHEVRON_RIGHT = "\u00BB"
+DOUBLE_CHEVRON_LEFT = "\u00ab"
+DOUBLE_CHEVRON_RIGHT = "\u00bb"
 
-TRIANGLE_RIGHT = "\u25B6"
-TRIANGLE_LEFT = "\u25C0"
-TRIANGLE_UP = "\u25B2"
-TRIANGLE_DOWN = "\u25BC"
-TRIANGLE_RIGHT_SMALL = "\u25B8"
-TRIANGLE_DOWN_SMALL = "\u25BE"
+TRIANGLE_RIGHT = "\u25b6"
+TRIANGLE_LEFT = "\u25c0"
+TRIANGLE_UP = "\u25b2"
+TRIANGLE_DOWN = "\u25bc"
+TRIANGLE_RIGHT_SMALL = "\u25b8"
+TRIANGLE_DOWN_SMALL = "\u25be"
 
 # ==============================================================================
 # STATUS / VALIDATION
@@ -51,93 +51,93 @@ CHECK_HEAVY = "\u2714"
 CHECK_BOX = "\u2611"
 CROSS = "\u2717"
 CROSS_HEAVY = "\u2718"
-CROSS_MARK = "\u274C"
+CROSS_MARK = "\u274c"
 BALLOT_X = "\u2613"
 
-WARN = "\u26A0"
-INFO = "\u24D8"
+WARN = "\u26a0"
+INFO = "\u24d8"
 INFO_CIRCLE = "\u2139"
 QUESTION = "\u2753"
 EXCLAIM = "\u2757"
-EXCLAIM_DOUBLE = "\u203C"
+EXCLAIM_DOUBLE = "\u203c"
 
-CIRCLE_FILLED = "\u25CF"
-CIRCLE_EMPTY = "\u25CB"
-CIRCLE_DOT = "\u29BF"
-SQUARE_FILLED = "\u25A0"
-SQUARE_EMPTY = "\u25A1"
-DIAMOND_FILLED = "\u25C6"
-DIAMOND_EMPTY = "\u25C7"
+CIRCLE_FILLED = "\u25cf"
+CIRCLE_EMPTY = "\u25cb"
+CIRCLE_DOT = "\u29bf"
+SQUARE_FILLED = "\u25a0"
+SQUARE_EMPTY = "\u25a1"
+DIAMOND_FILLED = "\u25c6"
+DIAMOND_EMPTY = "\u25c7"
 
 # ==============================================================================
 # TOOLS / ACTIONS
 # ==============================================================================
 
 GEAR = "\u2699"
-WRENCH = "\U0001F527"
-HAMMER = "\U0001F528"
-SCREWDRIVER = "\U0001FA9B"
-TOOLBOX = "\U0001F9F0"
+WRENCH = "\U0001f527"
+HAMMER = "\U0001f528"
+SCREWDRIVER = "\U0001fa9b"
+TOOLBOX = "\U0001f9f0"
 
-PLAY = "\u25B6"
-PAUSE = "\u23F8"
-STOP = "\u23F9"
-RECORD = "\u23FA"
-EJECT = "\u23CF"
-NEXT = "\u23ED"
-PREV = "\u23EE"
-FAST_FORWARD = "\u23E9"
-REWIND = "\u23EA"
+PLAY = "\u25b6"
+PAUSE = "\u23f8"
+STOP = "\u23f9"
+RECORD = "\u23fa"
+EJECT = "\u23cf"
+NEXT = "\u23ed"
+PREV = "\u23ee"
+FAST_FORWARD = "\u23e9"
+REWIND = "\u23ea"
 
-REFRESH = "\u21BB"
-RELOAD = "\u27F3"
-SYNC = "\u21CB"
-UNDO = "\u21B6"
-REDO = "\u21B7"
+REFRESH = "\u21bb"
+RELOAD = "\u27f3"
+SYNC = "\u21cb"
+UNDO = "\u21b6"
+REDO = "\u21b7"
 
 # ==============================================================================
 # EDA / ELECTRICAL
 # ==============================================================================
 
-LIGHTNING = "\u26A1"
-LIGHTBULB = "\U0001F4A1"
-BATTERY = "\U0001F50B"
-PLUG = "\U0001F50C"
-MICROCHIP = "\U0001F4BB"
+LIGHTNING = "\u26a1"
+LIGHTBULB = "\U0001f4a1"
+BATTERY = "\U0001f50b"
+PLUG = "\U0001f50c"
+MICROCHIP = "\U0001f4bb"
 
 WAVE = "\u3030"
-WAVE_DASH = "\u301C"
-SINE_WAVE = "\u223F"
-TILDE = "\u007E"
+WAVE_DASH = "\u301c"
+SINE_WAVE = "\u223f"
+TILDE = "\u007e"
 
-GRID = "\u22BD"
-CIRCUIT = "\u29C9"
-INFINITY = "\u221E"
+GRID = "\u22bd"
+CIRCUIT = "\u29c9"
+INFINITY = "\u221e"
 OHM = "\u2126"
-MICRO = "\u00B5"
-DEGREE = "\u00B0"
-PLUS_MINUS = "\u00B1"
+MICRO = "\u00b5"
+DEGREE = "\u00b0"
+PLUS_MINUS = "\u00b1"
 
 # ==============================================================================
 # UI / GENERAL
 # ==============================================================================
 
-SEARCH = "\U0001F50D"
+SEARCH = "\U0001f50d"
 SEARCH_ALT = "\u2315"
-MAGNIFIER = "\u26B2"
+MAGNIFIER = "\u26b2"
 
-PLUS = "\u002B"
+PLUS = "\u002b"
 MINUS = "\u2212"
 PLUS_HEAVY = "\u2795"
 MINUS_HEAVY = "\u2796"
-MULTIPLY = "\u00D7"
-DIVIDE = "\u00F7"
-EQUALS = "\u003D"
+MULTIPLY = "\u00d7"
+DIVIDE = "\u00f7"
+EQUALS = "\u003d"
 
-DOTS_V = "\u22EE"
-DOTS_H = "\u22EF"
-DOTS_DOWN = "\u22F0"
-DOTS_UP = "\u22F1"
+DOTS_V = "\u22ee"
+DOTS_H = "\u22ef"
+DOTS_DOWN = "\u22f0"
+DOTS_UP = "\u22f1"
 HAMBURGER = "\u2630"
 HAMBURGER_HEAVY = "\u2261"
 
@@ -147,48 +147,48 @@ ELLIPSIS = "\u2026"
 # FILES / FOLDERS
 # ==============================================================================
 
-FOLDER = "\U0001F4C1"
-FOLDER_OPEN = "\U0001F4C2"
-FILE = "\U0001F4C4"
-FILE_TEXT = "\U0001F4DD"
-FILE_BINARY = "\U0001F4BE"
-FLOPPY = "\U0001F4BE"
-DOCUMENT = "\U0001F5CE"
+FOLDER = "\U0001f4c1"
+FOLDER_OPEN = "\U0001f4c2"
+FILE = "\U0001f4c4"
+FILE_TEXT = "\U0001f4dd"
+FILE_BINARY = "\U0001f4be"
+FLOPPY = "\U0001f4be"
+DOCUMENT = "\U0001f5ce"
 PAGE = "\u2398"
 
 # ==============================================================================
 # TIME / CALENDAR
 # ==============================================================================
 
-CLOCK = "\U0001F550"
-WATCH = "\u231A"
-HOURGLASS = "\u231B"
-HOURGLASS_FLOW = "\u23F3"
-TIMER = "\u23F2"
-ALARM = "\u23F0"
-CALENDAR = "\U0001F4C5"
-DATE = "\U0001F4C6"
+CLOCK = "\U0001f550"
+WATCH = "\u231a"
+HOURGLASS = "\u231b"
+HOURGLASS_FLOW = "\u23f3"
+TIMER = "\u23f2"
+ALARM = "\u23f0"
+CALENDAR = "\U0001f4c5"
+DATE = "\U0001f4c6"
 
 # ==============================================================================
 # COMMUNICATION
 # ==============================================================================
 
 ENVELOPE = "\u2709"
-PHONE = "\u260E"
-SPEAKER = "\U0001F50A"
-MUTE = "\U0001F507"
-BELL = "\U0001F514"
-BELL_OFF = "\U0001F515"
+PHONE = "\u260e"
+SPEAKER = "\U0001f50a"
+MUTE = "\U0001f507"
+BELL = "\U0001f514"
+BELL_OFF = "\U0001f515"
 
 # ==============================================================================
 # SECURITY
 # ==============================================================================
 
-LOCK = "\U0001F512"
-LOCK_OPEN = "\U0001F513"
-KEY = "\U0001F511"
-SHIELD = "\U0001F6E1"
-EYE = "\U0001F441"
+LOCK = "\U0001f512"
+LOCK_OPEN = "\U0001f513"
+KEY = "\U0001f511"
+SHIELD = "\U0001f6e1"
+EYE = "\U0001f441"
 
 # ==============================================================================
 # WEATHER / NATURE (used as semantic icons)
@@ -200,67 +200,67 @@ HEART = "\u2764"
 HEART_EMPTY = "\u2661"
 SPARKLES = "\u2728"
 SUN = "\u2600"
-MOON = "\u263D"
+MOON = "\u263d"
 
 # ==============================================================================
 # MATH / LOGIC
 # ==============================================================================
 
 SUMMATION = "\u2211"
-PRODUCT = "\u220F"
-INTEGRAL = "\u222B"
-SQRT = "\u221A"
+PRODUCT = "\u220f"
+INTEGRAL = "\u222b"
+SQRT = "\u221a"
 APPROX = "\u2248"
 NOT_EQUAL = "\u2260"
 LESS_EQUAL = "\u2264"
 GREATER_EQUAL = "\u2265"
-PLUSMINUS = "\u00B1"
-PI = "\u03C0"
+PLUSMINUS = "\u00b1"
+PI = "\u03c0"
 DELTA = "\u0394"
-LAMBDA = "\u03BB"
-MU = "\u03BC"
-SIGMA = "\u03A3"
-OMEGA = "\u03A9"
+LAMBDA = "\u03bb"
+MU = "\u03bc"
+SIGMA = "\u03a3"
+OMEGA = "\u03a9"
 
 LOGIC_AND = "\u2227"
 LOGIC_OR = "\u2228"
-LOGIC_NOT = "\u00AC"
+LOGIC_NOT = "\u00ac"
 LOGIC_XOR = "\u2295"
-LOGIC_NAND = "\u22BC"
-LOGIC_NOR = "\u22BD"
+LOGIC_NAND = "\u22bc"
+LOGIC_NOR = "\u22bd"
 
 # ==============================================================================
 # CHARTS / DATA
 # ==============================================================================
 
-CHART_BAR = "\U0001F4CA"
-CHART_LINE = "\U0001F4C8"
-CHART_DOWN = "\U0001F4C9"
+CHART_BAR = "\U0001f4ca"
+CHART_LINE = "\U0001f4c8"
+CHART_DOWN = "\U0001f4c9"
 
 # ==============================================================================
 # BRACKETS
 # ==============================================================================
 
-LBRACE = "\u007B"
-RBRACE = "\u007D"
-LBRACK = "\u005B"
-RBRACK = "\u005D"
-LANGLE = "\u27E8"
-RANGLE = "\u27E9"
+LBRACE = "\u007b"
+RBRACE = "\u007d"
+LBRACK = "\u005b"
+RBRACK = "\u005d"
+LANGLE = "\u27e8"
+RANGLE = "\u27e9"
 
 # ==============================================================================
 # MISC SYMBOLS
 # ==============================================================================
 
-COPYRIGHT = "\u00A9"
-REGISTERED = "\u00AE"
+COPYRIGHT = "\u00a9"
+REGISTERED = "\u00ae"
 TRADEMARK = "\u2122"
-SECTION = "\u00A7"
-PARAGRAPH = "\u00B6"
+SECTION = "\u00a7"
+PARAGRAPH = "\u00b6"
 DAGGER = "\u2020"
 DOUBLE_DAGGER = "\u2021"
 BULLET = "\u2022"
-MIDDLE_DOT = "\u00B7"
+MIDDLE_DOT = "\u00b7"
 
 # ==============================================================================
 # OPENFORGE-SPECIFIC SEMANTIC ICONS

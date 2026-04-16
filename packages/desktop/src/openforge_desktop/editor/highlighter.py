@@ -14,15 +14,15 @@ from PySide6.QtGui import QColor, QFont, QSyntaxHighlighter, QTextCharFormat, QT
 
 # ── Catppuccin Mocha palette ─────────────────────────────────────────────
 
-_MAUVE: Final[str] = "#cba6f7"   # keywords
-_BLUE: Final[str] = "#89b4fa"    # types
-_PEACH: Final[str] = "#fab387"   # numbers
-_GREEN: Final[str] = "#a6e3a1"   # strings
+_MAUVE: Final[str] = "#cba6f7"  # keywords
+_BLUE: Final[str] = "#89b4fa"  # types
+_PEACH: Final[str] = "#fab387"  # numbers
+_GREEN: Final[str] = "#a6e3a1"  # strings
 _OVERLAY0: Final[str] = "#6c7086"  # comments
-_RED: Final[str] = "#f38ba8"     # preprocessor
+_RED: Final[str] = "#f38ba8"  # preprocessor
 _YELLOW: Final[str] = "#f9e2af"  # system tasks
-_SKY: Final[str] = "#89dceb"     # operators
-_TEAL: Final[str] = "#94e2d5"    # module instances / identifiers
+_SKY: Final[str] = "#89dceb"  # operators
+_TEAL: Final[str] = "#94e2d5"  # module instances / identifiers
 _FLAMINGO: Final[str] = "#f2cdcd"  # labels
 _LAVENDER: Final[str] = "#b4befe"  # constants
 
@@ -48,37 +48,161 @@ def _make_fmt(
 # ═══════════════════════════════════════════════════════════════════════════
 
 _VERILOG_KEYWORDS: Final[set[str]] = {
-    "module", "endmodule", "input", "output", "inout", "wire", "reg", "logic",
-    "always", "always_ff", "always_comb", "always_latch", "assign",
-    "if", "else", "begin", "end", "case", "casex", "casez", "endcase",
-    "for", "while", "repeat", "forever", "do",
-    "generate", "endgenerate", "function", "endfunction", "task", "endtask",
-    "parameter", "localparam", "defparam",
-    "integer", "real", "time", "initial", "posedge", "negedge",
-    "typedef", "struct", "enum", "union",
-    "interface", "endinterface", "modport", "clocking", "endclocking",
-    "class", "endclass", "extends", "implements",
-    "package", "endpackage", "import", "export",
-    "constraint", "covergroup", "endgroup", "coverpoint", "cross",
-    "property", "endproperty", "sequence", "endsequence",
-    "assert", "assume", "cover", "expect",
-    "rand", "randc", "virtual", "pure", "extern",
-    "return", "break", "continue", "fork", "join", "join_any", "join_none",
-    "disable", "iff", "inside", "dist", "with", "unique", "priority",
-    "tagged", "packed", "const", "ref", "local", "protected",
-    "static", "automatic", "new", "null", "this", "super",
-    "program", "endprogram", "checker", "endchecker",
-    "or", "and", "not", "nand", "nor", "xor", "xnor",
-    "supply0", "supply1", "tri", "triand", "trior", "tri0", "tri1",
-    "wand", "wor", "trireg", "pullup", "pulldown",
-    "default", "specify", "endspecify", "primitive", "endprimitive",
-    "table", "endtable",
+    "module",
+    "endmodule",
+    "input",
+    "output",
+    "inout",
+    "wire",
+    "reg",
+    "logic",
+    "always",
+    "always_ff",
+    "always_comb",
+    "always_latch",
+    "assign",
+    "if",
+    "else",
+    "begin",
+    "end",
+    "case",
+    "casex",
+    "casez",
+    "endcase",
+    "for",
+    "while",
+    "repeat",
+    "forever",
+    "do",
+    "generate",
+    "endgenerate",
+    "function",
+    "endfunction",
+    "task",
+    "endtask",
+    "parameter",
+    "localparam",
+    "defparam",
+    "integer",
+    "real",
+    "time",
+    "initial",
+    "posedge",
+    "negedge",
+    "typedef",
+    "struct",
+    "enum",
+    "union",
+    "interface",
+    "endinterface",
+    "modport",
+    "clocking",
+    "endclocking",
+    "class",
+    "endclass",
+    "extends",
+    "implements",
+    "package",
+    "endpackage",
+    "import",
+    "export",
+    "constraint",
+    "covergroup",
+    "endgroup",
+    "coverpoint",
+    "cross",
+    "property",
+    "endproperty",
+    "sequence",
+    "endsequence",
+    "assert",
+    "assume",
+    "cover",
+    "expect",
+    "rand",
+    "randc",
+    "virtual",
+    "pure",
+    "extern",
+    "return",
+    "break",
+    "continue",
+    "fork",
+    "join",
+    "join_any",
+    "join_none",
+    "disable",
+    "iff",
+    "inside",
+    "dist",
+    "with",
+    "unique",
+    "priority",
+    "tagged",
+    "packed",
+    "const",
+    "ref",
+    "local",
+    "protected",
+    "static",
+    "automatic",
+    "new",
+    "null",
+    "this",
+    "super",
+    "program",
+    "endprogram",
+    "checker",
+    "endchecker",
+    "or",
+    "and",
+    "not",
+    "nand",
+    "nor",
+    "xor",
+    "xnor",
+    "supply0",
+    "supply1",
+    "tri",
+    "triand",
+    "trior",
+    "tri0",
+    "tri1",
+    "wand",
+    "wor",
+    "trireg",
+    "pullup",
+    "pulldown",
+    "default",
+    "specify",
+    "endspecify",
+    "primitive",
+    "endprimitive",
+    "table",
+    "endtable",
 }
 
 _VERILOG_TYPES: Final[set[str]] = {
-    "wire", "reg", "logic", "bit", "byte", "shortint", "int", "longint",
-    "real", "shortreal", "realtime", "string", "void", "chandle", "event",
-    "genvar", "signed", "unsigned", "integer", "time",
+    "wire",
+    "reg",
+    "logic",
+    "bit",
+    "byte",
+    "shortint",
+    "int",
+    "longint",
+    "real",
+    "shortreal",
+    "realtime",
+    "string",
+    "void",
+    "chandle",
+    "event",
+    "genvar",
+    "signed",
+    "unsigned",
+    "integer",
+    "time",
 }
 
 _VERILOG_SYSTASKS: Final[str] = (
@@ -140,10 +264,12 @@ class VerilogHighlighter(QSyntaxHighlighter):
 
         # Order matters: later rules override earlier ones within a block.
         # Operators (sky)
-        self._rules.append((
-            QRegularExpression(_VERILOG_OPERATORS),
-            _make_fmt(_SKY),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(_VERILOG_OPERATORS),
+                _make_fmt(_SKY),
+            )
+        )
 
         # Keywords (mauve, bold)
         kw_pattern = r"\b(?:" + "|".join(sorted(_VERILOG_KEYWORDS)) + r")\b"
@@ -210,38 +336,139 @@ class VerilogHighlighter(QSyntaxHighlighter):
 # ═══════════════════════════════════════════════════════════════════════════
 
 _VHDL_KEYWORDS: Final[set[str]] = {
-    "abs", "access", "after", "alias", "all", "and", "architecture",
-    "array", "assert", "assume", "attribute",
-    "begin", "block", "body", "buffer", "bus",
-    "case", "component", "configuration", "constant", "context",
-    "default", "disconnect", "downto",
-    "else", "elsif", "end", "entity", "exit",
-    "file", "for", "force", "function",
-    "generate", "generic", "group", "guarded",
-    "if", "impure", "in", "inertial", "inout", "is",
-    "label", "library", "linkage", "literal", "loop",
-    "map", "mod",
-    "nand", "new", "next", "nor", "not", "null",
-    "of", "on", "open", "or", "others", "out",
-    "package", "parameter", "port", "postponed", "procedure",
-    "process", "property", "protected", "pure",
-    "range", "record", "register", "reject", "release",
-    "rem", "report", "restrict", "return", "rol", "ror",
-    "select", "sequence", "severity", "signal", "shared",
-    "sla", "sll", "sra", "srl", "subtype",
-    "then", "to", "transport", "type",
-    "unaffected", "units", "until", "use",
-    "variable", "vmode", "vprop", "vunit",
-    "wait", "when", "while", "with",
-    "xnor", "xor",
+    "abs",
+    "access",
+    "after",
+    "alias",
+    "all",
+    "and",
+    "architecture",
+    "array",
+    "assert",
+    "assume",
+    "attribute",
+    "begin",
+    "block",
+    "body",
+    "buffer",
+    "bus",
+    "case",
+    "component",
+    "configuration",
+    "constant",
+    "context",
+    "default",
+    "disconnect",
+    "downto",
+    "else",
+    "elsif",
+    "end",
+    "entity",
+    "exit",
+    "file",
+    "for",
+    "force",
+    "function",
+    "generate",
+    "generic",
+    "group",
+    "guarded",
+    "if",
+    "impure",
+    "in",
+    "inertial",
+    "inout",
+    "is",
+    "label",
+    "library",
+    "linkage",
+    "literal",
+    "loop",
+    "map",
+    "mod",
+    "nand",
+    "new",
+    "next",
+    "nor",
+    "not",
+    "null",
+    "of",
+    "on",
+    "open",
+    "or",
+    "others",
+    "out",
+    "package",
+    "parameter",
+    "port",
+    "postponed",
+    "procedure",
+    "process",
+    "property",
+    "protected",
+    "pure",
+    "range",
+    "record",
+    "register",
+    "reject",
+    "release",
+    "rem",
+    "report",
+    "restrict",
+    "return",
+    "rol",
+    "ror",
+    "select",
+    "sequence",
+    "severity",
+    "signal",
+    "shared",
+    "sla",
+    "sll",
+    "sra",
+    "srl",
+    "subtype",
+    "then",
+    "to",
+    "transport",
+    "type",
+    "unaffected",
+    "units",
+    "until",
+    "use",
+    "variable",
+    "vmode",
+    "vprop",
+    "vunit",
+    "wait",
+    "when",
+    "while",
+    "with",
+    "xnor",
+    "xor",
 }
 
 _VHDL_TYPES: Final[set[str]] = {
-    "bit", "bit_vector", "boolean", "character", "integer", "natural",
-    "positive", "real", "string", "time",
-    "std_logic", "std_logic_vector", "std_ulogic", "std_ulogic_vector",
-    "signed", "unsigned",
-    "line", "text", "side", "width",
+    "bit",
+    "bit_vector",
+    "boolean",
+    "character",
+    "integer",
+    "natural",
+    "positive",
+    "real",
+    "string",
+    "time",
+    "std_logic",
+    "std_logic_vector",
+    "std_ulogic",
+    "std_ulogic_vector",
+    "signed",
+    "unsigned",
+    "line",
+    "text",
+    "side",
+    "width",
 }
 
 
@@ -257,10 +484,12 @@ class VhdlHighlighter(QSyntaxHighlighter):
         self._rules: list[tuple[QRegularExpression, QTextCharFormat]] = []
 
         # Operators (sky)
-        self._rules.append((
-            QRegularExpression(r"<=|:=|=>|/=|[=<>&|+\-*/()]"),
-            _make_fmt(_SKY),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(r"<=|:=|=>|/=|[=<>&|+\-*/()]"),
+                _make_fmt(_SKY),
+            )
+        )
 
         # Keywords (mauve, bold) — case-insensitive
         kw_pattern = r"\b(?:" + "|".join(sorted(_VHDL_KEYWORDS)) + r")\b"
@@ -275,10 +504,14 @@ class VhdlHighlighter(QSyntaxHighlighter):
         self._rules.append((rx_t, _make_fmt(_BLUE)))
 
         # Numbers (peach): binary, octal, hex strings and integers/reals
-        self._rules.append((
-            QRegularExpression(r'[BOXbox]"[0-9a-fA-F_]+"|\b\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?\b'),
-            _make_fmt(_PEACH),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(
+                    r'[BOXbox]"[0-9a-fA-F_]+"|\b\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?\b'
+                ),
+                _make_fmt(_PEACH),
+            )
+        )
 
         # Character literals (green)
         self._rules.append((QRegularExpression(r"'[^']*'"), _make_fmt(_GREEN)))
@@ -287,10 +520,15 @@ class VhdlHighlighter(QSyntaxHighlighter):
         self._rules.append((QRegularExpression(r'"(?:[^"\\]|\\.)*"'), _make_fmt(_GREEN)))
 
         # Library / use clauses (red) — treated like preprocessor
-        self._rules.append((
-            QRegularExpression(r"\b(?:library|use)\b\s+[\w.]+", QRegularExpression.PatternOption.CaseInsensitiveOption),
-            _make_fmt(_RED),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(
+                    r"\b(?:library|use)\b\s+[\w.]+",
+                    QRegularExpression.PatternOption.CaseInsensitiveOption,
+                ),
+                _make_fmt(_RED),
+            )
+        )
 
         # Attributes (yellow)
         self._rules.append((QRegularExpression(r"'\w+"), _make_fmt(_YELLOW)))
@@ -337,34 +575,107 @@ class VhdlHighlighter(QSyntaxHighlighter):
 
 _SDC_COMMANDS: Final[set[str]] = {
     # SDC commands
-    "create_clock", "create_generated_clock",
-    "set_clock_groups", "set_clock_latency", "set_clock_uncertainty",
-    "set_input_delay", "set_output_delay",
-    "set_false_path", "set_multicycle_path", "set_max_delay", "set_min_delay",
-    "set_input_transition", "set_load", "set_driving_cell",
-    "set_dont_touch", "set_wire_load_model", "set_wire_load_mode",
-    "set_max_fanout", "set_max_capacitance", "set_max_area",
-    "set_disable_timing", "set_case_analysis",
-    "group_path", "set_timing_derate",
-    "get_ports", "get_pins", "get_cells", "get_nets", "get_clocks",
-    "get_lib_cells", "get_lib_pins",
-    "all_inputs", "all_outputs", "all_clocks", "all_registers",
-    "current_design", "current_instance",
-    "report_timing", "report_constraint", "report_clock",
+    "create_clock",
+    "create_generated_clock",
+    "set_clock_groups",
+    "set_clock_latency",
+    "set_clock_uncertainty",
+    "set_input_delay",
+    "set_output_delay",
+    "set_false_path",
+    "set_multicycle_path",
+    "set_max_delay",
+    "set_min_delay",
+    "set_input_transition",
+    "set_load",
+    "set_driving_cell",
+    "set_dont_touch",
+    "set_wire_load_model",
+    "set_wire_load_mode",
+    "set_max_fanout",
+    "set_max_capacitance",
+    "set_max_area",
+    "set_disable_timing",
+    "set_case_analysis",
+    "group_path",
+    "set_timing_derate",
+    "get_ports",
+    "get_pins",
+    "get_cells",
+    "get_nets",
+    "get_clocks",
+    "get_lib_cells",
+    "get_lib_pins",
+    "all_inputs",
+    "all_outputs",
+    "all_clocks",
+    "all_registers",
+    "current_design",
+    "current_instance",
+    "report_timing",
+    "report_constraint",
+    "report_clock",
     # XDC / Vivado
-    "set_property", "get_property", "create_pblock", "add_cells_to_pblock",
-    "set_input_jitter", "set_system_jitter",
-    "create_debug_core", "set_debug_port",
+    "set_property",
+    "get_property",
+    "create_pblock",
+    "add_cells_to_pblock",
+    "set_input_jitter",
+    "set_system_jitter",
+    "create_debug_core",
+    "set_debug_port",
     # TCL builtins
-    "set", "proc", "if", "else", "elseif", "for", "foreach", "while",
-    "switch", "return", "break", "continue", "expr", "puts", "gets",
-    "open", "close", "read", "source", "package", "namespace",
-    "variable", "global", "upvar", "uplevel",
-    "list", "lindex", "llength", "lappend", "lsort", "lsearch", "lrange",
-    "string", "regexp", "regsub", "scan", "format",
-    "file", "glob", "cd", "pwd", "exec",
-    "catch", "error", "info", "rename", "unset",
-    "array", "dict", "append", "incr",
+    "set",
+    "proc",
+    "if",
+    "else",
+    "elseif",
+    "for",
+    "foreach",
+    "while",
+    "switch",
+    "return",
+    "break",
+    "continue",
+    "expr",
+    "puts",
+    "gets",
+    "open",
+    "close",
+    "read",
+    "source",
+    "package",
+    "namespace",
+    "variable",
+    "global",
+    "upvar",
+    "uplevel",
+    "list",
+    "lindex",
+    "llength",
+    "lappend",
+    "lsort",
+    "lsearch",
+    "lrange",
+    "string",
+    "regexp",
+    "regsub",
+    "scan",
+    "format",
+    "file",
+    "glob",
+    "cd",
+    "pwd",
+    "exec",
+    "catch",
+    "error",
+    "info",
+    "rename",
+    "unset",
+    "array",
+    "dict",
+    "append",
+    "incr",
 }
 
 
@@ -380,32 +691,40 @@ class SdcHighlighter(QSyntaxHighlighter):
         self._rules: list[tuple[QRegularExpression, QTextCharFormat]] = []
 
         # Operators (sky)
-        self._rules.append((
-            QRegularExpression(r"[{}\[\]();=<>!&|+\-*/]"),
-            _make_fmt(_SKY),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(r"[{}\[\]();=<>!&|+\-*/]"),
+                _make_fmt(_SKY),
+            )
+        )
 
         # Commands (mauve, bold)
         cmd_pattern = r"\b(?:" + "|".join(sorted(_SDC_COMMANDS)) + r")\b"
         self._rules.append((QRegularExpression(cmd_pattern), _make_fmt(_MAUVE, bold=True)))
 
         # Flags / options (red) — e.g. -period, -name
-        self._rules.append((
-            QRegularExpression(r"\s-[a-zA-Z_]\w*"),
-            _make_fmt(_RED),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(r"\s-[a-zA-Z_]\w*"),
+                _make_fmt(_RED),
+            )
+        )
 
         # Variables (teal) — $var, ${var}
-        self._rules.append((
-            QRegularExpression(r"\$\{?\w+\}?"),
-            _make_fmt(_TEAL),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(r"\$\{?\w+\}?"),
+                _make_fmt(_TEAL),
+            )
+        )
 
         # Numbers (peach)
-        self._rules.append((
-            QRegularExpression(r"\b\d[\d_.]*(?:[eE][+-]?\d+)?\b"),
-            _make_fmt(_PEACH),
-        ))
+        self._rules.append(
+            (
+                QRegularExpression(r"\b\d[\d_.]*(?:[eE][+-]?\d+)?\b"),
+                _make_fmt(_PEACH),
+            )
+        )
 
         # Strings (green)
         self._rules.append((QRegularExpression(r'"(?:[^"\\]|\\.)*"'), _make_fmt(_GREEN)))
@@ -428,6 +747,7 @@ class SdcHighlighter(QSyntaxHighlighter):
 # ═══════════════════════════════════════════════════════════════════════════
 #  Language detection helper
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 def highlighter_for_extension(
     ext: str,

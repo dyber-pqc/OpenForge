@@ -3,6 +3,7 @@
 KiCad pcbnew-inspired dark green canvas with layer toggles, track/via
 drawing, zones, measure tool, grid snap, and Gerber export.
 """
+
 from __future__ import annotations
 
 import math
@@ -51,6 +52,7 @@ try:
         PcbTrack,
         PcbVia,
     )
+
     _HAS_MODEL = True
 except Exception:  # pragma: no cover
     _HAS_MODEL = False
@@ -59,22 +61,22 @@ except Exception:  # pragma: no cover
 # ----------------------------------------------------------------------
 # Layer colors (KiCad-ish)
 LAYER_COLORS: dict[str, str] = {
-    "F.Cu":     "#c83737",
-    "B.Cu":     "#4d7fc4",
-    "In1.Cu":   "#d4a017",
-    "In2.Cu":   "#8a5cff",
-    "In3.Cu":   "#00b8a9",
-    "In4.Cu":   "#ffa040",
-    "F.SilkS":  "#e0e0e0",
-    "B.SilkS":  "#a0a0a0",
-    "F.Mask":   "#6b4c9a",
-    "B.Mask":   "#6b4c9a",
-    "F.Paste":  "#909090",
-    "B.Paste":  "#707070",
+    "F.Cu": "#c83737",
+    "B.Cu": "#4d7fc4",
+    "In1.Cu": "#d4a017",
+    "In2.Cu": "#8a5cff",
+    "In3.Cu": "#00b8a9",
+    "In4.Cu": "#ffa040",
+    "F.SilkS": "#e0e0e0",
+    "B.SilkS": "#a0a0a0",
+    "F.Mask": "#6b4c9a",
+    "B.Mask": "#6b4c9a",
+    "F.Paste": "#909090",
+    "B.Paste": "#707070",
     "Edge.Cuts": "#f0e050",
 }
 
-CANVAS_BG = "#0a3d2c"      # dark PCB green
+CANVAS_BG = "#0a3d2c"  # dark PCB green
 GRID_MINOR = "#0f4a35"
 GRID_MAJOR = "#155a41"
 HIGHLIGHT = "#ffffff"
@@ -158,7 +160,9 @@ class PcbScene(QGraphicsScene):
 class PcbView(QGraphicsView):
     def __init__(self, scene: PcbScene) -> None:
         super().__init__(scene)
-        self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
+        self.setRenderHints(
+            QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform
+        )
         self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setMouseTracking(True)
@@ -400,6 +404,7 @@ class PcbLayoutEditor(QWidget):
         etype = event.type()
         if obj is self._view.viewport():
             from PySide6.QtCore import QEvent
+
             if etype == QEvent.Type.MouseButtonPress:
                 self._on_canvas_click(event)
             elif etype == QEvent.Type.MouseMove:
@@ -438,8 +443,9 @@ class PcbLayoutEditor(QWidget):
                 dx = (sp.x() - self._measure_start.x()) / PIX_PER_MM
                 dy = (sp.y() - self._measure_start.y()) / PIX_PER_MM
                 d = math.hypot(dx, dy)
-                QMessageBox.information(self, "Measure",
-                                        f"dx={dx:.3f} mm  dy={dy:.3f} mm  |  d={d:.3f} mm")
+                QMessageBox.information(
+                    self, "Measure", f"dx={dx:.3f} mm  dy={dy:.3f} mm  |  d={d:.3f} mm"
+                )
                 self._measure_start = None
 
     def _on_canvas_move(self, event) -> None:
@@ -449,8 +455,10 @@ class PcbLayoutEditor(QWidget):
     def _add_track_segment(self, a: QPointF, b: QPointF) -> None:
         track = PcbTrack(
             layer=self._scene.active_layer,
-            x1_mm=a.x() / PIX_PER_MM, y1_mm=a.y() / PIX_PER_MM,
-            x2_mm=b.x() / PIX_PER_MM, y2_mm=b.y() / PIX_PER_MM,
+            x1_mm=a.x() / PIX_PER_MM,
+            y1_mm=a.y() / PIX_PER_MM,
+            x2_mm=b.x() / PIX_PER_MM,
+            y2_mm=b.y() / PIX_PER_MM,
             width_mm=self._track_width_mm,
             net=self._active_net_id,
         )
@@ -459,9 +467,12 @@ class PcbLayoutEditor(QWidget):
 
     def _add_via_at(self, p: QPointF) -> None:
         via = PcbVia(
-            x_mm=p.x() / PIX_PER_MM, y_mm=p.y() / PIX_PER_MM,
-            drill_mm=0.3, diameter_mm=0.6,
-            layer_from="F.Cu", layer_to="B.Cu",
+            x_mm=p.x() / PIX_PER_MM,
+            y_mm=p.y() / PIX_PER_MM,
+            drill_mm=0.3,
+            diameter_mm=0.6,
+            layer_from="F.Cu",
+            layer_to="B.Cu",
             net=self._active_net_id,
         )
         self.board.vias.append(via)
@@ -482,7 +493,9 @@ class PcbLayoutEditor(QWidget):
 
         # Board outline
         if self.board.outline:
-            poly = QPolygonF([QPointF(x * PIX_PER_MM, y * PIX_PER_MM) for x, y in self.board.outline])
+            poly = QPolygonF(
+                [QPointF(x * PIX_PER_MM, y * PIX_PER_MM) for x, y in self.board.outline]
+            )
             pen = QPen(QColor(LAYER_COLORS["Edge.Cuts"]))
             pen.setWidthF(1.5)
             item = self._scene.addPolygon(poly, pen, QBrush(Qt.BrushStyle.NoBrush))
@@ -514,8 +527,11 @@ class PcbLayoutEditor(QWidget):
             pen.setWidthF(max(tr.width_mm * PIX_PER_MM, 1.0))
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             self._scene.addLine(
-                tr.x1_mm * PIX_PER_MM, tr.y1_mm * PIX_PER_MM,
-                tr.x2_mm * PIX_PER_MM, tr.y2_mm * PIX_PER_MM, pen,
+                tr.x1_mm * PIX_PER_MM,
+                tr.y1_mm * PIX_PER_MM,
+                tr.x2_mm * PIX_PER_MM,
+                tr.y2_mm * PIX_PER_MM,
+                pen,
             )
 
         # Vias
@@ -524,12 +540,20 @@ class PcbLayoutEditor(QWidget):
             drill = via.drill_mm * PIX_PER_MM
             color = QColor("#d0d0d0")
             self._scene.addEllipse(
-                via.x_mm * PIX_PER_MM - d / 2, via.y_mm * PIX_PER_MM - d / 2,
-                d, d, QPen(color), QBrush(color),
+                via.x_mm * PIX_PER_MM - d / 2,
+                via.y_mm * PIX_PER_MM - d / 2,
+                d,
+                d,
+                QPen(color),
+                QBrush(color),
             )
             self._scene.addEllipse(
-                via.x_mm * PIX_PER_MM - drill / 2, via.y_mm * PIX_PER_MM - drill / 2,
-                drill, drill, QPen(QColor("#000000")), QBrush(QColor("#000000")),
+                via.x_mm * PIX_PER_MM - drill / 2,
+                via.y_mm * PIX_PER_MM - drill / 2,
+                drill,
+                drill,
+                QPen(QColor("#000000")),
+                QBrush(QColor("#000000")),
             )
 
     def _render_footprint(self, fp: PcbFootprint) -> None:
@@ -556,8 +580,12 @@ class PcbLayoutEditor(QWidget):
             if pad.drill_mm > 0:
                 dr = pad.drill_mm * PIX_PER_MM
                 self._scene.addEllipse(
-                    x * PIX_PER_MM - dr / 2, y * PIX_PER_MM - dr / 2, dr, dr,
-                    QPen(QColor("#000000")), QBrush(QColor("#000000")),
+                    x * PIX_PER_MM - dr / 2,
+                    y * PIX_PER_MM - dr / 2,
+                    dr,
+                    dr,
+                    QPen(QColor("#000000")),
+                    QBrush(QColor("#000000")),
                 )
         # Silkscreen
         if self._scene.layer_visible.get("F.SilkS", True):
@@ -574,8 +602,9 @@ class PcbLayoutEditor(QWidget):
                 self._scene.addLine(wx1, wy1, wx2, wy2, pen)
 
     # ==================================================================
-    def place_footprint(self, name: str, x_mm: float, y_mm: float,
-                        ref: str = "", value: str = "") -> None:
+    def place_footprint(
+        self, name: str, x_mm: float, y_mm: float, ref: str = "", value: str = ""
+    ) -> None:
         fp_template = FOOTPRINTS.get(name)
         if fp_template is None:
             return
@@ -591,16 +620,14 @@ class PcbLayoutEditor(QWidget):
 
     # ==================================================================
     def _save_json(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(self, "Save PCB", "board.json",
-                                              "PCB JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(self, "Save PCB", "board.json", "PCB JSON (*.json)")
         if not path:
             return
         self.board.save_json(path)
         self._status.showMessage(f"Saved {path}")
 
     def _load_json(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "Load PCB", "",
-                                              "PCB JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, "Load PCB", "", "PCB JSON (*.json)")
         if not path:
             return
         self.board = PcbBoard.load_json(path)
@@ -616,5 +643,6 @@ class PcbLayoutEditor(QWidget):
         files = exp.export_all(Path(out))
         exp.export_drill(Path(out) / f"{self.board.name}.drl")
         self._status.showMessage(f"Exported {len(files)} Gerber layers to {out}")
-        QMessageBox.information(self, "Gerber Export",
-                                f"Exported {len(files)} layers and drill file to:\n{out}")
+        QMessageBox.information(
+            self, "Gerber Export", f"Exported {len(files)} layers and drill file to:\n{out}"
+        )

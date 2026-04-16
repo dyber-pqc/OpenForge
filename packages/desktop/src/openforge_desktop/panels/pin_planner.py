@@ -132,13 +132,13 @@ DIRECTIONS: list[str] = ["input", "output", "inout"]
 
 # Voltage bank colors (Catppuccin Mocha accent colors)
 _BANK_COLORS: dict[str, str] = {
-    "3.3V": "#89b4fa",   # blue
-    "2.5V": "#a6e3a1",   # green
-    "1.8V": "#f9e2af",   # yellow
-    "1.5V": "#fab387",   # peach
-    "1.2V": "#f38ba8",   # red
+    "3.3V": "#89b4fa",  # blue
+    "2.5V": "#a6e3a1",  # green
+    "1.8V": "#f9e2af",  # yellow
+    "1.5V": "#fab387",  # peach
+    "1.2V": "#f38ba8",  # red
     "VCCIO": "#cba6f7",  # mauve
-    "VCCAUX": "#94e2d5", # teal
+    "VCCAUX": "#94e2d5",  # teal
     "GND": "#6c7086",
     "NC": "#45475a",
 }
@@ -209,27 +209,23 @@ def build_bga(rows: int, cols: int) -> PackageGeometry:
             else:
                 v = "1.8V"
                 bank = "1"
-            g.pins.append(
-                PinInfo(name=name, row=r, col=c, bank=bank, voltage=v)
-            )
+            g.pins.append(PinInfo(name=name, row=r, col=c, bank=bank, voltage=v))
     return g
 
 
 def build_qfp(pins_per_side: int) -> PackageGeometry:
-    g = PackageGeometry(
-        kind="QFP", rows=pins_per_side, cols=pins_per_side
-    )
+    g = PackageGeometry(kind="QFP", rows=pins_per_side, cols=pins_per_side)
     idx = 1
     # Bottom side (left-to-right)
     for i in range(pins_per_side):
-        g.pins.append(
-            PinInfo(name=str(idx), row=pins_per_side, col=i, bank="S", voltage="3.3V")
-        )
+        g.pins.append(PinInfo(name=str(idx), row=pins_per_side, col=i, bank="S", voltage="3.3V"))
         idx += 1
     # Right side (bottom-to-top)
     for i in range(pins_per_side):
         g.pins.append(
-            PinInfo(name=str(idx), row=pins_per_side - i, col=pins_per_side, bank="E", voltage="3.3V")
+            PinInfo(
+                name=str(idx), row=pins_per_side - i, col=pins_per_side, bank="E", voltage="3.3V"
+            )
         )
         idx += 1
     # Top side (right-to-left)
@@ -240,9 +236,7 @@ def build_qfp(pins_per_side: int) -> PackageGeometry:
         idx += 1
     # Left side (top-to-bottom)
     for i in range(pins_per_side):
-        g.pins.append(
-            PinInfo(name=str(idx), row=i, col=0, bank="W", voltage="3.3V")
-        )
+        g.pins.append(PinInfo(name=str(idx), row=i, col=0, bank="W", voltage="3.3V"))
         idx += 1
     return g
 
@@ -412,9 +406,7 @@ class PackageView(QGraphicsView):
             )
             self._scene.addItem(label)
 
-        self._scene.setSceneRect(
-            -margin, -margin, w + 2 * margin, h + 2 * margin
-        )
+        self._scene.setSceneRect(-margin, -margin, w + 2 * margin, h + 2 * margin)
 
     def refresh_pin(self, pin_name: str) -> None:
         item = self._pin_items.get(pin_name)
@@ -505,9 +497,7 @@ class PinPlannerPanel(QDockWidget):
 
     def _build_ui(self) -> None:
         root = QWidget(self)
-        root.setStyleSheet(
-            f"QWidget {{ background-color: {_BG}; color: {_TEXT}; }}"
-        )
+        root.setStyleSheet(f"QWidget {{ background-color: {_BG}; color: {_TEXT}; }}")
         outer = QVBoxLayout(root)
         outer.setContentsMargins(6, 6, 6, 6)
         outer.setSpacing(4)
@@ -563,14 +553,10 @@ class PinPlannerPanel(QDockWidget):
         # Pin table
         self._table = QTableWidget(0, len(self._HEADERS), splitter)
         self._table.setHorizontalHeaderLabels(self._HEADERS)
-        self._table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Interactive
-        )
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
-        self._table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
+        self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._table.setStyleSheet(
             f"QTableWidget {{ background:{_SURFACE}; color:{_TEXT};"
             f" gridline-color:#45475a; alternate-background-color:#1a1a2e; }}"
@@ -583,15 +569,9 @@ class PinPlannerPanel(QDockWidget):
         self._table.setItemDelegateForColumn(
             self.COL_DRIVE, _ComboDelegate(DRIVE_STRENGTHS, self._table)
         )
-        self._table.setItemDelegateForColumn(
-            self.COL_SLEW, _ComboDelegate(SLEW_RATES, self._table)
-        )
-        self._table.setItemDelegateForColumn(
-            self.COL_PULL, _ComboDelegate(PULL_TYPES, self._table)
-        )
-        self._table.setItemDelegateForColumn(
-            self.COL_DIR, _ComboDelegate(DIRECTIONS, self._table)
-        )
+        self._table.setItemDelegateForColumn(self.COL_SLEW, _ComboDelegate(SLEW_RATES, self._table))
+        self._table.setItemDelegateForColumn(self.COL_PULL, _ComboDelegate(PULL_TYPES, self._table))
+        self._table.setItemDelegateForColumn(self.COL_DIR, _ComboDelegate(DIRECTIONS, self._table))
         self._table.itemChanged.connect(self._on_table_changed)
         splitter.addWidget(self._table)
 
@@ -620,9 +600,7 @@ class PinPlannerPanel(QDockWidget):
         # Load default constraint set
         cs = board.default_constraint_set()
         self.load_constraint_set(cs)
-        self._status.setText(
-            f"Loaded {board.name} ({board.device}, {board.package})"
-        )
+        self._status.setText(f"Loaded {board.name} ({board.device}, {board.package})")
 
     def _on_board_changed(self, name: str) -> None:
         if name and name != "(custom)":
@@ -682,7 +660,11 @@ class PinPlannerPanel(QDockWidget):
     def _refresh_table(self) -> None:
         self._table.blockSignals(True)
         self._table.setRowCount(0)
-        filt = (self._filter_edit.text() or "").strip().lower() if hasattr(self, "_filter_edit") else ""
+        filt = (
+            (self._filter_edit.text() or "").strip().lower()
+            if hasattr(self, "_filter_edit")
+            else ""
+        )
         for p in self._geom.pins:
             if filt:
                 hay = f"{p.name} {p.bank} {p.voltage} {p.assigned_net}".lower()
@@ -760,9 +742,7 @@ class PinPlannerPanel(QDockWidget):
                 continue
             if bank_item.text() in bad_banks:
                 bank_item.setBackground(red)
-                bank_item.setToolTip(
-                    f"Bank {bank_item.text()}: mixed IO voltage standards"
-                )
+                bank_item.setToolTip(f"Bank {bank_item.text()}: mixed IO voltage standards")
             else:
                 bank_item.setBackground(clear)
                 bank_item.setToolTip("")
@@ -771,9 +751,7 @@ class PinPlannerPanel(QDockWidget):
 
     def _on_import(self) -> None:
         if not _HAS_CORE:
-            QMessageBox.warning(
-                self, "Pin Planner", "openforge.constraints not available"
-            )
+            QMessageBox.warning(self, "Pin Planner", "openforge.constraints not available")
             return
         path, _ = QFileDialog.getOpenFileName(
             self,
@@ -807,9 +785,7 @@ class PinPlannerPanel(QDockWidget):
         if not _HAS_CORE:
             return
         cs = self.build_constraint_set()
-        suffix = {"xdc": ".xdc", "lpf": ".lpf", "pcf": ".pcf", "cst": ".cst"}.get(
-            fmt, ".sdc"
-        )
+        suffix = {"xdc": ".xdc", "lpf": ".lpf", "pcf": ".pcf", "cst": ".cst"}.get(fmt, ".sdc")
         path, _ = QFileDialog.getSaveFileName(
             self, f"Export {fmt.upper()}", f"constraints{suffix}", f"*{suffix}"
         )

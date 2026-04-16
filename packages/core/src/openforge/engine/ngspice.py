@@ -301,7 +301,7 @@ class NgspiceEngine(ToolEngine):
     def _raw_from_result(result: ToolResult) -> Path | None:
         for tok in result.command:
             if isinstance(tok, str) and tok.startswith("#raw="):
-                return Path(tok[len("#raw="):])
+                return Path(tok[len("#raw=") :])
         return None
 
     def _parsed_from_result(self, result: ToolResult) -> dict:

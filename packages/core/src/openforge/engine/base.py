@@ -102,9 +102,7 @@ class ToolEngine(ABC):
             env=dict(env) if env else None,
         )
         try:
-            raw_out, raw_err = await asyncio.wait_for(
-                proc.communicate(), timeout=timeout
-            )
+            raw_out, raw_err = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         except TimeoutError:
             proc.kill()
             await proc.wait()
@@ -167,6 +165,7 @@ class ToolEngine(ABC):
 
         # Merge environment: inherit OS env + user overrides + MSYS fix
         import os
+
         run_env = dict(os.environ)
         if env:
             run_env.update(env)

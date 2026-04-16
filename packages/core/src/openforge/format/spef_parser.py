@@ -289,26 +289,27 @@ class _SpefParser:
             m = re.search(rf"^\*{key}\s+([^\n]+)", text, re.MULTILINE)
             return m.group(1).strip() if m else None
 
-        if (v := grab("DESIGN")):
+        if v := grab("DESIGN"):
             self.file.design_name = v.strip('"')
-        if (v := grab("DIVIDER")):
+        if v := grab("DIVIDER"):
             self.file.divider = v.strip().split()[0]
-        if (v := grab("DELIMITER")):
+        if v := grab("DELIMITER"):
             self.file.delimiter = v.strip().split()[0]
-        if (v := grab("C_UNIT")):
+        if v := grab("C_UNIT"):
             self.c_scale = _parse_unit_line(v, _CAP_TO_PF)
-        if (v := grab("R_UNIT")):
+        if v := grab("R_UNIT"):
             self.r_scale = _parse_unit_line(v, _RES_TO_OHM)
-        if (v := grab("T_UNIT")):
+        if v := grab("T_UNIT"):
             self.file.units["T_UNIT"] = _parse_unit_line(v, _TIME_TO_NS)
-        if (v := grab("L_UNIT")):
+        if v := grab("L_UNIT"):
             self.file.units["L_UNIT"] = _parse_unit_line(v, _IND_TO_NH)
 
     # -- name map ----------------------------------------------------------
 
     def _parse_name_map(self, text: str) -> None:
-        m = re.search(r"\*NAME_MAP(.*?)(?=\n\*PORTS|\n\*D_NET|\n\*PHYSICAL_PORTS|\Z)",
-                      text, re.DOTALL)
+        m = re.search(
+            r"\*NAME_MAP(.*?)(?=\n\*PORTS|\n\*D_NET|\n\*PHYSICAL_PORTS|\Z)", text, re.DOTALL
+        )
         if not m:
             return
         body = m.group(1)
@@ -327,10 +328,12 @@ class _SpefParser:
         # Fast path: no references
         if "*" not in token:
             return token
+
         # Replace *NNN tokens (possibly followed by delimiter/pin)
         def repl(m: re.Match[str]) -> str:
             key = m.group(0)
             return self.name_map.get(key, key)
+
         return re.sub(r"\*\d+", repl, token)
 
     # -- nets --------------------------------------------------------------
@@ -445,9 +448,7 @@ class _SpefParser:
         else:
             node_a = self._resolve(parts[0])
             node_b = self._resolve(parts[1])
-            net.caps.append(
-                SpefCap(node=node_a, cap_pf=cap_pf, coupled_to=node_b)
-            )
+            net.caps.append(SpefCap(node=node_a, cap_pf=cap_pf, coupled_to=node_b))
 
     def _parse_res_entry(self, line: str, net: SpefNet) -> None:
         # <id> <node1> <node2> <value>
@@ -464,9 +465,7 @@ class _SpefParser:
             return
         node1 = self._resolve(parts[0])
         node2 = self._resolve(parts[1])
-        net.resistances.append(
-            SpefRes(node1=node1, node2=node2, res_ohm=value * self.r_scale)
-        )
+        net.resistances.append(SpefRes(node1=node1, node2=node2, res_ohm=value * self.r_scale))
 
 
 __all__ = [

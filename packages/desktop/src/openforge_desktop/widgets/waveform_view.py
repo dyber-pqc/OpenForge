@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
 try:
     from openforge.format.bus_decoder import BusDecoder
     from openforge.format.waveform import SignalKind, Waveform, WaveSignal, WaveTransition
+
     _HAS_MODEL = True
 except Exception:  # pragma: no cover
     Waveform = object  # type: ignore
@@ -79,8 +80,12 @@ MARKER = QColor("#a6e3a1")
 SELECTION = QColor(137, 180, 250, 60)
 
 DEFAULT_SIG_COLORS = [
-    QColor("#5eead4"), QColor("#fbbf24"), QColor("#f472b6"),
-    QColor("#60a5fa"), QColor("#a78bfa"), QColor("#34d399"),
+    QColor("#5eead4"),
+    QColor("#fbbf24"),
+    QColor("#f472b6"),
+    QColor("#60a5fa"),
+    QColor("#a78bfa"),
+    QColor("#34d399"),
 ]
 
 
@@ -88,7 +93,7 @@ DEFAULT_SIG_COLORS = [
 class DisplaySignal:
     full_path: str
     color: QColor = field(default_factory=lambda: QColor(SIG_HIGH))
-    radix: str = "hex"          # hex / dec / bin / oct / ascii
+    radix: str = "hex"  # hex / dec / bin / oct / ascii
     height: int = 26
     group: str = ""
     visible: bool = True
@@ -112,7 +117,7 @@ class Marker:
 class WaveformView(QWidget):
     """Custom-painted waveform canvas."""
 
-    cursorMoved = Signal(int)   # cursor A time
+    cursorMoved = Signal(int)  # cursor A time
     statusChanged = Signal(str)
 
     NAME_COL_DEFAULT = 220
@@ -183,9 +188,12 @@ class WaveformView(QWidget):
     # ──────────── Helpers ────────────
     def _canvas_rect(self) -> QRect:
         r = self.rect()
-        return QRect(self._name_col_w + self.VALUE_COL_W, self.TIME_AXIS_H,
-                     max(1, r.width() - self._name_col_w - self.VALUE_COL_W),
-                     max(1, r.height() - self.TIME_AXIS_H))
+        return QRect(
+            self._name_col_w + self.VALUE_COL_W,
+            self.TIME_AXIS_H,
+            max(1, r.width() - self._name_col_w - self.VALUE_COL_W),
+            max(1, r.height() - self.TIME_AXIS_H),
+        )
 
     def _t_to_x(self, t: float) -> int:
         cr = self._canvas_rect()
@@ -234,8 +242,12 @@ class WaveformView(QWidget):
         p.fillRect(r, NAME_BG)
         p.setPen(QPen(GRID_MAJOR))
         p.drawLine(self._name_col_w, 0, self._name_col_w, self.height())
-        p.drawLine(self._name_col_w + self.VALUE_COL_W, 0,
-                   self._name_col_w + self.VALUE_COL_W, self.height())
+        p.drawLine(
+            self._name_col_w + self.VALUE_COL_W,
+            0,
+            self._name_col_w + self.VALUE_COL_W,
+            self.height(),
+        )
         p.setFont(self._font)
         cr = self._canvas_rect()
         y = cr.top() + 4
@@ -248,18 +260,22 @@ class WaveformView(QWidget):
             sig = self._wf.signals.get(s.full_path) if self._wf else None
             if sig and getattr(sig, "width", 1) > 1:
                 name = f"{name}[{sig.msb}:{sig.lsb}]"
-            p.drawText(row.adjusted(6, 0, -4, 0),
-                       Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-                       name)
+            p.drawText(
+                row.adjusted(6, 0, -4, 0),
+                Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                name,
+            )
             # Value at cursor A
             if self._wf and sig:
                 val = self._wf.signal_at_time(s.full_path, int(self._cursor_a.time))
                 txt = self._format_value(val, getattr(sig, "width", 1), s.radix)
                 vrect = QRect(self._name_col_w, y, self.VALUE_COL_W, s.height)
                 p.setPen(QPen(s.color))
-                p.drawText(vrect.adjusted(4, 0, -4, 0),
-                           Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
-                           txt)
+                p.drawText(
+                    vrect.adjusted(4, 0, -4, 0),
+                    Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
+                    txt,
+                )
             y += s.height + 2
 
     def _paint_time_axis(self, p: QPainter) -> None:
@@ -304,9 +320,11 @@ class WaveformView(QWidget):
         if self._wf is None:
             p.setPen(QPen(AXIS))
             p.setFont(self._font)
-            p.drawText(self._canvas_rect(),
-                       Qt.AlignmentFlag.AlignCenter,
-                       "Open a VCD or FST file to begin...")
+            p.drawText(
+                self._canvas_rect(),
+                Qt.AlignmentFlag.AlignCenter,
+                "Open a VCD or FST file to begin...",
+            )
             return
         cr = self._canvas_rect()
         p.setClipRect(cr)
@@ -325,9 +343,7 @@ class WaveformView(QWidget):
             y += disp.height + 2
         p.setClipping(False)
 
-    def _paint_bit_signal(
-        self, p: QPainter, row: QRect, trs: list, disp: DisplaySignal
-    ) -> None:
+    def _paint_bit_signal(self, p: QPainter, row: QRect, trs: list, disp: DisplaySignal) -> None:
         top = row.top() + 3
         bot = row.bottom() - 3
         mid = (top + bot) // 2
@@ -432,8 +448,9 @@ class WaveformView(QWidget):
                 lbl = self._format_value(t.value, getattr(sig, "width", 1), disp.radix)
                 elided = self._fm.elidedText(lbl, Qt.TextElideMode.ElideRight, box_w - 6)
                 p.setPen(QPen(BUS_TEXT))
-                p.drawText(QRect(x1 + 3, top, box_w - 6, bot - top),
-                           Qt.AlignmentFlag.AlignCenter, elided)
+                p.drawText(
+                    QRect(x1 + 3, top, box_w - 6, bot - top), Qt.AlignmentFlag.AlignCenter, elided
+                )
 
     def _paint_cursors(self, p: QPainter) -> None:
         cr = self._canvas_rect()
@@ -447,8 +464,7 @@ class WaveformView(QWidget):
             if cur.name:
                 p.fillRect(QRect(x - 8, cr.top(), 16, 14), cur.color)
                 p.setPen(QPen(Qt.GlobalColor.black))
-                p.drawText(QRect(x - 8, cr.top(), 16, 14),
-                           Qt.AlignmentFlag.AlignCenter, cur.name)
+                p.drawText(QRect(x - 8, cr.top(), 16, 14), Qt.AlignmentFlag.AlignCenter, cur.name)
         p.setClipping(False)
 
     def _paint_markers(self, p: QPainter) -> None:
@@ -486,13 +502,13 @@ class WaveformView(QWidget):
         else:
             iv = int(val)
         if radix == "hex":
-            return f"{iv:0{max(1,(width+3)//4)}X}"
+            return f"{iv:0{max(1, (width + 3) // 4)}X}"
         if radix == "dec":
             return str(iv)
         if radix == "bin":
-            return f"{iv:0{max(1,width)}b}"
+            return f"{iv:0{max(1, width)}b}"
         if radix == "oct":
-            return f"{iv:0{max(1,(width+2)//3)}o}"
+            return f"{iv:0{max(1, (width + 2) // 3)}o}"
         if radix == "ascii":
             try:
                 return chr(iv & 0xFF) if 32 <= (iv & 0xFF) < 127 else f"\\x{iv:02x}"
@@ -504,8 +520,9 @@ class WaveformView(QWidget):
         if raw <= 0:
             return 1.0
         import math
+
         e = math.floor(math.log10(raw))
-        base = 10 ** e
+        base = 10**e
         for m in (1, 2, 5, 10):
             if m * base >= raw:
                 return m * base
@@ -663,26 +680,34 @@ class WaveformView(QWidget):
         k = ev.key()
         mods = ev.modifiers()
         if k == Qt.Key.Key_Plus or k == Qt.Key.Key_Equal:
-            self.zoom(0.8); return
+            self.zoom(0.8)
+            return
         if k == Qt.Key.Key_Minus:
-            self.zoom(1.25); return
+            self.zoom(1.25)
+            return
         if k == Qt.Key.Key_F:
-            self.zoom_fit(); return
+            self.zoom_fit()
+            return
         if k == Qt.Key.Key_Left and mods & Qt.KeyboardModifier.ShiftModifier:
-            self._step_edge(-1); return
+            self._step_edge(-1)
+            return
         if k == Qt.Key.Key_Right and mods & Qt.KeyboardModifier.ShiftModifier:
-            self._step_edge(1); return
+            self._step_edge(1)
+            return
         if k == Qt.Key.Key_Left:
-            self.pan(-0.1); return
+            self.pan(-0.1)
+            return
         if k == Qt.Key.Key_Right:
-            self.pan(0.1); return
+            self.pan(0.1)
+            return
         if mods & Qt.KeyboardModifier.ControlModifier and k == Qt.Key.Key_M:
-            self.add_marker(int(self._cursor_a.time), f"M{len(self._markers)+1}")
+            self.add_marker(int(self._cursor_a.time), f"M{len(self._markers) + 1}")
             return
         if mods & Qt.KeyboardModifier.ControlModifier and Qt.Key.Key_1 <= k <= Qt.Key.Key_8:
             n = k - Qt.Key.Key_0
-            self._aux_cursors[n] = Cursor(time=int(self._cursor_a.time),
-                                          color=QColor(CURSOR_AUX), name=str(n))
+            self._aux_cursors[n] = Cursor(
+                time=int(self._cursor_a.time), color=QColor(CURSOR_AUX), name=str(n)
+            )
             self.update()
             return
         super().keyPressEvent(ev)
@@ -751,10 +776,12 @@ class WaveformView(QWidget):
 
     def _emit_status(self, pt: QPoint | None = None) -> None:
         delta = int(self._cursor_b.time - self._cursor_a.time)
-        msg = (f"A={self._format_time(self._cursor_a.time)}  "
-               f"B={self._format_time(self._cursor_b.time)}  "
-               f"Δ={self._format_time(abs(delta))}  "
-               f"paint={self._last_paint_ms:.1f}ms")
+        msg = (
+            f"A={self._format_time(self._cursor_a.time)}  "
+            f"B={self._format_time(self._cursor_b.time)}  "
+            f"Δ={self._format_time(abs(delta))}  "
+            f"paint={self._last_paint_ms:.1f}ms"
+        )
         self.statusChanged.emit(msg)
 
     # search
@@ -794,10 +821,18 @@ class WaveformPanel(QWidget):
         tb.addAction("Zoom +", lambda: self.view.zoom(0.8))
         tb.addAction("Zoom -", lambda: self.view.zoom(1.25))
         tb.addSeparator()
-        tb.addAction("+Cursor", lambda: self.view.add_marker(
-            int(self.view._cursor_a.time), f"C{len(self.view._aux_cursors)+1}"))
-        tb.addAction("+Marker", lambda: self.view.add_marker(
-            int(self.view._cursor_a.time), f"M{len(self.view._markers)+1}"))
+        tb.addAction(
+            "+Cursor",
+            lambda: self.view.add_marker(
+                int(self.view._cursor_a.time), f"C{len(self.view._aux_cursors) + 1}"
+            ),
+        )
+        tb.addAction(
+            "+Marker",
+            lambda: self.view.add_marker(
+                int(self.view._cursor_a.time), f"M{len(self.view._markers) + 1}"
+            ),
+        )
         self._find_edit = QLineEdit()
         self._find_edit.setPlaceholderText("Find signal...")
         self._find_edit.setMaximumWidth(240)
@@ -832,7 +867,9 @@ class WaveformPanel(QWidget):
     # ──────────── File loading ────────────
     def _open_dialog(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open Waveform", "",
+            self,
+            "Open Waveform",
+            "",
             "Waveforms (*.vcd *.fst);;VCD (*.vcd);;FST (*.fst);;All Files (*)",
         )
         if path:
@@ -855,8 +892,7 @@ class WaveformPanel(QWidget):
         self.view.set_waveform(wf)
         self._rebuild_tree()
         self.view.zoom_fit()
-        self.status.showMessage(
-            f"Loaded {path.name}: {len(wf.signals)} signals, end={wf.end_time}")
+        self.status.showMessage(f"Loaded {path.name}: {len(wf.signals)} signals, end={wf.end_time}")
 
     def _reload(self) -> None:
         if self._current_path:
@@ -905,4 +941,4 @@ class WaveformPanel(QWidget):
             return
         # add first hit
         self.view.add_signal(hits[0])
-        self.status.showMessage(f"Added {hits[0]} (+{len(hits)-1} more matches)")
+        self.status.showMessage(f"Added {hits[0]} (+{len(hits) - 1} more matches)")

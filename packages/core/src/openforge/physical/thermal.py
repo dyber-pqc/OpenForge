@@ -278,9 +278,7 @@ class ThermalAnalyzer:
         return max(min(years, 1e6), 0.01)
 
     # ------------------------------------------------------------------
-    def compute_thermal_resistance(
-        self, thermal_map: ThermalMap, total_power_w: float
-    ) -> float:
+    def compute_thermal_resistance(self, thermal_map: ThermalMap, total_power_w: float) -> float:
         """Theta-JA in K/W from steady-state results."""
         if total_power_w <= 0:
             return 0.0
@@ -297,17 +295,14 @@ class ThermalAnalyzer:
 
     # ------------------------------------------------------------------
     def generate_thermal_report(self, thermal_map: ThermalMap, output: Path) -> Path:
-        total_power = sum(
-            n.power_w for n in thermal_map.hotspots
-        )
+        total_power = sum(n.power_w for n in thermal_map.hotspots)
         theta_ja = self.compute_thermal_resistance(thermal_map, max(total_power, 0.001))
         lines: list[str] = []
         lines.append("=" * 70)
         lines.append("OpenForge Thermal Analysis Report")
         lines.append("=" * 70)
         lines.append(
-            f"Die area:        {thermal_map.width_um:.1f} x "
-            f"{thermal_map.height_um:.1f} um"
+            f"Die area:        {thermal_map.width_um:.1f} x {thermal_map.height_um:.1f} um"
         )
         lines.append(f"Grid pitch:      {thermal_map.grid_size_um:.2f} um")
         lines.append(f"Grid points:     {thermal_map.rows} x {thermal_map.cols}")
@@ -331,7 +326,7 @@ class ThermalAnalyzer:
             for i, h in enumerate(thermal_map.hotspots[:10], 1):
                 lines.append(
                     f"  {i:2d}. ({h.x:7.1f}, {h.y:7.1f}) {h.temperature_c:6.2f} C "
-                    f" P={h.power_w*1e3:6.2f} mW"
+                    f" P={h.power_w * 1e3:6.2f} mW"
                 )
         lines.append("")
         lines.append(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}")

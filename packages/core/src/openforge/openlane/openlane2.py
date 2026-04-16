@@ -7,6 +7,7 @@ the OpenLane2 variable schema.
 
 Reference: https://openlane2.readthedocs.io
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -92,6 +93,7 @@ class OpenLane2Config(BaseModel):
     def to_yaml(self) -> str:
         try:
             import yaml  # type: ignore
+
             return yaml.safe_dump(self._flatten(), sort_keys=False)
         except Exception:
             # Minimal YAML-ish fallback
@@ -155,7 +157,11 @@ class OpenLane2Runner:
             match = re.search(r"(\d+\.\d+(?:\.\d+)?)", out.stdout + out.stderr)
             if match:
                 return match.group(1)
-            return (out.stdout or out.stderr).strip().splitlines()[0] if out.stdout or out.stderr else None
+            return (
+                (out.stdout or out.stderr).strip().splitlines()[0]
+                if out.stdout or out.stderr
+                else None
+            )
         except Exception:
             return None
 
@@ -200,9 +206,12 @@ class OpenLane2Runner:
         tag = f"step_{step.name.lower()}"
         cmd = [
             str(cli),
-            "--run-tag", tag,
-            "--from", step.value,
-            "--to", step.value,
+            "--run-tag",
+            tag,
+            "--from",
+            step.value,
+            "--to",
+            step.value,
             str(cfg),
         ]
         return self._spawn(cmd, run_dir, log_callback)

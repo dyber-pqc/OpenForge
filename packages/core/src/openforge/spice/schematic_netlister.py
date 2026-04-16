@@ -154,10 +154,7 @@ class SpiceComponent(BaseModel):
             tf = self.params.get("tf", "1n")
             pw = self.params.get("pw", "10u")
             per = self.params.get("per", "20u")
-            return (
-                f"V{_strip_prefix(ref, 'V')} {nodes} "
-                f"PULSE({v1} {v2} {td} {tr} {tf} {pw} {per})"
-            )
+            return f"V{_strip_prefix(ref, 'V')} {nodes} PULSE({v1} {v2} {td} {tr} {tf} {pw} {per})"
         if kind == "I":
             return f"I{_strip_prefix(ref, 'I')} {nodes} DC {v or '1m'}"
         # GND/VCC are virtual — handled at netlist gen time
@@ -229,10 +226,10 @@ class SpiceSchematic(BaseModel):
                     model=c.fields.get("model", "") if hasattr(c, "fields") else "",
                     nodes=nodes,
                     params={
-                        k: v
-                        for k, v in (c.fields or {}).items()
-                        if k.lower() not in ("model",)
-                    } if hasattr(c, "fields") else {},
+                        k: v for k, v in (c.fields or {}).items() if k.lower() not in ("model",)
+                    }
+                    if hasattr(c, "fields")
+                    else {},
                 )
             )
 
@@ -261,9 +258,7 @@ class SpiceSchematic(BaseModel):
         for sim in self.simulations:
             kind = sim.get("kind", "op").lower()
             if kind == "tran":
-                lines.append(
-                    f".tran {sim.get('tstep', '1u')} {sim.get('tstop', '1m')}"
-                )
+                lines.append(f".tran {sim.get('tstep', '1u')} {sim.get('tstop', '1m')}")
             elif kind == "dc":
                 lines.append(
                     f".dc {sim.get('src', 'V1')} {sim.get('start', 0)} "
@@ -276,8 +271,7 @@ class SpiceSchematic(BaseModel):
                 )
             elif kind == "noise":
                 lines.append(
-                    f".noise v({sim.get('out', 'out')}) {sim.get('src', 'V1')} "
-                    f"dec 10 1 1meg"
+                    f".noise v({sim.get('out', 'out')}) {sim.get('src', 'V1')} dec 10 1 1meg"
                 )
             else:
                 lines.append(".op")

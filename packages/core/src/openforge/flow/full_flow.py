@@ -19,6 +19,7 @@ from openforge.runner.engine import RunEngine, RunGraph, RunStage, RunStatus
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 class FullFlowConfig(BaseModel):
     """Configuration for a complete RTL-to-GDS flow."""
 
@@ -37,6 +38,7 @@ class FullFlowConfig(BaseModel):
 # ---------------------------------------------------------------------------
 # Stage / result models
 # ---------------------------------------------------------------------------
+
 
 class FlowStageStatus(BaseModel):
     """Status snapshot of a single flow stage."""
@@ -96,6 +98,7 @@ STAGE_NAMES: dict[str, str] = {
 # ---------------------------------------------------------------------------
 # TCL script generators
 # ---------------------------------------------------------------------------
+
 
 def _write_floorplan_tcl(out: Path, cfg: FullFlowConfig) -> str:
     """Write an OpenROAD floorplan TCL script. Returns the script path."""
@@ -290,14 +293,16 @@ class FullFlowRunner:
         out = self._out
 
         # ── Lint ──────────────────────────────────────────────────────
-        g.add_stage(RunStage(
-            id="lint",
-            name="Lint",
-            tool="verible",
-            command=["verible-verilog-lint", *cfg.rtl_files],
-            cwd=str(self.work_dir),
-            produces=["*.rpt", "*.log"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="lint",
+                name="Lint",
+                tool="verible",
+                command=["verible-verilog-lint", *cfg.rtl_files],
+                cwd=str(self.work_dir),
+                produces=["*.rpt", "*.log"],
+            )
+        )
 
         # ── Synthesis (Yosys) ─────────────────────────────────────────
         synth_dir = out / "synth"
@@ -309,137 +314,161 @@ class FullFlowRunner:
             f"write_json {synth_dir}/netlist.json; "
             f"write_verilog -noattr {synth_dir}/netlist.v"
         )
-        g.add_stage(RunStage(
-            id="synth",
-            name="Synthesis (Yosys)",
-            tool="yosys",
-            command=["yosys", "-p", yosys_script],
-            cwd=str(self.work_dir),
-            depends_on=["lint"],
-            produces=["netlist.json", "netlist.v"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="synth",
+                name="Synthesis (Yosys)",
+                tool="yosys",
+                command=["yosys", "-p", yosys_script],
+                cwd=str(self.work_dir),
+                depends_on=["lint"],
+                produces=["netlist.json", "netlist.v"],
+            )
+        )
 
         # ── Floorplan (OpenROAD) ──────────────────────────────────────
         fp_tcl = _write_floorplan_tcl(out, cfg)
         fp_dir = out / "floorplan"
         fp_dir.mkdir(parents=True, exist_ok=True)
-        g.add_stage(RunStage(
-            id="floorplan",
-            name="Floorplan",
-            tool="openroad",
-            command=["openroad", "-no_init", "-exit", fp_tcl],
-            cwd=str(fp_dir),
-            depends_on=["synth"],
-            produces=["*.def", "*.rpt", "*.log"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="floorplan",
+                name="Floorplan",
+                tool="openroad",
+                command=["openroad", "-no_init", "-exit", fp_tcl],
+                cwd=str(fp_dir),
+                depends_on=["synth"],
+                produces=["*.def", "*.rpt", "*.log"],
+            )
+        )
 
         # ── Placement (OpenROAD) ──────────────────────────────────────
         pl_tcl = _write_placement_tcl(out, cfg)
         pl_dir = out / "placement"
         pl_dir.mkdir(parents=True, exist_ok=True)
-        g.add_stage(RunStage(
-            id="placement",
-            name="Placement",
-            tool="openroad",
-            command=["openroad", "-no_init", "-exit", pl_tcl],
-            cwd=str(pl_dir),
-            depends_on=["floorplan"],
-            produces=["*.def", "*.rpt"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="placement",
+                name="Placement",
+                tool="openroad",
+                command=["openroad", "-no_init", "-exit", pl_tcl],
+                cwd=str(pl_dir),
+                depends_on=["floorplan"],
+                produces=["*.def", "*.rpt"],
+            )
+        )
 
         # ── CTS (OpenROAD) ────────────────────────────────────────────
         cts_tcl = _write_cts_tcl(out, cfg)
         cts_dir = out / "cts"
         cts_dir.mkdir(parents=True, exist_ok=True)
-        g.add_stage(RunStage(
-            id="cts",
-            name="Clock Tree Synthesis",
-            tool="openroad",
-            command=["openroad", "-no_init", "-exit", cts_tcl],
-            cwd=str(cts_dir),
-            depends_on=["placement"],
-            produces=["*.def", "*.rpt"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="cts",
+                name="Clock Tree Synthesis",
+                tool="openroad",
+                command=["openroad", "-no_init", "-exit", cts_tcl],
+                cwd=str(cts_dir),
+                depends_on=["placement"],
+                produces=["*.def", "*.rpt"],
+            )
+        )
 
         # ── Routing (OpenROAD) ────────────────────────────────────────
         rt_tcl = _write_routing_tcl(out, cfg)
         rt_dir = out / "routing"
         rt_dir.mkdir(parents=True, exist_ok=True)
-        g.add_stage(RunStage(
-            id="routing",
-            name="Routing",
-            tool="openroad",
-            command=["openroad", "-no_init", "-exit", rt_tcl],
-            cwd=str(rt_dir),
-            depends_on=["cts"],
-            produces=["*.def", "*.spef", "*.rpt"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="routing",
+                name="Routing",
+                tool="openroad",
+                command=["openroad", "-no_init", "-exit", rt_tcl],
+                cwd=str(rt_dir),
+                depends_on=["cts"],
+                produces=["*.def", "*.spef", "*.rpt"],
+            )
+        )
 
         # ── Metal Fill (OpenROAD) ─────────────────────────────────────
         fill_tcl = _write_fill_tcl(out, cfg)
         fill_dir = out / "fill"
         fill_dir.mkdir(parents=True, exist_ok=True)
-        g.add_stage(RunStage(
-            id="fill",
-            name="Metal Fill",
-            tool="openroad",
-            command=["openroad", "-no_init", "-exit", fill_tcl],
-            cwd=str(fill_dir),
-            depends_on=["routing"],
-            produces=["*.def"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="fill",
+                name="Metal Fill",
+                tool="openroad",
+                command=["openroad", "-no_init", "-exit", fill_tcl],
+                cwd=str(fill_dir),
+                depends_on=["routing"],
+                produces=["*.def"],
+            )
+        )
 
         # ── GDS Export (Magic) ────────────────────────────────────────
         gds_tcl = _write_gds_export_tcl(out, cfg)
         gds_dir = out / "gds_export"
         gds_dir.mkdir(parents=True, exist_ok=True)
         str(gds_dir / f"{cfg.top_module}.gds")
-        g.add_stage(RunStage(
-            id="gds_export",
-            name="GDS Export",
-            tool="magic",
-            command=[
-                "magic", "-dnull", "-noconsole",
-                "-rcfile", f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/magic/{cfg.pdk}.magicrc",
-                gds_tcl,
-            ],
-            cwd=str(gds_dir),
-            depends_on=["fill"],
-            produces=["*.gds", "*.gds.gz"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="gds_export",
+                name="GDS Export",
+                tool="magic",
+                command=[
+                    "magic",
+                    "-dnull",
+                    "-noconsole",
+                    "-rcfile",
+                    f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/magic/{cfg.pdk}.magicrc",
+                    gds_tcl,
+                ],
+                cwd=str(gds_dir),
+                depends_on=["fill"],
+                produces=["*.gds", "*.gds.gz"],
+            )
+        )
 
         # ── STA (OpenSTA) ────────────────────────────────────────────
         sta_tcl = _write_sta_tcl(out, cfg)
         sta_dir = out / "sta"
         sta_dir.mkdir(parents=True, exist_ok=True)
-        g.add_stage(RunStage(
-            id="sta",
-            name="Static Timing Analysis",
-            tool="opensta",
-            command=["sta", "-no_splash", "-exit", sta_tcl],
-            cwd=str(sta_dir),
-            depends_on=["fill"],
-            produces=["*.rpt", "sta.log"],
-        ))
+        g.add_stage(
+            RunStage(
+                id="sta",
+                name="Static Timing Analysis",
+                tool="opensta",
+                command=["sta", "-no_splash", "-exit", sta_tcl],
+                cwd=str(sta_dir),
+                depends_on=["fill"],
+                produces=["*.rpt", "sta.log"],
+            )
+        )
 
         # ── DRC (Magic) ──────────────────────────────────────────────
         if not cfg.skip_drc:
             drc_tcl = _write_drc_script(out, cfg)
             drc_dir = out / "drc"
             drc_dir.mkdir(parents=True, exist_ok=True)
-            g.add_stage(RunStage(
-                id="drc",
-                name="DRC (Magic)",
-                tool="magic",
-                command=[
-                    "magic", "-dnull", "-noconsole",
-                    "-rcfile", f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/magic/{cfg.pdk}.magicrc",
-                    drc_tcl,
-                ],
-                cwd=str(drc_dir),
-                depends_on=["gds_export"],
-                produces=["*.rpt", "drc.log"],
-            ))
+            g.add_stage(
+                RunStage(
+                    id="drc",
+                    name="DRC (Magic)",
+                    tool="magic",
+                    command=[
+                        "magic",
+                        "-dnull",
+                        "-noconsole",
+                        "-rcfile",
+                        f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/magic/{cfg.pdk}.magicrc",
+                        drc_tcl,
+                    ],
+                    cwd=str(drc_dir),
+                    depends_on=["gds_export"],
+                    produces=["*.rpt", "drc.log"],
+                )
+            )
 
         # ── LVS (Netgen) ─────────────────────────────────────────────
         if not cfg.skip_lvs:
@@ -449,21 +478,25 @@ class FullFlowRunner:
             netlist_v = str(out / "synth" / "netlist.v")
             setup_file = f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/netgen/{cfg.pdk}_setup.tcl"
             report = str(lvs_dir / "lvs.rpt")
-            g.add_stage(RunStage(
-                id="lvs",
-                name="LVS (Netgen)",
-                tool="netgen",
-                command=[
-                    "netgen", "-batch", "lvs",
-                    f'"{layout} {cfg.top_module}"',
-                    f'"{netlist_v} {cfg.top_module}"',
-                    setup_file,
-                    report,
-                ],
-                cwd=str(lvs_dir),
-                depends_on=["gds_export"],
-                produces=["*.rpt", "comp.out"],
-            ))
+            g.add_stage(
+                RunStage(
+                    id="lvs",
+                    name="LVS (Netgen)",
+                    tool="netgen",
+                    command=[
+                        "netgen",
+                        "-batch",
+                        "lvs",
+                        f'"{layout} {cfg.top_module}"',
+                        f'"{netlist_v} {cfg.top_module}"',
+                        setup_file,
+                        report,
+                    ],
+                    cwd=str(lvs_dir),
+                    depends_on=["gds_export"],
+                    produces=["*.rpt", "comp.out"],
+                )
+            )
 
         self._graph = g
         return g
@@ -487,6 +520,7 @@ class FullFlowRunner:
 
         # Wire callbacks
         if progress_callback is not None:
+
             def _on_start(_run_id: str, stage: RunStage) -> None:
                 progress_callback(stage.id, "running")
 
@@ -551,14 +585,16 @@ class FullFlowRunner:
                     except Exception:
                         errors.append(f"stage {s.id} failed (exit code {s.exit_code})")
 
-            stages.append(FlowStageStatus(
-                stage=s.id,
-                status=s.status.value,
-                runtime_s=round(runtime, 2),
-                log_path=s.log_path or "",
-                artifacts=[a.path for a in s.artifacts],
-                errors=errors,
-            ))
+            stages.append(
+                FlowStageStatus(
+                    stage=s.id,
+                    status=s.status.value,
+                    runtime_s=round(runtime, 2),
+                    log_path=s.log_path or "",
+                    artifacts=[a.path for a in s.artifacts],
+                    errors=errors,
+                )
+            )
 
         # Find GDS output
         gds_path: str | None = None

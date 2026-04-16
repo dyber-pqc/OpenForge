@@ -5,6 +5,7 @@ then decorates them with pricing and stock data from the component
 database. Supports CSV, Excel-compatible (CSV with BOM header) and
 HTML exports.
 """
+
 from __future__ import annotations
 
 import csv
@@ -60,9 +61,7 @@ class Bom:
         self.total_cost = round(self.total_cost + line.total_cost, 4)
 
     def total(self) -> float:
-        self.total_cost = round(
-            sum(line.total_cost for line in self.lines), 4
-        )
+        self.total_cost = round(sum(line.total_cost for line in self.lines), 4)
         return self.total_cost
 
     def recalc(self) -> None:
@@ -211,7 +210,7 @@ tr:nth-child(even) {{ background: #1e1e2e; }}
 <thead><tr><th>#</th><th>Ref Des</th><th>Qty</th><th>Value</th><th>Footprint</th><th>MPN</th>
 <th>Manufacturer</th><th>Description</th><th>Unit $</th><th>Ext $</th><th>Stock</th></tr></thead>
 <tbody>
-{''.join(rows)}
+{"".join(rows)}
 </tbody></table>
 </body></html>
 """
@@ -224,9 +223,7 @@ class BomGenerator:
     def __init__(self, db: ComponentDatabase | None = None):
         self.db = db or ComponentDatabase()
 
-    def from_schematic(
-        self, sch: Schematic, project_name: str = ""
-    ) -> Bom:
+    def from_schematic(self, sch: Schematic, project_name: str = "") -> Bom:
         """Group schematic components by (value, footprint, mpn)."""
         groups: dict[tuple[str, str, str], BomLine] = {}
         for refdes, comp in sch.components.items():

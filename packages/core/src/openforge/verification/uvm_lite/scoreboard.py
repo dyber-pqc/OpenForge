@@ -157,11 +157,11 @@ endclass
 
 
 _PROTOCOL_BASE: dict[str, str] = {
-    "axi":     "axi_scoreboard",
-    "axi4":    "axi_scoreboard",
-    "axis":    "axis_scoreboard",
+    "axi": "axi_scoreboard",
+    "axi4": "axi_scoreboard",
+    "axis": "axis_scoreboard",
     "axi_stream": "axis_scoreboard",
-    "memory":  "memory_scoreboard",
+    "memory": "memory_scoreboard",
     "generic": "scoreboard #(uvm_object)",
 }
 

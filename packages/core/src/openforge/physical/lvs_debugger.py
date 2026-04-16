@@ -2,6 +2,7 @@
 
 A Mentor Calibre nmLVS replacement built on top of Netgen + custom analysis.
 """
+
 from __future__ import annotations
 
 import html
@@ -108,14 +109,20 @@ class LvsDebugger:
         log = ""
         try:
             tcl = self._build_netgen_script(
-                layout_netlist, schematic_netlist, top_module,
-                setup_file, comp_out,
+                layout_netlist,
+                schematic_netlist,
+                top_module,
+                setup_file,
+                comp_out,
             )
             tcl_path = cwd / "_openforge_lvs.tcl"
             tcl_path.write_text(tcl, encoding="utf-8")
             proc = subprocess.run(
                 ["netgen", "-batch", "source", str(tcl_path)],
-                capture_output=True, text=True, timeout=600, cwd=str(cwd),
+                capture_output=True,
+                text=True,
+                timeout=600,
+                cwd=str(cwd),
             )
             log = (proc.stdout or "") + (proc.stderr or "")
         except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
@@ -132,15 +139,18 @@ class LvsDebugger:
 
     @staticmethod
     def _build_netgen_script(
-        layout: Path, schematic: Path, top: str,
-        setup: Path | None, comp_out: Path,
+        layout: Path,
+        schematic: Path,
+        top: str,
+        setup: Path | None,
+        comp_out: Path,
     ) -> str:
         setup_line = f'source "{setup}"\n' if setup else ""
         return (
-            f'{setup_line}'
+            f"{setup_line}"
             f'lvs {{ "{layout}" "{top}" }} {{ "{schematic}" "{top}" }} '
             f'nofile "{comp_out}"\n'
-            f'quit\n'
+            f"quit\n"
         )
 
     # ------------------------------------------------------------------
@@ -148,10 +158,12 @@ class LvsDebugger:
     # ------------------------------------------------------------------
 
     _RE_NET_COUNT = re.compile(
-        r"Subcircuit summary:.*?Nets:\s*(\d+)\s+(\d+)", re.DOTALL,
+        r"Subcircuit summary:.*?Nets:\s*(\d+)\s+(\d+)",
+        re.DOTALL,
     )
     _RE_DEV_COUNT = re.compile(
-        r"Devices:\s*(\d+)\s+(\d+)", re.DOTALL,
+        r"Devices:\s*(\d+)\s+(\d+)",
+        re.DOTALL,
     )
     _RE_NET_LINE = re.compile(
         r"^\s*([A-Za-z0-9_/\[\].]+)\s*\|\s*([A-Za-z0-9_/\[\].]+)\s*$",
@@ -204,11 +216,7 @@ class LvsDebugger:
         result.matched = (
             "Circuits match uniquely." in output
             or "Networks match." in output
-            or (
-                not result.mismatches
-                and not result.unmatched_nets
-                and result.layout_nets > 0
-            )
+            or (not result.mismatches and not result.unmatched_nets and result.layout_nets > 0)
         )
         return result
 
@@ -314,14 +322,11 @@ class LvsDebugger:
                 )
             elif m.type == "port_mismatch":
                 suggestions.append(
-                    f"Reorder ports: layout={m.layout_value} vs "
-                    f"schematic={m.schematic_value}"
+                    f"Reorder ports: layout={m.layout_value} vs schematic={m.schematic_value}"
                 )
 
         if not suggestions:
-            suggestions.append(
-                "Inspect the raw netgen log; the mismatch is unusual."
-            )
+            suggestions.append("Inspect the raw netgen log; the mismatch is unusual.")
         return suggestions
 
     # ------------------------------------------------------------------
@@ -334,24 +339,28 @@ class LvsDebugger:
         status_color = "#a6e3a1" if result.matched else "#f38ba8"
         status_text = "MATCH" if result.matched else "MISMATCH"
 
-        rows_nets = "".join(
-            f"<tr><td>{html.escape(n.name_layout)}</td>"
-            f"<td>{html.escape(n.name_schematic)}</td>"
-            f"<td style='color:#f38ba8'>NO</td></tr>"
-            for n in result.unmatched_nets[:200]
-        ) or "<tr><td colspan='3'><i>No unmatched nets</i></td></tr>"
-
-        rows_mm = "".join(
-            f"<tr><td>{html.escape(m.type)}</td>"
-            f"<td>{html.escape(m.layout_value)}</td>"
-            f"<td>{html.escape(m.schematic_value)}</td>"
-            f"<td>{html.escape(m.description)}</td></tr>"
-            for m in result.mismatches
-        ) or "<tr><td colspan='4'><i>No mismatches</i></td></tr>"
-
-        suggestions = "".join(
-            f"<li>{html.escape(s)}</li>" for s in self.suggest_fixes(result)
+        rows_nets = (
+            "".join(
+                f"<tr><td>{html.escape(n.name_layout)}</td>"
+                f"<td>{html.escape(n.name_schematic)}</td>"
+                f"<td style='color:#f38ba8'>NO</td></tr>"
+                for n in result.unmatched_nets[:200]
+            )
+            or "<tr><td colspan='3'><i>No unmatched nets</i></td></tr>"
         )
+
+        rows_mm = (
+            "".join(
+                f"<tr><td>{html.escape(m.type)}</td>"
+                f"<td>{html.escape(m.layout_value)}</td>"
+                f"<td>{html.escape(m.schematic_value)}</td>"
+                f"<td>{html.escape(m.description)}</td></tr>"
+                for m in result.mismatches
+            )
+            or "<tr><td colspan='4'><i>No mismatches</i></td></tr>"
+        )
+
+        suggestions = "".join(f"<li>{html.escape(s)}</li>" for s in self.suggest_fixes(result))
         root_cause = html.escape(self.find_root_cause(result))
 
         doc = f"""<!doctype html>

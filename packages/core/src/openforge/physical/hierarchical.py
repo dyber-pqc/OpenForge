@@ -187,9 +187,7 @@ class HierDesign(BaseModel):
             if block is None:
                 continue
             dep_abstracts = [
-                f"{child}.abstract"
-                for child in block.children
-                if child in self.blocks
+                f"{child}.abstract" for child in block.children if child in self.blocks
             ]
             synth_id = f"{block_name}.synth"
             pnr_id = f"{block_name}.pnr"
@@ -286,8 +284,7 @@ class HierarchicalFlow:
             # Stub: write a minimal placeholder netlist so downstream
             # steps have something to read.
             netlist.write_text(
-                f"// placeholder synthesis result for {name}\n"
-                f"module {name} (); endmodule\n"
+                f"// placeholder synthesis result for {name}\nmodule {name} (); endmodule\n"
             )
             report["status"] = "stub"
         block.netlist = str(netlist)
@@ -297,9 +294,7 @@ class HierarchicalFlow:
     def place_route_block(self, name: str) -> dict[str, Any]:
         block = self._get(name)
         if block.state not in ("synth_done", "pnr_done"):
-            raise RuntimeError(
-                f"cannot place/route {name}: state={block.state}"
-            )
+            raise RuntimeError(f"cannot place/route {name}: state={block.state}")
         bdir = self.block_dir(name)
         def_path = bdir / f"{name}.def"
         report: dict[str, Any] = {"block": name, "tool": "openroad"}
@@ -312,19 +307,15 @@ class HierarchicalFlow:
             )
             report.update(result or {})
             block.area_um2 = float(result.get("area_um2", block.area_um2))
-            block.utilization = float(
-                result.get("utilization", block.utilization)
-            )
-            block.achieved_freq_mhz = float(
-                result.get("freq_mhz", block.achieved_freq_mhz)
-            )
+            block.utilization = float(result.get("utilization", block.utilization))
+            block.achieved_freq_mhz = float(result.get("freq_mhz", block.achieved_freq_mhz))
             block.wns_ns = float(result.get("wns_ns", block.wns_ns))
         else:
             # Stub DEF file
             def_path.write_text(
                 "VERSION 5.8 ;\n"
-                "DIVIDERCHAR \"/\" ;\n"
-                "BUSBITCHARS \"[]\" ;\n"
+                'DIVIDERCHAR "/" ;\n'
+                'BUSBITCHARS "[]" ;\n'
                 f"DESIGN {name} ;\n"
                 "UNITS DISTANCE MICRONS 1000 ;\n"
                 "DIEAREA ( 0 0 ) ( 100000 100000 ) ;\n"
@@ -344,9 +335,7 @@ class HierarchicalFlow:
 
         block = self._get(name)
         if block.state not in ("pnr_done", "abstract_done"):
-            raise RuntimeError(
-                f"cannot abstract {name}: state={block.state}"
-            )
+            raise RuntimeError(f"cannot abstract {name}: state={block.state}")
         if block.def_path is None:
             raise RuntimeError(f"{name} has no DEF path")
         bdir = self.block_dir(name)

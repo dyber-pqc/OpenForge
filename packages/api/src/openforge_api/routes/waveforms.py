@@ -28,6 +28,7 @@ _waveform_signals: dict[UUID, list[SignalInfo]] = {}
 # Routes
 # ---------------------------------------------------------------------------
 
+
 @router.post("/upload", response_model=WaveformMetadata, status_code=status.HTTP_201_CREATED)
 async def upload_waveform(
     file: UploadFile,

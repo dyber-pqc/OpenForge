@@ -355,7 +355,9 @@ class SDCParser:
 
     @staticmethod
     def _parse_io_delay(
-        args: list[str], *, is_input: bool,
+        args: list[str],
+        *,
+        is_input: bool,
     ) -> SDCInputDelay | SDCOutputDelay | None:
         delay_val: float | None = None
         min_val: float | None = None

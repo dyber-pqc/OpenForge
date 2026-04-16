@@ -98,9 +98,7 @@ class EcoBrowserPanel(QDockWidget):
         self._metal_only.toggled.connect(self._refresh_script_table)
         options.addWidget(self._metal_only)
         options.addStretch(1)
-        self._disturb_label = QLabel(
-            "cells=0 added=0 nets=0 area=0.0 runtime=0.0s"
-        )
+        self._disturb_label = QLabel("cells=0 added=0 nets=0 area=0.0 runtime=0.0s")
         self._disturb_label.setStyleSheet(f"color: {_SUBTLE};")
         options.addWidget(self._disturb_label)
         outer.addLayout(options)
@@ -115,15 +113,9 @@ class EcoBrowserPanel(QDockWidget):
         ll.setContentsMargins(0, 0, 0, 0)
         ll.addWidget(QLabel("Violations"))
         self._violations = QTableWidget(0, 4, left)
-        self._violations.setHorizontalHeaderLabels(
-            ["Endpoint", "Check", "Slack (ns)", "Clock"]
-        )
-        self._violations.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        self._violations.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
+        self._violations.setHorizontalHeaderLabels(["Endpoint", "Check", "Slack (ns)", "Clock"])
+        self._violations.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._violations.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._violations.itemDoubleClicked.connect(self._auto_fix_selected)
         ll.addWidget(self._violations)
         hsplit.addWidget(left)
@@ -134,18 +126,12 @@ class EcoBrowserPanel(QDockWidget):
         rl.setContentsMargins(0, 0, 0, 0)
         rl.addWidget(QLabel("ECO script"))
         self._script_table = QTableWidget(0, 5, right)
-        self._script_table.setHorizontalHeaderLabels(
-            ["#", "Kind", "Target", "Net / New", "Notes"]
-        )
+        self._script_table.setHorizontalHeaderLabels(["#", "Kind", "Target", "Net / New", "Notes"])
         self._script_table.horizontalHeader().setSectionResizeMode(
             4, QHeaderView.ResizeMode.Stretch
         )
-        self._script_table.setDragDropMode(
-            QAbstractItemView.DragDropMode.InternalMove
-        )
-        self._script_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
+        self._script_table.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self._script_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         rl.addWidget(self._script_table)
 
         row_btns = QHBoxLayout()
@@ -236,9 +222,7 @@ class EcoBrowserPanel(QDockWidget):
             if p.slack_ns < 0:
                 slack_item.setForeground(QBrush(QColor(_RED)))
             self._violations.setItem(row, 2, slack_item)
-            self._violations.setItem(
-                row, 3, QTableWidgetItem(p.endpoint_clock or "-")
-            )
+            self._violations.setItem(row, 3, QTableWidgetItem(p.endpoint_clock or "-"))
 
     def _ensure_script(self) -> None:
         if self._script is None and EcoScript is not None:
@@ -294,17 +278,11 @@ class EcoBrowserPanel(QDockWidget):
         for row, cmd in enumerate(commands):
             self._script_table.insertRow(row)
             self._script_table.setItem(row, 0, QTableWidgetItem(str(row + 1)))
-            self._script_table.setItem(
-                row, 1, QTableWidgetItem(cmd.kind.value)
-            )
-            self._script_table.setItem(
-                row, 2, QTableWidgetItem(cmd.target_inst or "-")
-            )
+            self._script_table.setItem(row, 1, QTableWidgetItem(cmd.kind.value))
+            self._script_table.setItem(row, 2, QTableWidgetItem(cmd.target_inst or "-"))
             rhs = cmd.new_cell or cmd.net or "-"
             self._script_table.setItem(row, 3, QTableWidgetItem(rhs))
-            self._script_table.setItem(
-                row, 4, QTableWidgetItem(cmd.notes or "")
-            )
+            self._script_table.setItem(row, 4, QTableWidgetItem(cmd.notes or ""))
         self._update_disturbance()
         self._refresh_preview()
 
@@ -340,8 +318,7 @@ class EcoBrowserPanel(QDockWidget):
         )
         # Slack what-if: sum of slack_before vs slack_after on commands
         before = sum(
-            c.slack_before_ns or 0.0 for c in self._script.commands
-            if c.slack_before_ns is not None
+            c.slack_before_ns or 0.0 for c in self._script.commands if c.slack_before_ns is not None
         )
         after = sum(
             c.slack_after_ns or (c.slack_before_ns or 0.0) + 0.05
@@ -349,9 +326,7 @@ class EcoBrowserPanel(QDockWidget):
             if c.slack_before_ns is not None
         )
         if self._script.commands:
-            self._slack_diff.setText(
-                f"Slack before: {before:.3f} ns  after (est): {after:.3f} ns"
-            )
+            self._slack_diff.setText(f"Slack before: {before:.3f} ns  after (est): {after:.3f} ns")
 
     def _refresh_preview(self) -> None:
         if self._script is None:
@@ -365,9 +340,7 @@ class EcoBrowserPanel(QDockWidget):
     def _save_script(self) -> None:
         if self._script is None:
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Save ECO script", "eco.tcl", "Tcl (*.tcl)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Save ECO script", "eco.tcl", "Tcl (*.tcl)")
         if not path:
             return
         Path(path).write_text(self._preview.toPlainText())

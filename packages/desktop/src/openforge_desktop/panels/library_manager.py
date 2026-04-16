@@ -101,9 +101,7 @@ class _SymbolPreview(QGraphicsView):
             else:
                 x2, y2 = x, y + length
             self._scene.addLine(x, y, x2, y2, pin_pen)
-            label = self._scene.addText(
-                f"{getattr(p, 'number', '')} {getattr(p, 'name', '')}"
-            )
+            label = self._scene.addText(f"{getattr(p, 'number', '')} {getattr(p, 'name', '')}")
             label.setDefaultTextColor(label_color)
             label.setPos(x2 + 2, y2 - 10)
 
@@ -158,9 +156,7 @@ class _FootprintPreview(QGraphicsView):
             y1 = float(self._get(rc, "y1")) * scale
             x2 = float(self._get(rc, "x2")) * scale
             y2 = float(self._get(rc, "y2")) * scale
-            self._scene.addRect(
-                min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1), silk_pen
-            )
+            self._scene.addRect(min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1), silk_pen)
         for ci in self._get(fp, "circles", []) or []:
             cx = float(self._get(ci, "center_x")) * scale
             cy = float(self._get(ci, "center_y")) * scale
@@ -377,9 +373,7 @@ class LibraryManagerPanel(QWidget):
         w = QWidget()
         lay = QVBoxLayout(w)
         self._stats_label = QLabel("No libraries imported.")
-        self._stats_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
+        self._stats_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self._stats_label.setWordWrap(True)
         self._stats_label.setTextFormat(Qt.TextFormat.RichText)
         lay.addWidget(self._stats_label, 1)
@@ -470,9 +464,7 @@ class LibraryManagerPanel(QWidget):
             self._refresh_stats()
             n_sym = len(self._importer.symbols)
             n_fp = len(self._importer.footprints)
-            self._status.setText(
-                f"Loaded cache: {n_sym} symbols · {n_fp} footprints"
-            )
+            self._status.setText(f"Loaded cache: {n_sym} symbols · {n_fp} footprints")
 
     # ------------------------------------------------------------------
     # Trees
@@ -501,9 +493,7 @@ class LibraryManagerPanel(QWidget):
                 lib = (
                     fp.get("library") if isinstance(fp, dict) else getattr(fp, "library", "")
                 ) or key.split(":", 1)[0]
-                name = (
-                    fp.get("name") if isinstance(fp, dict) else getattr(fp, "name", key)
-                )
+                name = fp.get("name") if isinstance(fp, dict) else getattr(fp, "name", key)
                 by_lib_fp.setdefault(lib, []).append((name, fp))
             for lib in sorted(by_lib_fp):
                 items = sorted(by_lib_fp[lib], key=lambda t: (t[0] or "").lower())
@@ -587,8 +577,7 @@ class LibraryManagerPanel(QWidget):
         lines = [
             f"<b>Symbols:</b> {n_sym} across {len(self._importer.symbol_lib_counts)} libraries",
             "<br>".join(
-                f"&nbsp;&nbsp;{k}: {v}"
-                for k, v in sorted(self._importer.symbol_lib_counts.items())
+                f"&nbsp;&nbsp;{k}: {v}" for k, v in sorted(self._importer.symbol_lib_counts.items())
             ),
             "",
             "<b>Symbol pin distribution:</b> "

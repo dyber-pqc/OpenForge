@@ -1,4 +1,5 @@
 """Cell Library Browser dock widget."""
+
 from __future__ import annotations
 
 import re
@@ -298,9 +299,7 @@ class CellLibraryPanel(QDockWidget):
         self._timing_table.setHorizontalHeaderLabels(
             ["Related Pin", "Sense", "Rise (ps)", "Fall (ps)"]
         )
-        self._timing_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self._timing_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self._timing_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._tabs.addTab(self._timing_table, "Timing")
 
@@ -485,12 +484,8 @@ class CellLibraryPanel(QDockWidget):
             self._timing_table.insertRow(row)
             self._timing_table.setItem(row, 0, QTableWidgetItem(arc.related_pin))
             self._timing_table.setItem(row, 1, QTableWidgetItem(arc.sense))
-            self._timing_table.setItem(
-                row, 2, QTableWidgetItem(f"{arc.delay_rise_typ * 1000:.2f}")
-            )
-            self._timing_table.setItem(
-                row, 3, QTableWidgetItem(f"{arc.delay_fall_typ * 1000:.2f}")
-            )
+            self._timing_table.setItem(row, 2, QTableWidgetItem(f"{arc.delay_rise_typ * 1000:.2f}"))
+            self._timing_table.setItem(row, 3, QTableWidgetItem(f"{arc.delay_fall_typ * 1000:.2f}"))
 
     def _on_insert(self) -> None:
         items = self._tree.selectedItems()

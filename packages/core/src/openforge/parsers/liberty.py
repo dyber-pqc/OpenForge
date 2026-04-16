@@ -432,7 +432,10 @@ class LibertyParser:
                 continue
 
             # LUT groups
-            lut_m = re.match(r"(cell_rise|cell_fall|rise_transition|fall_transition|rise_constraint|fall_constraint)\s*\(([^)]*)\)\s*\{?\s*$", line)
+            lut_m = re.match(
+                r"(cell_rise|cell_fall|rise_transition|fall_transition|rise_constraint|fall_constraint)\s*\(([^)]*)\)\s*\{?\s*$",
+                line,
+            )
             if lut_m:
                 lut = LookupTable()
                 idx = self._parse_lut_body(lines, idx, total, lut)

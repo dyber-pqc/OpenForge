@@ -70,12 +70,12 @@ _STATUS_COLORS: dict[TestStatus, str] = {
 }
 
 _STATUS_ICONS: dict[TestStatus, str] = {
-    TestStatus.NOT_RUN: "\u25cb",   # empty circle
-    TestStatus.RUNNING: "\u25d4",   # circle with upper-right quadrant
-    TestStatus.PASSED: "\u25cf",    # filled circle
-    TestStatus.FAILED: "\u25cf",    # filled circle (red)
-    TestStatus.ERROR: "\u2716",     # heavy multiplication x
-    TestStatus.SKIPPED: "\u25cb",   # empty circle
+    TestStatus.NOT_RUN: "\u25cb",  # empty circle
+    TestStatus.RUNNING: "\u25d4",  # circle with upper-right quadrant
+    TestStatus.PASSED: "\u25cf",  # filled circle
+    TestStatus.FAILED: "\u25cf",  # filled circle (red)
+    TestStatus.ERROR: "\u2716",  # heavy multiplication x
+    TestStatus.SKIPPED: "\u25cb",  # empty circle
 }
 
 _STATUS_LABELS: dict[TestStatus, str] = {
@@ -123,9 +123,9 @@ class TestItemData:
 class _TestRunnerWorker(QThread):
     """Worker thread that runs selected tests and reports progress."""
 
-    test_started = Signal(str)          # test name
+    test_started = Signal(str)  # test name
     test_finished = Signal(str, str, float, str)  # name, status, duration, log
-    output_line = Signal(str)           # live output line
+    output_line = Signal(str)  # live output line
     all_finished = Signal()
 
     def __init__(
@@ -173,7 +173,9 @@ class _TestRunnerWorker(QThread):
         self.all_finished.emit()
 
     def _run_cocotb_test(
-        self, item: TestItemData, log_lines: list[str],
+        self,
+        item: TestItemData,
+        log_lines: list[str],
     ) -> str:
         """Run a cocotb test module."""
         from openforge.config.loader import load_config
@@ -202,7 +204,9 @@ class _TestRunnerWorker(QThread):
             return TestStatus.ERROR
 
     def _run_sv_test(
-        self, item: TestItemData, log_lines: list[str],
+        self,
+        item: TestItemData,
+        log_lines: list[str],
     ) -> str:
         """Run a SystemVerilog testbench via compile + simulate."""
         from openforge.config.loader import load_config
@@ -306,11 +310,11 @@ class TestbenchPanel(QDockWidget):
         # Test discovery tree
         self._tree = QTreeWidget()
         self._tree.setHeaderLabels(["", "Test Name", "Type", "Status", "Duration"])
-        self._tree.setColumnWidth(0, 30)   # checkbox
+        self._tree.setColumnWidth(0, 30)  # checkbox
         self._tree.setColumnWidth(1, 250)  # name
-        self._tree.setColumnWidth(2, 60)   # type
-        self._tree.setColumnWidth(3, 80)   # status
-        self._tree.setColumnWidth(4, 80)   # duration
+        self._tree.setColumnWidth(2, 60)  # type
+        self._tree.setColumnWidth(3, 80)  # status
+        self._tree.setColumnWidth(4, 80)  # duration
         self._tree.setRootIsDecorated(True)
         self._tree.setAlternatingRowColors(False)
         self._tree.itemDoubleClicked.connect(self._on_item_double_clicked)
@@ -349,9 +353,7 @@ class TestbenchPanel(QDockWidget):
 
         # Summary line
         self._summary = QLabel("No tests loaded")
-        self._summary.setStyleSheet(
-            f"color: {_CLR_SUBTEXT}; padding: 4px 8px; font-size: 12px;"
-        )
+        self._summary.setStyleSheet(f"color: {_CLR_SUBTEXT}; padding: 4px 8px; font-size: 12px;")
         main_layout.addWidget(self._summary)
 
         self.setWidget(container)
@@ -519,7 +521,9 @@ class TestbenchPanel(QDockWidget):
             group_item.setText(1, str(rel))
             group_item.setForeground(1, QColor(_CLR_LAVENDER))
             group_item.setFlags(
-                group_item.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable
+                group_item.flags()
+                | Qt.ItemFlag.ItemIsAutoTristate
+                | Qt.ItemFlag.ItemIsUserCheckable
             )
             group_item.setCheckState(0, Qt.CheckState.Checked)
 
@@ -551,19 +555,23 @@ class TestbenchPanel(QDockWidget):
             re.DOTALL,
         ):
             name = match.group(1)
-            tests.append(TestItemData(
-                name=f"{py_file.stem}::{name}",
-                file_path=py_file,
-                test_type="cocotb",
-            ))
+            tests.append(
+                TestItemData(
+                    name=f"{py_file.stem}::{name}",
+                    file_path=py_file,
+                    test_type="cocotb",
+                )
+            )
 
         # If no decorated tests found, treat the file itself as a test module
         if not tests and "cocotb" in content:
-            tests.append(TestItemData(
-                name=py_file.stem,
-                file_path=py_file,
-                test_type="cocotb",
-            ))
+            tests.append(
+                TestItemData(
+                    name=py_file.stem,
+                    file_path=py_file,
+                    test_type="cocotb",
+                )
+            )
 
         return tests
 
@@ -578,25 +586,31 @@ class TestbenchPanel(QDockWidget):
         # Match module declarations (typically `module xxx_tb;` or `module tb_xxx;`)
         for match in re.finditer(r"\bmodule\s+(\w+)", content):
             mod_name = match.group(1)
-            tests.append(TestItemData(
-                name=f"{sv_file.stem}::{mod_name}",
-                file_path=sv_file,
-                test_type="sv",
-            ))
+            tests.append(
+                TestItemData(
+                    name=f"{sv_file.stem}::{mod_name}",
+                    file_path=sv_file,
+                    test_type="sv",
+                )
+            )
 
         if not tests:
-            tests.append(TestItemData(
-                name=sv_file.stem,
-                file_path=sv_file,
-                test_type="sv",
-            ))
+            tests.append(
+                TestItemData(
+                    name=sv_file.stem,
+                    file_path=sv_file,
+                    test_type="sv",
+                )
+            )
 
         return tests
 
     # ── Tree item updating ────────────────────────────────────────────
 
     def _update_tree_item_status(
-        self, item: QTreeWidgetItem, data: TestItemData,
+        self,
+        item: QTreeWidgetItem,
+        data: TestItemData,
     ) -> None:
         """Update the status icon, text, and duration columns."""
         status = data.status
@@ -766,7 +780,9 @@ class TestbenchPanel(QDockWidget):
     # ── Detail panel ──────────────────────────────────────────────────
 
     def _on_current_changed(
-        self, current: QTreeWidgetItem | None, previous: QTreeWidgetItem | None,
+        self,
+        current: QTreeWidgetItem | None,
+        previous: QTreeWidgetItem | None,
     ) -> None:
         if current is None:
             return
@@ -799,7 +815,9 @@ class TestbenchPanel(QDockWidget):
                 self._detail_output.setTextCursor(cursor)
 
     def _on_item_double_clicked(
-        self, item: QTreeWidgetItem, column: int,
+        self,
+        item: QTreeWidgetItem,
+        column: int,
     ) -> None:
         """Open the test file in the editor on double-click."""
         name = item.data(1, Qt.ItemDataRole.UserRole)
@@ -824,7 +842,14 @@ class TestbenchPanel(QDockWidget):
                 visible = True
                 if name and name in self._test_items:
                     status = self._test_items[name].status
-                    if filter_text == "Passed" and status != TestStatus.PASSED or filter_text == "Failed" and status not in (TestStatus.FAILED, TestStatus.ERROR) or filter_text == "Not Run" and status != TestStatus.NOT_RUN:
+                    if (
+                        filter_text == "Passed"
+                        and status != TestStatus.PASSED
+                        or filter_text == "Failed"
+                        and status not in (TestStatus.FAILED, TestStatus.ERROR)
+                        or filter_text == "Not Run"
+                        and status != TestStatus.NOT_RUN
+                    ):
                         visible = False
                 child.setHidden(not visible)
                 if visible:
@@ -845,9 +870,7 @@ class TestbenchPanel(QDockWidget):
         else:
             cocotb = sum(1 for t in self._test_items.values() if t.test_type == "cocotb")
             sv = total - cocotb
-            self._summary.setText(
-                f"{total} tests found ({cocotb} cocotb, {sv} SystemVerilog)"
-            )
+            self._summary.setText(f"{total} tests found ({cocotb} cocotb, {sv} SystemVerilog)")
             self._summary.setStyleSheet(
                 f"color: {_CLR_SUBTEXT}; padding: 4px 8px; font-size: 12px;"
             )
@@ -860,6 +883,4 @@ class TestbenchPanel(QDockWidget):
             f"({self._tests_passed} passed, {self._tests_failed} failed) "
             f"[{elapsed:.1f}s]"
         )
-        self._summary.setStyleSheet(
-            f"color: {_CLR_YELLOW}; padding: 4px 8px; font-size: 12px;"
-        )
+        self._summary.setStyleSheet(f"color: {_CLR_YELLOW}; padding: 4px 8px; font-size: 12px;")

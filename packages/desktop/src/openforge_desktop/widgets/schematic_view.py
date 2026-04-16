@@ -256,8 +256,7 @@ class CellGraphicsItem(QGraphicsItem):
         self.setAcceptHoverEvents(True)
         self._w, self._h = self._size_for_kind()
         self._is_submodule = not cell.cell_type.startswith("$") and not any(
-            cell.cell_type.lower().startswith(p)
-            for p in ("sky130_", "gf180", "asap7", "nangate")
+            cell.cell_type.lower().startswith(p) for p in ("sky130_", "gf180", "asap7", "nangate")
         )
 
     def _size_for_kind(self) -> tuple[float, float]:
@@ -345,9 +344,7 @@ class CellGraphicsItem(QGraphicsItem):
 
     def hoverEnterEvent(self, event) -> None:
         kind_label = self.cell.kind.upper()
-        params_str = ", ".join(
-            f"{k}={v}" for k, v in list(self.cell.parameters.items())[:4]
-        )
+        params_str = ", ".join(f"{k}={v}" for k, v in list(self.cell.parameters.items())[:4])
         tooltip_lines = [
             f"<b>{self.cell.name}</b>",
             f"Type: <code>{self.cell.cell_type}</code>",
@@ -502,9 +499,7 @@ class SchematicView(QWidget):
         layout.setSpacing(0)
 
         toolbar = QFrame()
-        toolbar.setStyleSheet(
-            f"background: {SURFACE}; border-bottom: 1px solid {SURFACE1};"
-        )
+        toolbar.setStyleSheet(f"background: {SURFACE}; border-bottom: 1px solid {SURFACE1};")
         toolbar_layout = QHBoxLayout(toolbar)
         toolbar_layout.setContentsMargins(8, 4, 8, 4)
         toolbar_layout.setSpacing(6)
@@ -613,9 +608,7 @@ class SchematicView(QWidget):
         for name in netlist.modules:
             self.module_combo.addItem(name)
         self.module_combo.blockSignals(False)
-        target = netlist.top_module or (
-            next(iter(netlist.modules)) if netlist.modules else ""
-        )
+        target = netlist.top_module or (next(iter(netlist.modules)) if netlist.modules else "")
         if target:
             self._history.clear()
             self.module_combo.setCurrentText(target)
@@ -838,9 +831,7 @@ class SchematicView(QWidget):
             for bit in cell.consumed_bits():
                 driver = bit_to_driver.get(bit)
                 if driver and driver != cell_name:
-                    lvl = self._compute_level(
-                        driver, module, bit_to_driver, levels, visiting
-                    )
+                    lvl = self._compute_level(driver, module, bit_to_driver, levels, visiting)
                     if lvl > max_input_level:
                         max_input_level = lvl
 

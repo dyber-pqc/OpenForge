@@ -64,7 +64,7 @@ class LefMacro:
     name: str
     class_type: str = ""  # CORE, PAD, BLOCK, COVER, RING
     foreign: str = ""
-    width: float = 0.0   # in microns
+    width: float = 0.0  # in microns
     height: float = 0.0
     origin_x: float = 0.0
     origin_y: float = 0.0
@@ -108,7 +108,7 @@ class LefSite:
 
     name: str
     class_type: str = ""  # CORE, PAD, CORNER
-    width: float = 0.0   # in microns
+    width: float = 0.0  # in microns
     height: float = 0.0
     symmetry: list[str] = field(default_factory=list)
 
@@ -119,7 +119,7 @@ class LefLayer:
 
     name: str
     layer_type: str = ""  # ROUTING / CUT / MASTERSLICE / OVERLAP / IMPLANT
-    direction: str = ""   # HORIZONTAL / VERTICAL
+    direction: str = ""  # HORIZONTAL / VERTICAL
     pitch_x: float = 0.0
     pitch_y: float = 0.0
     width: float = 0.0
@@ -176,51 +176,52 @@ class LefLibrary:
 # Regex patterns
 # ---------------------------------------------------------------------------
 
-_RE_VERSION = re.compile(r'^\s*VERSION\s+(\S+)\s*;', re.MULTILINE)
+_RE_VERSION = re.compile(r"^\s*VERSION\s+(\S+)\s*;", re.MULTILINE)
 _RE_UNITS_DB = re.compile(
-    r'UNITS\s*.*?DATABASE\s+MICRONS\s+([\d.]+)\s*;', re.DOTALL,
+    r"UNITS\s*.*?DATABASE\s+MICRONS\s+([\d.]+)\s*;",
+    re.DOTALL,
 )
-_RE_MFG_GRID = re.compile(r'^\s*MANUFACTURINGGRID\s+([\d.]+)\s*;', re.MULTILINE)
+_RE_MFG_GRID = re.compile(r"^\s*MANUFACTURINGGRID\s+([\d.]+)\s*;", re.MULTILINE)
 
 # Layer block: LAYER <name> ... END <name>
 _RE_LAYER = re.compile(
-    r'^\s*LAYER\s+(\S+)\s+(.*?)END\s+\1',
+    r"^\s*LAYER\s+(\S+)\s+(.*?)END\s+\1",
     re.DOTALL | re.MULTILINE,
 )
-_RE_LAYER_TYPE = re.compile(r'TYPE\s+(\w+)\s*;')
-_RE_LAYER_DIR = re.compile(r'DIRECTION\s+(\w+)\s*;')
-_RE_LAYER_PITCH = re.compile(r'PITCH\s+([\d.]+)(?:\s+([\d.]+))?\s*;')
-_RE_LAYER_WIDTH = re.compile(r'\bWIDTH\s+([\d.]+)\s*;')
-_RE_LAYER_SPACING = re.compile(r'\bSPACING\s+([\d.]+)\s*;')
+_RE_LAYER_TYPE = re.compile(r"TYPE\s+(\w+)\s*;")
+_RE_LAYER_DIR = re.compile(r"DIRECTION\s+(\w+)\s*;")
+_RE_LAYER_PITCH = re.compile(r"PITCH\s+([\d.]+)(?:\s+([\d.]+))?\s*;")
+_RE_LAYER_WIDTH = re.compile(r"\bWIDTH\s+([\d.]+)\s*;")
+_RE_LAYER_SPACING = re.compile(r"\bSPACING\s+([\d.]+)\s*;")
 
 # Site block: SITE <name> ... END <name>
 _RE_SITE = re.compile(
-    r'^\s*SITE\s+(\S+)\s+(.*?)END\s+\1',
+    r"^\s*SITE\s+(\S+)\s+(.*?)END\s+\1",
     re.DOTALL | re.MULTILINE,
 )
-_RE_SITE_CLASS = re.compile(r'CLASS\s+(\w+)\s*;')
-_RE_SITE_SIZE = re.compile(r'SIZE\s+([\d.]+)\s+BY\s+([\d.]+)\s*;')
-_RE_SITE_SYM = re.compile(r'SYMMETRY\s+([\w\s]+?)\s*;')
+_RE_SITE_CLASS = re.compile(r"CLASS\s+(\w+)\s*;")
+_RE_SITE_SIZE = re.compile(r"SIZE\s+([\d.]+)\s+BY\s+([\d.]+)\s*;")
+_RE_SITE_SYM = re.compile(r"SYMMETRY\s+([\w\s]+?)\s*;")
 
 # Macro block: MACRO <name> ... END <name>
 _RE_MACRO = re.compile(
-    r'^\s*MACRO\s+(\S+)\s+(.*?)END\s+\1',
+    r"^\s*MACRO\s+(\S+)\s+(.*?)END\s+\1",
     re.DOTALL | re.MULTILINE,
 )
-_RE_MACRO_CLASS = re.compile(r'CLASS\s+([\w\s]+?)\s*;')
-_RE_MACRO_FOREIGN = re.compile(r'FOREIGN\s+(\S+)')
-_RE_MACRO_ORIGIN = re.compile(r'ORIGIN\s+([-\d.]+)\s+([-\d.]+)\s*;')
-_RE_MACRO_SIZE = re.compile(r'SIZE\s+([\d.]+)\s+BY\s+([\d.]+)\s*;')
-_RE_MACRO_SITE = re.compile(r'SITE\s+(\S+)\s*;')
-_RE_MACRO_SYM = re.compile(r'SYMMETRY\s+([\w\s]+?)\s*;')
+_RE_MACRO_CLASS = re.compile(r"CLASS\s+([\w\s]+?)\s*;")
+_RE_MACRO_FOREIGN = re.compile(r"FOREIGN\s+(\S+)")
+_RE_MACRO_ORIGIN = re.compile(r"ORIGIN\s+([-\d.]+)\s+([-\d.]+)\s*;")
+_RE_MACRO_SIZE = re.compile(r"SIZE\s+([\d.]+)\s+BY\s+([\d.]+)\s*;")
+_RE_MACRO_SITE = re.compile(r"SITE\s+(\S+)\s*;")
+_RE_MACRO_SYM = re.compile(r"SYMMETRY\s+([\w\s]+?)\s*;")
 
 # Pins inside a MACRO body.
 _RE_PIN_BLOCK = re.compile(
-    r'PIN\s+(\S+)\s+(.*?)END\s+\1',
+    r"PIN\s+(\S+)\s+(.*?)END\s+\1",
     re.DOTALL,
 )
-_RE_PIN_DIR = re.compile(r'DIRECTION\s+(\w+)\s*;')
-_RE_PIN_USE = re.compile(r'USE\s+(\w+)\s*;')
+_RE_PIN_DIR = re.compile(r"DIRECTION\s+(\w+)\s*;")
+_RE_PIN_USE = re.compile(r"USE\s+(\w+)\s*;")
 
 
 # ---------------------------------------------------------------------------
@@ -272,9 +273,7 @@ def parse_lef_directory(directory: Path | str) -> LefLibrary:
         raise FileNotFoundError(f"LEF directory not found: {d}")
 
     merged = LefLibrary()
-    files: list[Path] = sorted(
-        list(d.glob("*.lef")) + list(d.glob("*.tlef"))
-    )
+    files: list[Path] = sorted(list(d.glob("*.lef")) + list(d.glob("*.tlef")))
     for f in files:
         try:
             lib = parse_lef(f)

@@ -35,6 +35,7 @@ _synth_netlists: dict[UUID, str] = {}
 # Async dispatch
 # ---------------------------------------------------------------------------
 
+
 async def _dispatch_synthesis(job_id: UUID, body: SynthesisRequest) -> None:
     """Background task: run synthesis via SynthesisRunner."""
     try:
@@ -96,6 +97,7 @@ async def _dispatch_synthesis(job_id: UUID, body: SynthesisRequest) -> None:
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
 
 @router.post("/", response_model=JobBase, status_code=status.HTTP_202_ACCEPTED)
 async def start_synthesis(body: SynthesisRequest) -> JobBase:

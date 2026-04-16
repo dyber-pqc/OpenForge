@@ -227,9 +227,7 @@ class RegressionRunner:
 
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.max_workers
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_map = {executor.submit(self.run_single, t): t for t in tests}
             try:
                 for fut in concurrent.futures.as_completed(future_map):
@@ -391,9 +389,7 @@ class RegressionRunner:
         ]
         for src in test.sources:
             cmd.append(str(src))
-        cp = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=test.timeout_seconds
-        )
+        cp = subprocess.run(cmd, capture_output=True, text=True, timeout=test.timeout_seconds)
         log = "$ " + " ".join(cmd) + "\n" + cp.stdout + cp.stderr
         if cp.returncode != 0:
             return "error", log, None
@@ -470,9 +466,7 @@ class RegressionRunner:
         lines.append("=" * 72)
         return "\n".join(lines)
 
-    def generate_html_report(
-        self, results: list[TestResult], output: Path
-    ) -> Path:
+    def generate_html_report(self, results: list[TestResult], output: Path) -> Path:
         output = Path(output)
         output.parent.mkdir(parents=True, exist_ok=True)
         total = len(results)
@@ -528,7 +522,7 @@ pre {{ margin:0; max-height:6em; overflow:auto; font-size:.75rem;
 </div>
 <table>
 <thead><tr><th>Name</th><th>Status</th><th>Duration</th><th>Tags</th><th>Log Tail</th></tr></thead>
-<tbody>{''.join(rows)}</tbody>
+<tbody>{"".join(rows)}</tbody>
 </table>
 </body></html>
 """

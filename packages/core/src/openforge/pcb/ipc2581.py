@@ -8,6 +8,7 @@ IPC-2581 directly.
 
 This exporter produces a minimal but schema-valid Rev B document.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -163,13 +164,9 @@ class Ipc2581Exporter:
             "HistoryRecord",
             {
                 "number": "1",
-                "origination": datetime.now(UTC).strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                ),
+                "origination": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "software": "OpenForge EDA",
-                "lastChange": datetime.now(UTC).strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                ),
+                "lastChange": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             },
         )
         ET.SubElement(
@@ -235,15 +232,20 @@ class Ipc2581Exporter:
             ET.SubElement(
                 char,
                 "Textual",
-                {"definitionSource": "VALUE", "textualCharacteristicName": "Value",
-                 "textualCharacteristicValue": value or ""},
+                {
+                    "definitionSource": "VALUE",
+                    "textualCharacteristicName": "Value",
+                    "textualCharacteristicValue": value or "",
+                },
             )
             ET.SubElement(
                 char,
                 "Textual",
-                {"definitionSource": "FOOTPRINT",
-                 "textualCharacteristicName": "Footprint",
-                 "textualCharacteristicValue": fpname or ""},
+                {
+                    "definitionSource": "FOOTPRINT",
+                    "textualCharacteristicName": "Footprint",
+                    "textualCharacteristicValue": fpname or "",
+                },
             )
 
     def _build_ecad(self, parent: ET.Element) -> None:
@@ -266,16 +268,20 @@ class Ipc2581Exporter:
         ET.SubElement(
             gen,
             "Property",
-            {"name": "minimum_line_width",
-             "value": self._format_real(min_track),
-             "units": "MILLIMETER"},
+            {
+                "name": "minimum_line_width",
+                "value": self._format_real(min_track),
+                "units": "MILLIMETER",
+            },
         )
         ET.SubElement(
             gen,
             "Property",
-            {"name": "minimum_clearance",
-             "value": self._format_real(min_clear),
-             "units": "MILLIMETER"},
+            {
+                "name": "minimum_clearance",
+                "value": self._format_real(min_clear),
+                "units": "MILLIMETER",
+            },
         )
 
     def _build_cad_data(self, parent: ET.Element) -> None:
@@ -295,7 +301,9 @@ class Ipc2581Exporter:
             if lkind in ("signal", "plane"):
                 cu_index += 1
                 layer_func = "CONDUCTOR" if lkind == "signal" else "PLANE"
-                side = "TOP" if cu_index == 1 else ("BOTTOM" if lname.startswith("B.") else "INTERNAL")
+                side = (
+                    "TOP" if cu_index == 1 else ("BOTTOM" if lname.startswith("B.") else "INTERNAL")
+                )
             elif lkind == "dielectric":
                 layer_func = "DIELCORE"
                 side = "INTERNAL"
@@ -348,9 +356,7 @@ class Ipc2581Exporter:
                 "StackupLayer",
                 {
                     "layerOfGroupRef": getattr(layer, "name", f"L{idx}"),
-                    "thickness": self._format_real(
-                        getattr(layer, "thickness_mm", 0.0)
-                    ),
+                    "thickness": self._format_real(getattr(layer, "thickness_mm", 0.0)),
                     "tolPlus": "0.05",
                     "tolMinus": "0.05",
                     "sequence": str(idx),
@@ -382,7 +388,10 @@ class Ipc2581Exporter:
         profile = ET.SubElement(step, "Profile")
         poly = ET.SubElement(profile, "Polygon")
         outline = self.board.outline or [
-            (bx0, by0), (bx1, by0), (bx1, by1), (bx0, by1),
+            (bx0, by0),
+            (bx1, by0),
+            (bx1, by1),
+            (bx0, by1),
         ]
         if outline:
             first = outline[0]
@@ -440,9 +449,7 @@ class Ipc2581Exporter:
             ET.SubElement(
                 comp,
                 "NonstandardAttribute",
-                {"name": "value",
-                 "value": fp.value or "",
-                 "type": "STRING"},
+                {"name": "value", "value": fp.value or "", "type": "STRING"},
             )
             ET.SubElement(
                 comp,
@@ -572,11 +579,7 @@ class Ipc2581Exporter:
                     ET.SubElement(
                         feat,
                         "Circle",
-                        {
-                            "diameter": self._format_real(
-                                min(pad.size_x_mm, pad.size_y_mm)
-                            )
-                        },
+                        {"diameter": self._format_real(min(pad.size_x_mm, pad.size_y_mm))},
                     )
                 else:
                     ET.SubElement(

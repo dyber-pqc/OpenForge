@@ -9,6 +9,7 @@ This is *not* a sign-off-grade power engine - it is a deterministic,
 fast vector-based estimator in the spirit of PrimePower / XPower that
 runs entirely in-process with no external tools.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -246,9 +247,7 @@ class VectorPowerAnalyzer:
         return _DEFAULT_LEAKAGE_UW.get(_classify_cell(cell_type), _DEFAULT_LEAKAGE_UW["DEFAULT"])
 
     def _internal_fj_for(self, cell_type: str) -> float:
-        return _DEFAULT_INTERNAL_FJ.get(
-            _classify_cell(cell_type), _DEFAULT_INTERNAL_FJ["DEFAULT"]
-        )
+        return _DEFAULT_INTERNAL_FJ.get(_classify_cell(cell_type), _DEFAULT_INTERNAL_FJ["DEFAULT"])
 
     def _output_cap_ff_for(self, cell_type: str) -> float:
         lib = self._load_liberty()
@@ -292,7 +291,9 @@ class VectorPowerAnalyzer:
         samples: list[CellPowerSample] = []
         v2 = self.vdd * self.vdd
 
-        for comp in design.components.values() if isinstance(design.components, dict) else design.components:
+        for comp in (
+            design.components.values() if isinstance(design.components, dict) else design.components
+        ):
             # DefDesign.components may be dict or list depending on parser
             if isinstance(comp, str):  # shouldn't happen, defensive
                 continue
@@ -345,9 +346,7 @@ class VectorPowerAnalyzer:
     # Time-domain
     # ------------------------------------------------------------------
 
-    def compute_instantaneous(
-        self, timestep_ns: float = 0.1
-    ) -> list[tuple[float, float]]:
+    def compute_instantaneous(self, timestep_ns: float = 0.1) -> list[tuple[float, float]]:
         """Compute instantaneous power in mW at each ``timestep_ns`` bucket.
 
         Algorithm: build a histogram of all VCD transitions, weight each
@@ -361,9 +360,7 @@ class VectorPowerAnalyzer:
             return []
 
         samples = self.compute_per_cell()
-        total_dyn_mw = sum(
-            (s.switching_power_uw + s.internal_power_uw) for s in samples
-        ) / 1000.0
+        total_dyn_mw = sum((s.switching_power_uw + s.internal_power_uw) for s in samples) / 1000.0
         total_leak_mw = sum(s.leakage_power_uw for s in samples) / 1000.0
         total_toggles = 0
         # Average energy per toggle (mJ per toggle) derived from aggregate
@@ -382,9 +379,7 @@ class VectorPowerAnalyzer:
         if not all_transitions or total_toggles == 0:
             # No activity; return flat leakage trace
             n = max(1, int(duration_ns / max(timestep_ns, 1e-6)))
-            return [
-                (i * timestep_ns, total_leak_mw) for i in range(n)
-            ]
+            return [(i * timestep_ns, total_leak_mw) for i in range(n)]
 
         # mJ / toggle (average)
         # dynamic power (mW) = energy_per_toggle(mJ) * toggles/sec
@@ -397,9 +392,7 @@ class VectorPowerAnalyzer:
             energy_per_toggle_mj = total_dyn_mw / toggles_per_s  # mJ per toggle
 
         bins = max(1, int(round(duration_ns / max(timestep_ns, 1e-6))))
-        hist, edges = np.histogram(
-            all_transitions, bins=bins, range=(0.0, duration_ns)
-        )
+        hist, edges = np.histogram(all_transitions, bins=bins, range=(0.0, duration_ns))
         # Per-bin dynamic power: toggles_in_bin * energy_per_toggle_mj / bin_seconds
         bin_s = timestep_ns * 1e-9
         dyn_trace_mw = (hist * energy_per_toggle_mj) / max(bin_s, 1e-18)

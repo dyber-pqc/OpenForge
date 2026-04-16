@@ -31,8 +31,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.uvm_lite import (
@@ -84,7 +86,11 @@ class _NewTestWizard(QDialog):
         layout.addWidget(btns)
 
     def result_data(self) -> tuple[str, str, list[str]]:
-        agents = [self._agents.item(i).text() for i in range(self._agents.count()) if self._agents.item(i).isSelected()]
+        agents = [
+            self._agents.item(i).text()
+            for i in range(self._agents.count())
+            if self._agents.item(i).isSelected()
+        ]
         return self._name.text().strip() or "test", self._dut.text().strip() or "dut", agents
 
 
@@ -143,7 +149,9 @@ class UvmPanel(QWidget):
         for p in _PHASES:
             lbl = QLabel(p)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setStyleSheet("QLabel { padding: 4px 10px; border: 1px solid #45475a; border-radius: 4px; }")
+            lbl.setStyleSheet(
+                "QLabel { padding: 4px 10px; border: 1px solid #45475a; border-radius: 4px; }"
+            )
             self._phase_labels[p] = lbl
             pv.addWidget(lbl)
         pv.addStretch(1)
@@ -221,9 +229,7 @@ class UvmPanel(QWidget):
             generate_agent(AgentSpec(name=a, protocol=a), out)
         self._tests.append({"name": name, "dut": dut, "agents": agents, "dir": out})
         self._test_list.addItem(QListWidgetItem(name))
-        self._files_view.setPlainText(
-            "\n".join(f"{k}: {v}" for k, v in files.items())
-        )
+        self._files_view.setPlainText("\n".join(f"{k}: {v}" for k, v in files.items()))
         self._log(f"generated {name} at {out}")
 
     def _on_add_agent(self) -> None:

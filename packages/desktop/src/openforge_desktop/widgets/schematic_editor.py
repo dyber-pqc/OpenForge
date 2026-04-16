@@ -304,9 +304,7 @@ class Schematic:
         }
 
     def save(self, path: Path) -> None:
-        Path(path).write_text(
-            json.dumps(self.to_dict(), indent=2), encoding="utf-8"
-        )
+        Path(path).write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
 
     @classmethod
     def load(cls, path: Path) -> Schematic:
@@ -446,9 +444,7 @@ def builtin_library() -> dict[str, SchSymbol]:
     lib["Inductor"] = l
 
     # LED ---------------------------------------------------------------
-    led = SchSymbol(
-        name="LED", library="Device", description="Light emitting diode"
-    )
+    led = SchSymbol(name="LED", library="Device", description="Light emitting diode")
     led.pins = [
         SchPin("A", "1", "passive", 0, 0, orientation="left"),
         SchPin("K", "2", "passive", 200, 0, orientation="right"),
@@ -636,22 +632,50 @@ def builtin_library() -> dict[str, SchSymbol]:
         height=2000,
     )
     esp_pins = [
-        "GND", "3V3", "EN", "SENSOR_VP", "SENSOR_VN", "GPIO34", "GPIO35",
-        "GPIO32", "GPIO33", "GPIO25", "GPIO26", "GPIO27", "GPIO14",
-        "GPIO12", "GND2", "GPIO13", "GPIO9", "GPIO10", "GPIO11", "VDD",
-        "GPIO6", "GPIO7", "GPIO8", "GPIO15", "GPIO2", "GPIO0", "GPIO4",
-        "GPIO16", "GPIO17", "GPIO5", "GPIO18", "GPIO19", "NC", "GPIO21",
-        "RXD0", "TXD0", "GPIO22", "GPIO23",
+        "GND",
+        "3V3",
+        "EN",
+        "SENSOR_VP",
+        "SENSOR_VN",
+        "GPIO34",
+        "GPIO35",
+        "GPIO32",
+        "GPIO33",
+        "GPIO25",
+        "GPIO26",
+        "GPIO27",
+        "GPIO14",
+        "GPIO12",
+        "GND2",
+        "GPIO13",
+        "GPIO9",
+        "GPIO10",
+        "GPIO11",
+        "VDD",
+        "GPIO6",
+        "GPIO7",
+        "GPIO8",
+        "GPIO15",
+        "GPIO2",
+        "GPIO0",
+        "GPIO4",
+        "GPIO16",
+        "GPIO17",
+        "GPIO5",
+        "GPIO18",
+        "GPIO19",
+        "NC",
+        "GPIO21",
+        "RXD0",
+        "TXD0",
+        "GPIO22",
+        "GPIO23",
     ]
     for i, pname in enumerate(esp_pins):
         side = "left" if i < 19 else "right"
         x = 0 if side == "left" else 600
         y = 50 + (i if i < 19 else i - 19) * 100
-        dirn = (
-            "power_in"
-            if pname in ("GND", "GND2", "VDD", "3V3", "EN")
-            else "bidirectional"
-        )
+        dirn = "power_in" if pname in ("GND", "GND2", "VDD", "3V3", "EN") else "bidirectional"
         esp.pins.append(SchPin(pname, str(i + 1), dirn, x, y, orientation=side))
     lib["ESP32-WROOM-32"] = esp
 
@@ -782,9 +806,7 @@ class ComponentItem(QGraphicsItem):
         elif "BJT" in name or "MOS" in name:
             self._draw_transistor(painter)
         else:
-            painter.drawRect(
-                QRectF(0, 0, self.symbol.width, self.symbol.height)
-            )
+            painter.drawRect(QRectF(0, 0, self.symbol.width, self.symbol.height))
 
         # Pins
         painter.setPen(QPen(QColor(COLOR_BODY), 2))
@@ -887,21 +909,13 @@ class ComponentItem(QGraphicsItem):
 
     def _draw_pin(self, painter: QPainter, pin: SchPin) -> None:
         if pin.orientation == "right":
-            painter.drawLine(
-                QLineF(pin.x, pin.y, pin.x + pin.length, pin.y)
-            )
+            painter.drawLine(QLineF(pin.x, pin.y, pin.x + pin.length, pin.y))
         elif pin.orientation == "left":
-            painter.drawLine(
-                QLineF(pin.x, pin.y, pin.x - pin.length, pin.y)
-            )
+            painter.drawLine(QLineF(pin.x, pin.y, pin.x - pin.length, pin.y))
         elif pin.orientation == "up":
-            painter.drawLine(
-                QLineF(pin.x, pin.y, pin.x, pin.y - pin.length)
-            )
+            painter.drawLine(QLineF(pin.x, pin.y, pin.x, pin.y - pin.length))
         elif pin.orientation == "down":
-            painter.drawLine(
-                QLineF(pin.x, pin.y, pin.x, pin.y + pin.length)
-            )
+            painter.drawLine(QLineF(pin.x, pin.y, pin.x, pin.y + pin.length))
         # Pin name (small label near body end)
         painter.save()
         painter.setPen(QColor(COLOR_BODY))
@@ -1341,13 +1355,9 @@ class SchematicEditor(QWidget):
             if event.type() == QEvent.Type.MouseMove:
                 pos = self.view.mapToScene(event.position().toPoint())
                 snap_x, snap_y = self._snap_to_grid(pos.x(), pos.y())
-                self.coord_label.setText(
-                    f"X: {int(snap_x)}  Y: {int(snap_y)}"
-                )
+                self.coord_label.setText(f"X: {int(snap_x)}  Y: {int(snap_y)}")
                 if self._wire_preview and self._wire_start:
-                    self._wire_preview.setLine(
-                        QLineF(self._wire_start, QPointF(snap_x, snap_y))
-                    )
+                    self._wire_preview.setLine(QLineF(self._wire_start, QPointF(snap_x, snap_y)))
                 return False
 
             if (
@@ -1357,10 +1367,7 @@ class SchematicEditor(QWidget):
                 pos = self.view.mapToScene(event.position().toPoint())
                 snap_x, snap_y = self._snap_to_grid(pos.x(), pos.y())
 
-                if (
-                    self._mode == EditMode.PLACE_COMPONENT
-                    and self._current_symbol
-                ):
+                if self._mode == EditMode.PLACE_COMPONENT and self._current_symbol:
                     self._place_component(snap_x, snap_y)
                     return True
 
@@ -1369,9 +1376,7 @@ class SchematicEditor(QWidget):
                     return True
 
                 if self._mode == EditMode.PLACE_LABEL:
-                    text, ok = QInputDialog.getText(
-                        self, "Net Label", "Label:"
-                    )
+                    text, ok = QInputDialog.getText(self, "Net Label", "Label:")
                     if ok and text:
                         self._add_label(text, snap_x, snap_y)
                     return True
@@ -1427,9 +1432,7 @@ class SchematicEditor(QWidget):
     # ------------------------------------------------------------------
 
     def _next_refdes(self, prefix: str) -> str:
-        self._refdes_counter[prefix] = (
-            self._refdes_counter.get(prefix, 0) + 1
-        )
+        self._refdes_counter[prefix] = self._refdes_counter.get(prefix, 0) + 1
         return f"{prefix}{self._refdes_counter[prefix]}"
 
     def _refdes_prefix_for_symbol(self, sym: SchSymbol) -> str:
@@ -1488,9 +1491,7 @@ class SchematicEditor(QWidget):
         self._update_stats()
         self.schematic_changed.emit()
 
-    def _add_power(
-        self, x: float, y: float, name: str, is_ground: bool
-    ) -> None:
+    def _add_power(self, x: float, y: float, name: str, is_ground: bool) -> None:
         ps = SchPowerSymbol(net_name=name, x=x, y=y, is_ground=is_ground)
         self._schematic.power_symbols.append(ps)
         item = PowerSymbolItem(ps)
@@ -1567,9 +1568,7 @@ class SchematicEditor(QWidget):
             item = PowerSymbolItem(ps)
             self.scene.addItem(item)
         for label in self._schematic.labels:
-            text_item = self.scene.addText(
-                label.text, QFont("Sans Serif", 10)
-            )
+            text_item = self.scene.addText(label.text, QFont("Sans Serif", 10))
             text_item.setPos(label.x, label.y - 16)
             text_item.setDefaultTextColor(QColor(COLOR_LABEL))
         self._update_stats()
@@ -1663,8 +1662,7 @@ class SchematicEditor(QWidget):
 # ===========================================================================
 
 
-def resolve_hierarchy(root: Schematic,
-                      sub_loader=None) -> Schematic:
+def resolve_hierarchy(root: Schematic, sub_loader=None) -> Schematic:
     """Flatten all sub-sheets into a single :class:`Schematic`.
 
     ``sub_loader`` is an optional callable ``(filename) -> Schematic``
@@ -1693,11 +1691,14 @@ def resolve_hierarchy(root: Schematic,
 
             # Promote port labels to the parent flattening
             for p in sub.ports:
-                flat.labels.append(SchLabel(
-                    text=p.net_name or p.name,
-                    x=sub.position[0], y=sub.position[1],
-                    label_type="hierarchical",
-                ))
+                flat.labels.append(
+                    SchLabel(
+                        text=p.net_name or p.name,
+                        x=sub.position[0],
+                        y=sub.position[1],
+                        label_type="hierarchical",
+                    )
+                )
 
             # If we have a child schematic in memory (stored via fields),
             # walk it too.
@@ -1718,8 +1719,10 @@ def resolve_hierarchy(root: Schematic,
                     symbol_name=c.symbol_name,
                     library=c.library,
                     value=c.value,
-                    x=c.x, y=c.y,
-                    rotation=c.rotation, mirrored=c.mirrored,
+                    x=c.x,
+                    y=c.y,
+                    rotation=c.rotation,
+                    mirrored=c.mirrored,
                     fields=dict(c.fields),
                 )
                 flat.components.append(nc)
@@ -1739,13 +1742,18 @@ def resolve_hierarchy(root: Schematic,
 # ---------------------------------------------------------------------------
 
 
-def _editor_add_sub_sheet(self, name: str, filename: str,
-                          ports: list[SchPort] | None = None,
-                          x: float = 2000, y: float = 2000) -> SchSheet:
+def _editor_add_sub_sheet(
+    self,
+    name: str,
+    filename: str,
+    ports: list[SchPort] | None = None,
+    x: float = 2000,
+    y: float = 2000,
+) -> SchSheet:
     """Create a sheet graphic item and register it with the schematic."""
-    sheet = SchSheet(name=name, filename=filename,
-                     ports=list(ports or []),
-                     position=(float(x), float(y)))
+    sheet = SchSheet(
+        name=name, filename=filename, ports=list(ports or []), position=(float(x), float(y))
+    )
     self._schematic.sub_sheets.append(sheet)
 
     # Draw a labeled rectangle on the scene for the sheet
@@ -1872,8 +1880,7 @@ SchematicEditor._redraw_all = _editor_redraw_all  # type: ignore[attr-defined]
 class BusItem(QGraphicsLineItem):
     """A bus: thicker, dark-purple line representing a bundle of signals."""
 
-    def __init__(self, x1: float, y1: float, x2: float, y2: float,
-                 bus: SchBus) -> None:
+    def __init__(self, x1: float, y1: float, x2: float, y2: float, bus: SchBus) -> None:
         super().__init__(x1, y1, x2, y2)
         self._bus = bus
         pen = QPen(QColor("#8839ef"))

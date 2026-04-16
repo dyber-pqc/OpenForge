@@ -10,6 +10,7 @@ heatmap movie in the Reliability dashboard, plus a list of cells that
 fail timing because the supply at their location dropped below the
 library characterization voltage.
 """
+
 from __future__ import annotations
 
 import math
@@ -344,9 +345,7 @@ class DynamicIrDropAnalyzer:
             name, ctype, xs, ys = m.groups()
             x = int(xs) / 1000.0
             y = int(ys) / 1000.0
-            cells.append(
-                _CellInstance(name=name, cell_type=ctype, x=x, y=y, width=2.0, height=2.7)
-            )
+            cells.append(_CellInstance(name=name, cell_type=ctype, x=x, y=y, width=2.0, height=2.7))
         if not cells:
             return self._synthetic_cells()
         return cells

@@ -349,9 +349,7 @@ class _RecentProjectItem(QFrame):
             f"color: {self._accent}; font-size: 14px; font-weight: 600; background: transparent;"
         )
         self._sub = QLabel(f"{self._path}  •  {_format_relative_date(self._last_opened)}")
-        self._sub.setStyleSheet(
-            f"color: {self._dim}; font-size: 11px; background: transparent;"
-        )
+        self._sub.setStyleSheet(f"color: {self._dim}; font-size: 11px; background: transparent;")
         layout.addWidget(self._title)
         layout.addWidget(self._sub)
         self._refresh_style()
@@ -372,9 +370,7 @@ class _RecentProjectItem(QFrame):
         self._title.setStyleSheet(
             f"color: {self._accent}; font-size: 14px; font-weight: 600; background: transparent;"
         )
-        self._sub.setStyleSheet(
-            f"color: {self._dim}; font-size: 11px; background: transparent;"
-        )
+        self._sub.setStyleSheet(f"color: {self._dim}; font-size: 11px; background: transparent;")
         self._refresh_style()
 
     def mousePressEvent(self, event):
@@ -389,9 +385,7 @@ class _RecentProjectItem(QFrame):
         super().enterEvent(event)
 
     def leaveEvent(self, event):
-        self.setStyleSheet(
-            "_RecentProjectItem { background: transparent; border-radius: 6px; }"
-        )
+        self.setStyleSheet("_RecentProjectItem { background: transparent; border-radius: 6px; }")
         super().leaveEvent(event)
 
 
@@ -431,9 +425,7 @@ class _ExampleCard(QFrame):
         )
         self._desc = QLabel(self._example.description)
         self._desc.setWordWrap(True)
-        self._desc.setStyleSheet(
-            f"color: {self._dim}; font-size: 11px; background: transparent;"
-        )
+        self._desc.setStyleSheet(f"color: {self._dim}; font-size: 11px; background: transparent;")
         self._cat = QLabel(self._example.category)
         self._cat.setStyleSheet(
             f"color: {self._accent}; font-size: 10px; font-weight: 600; "
@@ -469,9 +461,7 @@ class _ExampleCard(QFrame):
         self._title.setStyleSheet(
             f"color: {self._fg}; font-size: 14px; font-weight: 700; background: transparent;"
         )
-        self._desc.setStyleSheet(
-            f"color: {self._dim}; font-size: 11px; background: transparent;"
-        )
+        self._desc.setStyleSheet(f"color: {self._dim}; font-size: 11px; background: transparent;")
         self._cat.setStyleSheet(
             f"color: {self._accent}; font-size: 10px; font-weight: 600; background: transparent;"
         )
@@ -547,9 +537,7 @@ class WelcomePanel(QWidget):
         title_row.setSpacing(14)
 
         self._logo = QLabel("⚡")
-        self._logo.setStyleSheet(
-            "font-size: 56px; background: transparent;"
-        )
+        self._logo.setStyleSheet("font-size: 56px; background: transparent;")
         title_row.addWidget(self._logo)
 
         title_block = QVBoxLayout()
@@ -558,12 +546,8 @@ class WelcomePanel(QWidget):
         self._title_label.setStyleSheet(
             "font-size: 38px; font-weight: 800; background: transparent;"
         )
-        self._tagline_label = QLabel(
-            "Open-source silicon design, from RTL to GDSII"
-        )
-        self._tagline_label.setStyleSheet(
-            "font-size: 15px; background: transparent;"
-        )
+        self._tagline_label = QLabel("Open-source silicon design, from RTL to GDSII")
+        self._tagline_label.setStyleSheet("font-size: 15px; background: transparent;")
         title_block.addWidget(self._title_label)
         title_block.addWidget(self._tagline_label)
         title_row.addLayout(title_block)
@@ -571,12 +555,8 @@ class WelcomePanel(QWidget):
         title_row.addStretch(1)
 
         self._version_label = QLabel("v0.10.0  •  Phase 10")
-        self._version_label.setStyleSheet(
-            "font-size: 12px; background: transparent;"
-        )
-        self._version_label.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom
-        )
+        self._version_label.setStyleSheet("font-size: 12px; background: transparent;")
+        self._version_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
         title_row.addWidget(self._version_label)
 
         header.addLayout(title_row)
@@ -807,22 +787,22 @@ class WelcomePanel(QWidget):
         self.setStyleSheet(
             f"""
             #WelcomePanel, #WelcomeContainer {{
-                background: {p['base']};
-                color: {p['text']};
+                background: {p["base"]};
+                color: {p["text"]};
             }}
-            QScrollArea {{ background: {p['base']}; border: none; }}
-            QLabel {{ color: {p['text']}; }}
+            QScrollArea {{ background: {p["base"]}; border: none; }}
+            QLabel {{ color: {p["text"]}; }}
             #WelcomeBottomStrip {{
-                background: {p['mantle']};
-                border: 1px solid {p['surface0']};
+                background: {p["mantle"]};
+                border: 1px solid {p["surface0"]};
                 border-radius: 8px;
             }}
             QFrame#WelcomeSeparator {{
-                background: {p['surface0']};
+                background: {p["surface0"]};
                 border: none;
             }}
             QLabel[welcomeHeading="true"] {{
-                color: {p['overlay1']};
+                color: {p["overlay1"]};
             }}
             """
         )
@@ -874,6 +854,7 @@ def featured_tutorials_for_welcome() -> list[dict]:
     """
     try:
         from openforge.tutorials.library import featured
+
         return [
             {
                 "id": t.id,
@@ -893,6 +874,7 @@ def load_recent_projects() -> list[dict]:
     """Read the recent projects list stored by the project service."""
     import os as _os
     import sys as _sys
+
     if _sys.platform.startswith("win") and _os.environ.get("APPDATA"):
         f = Path(_os.environ["APPDATA"]) / "OpenForge" / "recent.json"
     else:

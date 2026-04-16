@@ -129,8 +129,7 @@ class RunGraph:
         """True if all deps of ``stage_id`` are in SUCCESS/SKIPPED."""
         s = self._stages[stage_id]
         return all(
-            self._stages[d].status in (RunStatus.SUCCESS, RunStatus.SKIPPED)
-            for d in s.depends_on
+            self._stages[d].status in (RunStatus.SUCCESS, RunStatus.SKIPPED) for d in s.depends_on
         )
 
 
@@ -436,8 +435,7 @@ class RunEngine:
                 if not graph.can_run(s.id):
                     # skip if any dep failed/cancelled
                     if any(
-                        graph.get(d).status
-                        in (RunStatus.FAILED, RunStatus.CANCELLED)
+                        graph.get(d).status in (RunStatus.FAILED, RunStatus.CANCELLED)
                         for d in s.depends_on
                     ):
                         s.status = RunStatus.SKIPPED
@@ -523,9 +521,7 @@ class RunEngine:
                     logf.flush()
                     if self.on_log_line:
                         with contextlib.suppress(Exception):
-                            self.on_log_line(
-                                state.run_id, stage, line.decode("utf-8", "replace")
-                            )
+                            self.on_log_line(state.run_id, stage, line.decode("utf-8", "replace"))
                     if self.on_stage_progress:
                         with contextlib.suppress(Exception):
                             self.on_stage_progress(state.run_id, stage)
@@ -607,9 +603,7 @@ class RunEngine:
     def _cache_write(self, cache_file: Path, key: str) -> None:
         try:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
-            cache_file.write_text(
-                json.dumps({"key": key, "at": _utcnow()}), encoding="utf-8"
-            )
+            cache_file.write_text(json.dumps({"key": key, "at": _utcnow()}), encoding="utf-8")
         except Exception:
             pass
 

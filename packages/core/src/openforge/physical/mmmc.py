@@ -110,9 +110,7 @@ class MmmcConfig(BaseModel):
                 f"-voltage {corner.voltage:.3f} -temperature {corner.temperature:.2f}"
             )
             if corner.derate != 1.0:
-                lines.append(
-                    f"set_timing_derate -corner {corner.name} -late {corner.derate:.3f}"
-                )
+                lines.append(f"set_timing_derate -corner {corner.name} -late {corner.derate:.3f}")
             lines.append("")
 
         for mode in self.modes:
@@ -160,13 +158,9 @@ class MmmcConfig(BaseModel):
         lines.append("")
         for corner in self.corners:
             libs = " ".join(_tcl_path(p) for p in corner.lib_files)
-            lines.append(
-                f"create_library_set -name {corner.name}_libs -timing [list {libs}]"
-            )
+            lines.append(f"create_library_set -name {corner.name}_libs -timing [list {libs}]")
             rc_opts = (
-                f"-qx_tech_file {_tcl_path(corner.qrc_file)}"
-                if corner.qrc_file
-                else "-T 0.025"
+                f"-qx_tech_file {_tcl_path(corner.qrc_file)}" if corner.qrc_file else "-T 0.025"
             )
             lines.append(
                 f"create_rc_corner -name {corner.name}_rc "
@@ -193,9 +187,7 @@ class MmmcConfig(BaseModel):
                 sc.name for sc in self.scenarios if sc.check_type in ("hold", "min_max")
             )
             lines.append("")
-            lines.append(
-                f"set_analysis_view -setup [list {setup_views}] -hold [list {hold_views}]"
-            )
+            lines.append(f"set_analysis_view -setup [list {setup_views}] -hold [list {hold_views}]")
 
         return "\n".join(lines)
 

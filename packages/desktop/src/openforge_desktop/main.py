@@ -45,6 +45,7 @@ def main() -> int:
         # Brief pause to show each stage (real loading will replace this)
         QTimer.singleShot(0, lambda: None)
         import time
+
         time.sleep(0.15)
 
     splash.set_status("Ready.", 1.0)

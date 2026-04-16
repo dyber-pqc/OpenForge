@@ -22,6 +22,7 @@ app = typer.Typer(
 # ERC
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def erc(
     path: str = typer.Argument(".", help="Path to the design directory."),
@@ -58,11 +59,15 @@ def erc(
         result = checker.check(schematic_file=sch_path)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "passed": result.passed,
-            "errors": result.error_count,
-            "warnings": result.warning_count,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "passed": result.passed,
+                    "errors": result.error_count,
+                    "warnings": result.warning_count,
+                }
+            )
+        )
         if not result.passed:
             raise typer.Exit(code=2)
         return
@@ -70,7 +75,9 @@ def erc(
     if result.passed:
         console.print(f"[green bold]ERC CLEAN[/] -- {result.warning_count} warnings")
     else:
-        console.print(f"[red bold]ERC FAILED[/] -- {result.error_count} errors, {result.warning_count} warnings")
+        console.print(
+            f"[red bold]ERC FAILED[/] -- {result.error_count} errors, {result.warning_count} warnings"
+        )
         for v in result.violations[:20]:
             style = "[red]" if v.severity == "error" else "[yellow]"
             console.print(f"  {style}{v.rule}: {v.message}[/]")
@@ -80,6 +87,7 @@ def erc(
 # ---------------------------------------------------------------------------
 # PCB DRC
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def drc(
@@ -120,10 +128,14 @@ def drc(
         result = checker.check(board_file=board_path)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "passed": result.passed,
-            "violations": len(result.violations),
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "passed": result.passed,
+                    "violations": len(result.violations),
+                }
+            )
+        )
         if not result.passed:
             raise typer.Exit(code=2)
         return
@@ -140,6 +152,7 @@ def drc(
 # ---------------------------------------------------------------------------
 # Gerber
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def gerber(
@@ -189,6 +202,7 @@ def gerber(
 # Drill
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def drill(
     path: str = typer.Argument(".", help="Path to the design directory."),
@@ -226,6 +240,7 @@ def drill(
 # ---------------------------------------------------------------------------
 # BOM
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def bom(
@@ -274,6 +289,7 @@ def bom(
 # Pick & Place
 # ---------------------------------------------------------------------------
 
+
 @app.command(name="pick-place")
 def pick_place(
     path: str = typer.Argument(".", help="Path to the design directory."),
@@ -312,6 +328,7 @@ def pick_place(
 # Impedance
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def impedance(
     width: float = typer.Option(0.15, "--width", help="Trace width in mm."),
@@ -338,13 +355,17 @@ def impedance(
     )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "impedance_ohm": result.impedance_ohm,
-            "kind": kind,
-            "width_mm": width,
-            "height_mm": height,
-            "er": er,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "impedance_ohm": result.impedance_ohm,
+                    "kind": kind,
+                    "width_mm": width,
+                    "height_mm": height,
+                    "er": er,
+                }
+            )
+        )
         return
 
     table = Table(title="Impedance Calculation", show_header=True, header_style="bold cyan")
@@ -363,10 +384,13 @@ def impedance(
 # Route
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def route(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    engine: str = typer.Option("builtin", "--engine", help="Routing engine: builtin or freerouting."),
+    engine: str = typer.Option(
+        "builtin", "--engine", help="Routing engine: builtin or freerouting."
+    ),
     nets: list[str] | None = typer.Option(None, "--nets", help="Specific nets to route."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -403,11 +427,15 @@ def route(
         )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "routed": result.routed_count,
-            "unrouted": result.unrouted_count,
-            "total_length_mm": result.total_length_mm,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "routed": result.routed_count,
+                    "unrouted": result.unrouted_count,
+                    "total_length_mm": result.total_length_mm,
+                }
+            )
+        )
         return
 
     table = Table(title="Routing Results", show_header=True, header_style="bold cyan")
@@ -423,13 +451,16 @@ def route(
 # Export
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def export(
     path: str = typer.Argument(".", help="Path to the design directory."),
     ipc2581: bool = typer.Option(False, "--ipc2581", help="Export IPC-2581."),
     odbpp: bool = typer.Option(False, "--odbpp", help="Export ODB++."),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file or directory."),
-    output_dir: str | None = typer.Option(None, "--output-dir", help="Output directory (for ODB++)."),
+    output_dir: str | None = typer.Option(
+        None, "--output-dir", help="Output directory (for ODB++)."
+    ),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
     """Export PCB design in industry-standard formats.

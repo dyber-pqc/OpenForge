@@ -457,9 +457,7 @@ class SymbiFlowEngine(ToolEngine):
             return {"ok": False, "step": "fasm", "error": wf.stderr, **artifacts.as_dict()}
         artifacts.fasm = fasm
 
-        wb = self.generate_bitstream(
-            fasm, part=part, output_bit=bit, cwd=work, timeout=timeout
-        )
+        wb = self.generate_bitstream(fasm, part=part, output_bit=bit, cwd=work, timeout=timeout)
         if not wb.ok:
             return {"ok": False, "step": "bitstream", "error": wb.stderr, **artifacts.as_dict()}
         artifacts.bitstream = bit
@@ -470,9 +468,7 @@ class SymbiFlowEngine(ToolEngine):
     # Utility
     # ------------------------------------------------------------------
 
-    def estimate_resource_usage(
-        self, eblif: str | PathLike[str]
-    ) -> dict[str, int]:
+    def estimate_resource_usage(self, eblif: str | PathLike[str]) -> dict[str, int]:
         """Very rough LUT/FF/BRAM estimate from an eblif file."""
         path = Path(eblif)
         counts = {"luts": 0, "ffs": 0, "brams": 0, "dsps": 0}

@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 try:
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
+
     _HAVE_MPL = True
 except Exception:  # pragma: no cover
     _HAVE_MPL = False
@@ -165,7 +166,9 @@ class DrcBrowserPanel(QWidget):
 
     def _on_load(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open DRC report", "",
+            self,
+            "Open DRC report",
+            "",
             "DRC reports (*.rpt *.json *.xml *.lyrdb *.rve *.drc);;All files (*)",
         )
         if path:
@@ -183,9 +186,7 @@ class DrcBrowserPanel(QWidget):
         self._populate_layers()
         self._refresh()
         n = len(self._report.violations)
-        self._summary.setText(
-            f"{path.name}: {n} violations [{self._report.tool}]"
-        )
+        self._summary.setText(f"{path.name}: {n} violations [{self._report.tool}]")
 
     def _populate_layers(self) -> None:
         self._layer_filter.blockSignals(True)
@@ -227,10 +228,12 @@ class DrcBrowserPanel(QWidget):
             if any(v.severity == "error" for v in items):
                 top.setForeground(0, QBrush(QColor("#c0392b")))
             for v in items[:200]:
-                child = QTreeWidgetItem([
-                    f"{v.layer} @ ({v.x_um:.3f}, {v.y_um:.3f})",
-                    "",
-                ])
+                child = QTreeWidgetItem(
+                    [
+                        f"{v.layer} @ ({v.x_um:.3f}, {v.y_um:.3f})",
+                        "",
+                    ]
+                )
                 child.setData(0, Qt.ItemDataRole.UserRole, v)
                 top.addChild(child)
             self._tree.addTopLevelItem(top)
@@ -297,16 +300,16 @@ class DrcBrowserPanel(QWidget):
     def _on_export(self) -> None:
         if not self._filtered:
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export DRC CSV", "drc.csv", "CSV (*.csv)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Export DRC CSV", "drc.csv", "CSV (*.csv)")
         if not path:
             return
         with open(path, "w", newline="", encoding="utf-8") as fh:
             w = csv.writer(fh)
             w.writerow(["rule", "layer", "severity", "x_um", "y_um", "x2_um", "y2_um", "message"])
             for v in self._filtered:
-                w.writerow([v.rule, v.layer, v.severity, v.x_um, v.y_um, v.x2_um, v.y2_um, v.message])
+                w.writerow(
+                    [v.rule, v.layer, v.severity, v.x_um, v.y_um, v.x2_um, v.y2_um, v.message]
+                )
 
     def _on_waive(self) -> None:
         rows = sorted({i.row() for i in self._table.selectedItems()})
@@ -324,7 +327,7 @@ class DrcBrowserPanel(QWidget):
                 fh.write(
                     f"waive rule={v.rule!r} layer={v.layer} "
                     f"bbox=({v.x_um},{v.y_um},{v.x2_um},{v.y2_um}) "
-                    f"reason=\"manual waiver\"\n"
+                    f'reason="manual waiver"\n'
                 )
         QMessageBox.information(self, "Waiver", f"Wrote {len(selected)} waivers to {path}.")
 

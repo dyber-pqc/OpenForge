@@ -35,8 +35,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.formal import (
@@ -149,9 +151,7 @@ class FormalPanel(QWidget):
         split = QSplitter(Qt.Orientation.Horizontal)
         self._props = QTableWidget(0, 4)
         self._props.setHorizontalHeaderLabels(["Kind", "Name", "File:Line", "Status"])
-        self._props.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Stretch
-        )
+        self._props.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self._props.itemSelectionChanged.connect(self._on_prop_select)
         split.addWidget(self._props)
 
@@ -185,9 +185,7 @@ class FormalPanel(QWidget):
         for row, p in enumerate(props):
             self._props.setItem(row, 0, QTableWidgetItem(p.kind))
             self._props.setItem(row, 1, QTableWidgetItem(p.name))
-            self._props.setItem(
-                row, 2, QTableWidgetItem(f"{Path(p.file).name}:{p.line}")
-            )
+            self._props.setItem(row, 2, QTableWidgetItem(f"{Path(p.file).name}:{p.line}"))
             st = QTableWidgetItem("PENDING")
             st.setForeground(QBrush(QColor("#94a3b8")))
             self._props.setItem(row, 3, st)
@@ -230,13 +228,9 @@ class FormalPanel(QWidget):
             p = r.property
             self._props.setItem(row, 0, QTableWidgetItem(p.kind))
             self._props.setItem(row, 1, QTableWidgetItem(p.name))
-            self._props.setItem(
-                row, 2, QTableWidgetItem(f"{Path(p.file).name}:{p.line}")
-            )
+            self._props.setItem(row, 2, QTableWidgetItem(f"{Path(p.file).name}:{p.line}"))
             cell = QTableWidgetItem(r.status)
-            cell.setForeground(
-                QBrush(QColor(STATUS_COLOURS.get(r.status, "#cdd6f4")))
-            )
+            cell.setForeground(QBrush(QColor(STATUS_COLOURS.get(r.status, "#cdd6f4"))))
             self._props.setItem(row, 3, cell)
         # Populate cover table
         covers = [r for r in results if r.property.kind == "cover"]
@@ -245,9 +239,7 @@ class FormalPanel(QWidget):
             p = r.property
             self._cover_tbl.setItem(row, 0, QTableWidgetItem(p.name))
             self._cover_tbl.setItem(row, 1, QTableWidgetItem(r.status))
-            self._cover_tbl.setItem(
-                row, 2, QTableWidgetItem(f"{Path(p.file).name}:{p.line}")
-            )
+            self._cover_tbl.setItem(row, 2, QTableWidgetItem(f"{Path(p.file).name}:{p.line}"))
 
     def _on_prop_select(self) -> None:
         rows = self._props.selectionModel().selectedRows()

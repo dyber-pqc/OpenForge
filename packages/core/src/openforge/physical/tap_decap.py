@@ -145,7 +145,7 @@ class TapInserter:
         tap_count = 0
         max_dist = 0.0
         idx = 0
-        for (x0, y0, w, h) in rows:
+        for x0, y0, w, h in rows:
             occ = _row_occupancy_um(self.design, self.lib, y0, h)
             free = _free_spans(x0, w, occ)
             # Existing taps constitute the initial spacing set.
@@ -196,8 +196,7 @@ class TapInserter:
         lines = [f"COMPONENTS {len(self._instances)} ;"]
         for name, x_um, y_um in self._instances:
             lines.append(
-                f"    - {name} {tap_cell} + PLACED "
-                f"( {int(x_um * units)} {int(y_um * units)} ) N ;"
+                f"    - {name} {tap_cell} + PLACED ( {int(x_um * units)} {int(y_um * units)} ) N ;"
             )
         lines.append("END COMPONENTS")
         p.write_text("\n".join(lines) + "\n")
@@ -249,14 +248,12 @@ class DecapInserter:
     ) -> DecapInsertResult:
         cells = dict(decap_cells or SKY130_DECAP_CELLS)
         # largest width first
-        ordered = sorted(
-            cells.keys(), key=lambda n: -self._cell_width(n)
-        )
+        ordered = sorted(cells.keys(), key=lambda n: -self._cell_width(n))
         rows = _row_extents_um(self.design)
         total_cap = 0.0
         count = 0
         idx = 0
-        for (x0, y0, w, h) in rows:
+        for x0, y0, w, h in rows:
             occ = _row_occupancy_um(self.design, self.lib, y0, h)
             free = _free_spans(x0, w, occ)
             free_width = sum(b - a for a, b in free)
@@ -288,9 +285,7 @@ class DecapInserter:
             instances=list(self._instances),
         )
 
-    def insert_near_macros(
-        self, macros: list[str], cap_target_pf: float
-    ) -> DecapInsertResult:
+    def insert_near_macros(self, macros: list[str], cap_target_pf: float) -> DecapInsertResult:
         """Place decaps in the halo around each named hard macro."""
         macro_set = set(macros)
         targets: list[tuple[float, float]] = []
@@ -308,7 +303,7 @@ class DecapInserter:
         count = 0
         idx = 0
         halo_um = 15.0
-        for (x0, y0, w, h) in rows:
+        for x0, y0, w, h in rows:
             # only rows within halo of any target
             near = any(abs(ty - y0) <= halo_um for _tx, ty in targets)
             if not near:
@@ -344,8 +339,7 @@ class DecapInserter:
         lines = [f"COMPONENTS {len(self._instances)} ;"]
         for name, macro, x_um, y_um in self._instances:
             lines.append(
-                f"    - {name} {macro} + PLACED "
-                f"( {int(x_um * units)} {int(y_um * units)} ) N ;"
+                f"    - {name} {macro} + PLACED ( {int(x_um * units)} {int(y_um * units)} ) N ;"
             )
         lines.append("END COMPONENTS")
         p.write_text("\n".join(lines) + "\n")

@@ -270,10 +270,7 @@ class IrDropEstimator:
             for c in range(num_cols):
                 cx = (c + 0.5) * grid_resolution_um
                 # Distance to nearest power pin
-                d_min = min(
-                    abs(cx - px) + abs(cy - py)
-                    for (px, py) in info.power_pins
-                )
+                d_min = min(abs(cx - px) + abs(cy - py) for (px, py) in info.power_pins)
                 squares = max(1.0, d_min / max(grid_resolution_um, 0.1))
                 # Local current contribution: this cell + neighbors weighted by distance
                 local_current = current_grid[r][c]
@@ -393,26 +390,21 @@ def export_hotspot_report(ir_map: IrDropMap, path: Path) -> None:
     lines.append(f"Resolution:     {ir_map.grid_size_um:.2f} um")
     lines.append(f"Max drop:       {ir_map.max_drop_mv:.3f} mV")
     lines.append(f"Avg drop:       {ir_map.avg_drop_mv:.3f} mV")
-    lines.append(f"Min voltage:    {ir_map.vdd - ir_map.max_drop_mv/1000:.4f} V")
+    lines.append(f"Min voltage:    {ir_map.vdd - ir_map.max_drop_mv / 1000:.4f} V")
     lines.append(f"Hotspot count:  {len(ir_map.hotspots)}")
     lines.append("")
-    lines.append(f"{'#':>4}  {'X (um)':>10}  {'Y (um)':>10}  "
-                 f"{'Drop (mV)':>10}  {'V (V)':>10}")
+    lines.append(f"{'#':>4}  {'X (um)':>10}  {'Y (um)':>10}  {'Drop (mV)':>10}  {'V (V)':>10}")
     lines.append("-" * 60)
     for i, hp in enumerate(ir_map.hotspots, 1):
         lines.append(
-            f"{i:>4}  {hp.x:>10.2f}  {hp.y:>10.2f}  "
-            f"{hp.drop_mv:>10.3f}  {hp.voltage:>10.5f}"
+            f"{i:>4}  {hp.x:>10.2f}  {hp.y:>10.2f}  {hp.drop_mv:>10.3f}  {hp.voltage:>10.5f}"
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def compute_voltage_grid(ir_map: IrDropMap) -> list[list[float]]:
     """Convert the drop grid to an absolute voltage grid (V)."""
-    return [
-        [ir_map.vdd - drop / 1000.0 for drop in row]
-        for row in ir_map.grid
-    ]
+    return [[ir_map.vdd - drop / 1000.0 for drop in row] for row in ir_map.grid]
 
 
 def merge_drop_maps(maps: list[IrDropMap]) -> IrDropMap | None:
@@ -476,10 +468,7 @@ class DynamicIrSample:
         self.average_drop_v = float(average_drop_v)
 
     def __repr__(self) -> str:  # pragma: no cover
-        return (
-            f"DynamicIrSample(t={self.time_ns:.3f}ns, "
-            f"max={self.max_drop_v*1000:.1f}mV)"
-        )
+        return f"DynamicIrSample(t={self.time_ns:.3f}ns, max={self.max_drop_v * 1000:.1f}mV)"
 
 
 class DynamicIrResult:
@@ -547,9 +536,7 @@ class DynamicIrAnalyzer:
     def extract_pdn(self) -> dict:
         """Return a coarse summary of the power grid from SPECIALNETS."""
         design, _ = self._load()
-        vdd_nets = [
-            n for n in design.special_nets.values() if n.use in ("POWER", "SIGNAL")
-        ]
+        vdd_nets = [n for n in design.special_nets.values() if n.use in ("POWER", "SIGNAL")]
         gnd_nets = [n for n in design.special_nets.values() if n.use == "GROUND"]
         stripes = sum(len(n.routes) for n in (*vdd_nets, *gnd_nets))
         return {

@@ -159,9 +159,7 @@ class OpenFPGALoaderEngine(ToolEngine):
                 continue
             m = re.match(r"(0x[0-9a-fA-F]+)\s+(\S+)\s*(.*)", line)
             if m:
-                fpgas.append(
-                    {"idcode": m.group(1), "model": m.group(2), "family": m.group(3)}
-                )
+                fpgas.append({"idcode": m.group(1), "model": m.group(2), "family": m.group(3)})
         return fpgas
 
     def detect_devices(self, cable: str | None = None) -> list[dict[str, str]]:
@@ -252,9 +250,7 @@ class OpenFPGALoaderEngine(ToolEngine):
         verify:
             Verify the flash contents after writing.
         """
-        args = self._common_args(
-            board=board, cable=cable, fpga_part=fpga_part, freq_hz=freq_hz
-        )
+        args = self._common_args(board=board, cable=cable, fpga_part=fpga_part, freq_hz=freq_hz)
         if flash:
             args.append("-f")
         else:
@@ -317,9 +313,7 @@ class OpenFPGALoaderEngine(ToolEngine):
         timeout: float | None = None,
     ) -> ToolResult:
         """Read back the contents of the SPI flash to ``output``."""
-        args = self._common_args(
-            board=board, cable=cable, fpga_part=None, freq_hz=None
-        )
+        args = self._common_args(board=board, cable=cable, fpga_part=None, freq_hz=None)
         args += ["--dump-flash", "-o", str(output), "--file-size", str(size_kb * 1024)]
         return self.run(args, cwd=cwd, timeout=timeout)
 
@@ -332,9 +326,7 @@ class OpenFPGALoaderEngine(ToolEngine):
         timeout: float | None = None,
     ) -> ToolResult:
         """Erase the entire SPI flash."""
-        args = self._common_args(
-            board=board, cable=cable, fpga_part=None, freq_hz=None
-        )
+        args = self._common_args(board=board, cable=cable, fpga_part=None, freq_hz=None)
         args.append("--unprotect-flash")
         args.append("--bulk-erase")
         return self.run(args, cwd=cwd, timeout=timeout)
@@ -347,9 +339,7 @@ class OpenFPGALoaderEngine(ToolEngine):
         timeout: float | None = None,
     ) -> ToolResult:
         """Issue a JTAG reset to the target device."""
-        args = self._common_args(
-            board=board, cable=cable, fpga_part=None, freq_hz=None
-        )
+        args = self._common_args(board=board, cable=cable, fpga_part=None, freq_hz=None)
         args.append("--reset")
         return self.run(args, timeout=timeout)
 

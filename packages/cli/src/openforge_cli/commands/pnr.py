@@ -68,9 +68,7 @@ def _locate_sdc(project_dir: Path, sdc_arg: str | None, config) -> Path:
     sdc_dir = project_dir / ".openforge"
     sdc_dir.mkdir(parents=True, exist_ok=True)
     sdc_path = sdc_dir / "auto_constraints.sdc"
-    sdc_path.write_text(
-        f"create_clock -name clk -period {clock_period} [get_ports clk]\n"
-    )
+    sdc_path.write_text(f"create_clock -name clk -period {clock_period} [get_ports clk]\n")
     console.print(f"  [dim]Generated SDC with {clock_period} ns clock period[/]")
     return sdc_path
 
@@ -174,9 +172,7 @@ def pnr_run(
                     "Run [bold]openforge pnr run --floorplan[/] first."
                 )
                 raise typer.Exit(code=1)
-            result = runner.run_placement(
-                def_input=str(def_path), on_output=_on_output
-            )
+            result = runner.run_placement(def_input=str(def_path), on_output=_on_output)
         elif stage == "cts":
             def_path = project_dir / "pnr_build" / "placed.def"
             if not def_path.exists():
@@ -187,9 +183,7 @@ def pnr_run(
                     "Run [bold]openforge pnr run --place[/] first."
                 )
                 raise typer.Exit(code=1)
-            result = runner.run_placement(
-                def_input=str(def_path), on_output=_on_output
-            )
+            result = runner.run_placement(def_input=str(def_path), on_output=_on_output)
         elif stage == "route":
             def_path = project_dir / "pnr_build" / "placed.def"
             if not def_path.exists():
@@ -198,9 +192,7 @@ def pnr_run(
                     "Run [bold]openforge pnr run --place[/] first."
                 )
                 raise typer.Exit(code=1)
-            result = runner.run_routing(
-                def_input=str(def_path), on_output=_on_output
-            )
+            result = runner.run_routing(def_input=str(def_path), on_output=_on_output)
         else:
             console.print(f"[red]Unknown stage:[/] {stage}")
             raise typer.Exit(code=1)
@@ -217,20 +209,24 @@ def pnr_run(
         raise typer.Exit(code=1)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "status": "passed",
-            "stage": stage,
-            "area_um2": result.area_um2,
-            "utilization_pct": result.utilization_pct,
-            "wirelength_um": result.wirelength_um,
-            "drc_violations": result.drc_violations,
-            "timing_wns": result.timing_wns,
-            "timing_tns": result.timing_tns,
-            "power_mw": result.power_mw,
-            "def_path": result.def_path,
-            "gds_path": result.gds_path,
-            "duration_s": result.duration,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": "passed",
+                    "stage": stage,
+                    "area_um2": result.area_um2,
+                    "utilization_pct": result.utilization_pct,
+                    "wirelength_um": result.wirelength_um,
+                    "drc_violations": result.drc_violations,
+                    "timing_wns": result.timing_wns,
+                    "timing_tns": result.timing_tns,
+                    "power_mw": result.power_mw,
+                    "def_path": result.def_path,
+                    "gds_path": result.gds_path,
+                    "duration_s": result.duration,
+                }
+            )
+        )
         return
 
     # Display results

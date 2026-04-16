@@ -4,6 +4,7 @@ Provides a searchable, categorized view of the component database
 with detail pane showing image, parameters, pricing breaks,
 stock, and datasheet links.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -190,9 +191,7 @@ class PricingChart(QWidget):
         self._breaks: list[tuple[int, float]] = []
 
     def set_breaks(self, breaks: dict[str, float]) -> None:
-        self._breaks = sorted(
-            (int(k), v) for k, v in breaks.items() if str(k).isdigit()
-        )
+        self._breaks = sorted((int(k), v) for k, v in breaks.items() if str(k).isdigit())
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -276,72 +275,102 @@ class BrowserComponent:
 
 SAMPLE_COMPONENTS: list[BrowserComponent] = [
     BrowserComponent(
-        "RC0805FR-0710KL", "Yageo", "10kΩ resistor 0805 1%",
-        "resistor", "0805",
+        "RC0805FR-0710KL",
+        "Yageo",
+        "10kΩ resistor 0805 1%",
+        "resistor",
+        "0805",
         {"value": "10kΩ", "tolerance": "1%", "power": "0.125W"},
         {"1": 0.02, "100": 0.008, "1000": 0.003, "10000": 0.0015},
         100000,
     ),
     BrowserComponent(
-        "GRM21BR71H104KA01L", "Murata", "100nF X7R 50V 0805",
-        "capacitor", "0805",
+        "GRM21BR71H104KA01L",
+        "Murata",
+        "100nF X7R 50V 0805",
+        "capacitor",
+        "0805",
         {"value": "100nF", "voltage": "50V", "dielectric": "X7R"},
         {"1": 0.05, "100": 0.02, "1000": 0.008, "10000": 0.004},
         50000,
     ),
     BrowserComponent(
-        "STM32F103C8T6", "STMicroelectronics",
-        "ARM Cortex-M3 MCU 64KB Flash 20KB RAM", "ic", "LQFP-48",
+        "STM32F103C8T6",
+        "STMicroelectronics",
+        "ARM Cortex-M3 MCU 64KB Flash 20KB RAM",
+        "ic",
+        "LQFP-48",
         {"core": "Cortex-M3", "speed": "72MHz", "flash": "64KB"},
         {"1": 3.50, "100": 2.75, "1000": 2.10, "10000": 1.85},
         5000,
         datasheet_url="https://www.st.com/resource/en/datasheet/stm32f103c8.pdf",
     ),
     BrowserComponent(
-        "ESP32-WROOM-32", "Espressif", "Wi-Fi+BT SoC module",
-        "ic", "Module",
+        "ESP32-WROOM-32",
+        "Espressif",
+        "Wi-Fi+BT SoC module",
+        "ic",
+        "Module",
         {"wifi": "802.11 b/g/n", "bt": "4.2"},
         {"1": 3.80, "100": 3.10, "1000": 2.50},
         12000,
     ),
     BrowserComponent(
-        "AMS1117-3.3", "AMS", "3.3V LDO 1A",
-        "regulator", "SOT-223",
+        "AMS1117-3.3",
+        "AMS",
+        "3.3V LDO 1A",
+        "regulator",
+        "SOT-223",
         {"vout": "3.3V", "iout": "1A"},
         {"1": 0.25, "100": 0.12, "1000": 0.07},
         30000,
     ),
     BrowserComponent(
-        "LTST-C170KRKT", "Lite-On", "Red LED 0805 2V 20mA",
-        "led", "0805",
+        "LTST-C170KRKT",
+        "Lite-On",
+        "Red LED 0805 2V 20mA",
+        "led",
+        "0805",
         {"color": "red", "vf": "2.0V"},
         {"1": 0.12, "100": 0.06, "1000": 0.025},
         40000,
     ),
     BrowserComponent(
-        "1N4148W-7-F", "Diodes Inc", "Switching diode 100V 150mA",
-        "diode", "SOD-123",
+        "1N4148W-7-F",
+        "Diodes Inc",
+        "Switching diode 100V 150mA",
+        "diode",
+        "SOD-123",
         {"vr": "100V", "if": "150mA"},
         {"1": 0.10, "100": 0.04, "1000": 0.015},
         80000,
     ),
     BrowserComponent(
-        "ABM8G-16.000MHZ-4Y-T3", "Abracon", "16 MHz crystal",
-        "crystal", "3225",
+        "ABM8G-16.000MHZ-4Y-T3",
+        "Abracon",
+        "16 MHz crystal",
+        "crystal",
+        "3225",
         {"freq": "16MHz", "load": "8pF"},
         {"1": 0.35, "100": 0.22},
         15000,
     ),
     BrowserComponent(
-        "USB4110-GF-A", "GCT", "USB Type-C receptacle",
-        "connector", "SMD",
+        "USB4110-GF-A",
+        "GCT",
+        "USB Type-C receptacle",
+        "connector",
+        "SMD",
         {"pins": "24", "type": "USB-C"},
         {"1": 0.85, "100": 0.55},
         20000,
     ),
     BrowserComponent(
-        "ATMEGA328P-PU", "Microchip", "AVR 8-bit MCU 32KB flash",
-        "ic", "DIP-28",
+        "ATMEGA328P-PU",
+        "Microchip",
+        "AVR 8-bit MCU 32KB flash",
+        "ic",
+        "DIP-28",
         {"core": "AVR", "speed": "20MHz", "flash": "32KB"},
         {"1": 2.50, "100": 2.00, "1000": 1.70},
         8000,
@@ -387,9 +416,7 @@ class ComponentBrowserPanel(QDockWidget):
     def _build_search_bar(self) -> QHBoxLayout:
         row = QHBoxLayout()
         self._search_edit = QLineEdit()
-        self._search_edit.setPlaceholderText(
-            "Search by MPN, value, manufacturer, description..."
-        )
+        self._search_edit.setPlaceholderText("Search by MPN, value, manufacturer, description...")
         self._search_edit.textChanged.connect(self._refresh_list)
         row.addWidget(self._search_edit, 1)
 
@@ -487,9 +514,7 @@ class ComponentBrowserPanel(QDockWidget):
         self._params_table.setHorizontalHeaderLabels(["Parameter", "Value"])
         self._params_table.horizontalHeader().setStretchLastSection(True)
         self._params_table.verticalHeader().setVisible(False)
-        self._params_table.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
+        self._params_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._params_table.setMinimumHeight(150)
         pg_l.addWidget(self._params_table)
         lay.addWidget(pg)
@@ -503,9 +528,7 @@ class ComponentBrowserPanel(QDockWidget):
         self._price_table.setHorizontalHeaderLabels(["Qty", "Unit $"])
         self._price_table.horizontalHeader().setStretchLastSection(True)
         self._price_table.setMaximumHeight(140)
-        self._price_table.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
+        self._price_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         pcg_l.addWidget(self._price_table)
         lay.addWidget(pcg)
 
@@ -639,13 +662,9 @@ class ComponentBrowserPanel(QDockWidget):
         if self._current is None:
             return
         self.component_added.emit(self._current.mpn)
-        QMessageBox.information(
-            self, "Component added", f"Added {self._current.mpn} to project."
-        )
+        QMessageBox.information(self, "Component added", f"Added {self._current.mpn} to project.")
 
     def _import_csv(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Import components CSV", "", "CSV (*.csv)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Import components CSV", "", "CSV (*.csv)")
         if path:
             QMessageBox.information(self, "Import", f"Imported from {path}")

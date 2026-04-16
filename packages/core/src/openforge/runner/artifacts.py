@@ -90,9 +90,7 @@ class ArtifactRegistry:
 
     def register(self, run_id: str, stage_id: str, artifact: RunArtifact) -> None:
         with self._lock:
-            self._by_run.setdefault(run_id, {}).setdefault(stage_id, []).append(
-                artifact
-            )
+            self._by_run.setdefault(run_id, {}).setdefault(stage_id, []).append(artifact)
 
     def list_for_run(self, run_id: str) -> list[RunArtifact]:
         with self._lock:

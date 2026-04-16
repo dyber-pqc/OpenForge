@@ -293,11 +293,7 @@ _CYCLE_ESTIMATES: dict[PqcAlgorithm, tuple[int, int, int]] = {
 def _build_module(algo: PqcAlgorithm) -> PqcModule:
     p = PQC_PARAMS[algo]
     keygen_cyc, op_cyc, verify_cyc = _CYCLE_ESTIMATES[algo]
-    rmap = (
-        _default_register_map_kem(p)
-        if p.is_kem
-        else _default_register_map_sig(p)
-    )
+    rmap = _default_register_map_kem(p) if p.is_kem else _default_register_map_sig(p)
     top = f"{algo.value.replace('-', '_')}_top"
     desc_family = "KEM" if p.is_kem else "digital signature"
     return PqcModule(
@@ -321,9 +317,7 @@ class PqcCatalog:
     """Catalog of PQC IP modules."""
 
     def __init__(self) -> None:
-        self._modules: dict[PqcAlgorithm, PqcModule] = {
-            a: _build_module(a) for a in PqcAlgorithm
-        }
+        self._modules: dict[PqcAlgorithm, PqcModule] = {a: _build_module(a) for a in PqcAlgorithm}
 
     def list_modules(self) -> list[PqcModule]:
         """Return all modules in the catalog."""
@@ -345,13 +339,9 @@ class PqcCatalog:
         return None
 
     def filter_by_security_level(self, level: int) -> list[PqcModule]:
-        return [
-            m for m in self._modules.values() if m.params.security_level_nist == level
-        ]
+        return [m for m in self._modules.values() if m.params.security_level_nist == level]
 
-    def generate_wrapper(
-        self, module: PqcModule, instance_name: str | None = None
-    ) -> str:
+    def generate_wrapper(self, module: PqcModule, instance_name: str | None = None) -> str:
         """Generate a Verilog wrapper instantiation for the given module."""
         inst = instance_name or f"u_{module.verilog_top}"
         p = module.params
@@ -436,9 +426,7 @@ class PqcCatalog:
         lines.append("endmodule")
         return "\n".join(lines)
 
-    def estimate_resources(
-        self, module: PqcModule, target: str = "asic"
-    ) -> dict[str, Any]:
+    def estimate_resources(self, module: PqcModule, target: str = "asic") -> dict[str, Any]:
         """Estimate gates, area, power, latency for the given module.
 
         Args:
@@ -539,8 +527,7 @@ class PqcCatalog:
                     "clock_mhz": m.clock_mhz,
                     "verilog_top": m.verilog_top,
                     "register_map": {
-                        k: {"offset": v[0], "size": v[1]}
-                        for k, v in m.register_map.items()
+                        k: {"offset": v[0], "size": v[1]} for k, v in m.register_map.items()
                     },
                 }
             )

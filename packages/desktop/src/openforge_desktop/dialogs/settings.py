@@ -36,9 +36,7 @@ def _tool_row(
 
     btn_browse = QPushButton("Browse...")
     btn_browse.setFixedWidth(80)
-    btn_browse.clicked.connect(
-        lambda: _browse_tool(parent, edit, tool_name)
-    )
+    btn_browse.clicked.connect(lambda: _browse_tool(parent, edit, tool_name))
 
     btn_detect = QPushButton("Detect")
     btn_detect.setFixedWidth(60)
@@ -48,9 +46,7 @@ def _tool_row(
 
 
 def _browse_tool(parent: QWidget, edit: QLineEdit, tool_name: str) -> None:
-    path, _ = QFileDialog.getOpenFileName(
-        parent, f"Locate {tool_name}", "", "All Files (*)"
-    )
+    path, _ = QFileDialog.getOpenFileName(parent, f"Locate {tool_name}", "", "All Files (*)")
     if path:
         edit.setText(path)
 
@@ -214,14 +210,16 @@ class _AppearanceTab(QWidget):
         # Editor font
         self.editor_font_combo = QComboBox()
         self.editor_font_combo.setEditable(True)
-        self.editor_font_combo.addItems([
-            "JetBrains Mono",
-            "Cascadia Code",
-            "Fira Code",
-            "Consolas",
-            "Source Code Pro",
-            "Hack",
-        ])
+        self.editor_font_combo.addItems(
+            [
+                "JetBrains Mono",
+                "Cascadia Code",
+                "Fira Code",
+                "Consolas",
+                "Source Code Pro",
+                "Hack",
+            ]
+        )
         saved_font = settings.value("appearance/editor_font", "JetBrains Mono")
         idx = self.editor_font_combo.findText(str(saved_font))
         if idx >= 0:

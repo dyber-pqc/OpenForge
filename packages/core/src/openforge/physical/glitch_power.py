@@ -119,7 +119,7 @@ class GlitchPowerAnalyzer:
         for sig, events in self._events.items():
             c_ff = load_caps_ff.get(sig, default_cap_ff)
             # One glitch = two transitions → two C*V^2 events
-            energy_pj_per_event = 2 * 0.5 * c_ff * 1e-3 * (vdd ** 2)
+            energy_pj_per_event = 2 * 0.5 * c_ff * 1e-3 * (vdd**2)
             # C is in fF → C*V^2 = fF*V^2 = fJ = 1e-3 pJ
             sig_energy = 0.0
             for ev in events:

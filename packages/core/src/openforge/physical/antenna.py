@@ -71,18 +71,24 @@ class AntennaChecker(BaseModel):
         """Default sky130 MP antenna rules (SkyWater PDK)."""
         return cls(
             rules=[
-                AntennaRule(layer="li1",  max_ratio_metal=400, max_ratio_via=400,
-                            max_diff_area_um2=0.00325),
-                AntennaRule(layer="met1", max_ratio_metal=400, max_ratio_via=400,
-                            max_diff_area_um2=0.00425),
-                AntennaRule(layer="met2", max_ratio_metal=400, max_ratio_via=400,
-                            max_diff_area_um2=0.00425),
-                AntennaRule(layer="met3", max_ratio_metal=400, max_ratio_via=400,
-                            max_diff_area_um2=0.00425),
-                AntennaRule(layer="met4", max_ratio_metal=400, max_ratio_via=400,
-                            max_diff_area_um2=0.00425),
-                AntennaRule(layer="met5", max_ratio_metal=600, max_ratio_via=600,
-                            max_diff_area_um2=0.00425),
+                AntennaRule(
+                    layer="li1", max_ratio_metal=400, max_ratio_via=400, max_diff_area_um2=0.00325
+                ),
+                AntennaRule(
+                    layer="met1", max_ratio_metal=400, max_ratio_via=400, max_diff_area_um2=0.00425
+                ),
+                AntennaRule(
+                    layer="met2", max_ratio_metal=400, max_ratio_via=400, max_diff_area_um2=0.00425
+                ),
+                AntennaRule(
+                    layer="met3", max_ratio_metal=400, max_ratio_via=400, max_diff_area_um2=0.00425
+                ),
+                AntennaRule(
+                    layer="met4", max_ratio_metal=400, max_ratio_via=400, max_diff_area_um2=0.00425
+                ),
+                AntennaRule(
+                    layer="met5", max_ratio_metal=600, max_ratio_via=600, max_diff_area_um2=0.00425
+                ),
             ]
         )
 
@@ -146,9 +152,7 @@ class AntennaChecker(BaseModel):
 
     # ---- metal area ------------------------------------------------------
 
-    def _metal_area_by_layer(
-        self, net, design: DefDesign, lib: LefLibrary
-    ) -> dict[str, float]:
+    def _metal_area_by_layer(self, net, design: DefDesign, lib: LefLibrary) -> dict[str, float]:
         out: dict[str, float] = {}
         # LEF layer width cache (µm)
         layer_widths = {
@@ -290,9 +294,7 @@ class AntennaFixer:
 
     # ------------------------------------------------------------------- api
 
-    def insert_diodes(
-        self, diode_cell: str = "sky130_fd_sc_hd__diode_2"
-    ) -> list[AntennaFix]:
+    def insert_diodes(self, diode_cell: str = "sky130_fd_sc_hd__diode_2") -> list[AntennaFix]:
         """Emit a diode fix for every violation that warrants one."""
         self._fixes = []
         for v in self.violations:
@@ -324,10 +326,7 @@ class AntennaFixer:
             location=loc,
             diode_cell=None,
             near_pin=violation.gate_pin,
-            notes=(
-                f"Route {violation.net} up from {violation.layer} near "
-                f"{violation.gate_pin}"
-            ),
+            notes=(f"Route {violation.net} up from {violation.layer} near {violation.gate_pin}"),
         )
 
     def split_route(self, violation: AntennaViolation) -> AntennaFix:

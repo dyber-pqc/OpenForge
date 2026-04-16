@@ -67,7 +67,11 @@ _ALT_ROW: Final[str] = "#1a1a2e"
 
 # Physical design flow stages
 _PD_STAGES: Final[list[str]] = [
-    "Floorplan", "Placement", "CTS", "Routing", "Signoff",
+    "Floorplan",
+    "Placement",
+    "CTS",
+    "Routing",
+    "Signoff",
 ]
 
 
@@ -177,28 +181,44 @@ class _FlowPipelineWidget(QWidget):
             # Icon
             painter.setPen(QColor(_CRUST if status != "idle" else _SUBTEXT))
             if status == "done":
-                painter.drawText(QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
-                                 Qt.AlignmentFlag.AlignCenter, "\u2713")
+                painter.drawText(
+                    QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
+                    Qt.AlignmentFlag.AlignCenter,
+                    "\u2713",
+                )
             elif status == "running":
-                painter.drawText(QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
-                                 Qt.AlignmentFlag.AlignCenter, "\u25b6")
+                painter.drawText(
+                    QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
+                    Qt.AlignmentFlag.AlignCenter,
+                    "\u25b6",
+                )
             elif status == "error":
-                painter.drawText(QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
-                                 Qt.AlignmentFlag.AlignCenter, "\u2717")
+                painter.drawText(
+                    QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
+                    Qt.AlignmentFlag.AlignCenter,
+                    "\u2717",
+                )
             else:
-                painter.drawText(QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
-                                 Qt.AlignmentFlag.AlignCenter, str(i + 1))
+                painter.drawText(
+                    QRectF(cx - node_r, cy - node_r, 2 * node_r, 2 * node_r),
+                    Qt.AlignmentFlag.AlignCenter,
+                    str(i + 1),
+                )
 
             # Label + duration
             font2 = QFont()
             font2.setPointSize(7)
             painter.setFont(font2)
             painter.setPen(QColor(_TEXT if status != "idle" else _SUBTEXT))
-            painter.drawText(QRectF(cx - 35, cy + node_r + 2, 70, 12),
-                             Qt.AlignmentFlag.AlignCenter, label)
+            painter.drawText(
+                QRectF(cx - 35, cy + node_r + 2, 70, 12), Qt.AlignmentFlag.AlignCenter, label
+            )
             painter.setPen(QColor(_SUBTEXT))
-            painter.drawText(QRectF(cx - 35, cy + node_r + 13, 70, 10),
-                             Qt.AlignmentFlag.AlignCenter, self._durations[i])
+            painter.drawText(
+                QRectF(cx - 35, cy + node_r + 13, 70, 10),
+                Qt.AlignmentFlag.AlignCenter,
+                self._durations[i],
+            )
             painter.setFont(font)
 
 
@@ -208,7 +228,7 @@ class _FlowPipelineWidget(QWidget):
 class _FlowControlTab(QWidget):
     """Physical design flow control with per-stage run buttons and config."""
 
-    run_stage_requested = Signal(int)    # stage index
+    run_stage_requested = Signal(int)  # stage index
     run_full_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -389,9 +409,7 @@ class _FloorplanTab(QWidget):
         self._util_label = QLabel("70%")
         self._util_label.setStyleSheet(f"color: {_CLR_BLUE}; font-weight: bold; font-size: 14px;")
         self._util_label.setFixedWidth(50)
-        self._util_slider.valueChanged.connect(
-            lambda v: self._util_label.setText(f"{v}%")
-        )
+        self._util_slider.valueChanged.connect(lambda v: self._util_label.setText(f"{v}%"))
         ug_layout.addWidget(self._util_label)
         root.addWidget(util_group)
 
@@ -583,8 +601,9 @@ class _DensityHeatmap(QWidget):
             # Placeholder
             painter = QPainter(self)
             painter.setPen(QColor(_SUBTEXT))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter,
-                             "Run placement to generate density map")
+            painter.drawText(
+                self.rect(), Qt.AlignmentFlag.AlignCenter, "Run placement to generate density map"
+            )
             return
 
         painter = QPainter(self)
@@ -644,8 +663,9 @@ class _PowerPieWidget(QWidget):
         if not self._slices:
             painter = QPainter(self)
             painter.setPen(QColor(_SUBTEXT))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter,
-                             "Run power analysis\nto see breakdown")
+            painter.drawText(
+                self.rect(), Qt.AlignmentFlag.AlignCenter, "Run power analysis\nto see breakdown"
+            )
             return
 
         painter = QPainter(self)
@@ -687,6 +707,7 @@ class _PowerPieWidget(QWidget):
         font.setBold(False)
         painter.setFont(font)
         from PySide6.QtGui import QFontMetrics
+
         fm = QFontMetrics(font)
         x = 6
         for label, value, color in self._slices:
@@ -715,11 +736,17 @@ class _PowerTab(QWidget):
         root.addWidget(_header_label("Power Summary"))
         summary_row = QHBoxLayout()
         self._lbl_total = QLabel("Total: -- mW")
-        self._lbl_total.setStyleSheet(f"color: {_CLR_BLUE}; font-weight: bold; font-size: 14px; padding: 4px 8px;")
+        self._lbl_total.setStyleSheet(
+            f"color: {_CLR_BLUE}; font-weight: bold; font-size: 14px; padding: 4px 8px;"
+        )
         self._lbl_dynamic = QLabel("Dynamic: -- mW")
-        self._lbl_dynamic.setStyleSheet(f"color: {_CLR_GREEN}; font-weight: bold; font-size: 14px; padding: 4px 8px;")
+        self._lbl_dynamic.setStyleSheet(
+            f"color: {_CLR_GREEN}; font-weight: bold; font-size: 14px; padding: 4px 8px;"
+        )
         self._lbl_leakage = QLabel("Leakage: -- mW")
-        self._lbl_leakage.setStyleSheet(f"color: {_CLR_RED}; font-weight: bold; font-size: 14px; padding: 4px 8px;")
+        self._lbl_leakage.setStyleSheet(
+            f"color: {_CLR_RED}; font-weight: bold; font-size: 14px; padding: 4px 8px;"
+        )
         summary_row.addWidget(self._lbl_total)
         summary_row.addWidget(self._lbl_dynamic)
         summary_row.addWidget(self._lbl_leakage)
@@ -748,7 +775,9 @@ class _PowerTab(QWidget):
         self._hierarchy_table = QTableWidget(0, 3)
         self._hierarchy_table.setHorizontalHeaderLabels(["Module", "Power (mW)", "% of Total"])
         _configure_table(self._hierarchy_table)
-        self._hierarchy_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._hierarchy_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
         rl.addWidget(self._hierarchy_table)
         body.addWidget(right)
 
@@ -856,10 +885,14 @@ class _DrcLvsTab(QWidget):
         # DRC violations table
         root.addWidget(_header_label("DRC Violations"))
         self._drc_table = QTableWidget(0, 5)
-        self._drc_table.setHorizontalHeaderLabels(["Rule", "Count", "Layer", "Severity", "Coordinates"])
+        self._drc_table.setHorizontalHeaderLabels(
+            ["Rule", "Count", "Layer", "Severity", "Coordinates"]
+        )
         _configure_table(self._drc_table)
         self._drc_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self._drc_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        self._drc_table.horizontalHeader().setSectionResizeMode(
+            4, QHeaderView.ResizeMode.ResizeToContents
+        )
         root.addWidget(self._drc_table)
 
         # LVS results
@@ -1084,6 +1117,7 @@ class PhysicalDesignPanel(QDockWidget):
 
         # Wrap each tab in a QScrollArea
         from PySide6.QtWidgets import QScrollArea
+
         def _scrollable(widget: QWidget) -> QScrollArea:
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)
@@ -1106,6 +1140,7 @@ class PhysicalDesignPanel(QDockWidget):
     def set_theme(self, dark: bool) -> None:
         """Switch panel QSS between dark and light themes."""
         from openforge_desktop.panels._theme import panel_tab_qss
+
         self._tabs.setStyleSheet(panel_tab_qss(dark))
 
     @property
@@ -1205,6 +1240,7 @@ class PhysicalDesignPanel(QDockWidget):
         if def_path and _Path(def_path).exists():
             try:
                 from openforge.format.def_parser import parse_def as _parse_def
+
                 design = _parse_def(_Path(def_path))
                 stats = design.stats()
             except Exception as exc:
@@ -1263,38 +1299,38 @@ class PhysicalDesignPanel(QDockWidget):
 
         routing_stats: list[dict] = []
         if stats:
-            routing_stats.extend([
-                {"metric": "Total Cells", "value": f"{stats['total_cells']:,}"},
-                {"metric": "Logic Cells", "value": f"{stats['logic_cells']:,}"},
-                {"metric": "Filler Cells", "value": f"{stats['filler_cells']:,}"},
-                {"metric": "Flip-Flops", "value": f"{stats['flops']:,}"},
-                {"metric": "Buffers", "value": f"{stats['buffers']:,}"},
-                {"metric": "Inverters", "value": f"{stats['inverters']:,}"},
-                {"metric": "Clock Cells", "value": f"{stats['clock_cells']:,}"},
-                {"metric": "I/O Pins", "value": f"{stats['total_pins']:,}"},
-                {"metric": "Signal Nets", "value": f"{stats['total_nets']:,}"},
-                {"metric": "Power Nets", "value": f"{stats['special_nets']:,}"},
-                {"metric": "Die Width", "value": f"{stats['die_width_um']:.1f} um"},
-                {"metric": "Die Height", "value": f"{stats['die_height_um']:.1f} um"},
-                {"metric": "Die Area", "value": f"{stats['die_area_um2']:,.1f} um2"},
-                {"metric": "Routed Wirelength",
-                 "value": f"{stats['wirelength_um']:,.0f} um"},
-                {"metric": "Layers Used",
-                 "value": ", ".join(stats["layers_used"]) or "--"},
-            ])
+            routing_stats.extend(
+                [
+                    {"metric": "Total Cells", "value": f"{stats['total_cells']:,}"},
+                    {"metric": "Logic Cells", "value": f"{stats['logic_cells']:,}"},
+                    {"metric": "Filler Cells", "value": f"{stats['filler_cells']:,}"},
+                    {"metric": "Flip-Flops", "value": f"{stats['flops']:,}"},
+                    {"metric": "Buffers", "value": f"{stats['buffers']:,}"},
+                    {"metric": "Inverters", "value": f"{stats['inverters']:,}"},
+                    {"metric": "Clock Cells", "value": f"{stats['clock_cells']:,}"},
+                    {"metric": "I/O Pins", "value": f"{stats['total_pins']:,}"},
+                    {"metric": "Signal Nets", "value": f"{stats['total_nets']:,}"},
+                    {"metric": "Power Nets", "value": f"{stats['special_nets']:,}"},
+                    {"metric": "Die Width", "value": f"{stats['die_width_um']:.1f} um"},
+                    {"metric": "Die Height", "value": f"{stats['die_height_um']:.1f} um"},
+                    {"metric": "Die Area", "value": f"{stats['die_area_um2']:,.1f} um2"},
+                    {"metric": "Routed Wirelength", "value": f"{stats['wirelength_um']:,.0f} um"},
+                    {"metric": "Layers Used", "value": ", ".join(stats["layers_used"]) or "--"},
+                ]
+            )
         else:
             routing_stats.append({"metric": "Cell Count", "value": f"{cell_count:,}"})
 
         if utilization > 0:
             routing_stats.append({"metric": "Utilization", "value": f"{utilization:.1f}%"})
-        routing_stats.extend([
-            {"metric": "WNS", "value": f"{wns:.3f} ns"},
-            {"metric": "TNS", "value": f"{tns:.3f} ns"},
-        ])
+        routing_stats.extend(
+            [
+                {"metric": "WNS", "value": f"{wns:.3f} ns"},
+                {"metric": "TNS", "value": f"{tns:.3f} ns"},
+            ]
+        )
         if wirelength > 0 and not stats:
-            routing_stats.append(
-                {"metric": "Total Wirelength", "value": f"{wirelength:,.0f} um"}
-            )
+            routing_stats.append({"metric": "Total Wirelength", "value": f"{wirelength:,.0f} um"})
 
         self._stats.set_area(area_data)
         self._stats.set_routing_stats(routing_stats)
@@ -1363,9 +1399,7 @@ class PhysicalDesignPanel(QDockWidget):
 
         # Create and start the worker
         self._pnr_worker = _OpenLaneWorker(project_path, config, self)
-        self._pnr_worker.output_line.connect(
-            lambda line: self._flow.append_log(line)
-        )
+        self._pnr_worker.output_line.connect(lambda line: self._flow.append_log(line))
         if on_output:
             self._pnr_worker.output_line.connect(on_output)
 
@@ -1376,13 +1410,14 @@ class PhysicalDesignPanel(QDockWidget):
             lambda step, dur: self._on_step_completed(step, dur, stage_map, total_steps)
         )
         self._pnr_worker.finished_result.connect(self._on_flow_finished)
-        self._pnr_worker.error.connect(
-            lambda msg: self._flow.append_log(f"ERROR: {msg}")
-        )
+        self._pnr_worker.error.connect(lambda msg: self._flow.append_log(f"ERROR: {msg}"))
         self._pnr_worker.start()
 
     def _on_step_started(
-        self, step: str, stage_map: dict[str, int], total: int,
+        self,
+        step: str,
+        stage_map: dict[str, int],
+        total: int,
     ) -> None:
         idx = stage_map.get(step, -1)
         if idx >= 0:
@@ -1390,8 +1425,11 @@ class PhysicalDesignPanel(QDockWidget):
         self._flow.progress.setFormat(f"Running: {step}")
 
     def _on_step_completed(
-        self, step: str, duration: float,
-        stage_map: dict[str, int], total: int,
+        self,
+        step: str,
+        duration: float,
+        stage_map: dict[str, int],
+        total: int,
     ) -> None:
         idx = stage_map.get(step, -1)
         dur_str = f"{duration:.1f}s" if duration < 60 else f"{duration / 60:.1f}m"
@@ -1399,10 +1437,15 @@ class PhysicalDesignPanel(QDockWidget):
             self._flow.pipeline.set_status(idx, "done", dur_str)
 
         # Update progress bar
-        completed = sum(
-            1 for s in _PD_STAGES
-            if self._flow.pipeline._statuses[_PD_STAGES.index(s)] == "done"
-        ) if hasattr(self._flow.pipeline, '_statuses') else 0
+        completed = (
+            sum(
+                1
+                for s in _PD_STAGES
+                if self._flow.pipeline._statuses[_PD_STAGES.index(s)] == "done"
+            )
+            if hasattr(self._flow.pipeline, "_statuses")
+            else 0
+        )
         pct = int(completed / len(_PD_STAGES) * 100)
         self._flow.progress.setValue(pct)
 
@@ -1424,33 +1467,47 @@ class PhysicalDesignPanel(QDockWidget):
             self._flow.progress.setFormat(f"Failed at: {result.failed_step}")
 
         # Populate statistics tab with real results
-        self.update_results({
-            "stage_statuses": [
-                ("done" if s.lower() in [c.lower() for c in result.completed_steps] else "idle", "--")
-                for s in _PD_STAGES
-            ],
-            "area": [
-                {"name": "Total Design", "area": result.area_um2},
-            ],
-            "routing_stats": [
-                {"metric": "Total Wirelength", "value": f"{result.wirelength_um:,.0f} um"},
-                {"metric": "Cell Count", "value": f"{result.cell_count:,}" if hasattr(result, "cell_count") else "--"},
-                {"metric": "WNS", "value": f"{result.wns:.3f} ns"},
-                {"metric": "TNS", "value": f"{result.tns:.3f} ns"},
-            ],
-            "power": [
-                {"name": "Total", "power": result.power_mw},
-            ],
-            "drc_total": result.drc_violations,
-            "drc_critical": 0,
-            "lvs_results": [
-                {
-                    "check": "Circuit Match",
-                    "status": "Match" if result.lvs_match else "Mismatch",
-                    "details": "Circuits match" if result.lvs_match else "Circuits do not match",
-                },
-            ],
-        })
+        self.update_results(
+            {
+                "stage_statuses": [
+                    (
+                        "done"
+                        if s.lower() in [c.lower() for c in result.completed_steps]
+                        else "idle",
+                        "--",
+                    )
+                    for s in _PD_STAGES
+                ],
+                "area": [
+                    {"name": "Total Design", "area": result.area_um2},
+                ],
+                "routing_stats": [
+                    {"metric": "Total Wirelength", "value": f"{result.wirelength_um:,.0f} um"},
+                    {
+                        "metric": "Cell Count",
+                        "value": f"{result.cell_count:,}"
+                        if hasattr(result, "cell_count")
+                        else "--",
+                    },
+                    {"metric": "WNS", "value": f"{result.wns:.3f} ns"},
+                    {"metric": "TNS", "value": f"{result.tns:.3f} ns"},
+                ],
+                "power": [
+                    {"name": "Total", "power": result.power_mw},
+                ],
+                "drc_total": result.drc_violations,
+                "drc_critical": 0,
+                "lvs_results": [
+                    {
+                        "check": "Circuit Match",
+                        "status": "Match" if result.lvs_match else "Mismatch",
+                        "details": "Circuits match"
+                        if result.lvs_match
+                        else "Circuits do not match",
+                    },
+                ],
+            }
+        )
 
         # Append summary to log
         self._flow.append_log("")
@@ -1462,6 +1519,7 @@ class PhysicalDesignPanel(QDockWidget):
         elif hasattr(result, "output_dir") and result.output_dir:
             # Try to find the DEF file in the output directory
             from pathlib import Path as _Path
+
             out = _Path(result.output_dir)
             defs = list(out.rglob("*.def"))
             if defs:
@@ -1470,54 +1528,85 @@ class PhysicalDesignPanel(QDockWidget):
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""
         import random
+
         random.seed(42)
 
-        self.update_results({
-            "stage_statuses": [
-                ("done", "12.3s"),
-                ("done", "45.8s"),
-                ("done", "28.1s"),
-                ("done", "1m 42s"),
-                ("running", "..."),
-            ],
-            "area": [
-                {"name": "Standard Cells", "area": 38400.0},
-                {"name": "Macros / SRAM", "area": 8192.0},
-                {"name": "Filler Cells", "area": 4800.0},
-                {"name": "Clock Tree", "area": 2400.0},
-                {"name": "Power Grid", "area": 1200.0},
-            ],
-            "routing_stats": [
-                {"metric": "Total Wirelength", "value": "2,345,678 um"},
-                {"metric": "Average Net Length", "value": "48.3 um"},
-                {"metric": "Max Net Length", "value": "1,892 um"},
-                {"metric": "Routing Overflow", "value": "0"},
-                {"metric": "Congestion (H)", "value": "12.4%"},
-                {"metric": "Congestion (V)", "value": "8.7%"},
-            ],
-            "power": [
-                {"name": "Internal (Switching)", "power": 42.5},
-                {"name": "Switching (Net)", "power": 18.3},
-                {"name": "Leakage", "power": 3.8},
-                {"name": "Total", "power": 64.6},
-            ],
-            "drc_total": 3,
-            "drc_critical": 1,
-            "density_grid": [
-                [random.uniform(0.3, 0.9) for _ in range(16)] for _ in range(12)
-            ],
-            "drc_violations": [
-                {"rule": "Metal1.MinSpace", "count": 2, "layer": "Metal1", "severity": "warning", "x": 245, "y": 1023},
-                {"rule": "Via1.Enclosure", "count": 1, "layer": "Via1", "severity": "critical", "x": 890, "y": 456},
-            ],
-            "lvs_results": [
-                {"check": "Device Count", "status": "Match", "details": "Layout: 8192, Schematic: 8192"},
-                {"check": "Net Count", "status": "Match", "details": "Layout: 6543, Schematic: 6543"},
-                {"check": "Floating Nets", "status": "Pass", "details": "No floating nets detected"},
-                {"check": "Short Circuits", "status": "Pass", "details": "No shorts found"},
-                {"check": "Open Circuits", "status": "Fail", "details": "2 open nets: VDD_core, net_1234"},
-            ],
-        })
+        self.update_results(
+            {
+                "stage_statuses": [
+                    ("done", "12.3s"),
+                    ("done", "45.8s"),
+                    ("done", "28.1s"),
+                    ("done", "1m 42s"),
+                    ("running", "..."),
+                ],
+                "area": [
+                    {"name": "Standard Cells", "area": 38400.0},
+                    {"name": "Macros / SRAM", "area": 8192.0},
+                    {"name": "Filler Cells", "area": 4800.0},
+                    {"name": "Clock Tree", "area": 2400.0},
+                    {"name": "Power Grid", "area": 1200.0},
+                ],
+                "routing_stats": [
+                    {"metric": "Total Wirelength", "value": "2,345,678 um"},
+                    {"metric": "Average Net Length", "value": "48.3 um"},
+                    {"metric": "Max Net Length", "value": "1,892 um"},
+                    {"metric": "Routing Overflow", "value": "0"},
+                    {"metric": "Congestion (H)", "value": "12.4%"},
+                    {"metric": "Congestion (V)", "value": "8.7%"},
+                ],
+                "power": [
+                    {"name": "Internal (Switching)", "power": 42.5},
+                    {"name": "Switching (Net)", "power": 18.3},
+                    {"name": "Leakage", "power": 3.8},
+                    {"name": "Total", "power": 64.6},
+                ],
+                "drc_total": 3,
+                "drc_critical": 1,
+                "density_grid": [[random.uniform(0.3, 0.9) for _ in range(16)] for _ in range(12)],
+                "drc_violations": [
+                    {
+                        "rule": "Metal1.MinSpace",
+                        "count": 2,
+                        "layer": "Metal1",
+                        "severity": "warning",
+                        "x": 245,
+                        "y": 1023,
+                    },
+                    {
+                        "rule": "Via1.Enclosure",
+                        "count": 1,
+                        "layer": "Via1",
+                        "severity": "critical",
+                        "x": 890,
+                        "y": 456,
+                    },
+                ],
+                "lvs_results": [
+                    {
+                        "check": "Device Count",
+                        "status": "Match",
+                        "details": "Layout: 8192, Schematic: 8192",
+                    },
+                    {
+                        "check": "Net Count",
+                        "status": "Match",
+                        "details": "Layout: 6543, Schematic: 6543",
+                    },
+                    {
+                        "check": "Floating Nets",
+                        "status": "Pass",
+                        "details": "No floating nets detected",
+                    },
+                    {"check": "Short Circuits", "status": "Pass", "details": "No shorts found"},
+                    {
+                        "check": "Open Circuits",
+                        "status": "Fail",
+                        "details": "2 open nets: VDD_core, net_1234",
+                    },
+                ],
+            }
+        )
 
 
 # ── OpenLane Background Worker ─────────────────────────────────────────────
@@ -1527,7 +1616,7 @@ class _OpenLaneWorker(QThread):
     """Run the OpenLane RTL-to-GDSII flow on a background thread."""
 
     output_line = Signal(str)
-    step_started = Signal(str)       # step name
+    step_started = Signal(str)  # step name
     step_completed = Signal(str, float)  # step name, duration
     finished_result = Signal(object)  # OpenLaneResult
     error = Signal(str)
@@ -1554,6 +1643,7 @@ class _OpenLaneWorker(QThread):
             # Track step transitions
             current_step: list[str] = [""]
             import time
+
             step_start: list[float] = [time.monotonic()]
 
             def on_output(line: str) -> None:
@@ -1608,5 +1698,6 @@ class _OpenLaneWorker(QThread):
 
         except Exception as exc:
             import traceback
+
             self.error.emit(f"{exc}\n{traceback.format_exc()}")
             self.finished_result.emit(None)

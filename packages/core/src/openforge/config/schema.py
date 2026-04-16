@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class SimulationTool(StrEnum):
     VERILATOR = "verilator"
     ICARUS = "icarus"
@@ -62,6 +63,7 @@ class PowerModel(StrEnum):
 # Sub-config models
 # ---------------------------------------------------------------------------
 
+
 class SourceFile(BaseModel):
     """A single HDL source file with per-file metadata."""
 
@@ -79,9 +81,7 @@ class ProjectConfig(BaseModel):
     target_pdk: str | None = None
     include_dirs: list[Path] = Field(default_factory=list)
     defines: dict[str, str] = Field(default_factory=dict)
-    language_version: Literal[
-        "v2005", "sv2012", "sv2017", "vhdl93", "vhdl2008"
-    ] = "sv2017"
+    language_version: Literal["v2005", "sv2012", "sv2017", "vhdl93", "vhdl2008"] = "sv2017"
 
 
 class ElaborationConfig(BaseModel):
@@ -97,7 +97,9 @@ class ElaborationConfig(BaseModel):
 class DesignConfig(BaseModel):
     """Design source files and constraints."""
 
-    sources: list[str] = Field(default_factory=list, description="Glob patterns for RTL source files")
+    sources: list[str] = Field(
+        default_factory=list, description="Glob patterns for RTL source files"
+    )
     includes: list[str] = Field(default_factory=list, description="Include search directories")
     constraints: list[str] = Field(default_factory=list, description="SDC / constraint files")
 
@@ -115,9 +117,13 @@ class SimulationConfig(BaseModel):
     """Simulation runner configuration."""
 
     tool: SimulationTool = SimulationTool.VERILATOR
-    testbenches: list[str] = Field(default_factory=list, description="Glob patterns for testbench files")
+    testbenches: list[str] = Field(
+        default_factory=list, description="Glob patterns for testbench files"
+    )
     coverage: CoverageOptions = Field(default_factory=CoverageOptions)
-    plusargs: dict[str, str] = Field(default_factory=dict, description="Extra +arg values passed to simulator")
+    plusargs: dict[str, str] = Field(
+        default_factory=dict, description="Extra +arg values passed to simulator"
+    )
     timeout_seconds: Annotated[int, Field(ge=1)] = 300
 
 
@@ -148,7 +154,9 @@ class SideChannelConfig(BaseModel):
 class EntropyAnalysisConfig(BaseModel):
     """Entropy flow tracking configuration."""
 
-    sources: list[str] = Field(default_factory=list, description="Signals acting as entropy sources")
+    sources: list[str] = Field(
+        default_factory=list, description="Signals acting as entropy sources"
+    )
     sinks: list[str] = Field(default_factory=list, description="Signals acting as entropy sinks")
 
 
@@ -184,7 +192,9 @@ class TimingConfig(BaseModel):
 
     tool: TimingTool = TimingTool.OPENSTA
     clock_period: float = Field(default=10.0, description="Target clock period in nanoseconds")
-    sdc_files: list[str] = Field(default_factory=list, description="Additional SDC constraint files")
+    sdc_files: list[str] = Field(
+        default_factory=list, description="Additional SDC constraint files"
+    )
 
 
 class PowerConfig(BaseModel):
@@ -202,12 +212,15 @@ class CIConfig(BaseModel):
     on_push: bool = True
     on_pr: bool = True
     nightly: bool = False
-    extra_steps: list[str] = Field(default_factory=list, description="Additional CI step references")
+    extra_steps: list[str] = Field(
+        default_factory=list, description="Additional CI step references"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Top-level config
 # ---------------------------------------------------------------------------
+
 
 class VerificationConfig(BaseModel):
     """Verification settings grouped under the ``verification:`` key."""

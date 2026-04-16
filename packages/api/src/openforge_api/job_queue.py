@@ -207,8 +207,7 @@ class JobQueue:
             ids = [
                 jid
                 for jid, j in self._jobs.items()
-                if j.status
-                in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED)
+                if j.status in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED)
             ]
             for jid in ids:
                 del self._jobs[jid]

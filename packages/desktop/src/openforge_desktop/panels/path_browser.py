@@ -150,11 +150,11 @@ class PathBarWidget(QFrame):
             if idx >= 0 and idx < len(self._stages):
                 stage = self._stages[idx]
                 self.setToolTip(
-                    f"{stage.get('cell','')}\n"
-                    f"Type: {stage.get('type','')}\n"
-                    f"Pin: {stage.get('pin','')}\n"
-                    f"Delay: {stage.get('delay',0):.3f} ns\n"
-                    f"Cumulative: {stage.get('cumulative',0):.3f} ns"
+                    f"{stage.get('cell', '')}\n"
+                    f"Type: {stage.get('type', '')}\n"
+                    f"Pin: {stage.get('pin', '')}\n"
+                    f"Delay: {stage.get('delay', 0):.3f} ns\n"
+                    f"Cumulative: {stage.get('cumulative', 0):.3f} ns"
                 )
 
     def mousePressEvent(self, event) -> None:  # noqa: N802
@@ -306,9 +306,7 @@ class PathBrowserPanel(QDockWidget):
         self.table.setHorizontalHeaderLabels(
             ["Cell", "Type", "Pin", "Dir", "Delay (ns)", "Cumulative"]
         )
-        self.table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
@@ -430,13 +428,15 @@ class PathBrowserPanel(QDockWidget):
 
         for grp_name, paths in sorted(groups.items()):
             paths.sort(key=lambda x: x.get("slack", 0.0))
-            grp_item = QTreeWidgetItem([
-                "",
-                f"{grp_name}  ({len(paths)})",
-                "",
-                "",
-                "",
-            ])
+            grp_item = QTreeWidgetItem(
+                [
+                    "",
+                    f"{grp_name}  ({len(paths)})",
+                    "",
+                    "",
+                    "",
+                ]
+            )
             f = QFont()
             f.setBold(True)
             grp_item.setFont(1, f)
@@ -444,14 +444,16 @@ class PathBrowserPanel(QDockWidget):
             for p in paths:
                 slack = p.get("slack", 0.0)
                 status = _CLEAN if slack >= 0 else _VIOL
-                delay = (p.get("arrival", 0.0))
-                item = QTreeWidgetItem([
-                    status,
-                    p.get("endpoint", "?"),
-                    _format_ns(slack),
-                    f"{delay:.3f} ns",
-                    str(len(p.get("stages", []))),
-                ])
+                delay = p.get("arrival", 0.0)
+                item = QTreeWidgetItem(
+                    [
+                        status,
+                        p.get("endpoint", "?"),
+                        _format_ns(slack),
+                        f"{delay:.3f} ns",
+                        str(len(p.get("stages", []))),
+                    ]
+                )
                 color = _slack_color(slack, self._dark)
                 item.setForeground(2, QBrush(color))
                 item.setForeground(0, QBrush(color))
@@ -548,7 +550,6 @@ class PathBrowserPanel(QDockWidget):
             x, y = first.get("x"), first.get("y")
             if x is not None and y is not None:
                 self.layout_navigate_requested.emit(float(x), float(y))
-
 
     # ------------------------------------------------------------------
     # Real STA report integration

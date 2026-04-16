@@ -191,16 +191,21 @@ class _TrendChart(QWidget):
         for i in range(6):
             v = v_max - (v_max - v_min) * i / 5
             ypx = plot.top() + plot.height() * i / 5
-            p.drawText(QRectF(0, ypx - 7, margin_l - 4, 14),
-                       Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                       f"{v:.0f}%")
+            p.drawText(
+                QRectF(0, ypx - 7, margin_l - 4, 14),
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                f"{v:.0f}%",
+            )
         # X axis ticks
         span_s = (t_max - t_min).total_seconds() or 1.0
         for i in range(6):
             xpx = plot.left() + plot.width() * i / 5
             t = datetime.fromtimestamp(t_min.timestamp() + span_s * i / 5)
-            p.drawText(QRectF(xpx - 40, plot.bottom() + 2, 80, 14),
-                       Qt.AlignmentFlag.AlignCenter, t.strftime("%m-%d"))
+            p.drawText(
+                QRectF(xpx - 40, plot.bottom() + 2, 80, 14),
+                Qt.AlignmentFlag.AlignCenter,
+                t.strftime("%m-%d"),
+            )
 
         def to_px(t: datetime, v: float) -> QPointF:
             tx = (t.timestamp() - t_min.timestamp()) / span_s
@@ -227,8 +232,11 @@ class _TrendChart(QWidget):
             lx = plot.right() + 8
             p.fillRect(QRectF(lx, ly + 2, 14, 10), color)
             p.setPen(QColor(self._palette.text))
-            p.drawText(QRectF(lx + 18, ly, 110, 14),
-                       Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, name)
+            p.drawText(
+                QRectF(lx + 18, ly, 110, 14),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                name,
+            )
 
         p.end()
 
@@ -396,9 +404,7 @@ class CoverageClosurePanel(QDockWidget):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self._holes_tree = QTreeWidget()
         self._holes_tree.setHeaderLabels(["File", "Line", "Type", "Description"])
-        self._holes_tree.header().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
+        self._holes_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self._holes_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._holes_tree.customContextMenuRequested.connect(self._on_hole_context_menu)
         self._holes_tree.itemSelectionChanged.connect(self._on_hole_selected)
@@ -515,7 +521,11 @@ class CoverageClosurePanel(QDockWidget):
         self._refresh_history()
         self._refresh_holes(latest)
 
-        forecast = manager.compute_closure_estimate() if hasattr(manager, "compute_closure_estimate") else {}
+        forecast = (
+            manager.compute_closure_estimate()
+            if hasattr(manager, "compute_closure_estimate")
+            else {}
+        )
         unmet = [(name, info) for name, info in forecast.items() if not info.get("met")]
         if not unmet:
             self._eta_label.setText("ETA: all goals met")
@@ -571,7 +581,9 @@ class CoverageClosurePanel(QDockWidget):
         if not self._manager:
             return
         goals = getattr(self._manager, "goals", [])
-        evaluated = self._manager.evaluate_goals() if hasattr(self._manager, "evaluate_goals") else {}
+        evaluated = (
+            self._manager.evaluate_goals() if hasattr(self._manager, "evaluate_goals") else {}
+        )
         for g in goals:
             row = self._goals_table.rowCount()
             self._goals_table.insertRow(row)
@@ -697,7 +709,9 @@ class CoverageClosurePanel(QDockWidget):
         for s in reversed(snaps[-200:]):
             row = self._history_table.rowCount()
             self._history_table.insertRow(row)
-            self._history_table.setItem(row, 0, QTableWidgetItem(s.timestamp.isoformat(timespec="seconds")))
+            self._history_table.setItem(
+                row, 0, QTableWidgetItem(s.timestamp.isoformat(timespec="seconds"))
+            )
             self._history_table.setItem(row, 1, QTableWidgetItem(str(s.test_count)))
             self._history_table.setItem(row, 2, QTableWidgetItem(f"{s.total_pct:.1f}%"))
             self._history_table.setItem(row, 3, QTableWidgetItem(f"{s.line_pct:.1f}%"))

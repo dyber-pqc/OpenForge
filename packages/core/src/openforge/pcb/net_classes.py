@@ -3,6 +3,7 @@
 Net classes group nets sharing design rules (width, clearance, via sizes,
 impedance targets, length matching, differential-pair geometry, topology).
 """
+
 from __future__ import annotations
 
 from typing import Literal

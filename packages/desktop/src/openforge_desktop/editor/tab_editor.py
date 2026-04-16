@@ -44,10 +44,26 @@ from openforge_desktop.editor.code_editor import CodeEditor, _make_font, _Minima
 _VERILOG_EXTS: Final[set[str]] = {".v", ".sv", ".svh", ".vh"}
 _VHDL_EXTS: Final[set[str]] = {".vhd", ".vhdl"}
 _SDC_EXTS: Final[set[str]] = {".sdc", ".xdc", ".tcl"}
-_ALL_SUPPORTED: Final[set[str]] = _VERILOG_EXTS | _VHDL_EXTS | _SDC_EXTS | {
-    ".py", ".yaml", ".yml", ".json", ".md", ".txt", ".cfg", ".ini",
-    ".def", ".lef", ".lib", ".spice", ".sp",
-}
+_ALL_SUPPORTED: Final[set[str]] = (
+    _VERILOG_EXTS
+    | _VHDL_EXTS
+    | _SDC_EXTS
+    | {
+        ".py",
+        ".yaml",
+        ".yml",
+        ".json",
+        ".md",
+        ".txt",
+        ".cfg",
+        ".ini",
+        ".def",
+        ".lef",
+        ".lib",
+        ".spice",
+        ".sp",
+    }
+)
 
 
 # ── Welcome page ─────────────────────────────────────────────────────────
@@ -65,7 +81,9 @@ class _WelcomeTab(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title = QLabel("OpenForge EDA")
-        title.setStyleSheet("font-size: 28px; font-weight: bold; color: #cba6f7; margin-bottom: 8px;")
+        title.setStyleSheet(
+            "font-size: 28px; font-weight: bold; color: #cba6f7; margin-bottom: 8px;"
+        )
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
@@ -100,8 +118,8 @@ class _WelcomeTab(QWidget):
 class _SearchBar(QWidget):
     """Find / replace bar attached to the bottom of the editor."""
 
-    search_requested = Signal(str, bool)   # (text, forward)
-    replace_requested = Signal(str, str)   # (find, replace_with)
+    search_requested = Signal(str, bool)  # (text, forward)
+    replace_requested = Signal(str, str)  # (find, replace_with)
     replace_all_requested = Signal(str, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -112,7 +130,9 @@ class _SearchBar(QWidget):
         layout.addWidget(QLabel("Find:"))
         self._find = QLineEdit()
         self._find.setPlaceholderText("Search...")
-        self._find.returnPressed.connect(lambda: self.search_requested.emit(self._find.text(), True))
+        self._find.returnPressed.connect(
+            lambda: self.search_requested.emit(self._find.text(), True)
+        )
         layout.addWidget(self._find)
 
         btn_prev = QPushButton("Prev")
@@ -151,7 +171,12 @@ class _SearchBar(QWidget):
         layout.addWidget(btn_close)
 
     def set_replace_visible(self, visible: bool) -> None:
-        for w in (self._replace_label, self._replace_input, self._btn_replace, self._btn_replace_all):
+        for w in (
+            self._replace_label,
+            self._replace_input,
+            self._btn_replace,
+            self._btn_replace_all,
+        ):
             w.setVisible(visible)
 
     def focus_search(self) -> None:
@@ -316,7 +341,9 @@ class EditorTabWidget(QWidget):
 
     def open_file_dialog(self, start_dir: str = "") -> None:
         path_str, _ = QFileDialog.getOpenFileName(
-            self, "Open Source File", start_dir,
+            self,
+            "Open Source File",
+            start_dir,
             "Verilog (*.v *.sv *.vh *.svh);;"
             "VHDL (*.vhd *.vhdl);;"
             "Constraints (*.sdc *.xdc *.tcl);;"
@@ -344,11 +371,10 @@ class EditorTabWidget(QWidget):
         if idx < 0:
             return
         path_str, _ = QFileDialog.getSaveFileName(
-            self, "Save File As", "",
-            "Verilog (*.v *.sv);;"
-            "VHDL (*.vhd *.vhdl);;"
-            "Constraints (*.sdc *.xdc *.tcl);;"
-            "All (*)",
+            self,
+            "Save File As",
+            "",
+            "Verilog (*.v *.sv);;VHDL (*.vhd *.vhdl);;Constraints (*.sdc *.xdc *.tcl);;All (*)",
         )
         if path_str:
             path = Path(path_str)

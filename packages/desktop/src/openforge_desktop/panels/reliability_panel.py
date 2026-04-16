@@ -7,6 +7,7 @@ as matplotlib heatmaps plus populated violation tables.
 
 Catppuccin Mocha colors are used for the widgets.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -147,8 +148,8 @@ class _ReliabilityRadar(QWidget):
             r = radius * (self._scores[key] / 100.0)
             poly.append(QPointF(cx + r * math.cos(a), cy + r * math.sin(a)))
         gradient = QLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius)
-        gradient.setColorAt(0.0, QColor(166, 227, 161, 160))   # green
-        gradient.setColorAt(1.0, QColor(137, 180, 250, 160))   # blue
+        gradient.setColorAt(0.0, QColor(166, 227, 161, 160))  # green
+        gradient.setColorAt(1.0, QColor(137, 180, 250, 160))  # blue
         p.setBrush(QBrush(gradient))
         p.setPen(QPen(QColor(MOCHA["teal"]), 2))
         p.drawPolygon(poly)
@@ -270,8 +271,11 @@ if _MPL_OK:
                 lf = [pt[0] for pt in limit_curve]
                 lm = [pt[1] for pt in limit_curve]
                 self._ax.plot(lf, lm, color=MOCHA["red"], linestyle="--", label="FCC limit")
-                self._ax.legend(facecolor=MOCHA["surface0"], edgecolor=MOCHA["surface1"],
-                                labelcolor=MOCHA["text"])
+                self._ax.legend(
+                    facecolor=MOCHA["surface0"],
+                    edgecolor=MOCHA["surface1"],
+                    labelcolor=MOCHA["text"],
+                )
             self._ax.set_xscale("log")
             self._ax.set_xlabel("Frequency (MHz)")
             self._ax.set_ylabel("dBuV/m")
@@ -310,8 +314,8 @@ class _AnalysisWorker(QObject):
     """Runs a zero-arg callable and reports progress/result via signals."""
 
     progress = Signal(float, str)
-    finished = Signal(str, object)    # kind, result
-    failed = Signal(str, str)         # kind, traceback
+    finished = Signal(str, object)  # kind, result
+    failed = Signal(str, str)  # kind, traceback
 
     def __init__(self, kind: str, fn: Callable[[Callable[[float, str], None]], Any]) -> None:
         super().__init__()
@@ -508,12 +512,8 @@ class ReliabilityPanel(QDockWidget):
         layout.addWidget(self.ir_canvas, 1)
 
         self.ir_table = QTableWidget(0, 4)
-        self.ir_table.setHorizontalHeaderLabels(
-            ["X (um)", "Y (um)", "Drop (mV)", "V (V)"]
-        )
-        self.ir_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.ir_table.setHorizontalHeaderLabels(["X (um)", "Y (um)", "Drop (mV)", "V (V)"])
+        self.ir_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.ir_table.setMaximumHeight(160)
         layout.addWidget(self.ir_table)
 
@@ -562,9 +562,7 @@ class ReliabilityPanel(QDockWidget):
         self.em_table.setHorizontalHeaderLabels(
             ["Net", "Layer", "Width (um)", "Density (mA/um)", "Limit (mA/um)", "Severity"]
         )
-        self.em_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.em_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.em_table, 1)
 
         self.em_summary = QTextEdit()
@@ -732,9 +730,7 @@ class ReliabilityPanel(QDockWidget):
         self.esd_table.setHorizontalHeaderLabels(
             ["Pin", "Target", "Distance (um)", "R (ohm)", "Status"]
         )
-        self.esd_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.esd_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.esd_table, 1)
 
         self.esd_summary = QTextEdit()
@@ -759,9 +755,7 @@ class ReliabilityPanel(QDockWidget):
             return None
         p = Path(txt)
         if not p.exists():
-            QMessageBox.warning(
-                self, "File Not Found", f"{label} path does not exist:\n{p}"
-            )
+            QMessageBox.warning(self, "File Not Found", f"{label} path does not exist:\n{p}")
             return None
         return p
 
@@ -841,8 +835,13 @@ class ReliabilityPanel(QDockWidget):
         self._set_status(f"{kind} complete")
         summary: dict[str, Any] = {}
         if is_dataclass(result):
-            for attr in ("max_drop_mv", "max_temp_c", "critical_count",
-                         "hbm_compliant", "fcc_class_b_compliant"):
+            for attr in (
+                "max_drop_mv",
+                "max_temp_c",
+                "critical_count",
+                "hbm_compliant",
+                "fcc_class_b_compliant",
+            ):
                 if hasattr(result, attr):
                     summary[attr] = getattr(result, attr)
         self.analysis_completed.emit(kind, summary)
@@ -1039,16 +1038,14 @@ class ReliabilityPanel(QDockWidget):
 
         vdd_mv = result.vdd * 1000.0
         threshold_mv = vdd_mv * (self.ir_threshold_pct.value() / 100.0)
-        violators = sum(
-            1 for row in result.grid for v in row if v > threshold_mv
-        )
+        violators = sum(1 for row in result.grid for v in row if v > threshold_mv)
         total = result.num_rows * result.num_cols
         self.ir_summary.setPlainText(
             f"VDD={result.vdd:.3f}V  die={result.width_um:.0f}x{result.height_um:.0f} um  "
             f"grid={result.num_cols}x{result.num_rows}\n"
             f"Max drop: {result.max_drop_mv:.2f} mV   "
             f"Avg drop: {result.avg_drop_mv:.2f} mV\n"
-            f"Min V: {result.vdd - result.max_drop_mv/1000:.4f} V\n"
+            f"Min V: {result.vdd - result.max_drop_mv / 1000:.4f} V\n"
             f"Hotspots >= {threshold_mv:.1f} mV "
             f"(= {self.ir_threshold_pct.value():.1f}% of VDD): {violators}/{total}"
         )
@@ -1071,11 +1068,9 @@ class ReliabilityPanel(QDockWidget):
             self.em_table.setItem(r, 1, QTableWidgetItem(v.wire.layer))
             self.em_table.setItem(r, 2, QTableWidgetItem(f"{v.wire.width:.3f}"))
             self.em_table.setItem(
-                r, 3, QTableWidgetItem(f"{v.current_density_a_per_um2*1e3:.3f}")
+                r, 3, QTableWidgetItem(f"{v.current_density_a_per_um2 * 1e3:.3f}")
             )
-            self.em_table.setItem(
-                r, 4, QTableWidgetItem(f"{v.limit_a_per_um2*1e3:.3f}")
-            )
+            self.em_table.setItem(r, 4, QTableWidgetItem(f"{v.limit_a_per_um2 * 1e3:.3f}"))
             sev_item = QTableWidgetItem(v.severity.upper())
             sev_item.setForeground(
                 QBrush(QColor(MOCHA["red" if v.severity == "critical" else "yellow"]))
@@ -1085,14 +1080,14 @@ class ReliabilityPanel(QDockWidget):
         worst = result.worst_violation
         worst_str = (
             f"{worst.wire.net} @ {worst.wire.layer} "
-            f"{worst.current_density_a_per_um2*1e3:.3f} mA/um"
+            f"{worst.current_density_a_per_um2 * 1e3:.3f} mA/um"
             if worst
             else "(none)"
         )
         self.em_summary.setPlainText(
             f"Wires checked: {result.wires_checked}\n"
             f"Critical: {result.critical_count}   Warnings: {result.warning_count}\n"
-            f"Avg density: {result.avg_density*1e3:.3f} mA/um\n"
+            f"Avg density: {result.avg_density * 1e3:.3f} mA/um\n"
             f"Worst: {worst_str}\n"
             f"Runtime: {result.runtime_s:.2f}s"
         )
@@ -1112,7 +1107,7 @@ class ReliabilityPanel(QDockWidget):
             self.th_hotspots.addItem(
                 QListWidgetItem(
                     f"{h.temperature_c:6.2f} C @ ({h.x:7.1f}, {h.y:7.1f}) um  "
-                    f"P={h.power_w*1e3:6.2f} mW"
+                    f"P={h.power_w * 1e3:6.2f} mW"
                 )
             )
         self.th_summary.setPlainText(
@@ -1145,16 +1140,16 @@ class ReliabilityPanel(QDockWidget):
             f"CISPR 22 Class B:    {'PASS' if result.ce_compliant else 'FAIL'}\n"
             f"Near-field max: {result.near_field_max_v_per_m:.3f} V/m"
         )
-        score = 100.0 if result.is_compliant else max(
-            0.0, 100.0 - max(0.0, result.worst_emission_db_uv_per_m - 40.0) * 2.0
+        score = (
+            100.0
+            if result.is_compliant
+            else max(0.0, 100.0 - max(0.0, result.worst_emission_db_uv_per_m - 40.0) * 2.0)
         )
         self.lbl_emi.setText(f"{score:.0f} / 100")
 
     def _present_esd(self, result: Any) -> None:
         self.esd_table.setRowCount(0)
-        for p in sorted(
-            result.paths, key=lambda x: x.total_resistance, reverse=True
-        )[:500]:
+        for p in sorted(result.paths, key=lambda x: x.total_resistance, reverse=True)[:500]:
             r = self.esd_table.rowCount()
             self.esd_table.insertRow(r)
             self.esd_table.setItem(r, 0, QTableWidgetItem(p.source_pin))
@@ -1162,9 +1157,7 @@ class ReliabilityPanel(QDockWidget):
             self.esd_table.setItem(r, 2, QTableWidgetItem(f"{p.distance_um:.1f}"))
             self.esd_table.setItem(r, 3, QTableWidgetItem(f"{p.total_resistance:.2f}"))
             status = QTableWidgetItem("OK" if p.breakdown_ok else "FAIL")
-            status.setForeground(
-                QBrush(QColor(MOCHA["green" if p.breakdown_ok else "red"]))
-            )
+            status.setForeground(QBrush(QColor(MOCHA["green" if p.breakdown_ok else "red"])))
             self.esd_table.setItem(r, 4, status)
 
         self.esd_summary.setPlainText(
@@ -1176,8 +1169,10 @@ class ReliabilityPanel(QDockWidget):
             f"CDM ({result.cdm_voltage_v:.0f} V):   "
             f"{'PASS' if result.cdm_compliant else 'FAIL'}"
         )
-        score = 100.0 if result.is_clean else max(
-            0.0, 100.0 - result.critical_count * 10.0 - result.warning_count * 2.0
+        score = (
+            100.0
+            if result.is_clean
+            else max(0.0, 100.0 - result.critical_count * 10.0 - result.warning_count * 2.0)
         )
         self.lbl_esd.setText(f"{score:.0f} / 100")
 
@@ -1188,9 +1183,7 @@ class ReliabilityPanel(QDockWidget):
         if kind not in self._last_results:
             QMessageBox.information(self, "No Data", f"Run {kind} first.")
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Save CSV", f"{kind}.csv", "CSV (*.csv)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Save CSV", f"{kind}.csv", "CSV (*.csv)")
         if not path:
             return
         try:
@@ -1213,8 +1206,8 @@ class ReliabilityPanel(QDockWidget):
             for v in result.violations:
                 f.write(
                     f"{v.wire.net},{v.wire.layer},{v.wire.width:.3f},"
-                    f"{v.current_density_a_per_um2*1e3:.4f},"
-                    f"{v.limit_a_per_um2*1e3:.4f},{v.severity}\n"
+                    f"{v.current_density_a_per_um2 * 1e3:.4f},"
+                    f"{v.limit_a_per_um2 * 1e3:.4f},{v.severity}\n"
                 )
         elif kind == "thermal":
             f.write("ix,iy,temperature_c\n")
@@ -1288,9 +1281,7 @@ class ReliabilityPanel(QDockWidget):
         ):
             lbl.setText("--")
         self.lbl_overall.setText("--")
-        self.radar.set_scores(
-            {k: 0 for k in ("IR Drop", "EM", "Thermal", "EMI", "ESD")}
-        )
+        self.radar.set_scores({k: 0 for k in ("IR Drop", "EM", "Thermal", "EMI", "ESD")})
         self.ir_summary.clear()
         self.em_summary.clear()
         self.th_summary.clear()

@@ -2,6 +2,7 @@
 
 Scan chain insertion + ATPG. A Mentor Tessent replacement.
 """
+
 from __future__ import annotations
 
 import random
@@ -146,7 +147,7 @@ class ScanInsertion:
         chunks: list[list[ScanFlop]] = []
         i = 0
         while i < len(flops):
-            chunks.append(flops[i:i + per_chain])
+            chunks.append(flops[i : i + per_chain])
             i += per_chain
 
         for ci, chunk in enumerate(chunks):
@@ -158,14 +159,14 @@ class ScanInsertion:
             result.scan_chains.append(chain)
             result.scanned_flops += chain.length
 
-        result.scan_coverage = (
-            100.0 * result.scanned_flops / max(result.total_flops, 1)
-        )
+        result.scan_coverage = 100.0 * result.scanned_flops / max(result.total_flops, 1)
 
         # Write yosys-style transform script alongside the netlist.
         script_path = netlist.with_suffix(".scan.ys")
         script = self._build_yosys_script(
-            netlist, top_module, scan_dff_cell,
+            netlist,
+            top_module,
+            scan_dff_cell,
         )
         try:
             script_path.write_text(script, encoding="utf-8")
@@ -178,7 +179,9 @@ class ScanInsertion:
         try:
             proc = subprocess.run(
                 ["yosys", "-q", "-s", str(script_path)],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             result.log += (proc.stdout or "") + (proc.stderr or "")
             if out_v.exists():
@@ -239,12 +242,10 @@ class AtpgRunner:
         if not netlist.exists():
             return ins, outs
         text = netlist.read_text(encoding="utf-8", errors="ignore")
-        for m in re.finditer(r"\binput\b\s+(?:wire\s+)?(?:\[[^\]]+\]\s*)?(\w+)",
-                              text):
+        for m in re.finditer(r"\binput\b\s+(?:wire\s+)?(?:\[[^\]]+\]\s*)?(\w+)", text):
             if m.group(1) not in ins:
                 ins.append(m.group(1))
-        for m in re.finditer(r"\boutput\b\s+(?:wire\s+)?(?:\[[^\]]+\]\s*)?(\w+)",
-                              text):
+        for m in re.finditer(r"\boutput\b\s+(?:wire\s+)?(?:\[[^\]]+\]\s*)?(\w+)", text):
             if m.group(1) not in outs:
                 outs.append(m.group(1))
         return ins, outs
@@ -273,12 +274,14 @@ class AtpgRunner:
                 bits[(pid - 2) % n_in] = 1  # walking-1
             else:
                 bits = [self._rng.randint(0, 1) for _ in range(n_in)]
-            patterns.append({
-                "pattern_id": pid,
-                "inputs": "".join(str(b) for b in bits),
-                "expected_outputs": "X" * n_out,
-                "faults_covered": self._rng.randint(2, 8),
-            })
+            patterns.append(
+                {
+                    "pattern_id": pid,
+                    "inputs": "".join(str(b) for b in bits),
+                    "expected_outputs": "X" * n_out,
+                    "faults_covered": self._rng.randint(2, 8),
+                }
+            )
         return patterns
 
     def estimate_fault_coverage(
@@ -302,22 +305,22 @@ class AtpgRunner:
         """Write patterns in STIL format."""
         output = Path(output)
         lines = [
-            'STIL 1.0;',
-            'Header {',
+            "STIL 1.0;",
+            "Header {",
             '    Title "OpenForge ATPG patterns";',
             '    Date "auto-generated";',
             '    Source "openforge.verification.dft";',
-            '}',
-            'Signals {',
-            '    SCAN_IN In; SCAN_OUT Out; SCAN_EN In; CLK In;',
-            '}',
+            "}",
+            "Signals {",
+            "    SCAN_IN In; SCAN_OUT Out; SCAN_EN In; CLK In;",
+            "}",
             'Pattern "openforge_patterns" {',
         ]
         for p in patterns:
             lines.append(
-                f'    V {{ SCAN_IN={p["inputs"]}; }}'
-                f'  // pattern {p["pattern_id"]}, '
-                f'covers {p.get("faults_covered", 0)} faults'
+                f"    V {{ SCAN_IN={p['inputs']}; }}"
+                f"  // pattern {p['pattern_id']}, "
+                f"covers {p.get('faults_covered', 0)} faults"
             )
         lines.append("}")
         output.write_text("\n".join(lines) + "\n", encoding="utf-8")

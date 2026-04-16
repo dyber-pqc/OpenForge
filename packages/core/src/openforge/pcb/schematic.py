@@ -5,6 +5,7 @@ components, nets and full schematic sheets. Designed to be the
 in-memory representation that the desktop schematic editor and
 BOM/netlist generators operate on.
 """
+
 from __future__ import annotations
 
 import json
@@ -276,9 +277,7 @@ class Schematic:
                 errors.append(f"Net {name} has fewer than 2 connections")
             for refdes, _pin in net.connections:
                 if refdes not in self.components:
-                    errors.append(
-                        f"Net {name} refers to missing component {refdes}"
-                    )
+                    errors.append(f"Net {name} refers to missing component {refdes}")
         return errors
 
     def to_dict(self) -> dict:

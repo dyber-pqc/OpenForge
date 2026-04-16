@@ -478,7 +478,7 @@ class FipsDocGenerator:
         """Generate FSM diagram in Graphviz DOT format."""
         lines: list[str] = []
         lines.append("digraph FIPS_FSM {")
-        lines.append('    rankdir=LR;')
+        lines.append("    rankdir=LR;")
         lines.append('    node [shape=ellipse, fontname="Helvetica"];')
         for s in states:
             safe = s.replace(" ", "_")
@@ -501,7 +501,9 @@ class FipsDocGenerator:
         lines: list[str] = []
         lines.append("# Critical Security Parameter Inventory")
         lines.append("")
-        lines.append("| Name | Type | Algorithm | Length (bits) | Input | Output | Zeroization | Access |")
+        lines.append(
+            "| Name | Type | Algorithm | Length (bits) | Input | Output | Zeroization | Access |"
+        )
         lines.append("|---|---|---|---|---|---|---|---|")
         for c in csps:
             lines.append(

@@ -1,4 +1,5 @@
 """JLCPCB part picker dialog."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
 
 try:
     from openforge.pcb.jlcpcb import JlcPartPicker, LcscPart
+
     _HAS_JLC = True
 except Exception:  # noqa: BLE001
     _HAS_JLC = False
@@ -64,9 +66,7 @@ class JlcpcbPickerDialog(QDialog):
         self._table.setHorizontalHeaderLabels(
             ["LCSC #", "Name", "Package", "Mfr", "Basic", "Price", "Stock"]
         )
-        self._table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeToContents
-        )
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self._table.setSelectionBehavior(QTableWidget.SelectRows)
         self._table.setEditTriggers(QTableWidget.NoEditTriggers)
         lay.addWidget(self._table, 1)
@@ -111,12 +111,8 @@ class JlcpcbPickerDialog(QDialog):
             self._table.setItem(row, 1, QTableWidgetItem(p.name))
             self._table.setItem(row, 2, QTableWidgetItem(p.package))
             self._table.setItem(row, 3, QTableWidgetItem(p.manufacturer))
-            self._table.setItem(
-                row, 4, QTableWidgetItem("Basic" if p.is_basic else "Extended")
-            )
-            self._table.setItem(
-                row, 5, QTableWidgetItem(f"${p.price_per_unit:.4f}")
-            )
+            self._table.setItem(row, 4, QTableWidgetItem("Basic" if p.is_basic else "Extended"))
+            self._table.setItem(row, 5, QTableWidgetItem(f"${p.price_per_unit:.4f}"))
             self._table.setItem(row, 6, QTableWidgetItem(str(p.stock)))
         self._status.setText(f"{len(parts)} parts")
 

@@ -152,17 +152,11 @@ def placement_stage(
     )
 
 
-def cts_stage(
-    *, stage_id: str = "cts", depends_on: list[str] | None = None
-) -> RunStage:
-    return _openroad_stage(
-        stage_id, "CTS", "cts.tcl", depends_on or [], ["*.def", "*.rpt"]
-    )
+def cts_stage(*, stage_id: str = "cts", depends_on: list[str] | None = None) -> RunStage:
+    return _openroad_stage(stage_id, "CTS", "cts.tcl", depends_on or [], ["*.def", "*.rpt"])
 
 
-def routing_stage(
-    *, stage_id: str = "routing", depends_on: list[str] | None = None
-) -> RunStage:
+def routing_stage(*, stage_id: str = "routing", depends_on: list[str] | None = None) -> RunStage:
     return _openroad_stage(
         stage_id,
         "Routing",

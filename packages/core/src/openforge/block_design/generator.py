@@ -282,8 +282,11 @@ def generate_verilog(design: BlockDesign) -> str:
             port_name_w = max(len(p.name) for p in inst.ports)
             for i, p in enumerate(inst.ports):
                 comma = "," if i < len(inst.ports) - 1 else ""
-                conn = sink_net.get((inst.name, p.name)) if p.direction != "output" \
+                conn = (
+                    sink_net.get((inst.name, p.name))
+                    if p.direction != "output"
                     else src_net.get((inst.name, p.name))
+                )
                 if conn is None:
                     # Unconnected: explicit empty binding + comment
                     lines.append(
@@ -326,9 +329,7 @@ def generate_verilog(design: BlockDesign) -> str:
                             f"  // width {eff_w} vs {p.width}"
                         )
                 else:
-                    lines.append(
-                        f"        .{p.name.ljust(port_name_w)} ({net}){comma}"
-                    )
+                    lines.append(f"        .{p.name.ljust(port_name_w)} ({net}){comma}")
         lines.append("    );")
         lines.append("")
 
@@ -505,9 +506,7 @@ def validate(design: BlockDesign) -> list[str]:
     for inst in design.instances:
         for p in inst.ports:
             if _is_required_port(p) and (inst.name, p.name) not in sunk:
-                msgs.append(
-                    f"unconnected required port: {inst.name}.{p.name} ({p.direction})"
-                )
+                msgs.append(f"unconnected required port: {inst.name}.{p.name} ({p.direction})")
 
     # Combinational cycle detection (very coarse: builds instance-level
     # dependency graph ignoring clocked elements). Any instance whose module
@@ -531,7 +530,7 @@ def validate(design: BlockDesign) -> list[str]:
         color[n] = GRAY
         for m in graph.get(n, ()):
             if color.get(m, WHITE) == GRAY:
-                cycle = " -> ".join(stack[stack.index(m):] + [m]) if m in stack else f"{n} -> {m}"
+                cycle = " -> ".join(stack[stack.index(m) :] + [m]) if m in stack else f"{n} -> {m}"
                 msgs.append(f"combinational cycle detected: {cycle}")
             elif color.get(m, WHITE) == WHITE:
                 visit(m, stack + [m])
@@ -557,7 +556,9 @@ def _ck_rst(active_low: bool = True) -> list[BlockPort]:
     ]
 
 
-def make_axi4lite_slave(name: str = "axi4lite_slave", data_w: int = 32, addr_w: int = 32) -> BlockInstance:
+def make_axi4lite_slave(
+    name: str = "axi4lite_slave", data_w: int = 32, addr_w: int = 32
+) -> BlockInstance:
     """AXI4-Lite slave register file block."""
     ports = _ck_rst() + [
         BlockPort("awaddr", "input", addr_w),

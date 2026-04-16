@@ -1,4 +1,5 @@
 """LEC results panel for the OpenForge desktop app."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -123,9 +124,7 @@ class LecPanel(QDockWidget):
         f.setBold(True)
         self._status_label.setFont(f)
         self._status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._status_label.setStyleSheet(
-            "background:#313244; padding:14px; border-radius:6px;"
-        )
+        self._status_label.setStyleSheet("background:#313244; padding:14px; border-radius:6px;")
         layout.addWidget(self._status_label)
 
         # stats row
@@ -143,12 +142,8 @@ class LecPanel(QDockWidget):
         # tabs - differences + log
         self._tabs = QTabWidget()
         self._diff_table = QTableWidget(0, 4)
-        self._diff_table.setHorizontalHeaderLabels(
-            ["Type", "Gold Signal", "Rev Signal", "Reason"]
-        )
-        self._diff_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self._diff_table.setHorizontalHeaderLabels(["Type", "Gold Signal", "Rev Signal", "Reason"])
+        self._diff_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self._diff_table.verticalHeader().setVisible(False)
         self._tabs.addTab(self._diff_table, "Differences")
 
@@ -199,18 +194,10 @@ class LecPanel(QDockWidget):
         for diff in diffs:
             row = self._diff_table.rowCount()
             self._diff_table.insertRow(row)
-            self._diff_table.setItem(
-                row, 0, QTableWidgetItem(str(diff.get("type", "")))
-            )
-            self._diff_table.setItem(
-                row, 1, QTableWidgetItem(str(diff.get("signal", "")))
-            )
-            self._diff_table.setItem(
-                row, 2, QTableWidgetItem(str(diff.get("rev_signal", "")))
-            )
-            self._diff_table.setItem(
-                row, 3, QTableWidgetItem(str(diff.get("reason", "")))
-            )
+            self._diff_table.setItem(row, 0, QTableWidgetItem(str(diff.get("type", ""))))
+            self._diff_table.setItem(row, 1, QTableWidgetItem(str(diff.get("signal", ""))))
+            self._diff_table.setItem(row, 2, QTableWidgetItem(str(diff.get("rev_signal", ""))))
+            self._diff_table.setItem(row, 3, QTableWidgetItem(str(diff.get("reason", ""))))
 
         self._log_view.setPlainText(getattr(result, "log", "") or "")
 

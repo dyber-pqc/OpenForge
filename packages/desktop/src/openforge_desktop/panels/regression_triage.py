@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
 
@@ -82,9 +83,7 @@ def cluster_failures(failures: list[TriageFailure]) -> list[TriageCluster]:
     """Group failures by fuzzy hash of their first error line."""
     clusters: dict[str, TriageCluster] = {}
     for f in failures:
-        first_line = next(
-            (ln for ln in f.message.splitlines() if ln.strip()), f.message
-        )[:400]
+        first_line = next((ln for ln in f.message.splitlines() if ln.strip()), f.message)[:400]
         key = fuzzy_hash(first_line)
         cl = clusters.get(key)
         if cl is None:
@@ -197,9 +196,7 @@ class RegressionTriagePanel(QWidget):
         )
 
     def _on_load_results(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Load regression results", "", "JSON (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Load regression results", "", "JSON (*.json)")
         if not path:
             return
         try:
@@ -320,9 +317,7 @@ class RegressionTriagePanel(QWidget):
             "table{border-collapse:collapse}td,th{border:1px solid #45475a;padding:4px}"
             "</style></head><body><h1>Regression triage report</h1>"
             "<table><tr><th>Key</th><th>Count</th><th>First error</th>"
-            "<th>Sample tests</th><th>Notes</th></tr>"
-            + "".join(rows)
-            + "</table></body></html>"
+            "<th>Sample tests</th><th>Notes</th></tr>" + "".join(rows) + "</table></body></html>"
         )
         try:
             Path(target).write_text(html, encoding="utf-8")

@@ -35,8 +35,8 @@ class PathDelay(BaseModel):
     path_id: str
     startpoint: str = ""
     endpoint: str = ""
-    gba_delay: float = 0.0      # ns
-    pba_delay: float = 0.0      # ns
+    gba_delay: float = 0.0  # ns
+    pba_delay: float = 0.0  # ns
     pessimism_reduction_ps: float = 0.0
     slack_gba_ns: float = 0.0
     slack_pba_ns: float = 0.0
@@ -136,9 +136,7 @@ class PbaAnalyzer:
             out.append(self.analyze_path(p, i))
         return out
 
-    def total_pessimism_reduction_ps(
-        self, results: list[PathDelay] | None = None
-    ) -> float:
+    def total_pessimism_reduction_ps(self, results: list[PathDelay] | None = None) -> float:
         if results is None:
             results = self.analyze_all_critical_paths()
         return sum(r.pessimism_reduction_ps for r in results)

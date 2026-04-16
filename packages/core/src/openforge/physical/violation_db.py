@@ -10,6 +10,7 @@ Uses a lightweight SQLite backend for persistence plus an in-memory
 index for fast queries; falls back to pure-Python lists when SQLite is
 unavailable.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -161,9 +162,22 @@ class ViolationDb:
                  suggestion, waiver_id, source, timestamp)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    v.id, v.kind, v.severity, x, y, v.instance, v.net, v.layer,
-                    v.metric_value, v.metric_unit, v.threshold, v.delta,
-                    v.suggestion, v.waiver_id, v.source, v.timestamp,
+                    v.id,
+                    v.kind,
+                    v.severity,
+                    x,
+                    y,
+                    v.instance,
+                    v.net,
+                    v.layer,
+                    v.metric_value,
+                    v.metric_unit,
+                    v.threshold,
+                    v.delta,
+                    v.suggestion,
+                    v.waiver_id,
+                    v.source,
+                    v.timestamp,
                 ),
             )
 
@@ -281,9 +295,7 @@ class ViolationDb:
         return max(0.0, min(100.0, score))
 
     # ------------------------------------------------------------------
-    def waive(
-        self, violation_id: str, waiver_id: str, justification: str
-    ) -> bool:
+    def waive(self, violation_id: str, waiver_id: str, justification: str) -> bool:
         hit = False
         for v in self._mem:
             if v.id == violation_id:
@@ -305,9 +317,7 @@ class ViolationDb:
                 pass
         return hit
 
-    def waive_bulk(
-        self, violation_ids: Iterable[str], waiver_id: str, justification: str
-    ) -> int:
+    def waive_bulk(self, violation_ids: Iterable[str], waiver_id: str, justification: str) -> int:
         count = 0
         for vid in violation_ids:
             if self.waive(vid, waiver_id, justification):
@@ -326,18 +336,28 @@ class ViolationDb:
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         fields = [
-            "id", "kind", "severity", "location", "instance", "net", "layer",
-            "metric_value", "metric_unit", "threshold", "delta", "suggestion",
-            "waiver_id", "source", "timestamp",
+            "id",
+            "kind",
+            "severity",
+            "location",
+            "instance",
+            "net",
+            "layer",
+            "metric_value",
+            "metric_unit",
+            "threshold",
+            "delta",
+            "suggestion",
+            "waiver_id",
+            "source",
+            "timestamp",
         ]
         with p.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.DictWriter(fh, fieldnames=fields)
             writer.writeheader()
             for v in self._mem:
                 row = v.model_dump()
-                row["location"] = (
-                    f"{v.location[0]:.2f},{v.location[1]:.2f}" if v.location else ""
-                )
+                row["location"] = f"{v.location[0]:.2f},{v.location[1]:.2f}" if v.location else ""
                 writer.writerow({k: row.get(k, "") for k in fields})
         return p
 
@@ -431,9 +451,7 @@ class ViolationImporter:
         """Handles both STA result objects and raw path lists."""
         out: list[Violation] = []
         # Setup paths
-        for path in _as_iter(report, "setup_violations") + _as_iter(
-            report, "violating_paths"
-        ):
+        for path in _as_iter(report, "setup_violations") + _as_iter(report, "violating_paths"):
             slack = _safe_num(_get(path, "slack", 0.0))
             if slack >= 0:
                 continue
@@ -486,9 +504,7 @@ class ViolationImporter:
                     metric_value=_safe_num(_get(viol, "value", 1.0)),
                     metric_unit=str(_get(viol, "unit", "") or ""),
                     threshold=_safe_num(_get(viol, "threshold", 0.0)),
-                    suggestion=str(
-                        _get(viol, "rule", _get(viol, "description", "DRC violation"))
-                    ),
+                    suggestion=str(_get(viol, "rule", _get(viol, "description", "DRC violation"))),
                     source="drc",
                 )
             )

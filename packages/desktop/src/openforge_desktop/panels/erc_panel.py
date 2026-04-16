@@ -4,6 +4,7 @@ Qt widget that runs :class:`openforge.pcb.erc.ErcChecker` against a
 schematic and displays violations in a sortable table with inline
 severity colouring, rule toggles, waivers and HTML report export.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,6 +35,7 @@ try:
         ErcChecker,
         ErcWaiver,
     )
+
     _HAS_ERC = True
 except Exception:  # pragma: no cover
     _HAS_ERC = False
@@ -168,14 +170,14 @@ class ErcPanel(QWidget):
         self.rule_tree.setHeaderLabels(["Enabled", "ID", "Description"])
         self.rule_tree.setAlternatingRowColors(True)
         for rule in self._rules:
-            itm = QTreeWidgetItem([
-                "",
-                rule.id,
-                rule.description,
-            ])
-            itm.setCheckState(0,
-                              Qt.CheckState.Checked if rule.enabled
-                              else Qt.CheckState.Unchecked)
+            itm = QTreeWidgetItem(
+                [
+                    "",
+                    rule.id,
+                    rule.description,
+                ]
+            )
+            itm.setCheckState(0, Qt.CheckState.Checked if rule.enabled else Qt.CheckState.Unchecked)
             itm.setData(1, Qt.ItemDataRole.UserRole, rule.id)
             self.rule_tree.addTopLevelItem(itm)
         self.rule_tree.itemChanged.connect(self._on_rule_toggled)
@@ -185,14 +187,12 @@ class ErcPanel(QWidget):
 
         # Violation table
         self.table = QTableWidget(0, 6)
-        self.table.setHorizontalHeaderLabels([
-            "Severity", "Rule", "Component", "Pin", "Net", "Message"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["Severity", "Rule", "Component", "Pin", "Net", "Message"]
+        )
         self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(
-            QTableWidget.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(
-            QTableWidget.SelectionMode.SingleSelection)
+        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
         splitter.addWidget(self.table)
@@ -205,7 +205,8 @@ class ErcPanel(QWidget):
         self.status = QLabel("No ERC run yet")
         self.status.setStyleSheet(
             "color: #a6adc8; padding: 4px 8px;"
-            "background: #181825; border: 1px solid #313244; border-radius: 4px;")
+            "background: #181825; border: 1px solid #313244; border-radius: 4px;"
+        )
         layout.addWidget(self.status)
 
     # ------------------------------------------------------------------
@@ -217,24 +218,19 @@ class ErcPanel(QWidget):
 
     def run_erc(self) -> None:
         if not _HAS_ERC:
-            QMessageBox.warning(self, "ERC",
-                                "openforge.pcb.erc is not available")
+            QMessageBox.warning(self, "ERC", "openforge.pcb.erc is not available")
             return
         if self._schematic is None:
-            QMessageBox.information(self, "ERC",
-                                    "No schematic loaded")
+            QMessageBox.information(self, "ERC", "No schematic loaded")
             return
-        self._checker = ErcChecker(self._schematic,
-                                   rules=self._rules,
-                                   waivers=self._waivers)
+        self._checker = ErcChecker(self._schematic, rules=self._rules, waivers=self._waivers)
         self._violations = self._checker.check_all()
         self._refresh_table()
         err = sum(1 for v in self._violations if v.severity == "error")
         warn = sum(1 for v in self._violations if v.severity == "warning")
         info = sum(1 for v in self._violations if v.severity == "info")
         self.status.setText(
-            f"{len(self._violations)} violations: "
-            f"{err} errors, {warn} warnings, {info} info"
+            f"{len(self._violations)} violations: {err} errors, {warn} warnings, {info} info"
         )
 
     # ------------------------------------------------------------------
@@ -264,8 +260,7 @@ class ErcPanel(QWidget):
                 "warning": QColor("#f9e2af"),
                 "info": QColor("#89b4fa"),
             }.get(v.severity, QColor("#cdd6f4"))
-            cells = [v.severity.upper(), v.rule, v.component,
-                     v.pin, v.net, v.message]
+            cells = [v.severity.upper(), v.rule, v.component, v.pin, v.net, v.message]
             for col, txt in enumerate(cells):
                 itm = QTableWidgetItem(str(txt))
                 if col == 0:
@@ -286,8 +281,7 @@ class ErcPanel(QWidget):
             return None
         # Need to map displayed row back to violation when filtering.
         filt = self.severity_filter.currentText().lower()
-        visible = [v for v in self._violations
-                   if filt == "all" or v.severity == filt]
+        visible = [v for v in self._violations if filt == "all" or v.severity == filt]
         if r < len(visible):
             return visible[r]
         return None
@@ -311,8 +305,7 @@ class ErcPanel(QWidget):
         if not v:
             return
         self._waivers.append(
-            ErcWaiver(rule=v.rule, component=v.component, pin=v.pin,
-                      reason="User waiver")
+            ErcWaiver(rule=v.rule, component=v.component, pin=v.pin, reason="User waiver")
         )
         v.waived = True
         self._refresh_table()
@@ -321,8 +314,8 @@ class ErcPanel(QWidget):
         if not self._checker:
             return
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export ERC Report", "erc_report.html",
-            "HTML (*.html)")
+            self, "Export ERC Report", "erc_report.html", "HTML (*.html)"
+        )
         if not path:
             return
         Path(path).write_text(self._checker.export_html(), encoding="utf-8")

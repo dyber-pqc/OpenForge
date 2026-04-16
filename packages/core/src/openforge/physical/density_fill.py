@@ -179,9 +179,7 @@ class DensityFiller:
                 if seg.layer.lower() != layer_l or len(seg.points) < 2:
                     continue
                 # default width from LEF (µm)
-                layer_lef = self.lib.layers.get(seg.layer) or self.lib.layers.get(
-                    seg.layer.lower()
-                )
+                layer_lef = self.lib.layers.get(seg.layer) or self.lib.layers.get(seg.layer.lower())
                 if seg.width > 0:
                     width_um = self.design.to_um(seg.width)
                 elif layer_lef and layer_lef.width > 0:
@@ -189,19 +187,12 @@ class DensityFiller:
                 else:
                     width_um = 0.14
                 half = width_um / 2.0
-                pts = [
-                    (self.design.to_um(x), self.design.to_um(y))
-                    for (x, y, _e) in seg.points
-                ]
+                pts = [(self.design.to_um(x), self.design.to_um(y)) for (x, y, _e) in seg.points]
                 for (x1, y1), (x2, y2) in zip(pts, pts[1:], strict=False):
                     if abs(x1 - x2) < 1e-9:  # vertical
-                        self._paint_rect(
-                            mask, x1 - half, min(y1, y2), x1 + half, max(y1, y2)
-                        )
+                        self._paint_rect(mask, x1 - half, min(y1, y2), x1 + half, max(y1, y2))
                     else:
-                        self._paint_rect(
-                            mask, min(x1, x2), y1 - half, max(x1, x2), y1 + half
-                        )
+                        self._paint_rect(mask, min(x1, x2), y1 - half, max(x1, x2), y1 + half)
 
         # 3. Special nets (PDN stripes) - paint them too
         for snet in self.design.special_nets.values():
@@ -210,19 +201,12 @@ class DensityFiller:
                     continue
                 w_um = self.design.to_um(seg.width) if seg.width > 0 else 1.6
                 half = w_um / 2.0
-                pts = [
-                    (self.design.to_um(x), self.design.to_um(y))
-                    for (x, y, _e) in seg.points
-                ]
+                pts = [(self.design.to_um(x), self.design.to_um(y)) for (x, y, _e) in seg.points]
                 for (x1, y1), (x2, y2) in zip(pts, pts[1:], strict=False):
                     if abs(x1 - x2) < 1e-9:
-                        self._paint_rect(
-                            mask, x1 - half, min(y1, y2), x1 + half, max(y1, y2)
-                        )
+                        self._paint_rect(mask, x1 - half, min(y1, y2), x1 + half, max(y1, y2))
                     else:
-                        self._paint_rect(
-                            mask, min(x1, x2), y1 - half, max(x1, x2), y1 + half
-                        )
+                        self._paint_rect(mask, min(x1, x2), y1 - half, max(x1, x2), y1 + half)
 
         return mask
 
@@ -316,13 +300,9 @@ class DensityFiller:
                         y_um = self._die_y1_um + jj * self.grid_pitch_um
                         self._inst_counter += 1
                         inst_name = f"FILLER_{layer}_{self._inst_counter}"
-                        self._fill_instances.append(
-                            (inst_name, fill_cell, x_um, y_um)
-                        )
+                        self._fill_instances.append((inst_name, fill_cell, x_um, y_um))
                         inserted += 1
-                        current_fill = float(
-                            halo_mask[j0:j1, i0:i1].mean()
-                        )
+                        current_fill = float(halo_mask[j0:j1, i0:i1].mean())
                     if current_fill >= target_density:
                         break
 

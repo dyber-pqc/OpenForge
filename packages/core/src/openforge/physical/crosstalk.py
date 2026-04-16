@@ -227,11 +227,7 @@ class CrosstalkAnalyzer:
             new_path.data_path = [copy.copy(s) for s in p.data_path]
             added_ns = 0.0
             for s in new_path.data_path:
-                net_guess = (
-                    s.pin_name.rsplit("/", 1)[0]
-                    if "/" in s.pin_name
-                    else s.pin_name
-                )
+                net_guess = s.pin_name.rsplit("/", 1)[0] if "/" in s.pin_name else s.pin_name
                 dd = net_delta.get(net_guess)
                 if dd:
                     s.delay_ns = float(s.delay_ns or 0.0) + dd / 1000.0

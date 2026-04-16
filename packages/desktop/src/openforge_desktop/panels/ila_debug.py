@@ -109,9 +109,7 @@ class IlaDebugPanel(QDockWidget):
         probes_box = QGroupBox("Probes")
         probes_layout = QVBoxLayout(probes_box)
 
-        self._hierarchy_hint = QLabel(
-            "Load probes from a hierarchy JSON, or add them manually."
-        )
+        self._hierarchy_hint = QLabel("Load probes from a hierarchy JSON, or add them manually.")
         probes_layout.addWidget(self._hierarchy_hint)
 
         load_row = QHBoxLayout()
@@ -130,9 +128,7 @@ class IlaDebugPanel(QDockWidget):
         self._probe_table = QTableWidget(0, 3)
         self._probe_table.setHorizontalHeaderLabels(["Probe", "Signal", "Width"])
         self._probe_table.horizontalHeader().setStretchLastSection(True)
-        self._probe_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self._probe_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         probes_layout.addWidget(self._probe_table)
         root.addWidget(probes_box)
 
@@ -140,12 +136,8 @@ class IlaDebugPanel(QDockWidget):
         trig_box = QGroupBox("Trigger Sequencer (up to 8 stages)")
         trig_layout = QVBoxLayout(trig_box)
         self._trigger_table = QTableWidget(0, 4)
-        self._trigger_table.setHorizontalHeaderLabels(
-            ["Probe", "Kind", "Value", "Count"]
-        )
-        self._trigger_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self._trigger_table.setHorizontalHeaderLabels(["Probe", "Kind", "Value", "Count"])
+        self._trigger_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         trig_layout.addWidget(self._trigger_table)
         trig_row = QHBoxLayout()
         self._add_stage_btn = QPushButton("Add Stage")
@@ -253,31 +245,31 @@ class IlaDebugPanel(QDockWidget):
         p = DARK_PALETTE
         self.setStyleSheet(
             f"""
-            QDockWidget {{ background: {getattr(p, 'surface0', '#1e1e2e')}; }}
+            QDockWidget {{ background: {getattr(p, "surface0", "#1e1e2e")}; }}
             QGroupBox {{
-                border: 1px solid {getattr(p, 'surface2', '#313244')};
+                border: 1px solid {getattr(p, "surface2", "#313244")};
                 border-radius: 6px;
                 margin-top: 10px;
                 padding: 6px;
-                color: {getattr(p, 'text', '#cdd6f4')};
+                color: {getattr(p, "text", "#cdd6f4")};
                 font-weight: 600;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 8px;
                 padding: 0 4px;
-                color: {getattr(p, 'blue', '#89b4fa')};
+                color: {getattr(p, "blue", "#89b4fa")};
             }}
             QPushButton {{
-                background: {getattr(p, 'surface1', '#45475a')};
-                color: {getattr(p, 'text', '#cdd6f4')};
-                border: 1px solid {getattr(p, 'surface2', '#585b70')};
+                background: {getattr(p, "surface1", "#45475a")};
+                color: {getattr(p, "text", "#cdd6f4")};
+                border: 1px solid {getattr(p, "surface2", "#585b70")};
                 border-radius: 4px;
                 padding: 4px 10px;
             }}
             QPushButton:hover {{
-                background: {getattr(p, 'blue', '#89b4fa')};
-                color: {getattr(p, 'base', '#1e1e2e')};
+                background: {getattr(p, "blue", "#89b4fa")};
+                color: {getattr(p, "base", "#1e1e2e")};
             }}
             """
         )
@@ -297,9 +289,7 @@ class IlaDebugPanel(QDockWidget):
     # ------------------------------------------------------------------
 
     def _on_load_hierarchy(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Load hierarchy JSON", "", "JSON (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Load hierarchy JSON", "", "JSON (*.json)")
         if not path:
             return
         try:
@@ -343,7 +333,9 @@ class IlaDebugPanel(QDockWidget):
         self._trigger_table.insertRow(row)
         self._trigger_table.setItem(row, 0, QTableWidgetItem("probe0"))
         kind_combo = QComboBox()
-        kind_combo.addItems([k.value for k in (TriggerKind or [])]) if TriggerKind else kind_combo.addItems(
+        kind_combo.addItems(
+            [k.value for k in (TriggerKind or [])]
+        ) if TriggerKind else kind_combo.addItems(
             [
                 "edge_rise",
                 "edge_fall",
@@ -405,9 +397,7 @@ class IlaDebugPanel(QDockWidget):
                 count = max(1, int(count_item.text()))
                 stages.append(
                     (
-                        TriggerCondition(
-                            probe=probe_item.text(), kind=kind, value=val
-                        ),
+                        TriggerCondition(probe=probe_item.text(), kind=kind, value=val),
                         count,
                     )
                 )
@@ -437,7 +427,11 @@ class IlaDebugPanel(QDockWidget):
         core = DebugCore(probes=probes, capture_depth=self._depth_spin.value())
         try:
             verilog = render_advanced_ila(
-                core, trig or TriggerSequence(stages=[]), mode, 4, vendor or IlaVendor.XILINX  # type: ignore[arg-type]
+                core,
+                trig or TriggerSequence(stages=[]),
+                mode,
+                4,
+                vendor or IlaVendor.XILINX,  # type: ignore[arg-type]
             )
         except Exception as exc:
             QMessageBox.warning(self, "ILA", f"Render failed: {exc}")
@@ -461,9 +455,7 @@ class IlaDebugPanel(QDockWidget):
             return
         adapter = JtagBridge.auto_detect()
         if adapter:
-            self._adapter_label.setText(
-                f"Adapter: {adapter.name} ({adapter.usb_id})"
-            )
+            self._adapter_label.setText(f"Adapter: {adapter.name} ({adapter.usb_id})")
             self._bridge = JtagBridge(adapter=adapter)
         else:
             self._adapter_label.setText("Adapter: none detected")
@@ -483,9 +475,7 @@ class IlaDebugPanel(QDockWidget):
             self._scan_list.addItem(f"(scan failed: {exc})")
             return
         for d in devs:
-            self._scan_list.addItem(
-                QListWidgetItem(f"{d.idcode_hex}  {d.name}  irlen={d.irlen}")
-            )
+            self._scan_list.addItem(QListWidgetItem(f"{d.idcode_hex}  {d.name}  irlen={d.irlen}"))
         if not devs:
             self._scan_list.addItem("(no devices)")
 
@@ -514,9 +504,7 @@ class IlaDebugPanel(QDockWidget):
         try:
             self._reader.arm()
             self._multi_shot_remaining = max(1, self._shots_spin.value())
-            self._log_msg(
-                f"Armed ({self._multi_shot_remaining} capture(s) queued)"
-            )
+            self._log_msg(f"Armed ({self._multi_shot_remaining} capture(s) queued)")
             self._status_timer.start()
         except Exception as exc:
             self._log_msg(f"Arm failed: {exc}")
@@ -554,9 +542,7 @@ class IlaDebugPanel(QDockWidget):
             f"armed={s['armed']} trig={s['triggered']} full={s['full']} "
             f"samples={s['sample_count']}/{depth}"
         )
-        self._progress.setValue(
-            int(100 * min(1.0, s["sample_count"] / max(1, depth)))
-        )
+        self._progress.setValue(int(100 * min(1.0, s["sample_count"] / max(1, depth))))
         if s["full"]:
             self._capture_to_vcd()
 

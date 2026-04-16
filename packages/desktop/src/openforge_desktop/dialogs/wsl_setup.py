@@ -199,8 +199,13 @@ def generate_setup_script() -> str:
 def generate_verify_script() -> str:
     """Return a bash script that calls --version on each tool."""
     tools = [
-        "yosys", "magic", "netgen", "klayout",
-        "iverilog", "verilator", "openroad",
+        "yosys",
+        "magic",
+        "netgen",
+        "klayout",
+        "iverilog",
+        "verilator",
+        "openroad",
     ]
     lines = ["#!/usr/bin/env bash", "set +e", ""]
     for tool in tools:
@@ -271,9 +276,7 @@ class WslSetupDialog(QDialog):
         body.addLayout(details, stretch=1)
 
         self._step_title = QLabel("")
-        self._step_title.setStyleSheet(
-            "font-size: 16px; font-weight: 700; color: #cdd6f4;"
-        )
+        self._step_title.setStyleSheet("font-size: 16px; font-weight: 700; color: #cdd6f4;")
         details.addWidget(self._step_title)
 
         self._step_desc = QLabel("")
@@ -387,9 +390,7 @@ class WslSetupDialog(QDialog):
 
     def _run_current(self) -> None:
         if not self._is_windows():
-            self._append_log(
-                "[warn] Not running on Windows; this wizard is a no-op on this OS."
-            )
+            self._append_log("[warn] Not running on Windows; this wizard is a no-op on this OS.")
             self._steps[self._current].success = True
             self._refresh()
             return
@@ -421,9 +422,7 @@ class WslSetupDialog(QDialog):
         step.success = ok
         step.output = output
         self._append_log("")
-        self._append_log(
-            "[ok] step succeeded" if ok else "[error] step failed; you can Retry"
-        )
+        self._append_log("[ok] step succeeded" if ok else "[error] step failed; you can Retry")
         if self._thread is not None:
             self._thread.quit()
             self._thread.wait(1000)

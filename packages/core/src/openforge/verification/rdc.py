@@ -67,10 +67,7 @@ class RdcAnalyzer:
                     continue
                 conns = cdata.get("connections", {})
                 rst_bits = (
-                    conns.get("R")
-                    or conns.get("RST")
-                    or conns.get("CLR")
-                    or conns.get("PRE")
+                    conns.get("R") or conns.get("RST") or conns.get("CLR") or conns.get("PRE")
                 )
                 if not rst_bits:
                     continue
@@ -80,9 +77,7 @@ class RdcAnalyzer:
         self._domains = [
             ResetDomain(
                 name=name,
-                polarity=(
-                    "active_low" if self._ACTIVE_LOW_RE.search(name) else "active_high"
-                ),
+                polarity=("active_low" if self._ACTIVE_LOW_RE.search(name) else "active_high"),
                 sync=("async" if self._ASYNC_RE.search(name) else "sync"),
                 source=name,
             )
@@ -108,10 +103,7 @@ class RdcAnalyzer:
                     continue
                 conns = cdata.get("connections", {})
                 rst_bits = (
-                    conns.get("R")
-                    or conns.get("RST")
-                    or conns.get("CLR")
-                    or conns.get("PRE")
+                    conns.get("R") or conns.get("RST") or conns.get("CLR") or conns.get("PRE")
                 )
                 if not rst_bits:
                     continue
@@ -132,12 +124,8 @@ class RdcAnalyzer:
                     if not src_rst or src_rst == dst_rst:
                         continue
                     if any(b in q_bits for b in d_bits):
-                        src_dom = next(
-                            (d for d in self._domains if d.name == src_rst), None
-                        )
-                        dst_dom = next(
-                            (d for d in self._domains if d.name == dst_rst), None
-                        )
+                        src_dom = next((d for d in self._domains if d.name == src_rst), None)
+                        dst_dom = next((d for d in self._domains if d.name == dst_rst), None)
                         kind = "no_isolation"
                         if src_dom and dst_dom and src_dom.polarity != dst_dom.polarity:
                             kind = "shared_polarity_mismatch"
@@ -168,9 +156,7 @@ class RdcAnalyzer:
             return
         with tempfile.TemporaryDirectory() as td:
             out_json = Path(td) / "netlist.json"
-            reads = "; ".join(
-                f"read_verilog -sv {str(p).replace(chr(92), '/')}" for p in self._rtl
-            )
+            reads = "; ".join(f"read_verilog -sv {str(p).replace(chr(92), '/')}" for p in self._rtl)
             script = (
                 f"{reads}; hierarchy -top {self._top}; proc; flatten; "
                 f"write_json {str(out_json).replace(chr(92), '/')}"

@@ -133,8 +133,9 @@ class DefComponent:
     @property
     def is_buffer(self) -> bool:
         m = self.macro.lower()
-        return ("__buf" in m or "_buf_" in m or "clkbuf" in m
-                or "__clkbuf" in m or "__clkdlybuf" in m)
+        return (
+            "__buf" in m or "_buf_" in m or "clkbuf" in m or "__clkbuf" in m or "__clkdlybuf" in m
+        )
 
     @property
     def is_inverter(self) -> bool:
@@ -144,9 +145,17 @@ class DefComponent:
     @property
     def is_flop(self) -> bool:
         m = self.macro.lower()
-        return ("_dff" in m or "_ff_" in m or "_dfb" in m or "_dfx" in m
-                or "_dfr" in m or "_dlrtp" in m or "_dlxtp" in m
-                or "sdff" in m or "edff" in m)
+        return (
+            "_dff" in m
+            or "_ff_" in m
+            or "_dfb" in m
+            or "_dfx" in m
+            or "_dfr" in m
+            or "_dlrtp" in m
+            or "_dlxtp" in m
+            or "sdff" in m
+            or "edff" in m
+        )
 
     @property
     def is_latch(self) -> bool:
@@ -162,8 +171,7 @@ class DefComponent:
     def is_macro(self) -> bool:
         """Heuristic: cell sized > 50 um wide is probably a hard macro."""
         m = self.macro.lower()
-        return ("sram" in m or "ram_" in m or "rom_" in m or "pll" in m
-                or "_macro" in m)
+        return "sram" in m or "ram_" in m or "rom_" in m or "pll" in m or "_macro" in m
 
     @property
     def is_placed(self) -> bool:
@@ -203,7 +211,7 @@ class DefRouteSegment:
     # (x, y, ext) in db units
     via: str = ""  # via cell name if this segment ends in a via
     width: float = 0  # 0 = use default for layer
-    style: int = 0   # SHAPE: 0 = default, others = STRIPE/IOWIRE/COREWIRE...
+    style: int = 0  # SHAPE: 0 = default, others = STRIPE/IOWIRE/COREWIRE...
     shape: str = ""  # STRIPE / RING / FOLLOWPIN / IOWIRE / COREWIRE / BLOCKWIRE
     mask: int = 0
     is_via_only: bool = False
@@ -364,13 +372,14 @@ class DefDesign:
     # ----- Region queries ------------------------------------------------
 
     def cells_in_region(
-        self, x1: float, y1: float, x2: float, y2: float,
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
     ) -> list[DefComponent]:
         """Return all components whose origin is inside a rectangle (db units)."""
-        return [
-            c for c in self.components.values()
-            if x1 <= c.x <= x2 and y1 <= c.y <= y2
-        ]
+        return [c for c in self.components.values() if x1 <= c.x <= x2 and y1 <= c.y <= y2]
 
     def find_cells_by_macro(self, macro_pattern: str) -> list[DefComponent]:
         """Return components whose macro name matches a substring."""
@@ -401,7 +410,8 @@ class DefDesign:
     # ----- Density heatmap ----------------------------------------------
 
     def density_heatmap(
-        self, grid_size_um: float = 5.0,
+        self,
+        grid_size_um: float = 5.0,
     ) -> tuple[list[list[float]], int, int]:
         """Compute placement density as a 2D grid normalised to 0..1.
 
@@ -430,7 +440,8 @@ class DefDesign:
         return grid, n_cols, n_rows
 
     def congestion_heatmap(
-        self, grid_size_um: float = 5.0,
+        self,
+        grid_size_um: float = 5.0,
     ) -> tuple[list[list[float]], int, int]:
         """Compute a routing congestion heatmap from the parsed routes.
 
@@ -473,82 +484,84 @@ class DefDesign:
 # Pre-compiled patterns. Compiling once at module import time saves a few
 # milliseconds per file and makes hot loops on multi-MB DEF dumps much faster.
 
-_RE_DESIGN = re.compile(r'^\s*DESIGN\s+(\S+)\s*;', re.MULTILINE)
-_RE_VERSION = re.compile(r'^\s*VERSION\s+(\S+)\s*;', re.MULTILINE)
+_RE_DESIGN = re.compile(r"^\s*DESIGN\s+(\S+)\s*;", re.MULTILINE)
+_RE_VERSION = re.compile(r"^\s*VERSION\s+(\S+)\s*;", re.MULTILINE)
 _RE_DIVIDER = re.compile(r'^\s*DIVIDERCHAR\s+"([^"]+)"\s*;', re.MULTILINE)
 _RE_BUSBIT = re.compile(r'^\s*BUSBITCHARS\s+"([^"]+)"\s*;', re.MULTILINE)
 _RE_UNITS = re.compile(
-    r'^\s*UNITS\s+DISTANCE\s+MICRONS\s+(\d+)\s*;', re.MULTILINE,
+    r"^\s*UNITS\s+DISTANCE\s+MICRONS\s+(\d+)\s*;",
+    re.MULTILINE,
 )
 _RE_DIEAREA = re.compile(
-    r'^\s*DIEAREA\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)',
+    r"^\s*DIEAREA\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)",
     re.MULTILINE,
 )
 _RE_ROW = re.compile(
-    r'ROW\s+(\S+)\s+(\S+)\s+(-?\d+)\s+(-?\d+)\s+(\w+)'
-    r'(?:\s+DO\s+(\d+)\s+BY\s+(\d+)\s+STEP\s+(\d+)\s+(\d+))?\s*;'
+    r"ROW\s+(\S+)\s+(\S+)\s+(-?\d+)\s+(-?\d+)\s+(\w+)"
+    r"(?:\s+DO\s+(\d+)\s+BY\s+(\d+)\s+STEP\s+(\d+)\s+(\d+))?\s*;"
 )
 _RE_TRACK = re.compile(
-    r'TRACKS\s+(\w+)\s+(\d+)\s+DO\s+(\d+)\s+STEP\s+(\d+)\s+LAYER\s+([\w\s]+?)\s*;'
+    r"TRACKS\s+(\w+)\s+(\d+)\s+DO\s+(\d+)\s+STEP\s+(\d+)\s+LAYER\s+([\w\s]+?)\s*;"
 )
 _RE_COMPONENTS_BLOCK = re.compile(
-    r'COMPONENTS\s+\d+\s*;(.*?)END\s+COMPONENTS', re.DOTALL,
+    r"COMPONENTS\s+\d+\s*;(.*?)END\s+COMPONENTS",
+    re.DOTALL,
 )
-_RE_PINS_BLOCK = re.compile(r'PINS\s+\d+\s*;(.*?)END\s+PINS', re.DOTALL)
+_RE_PINS_BLOCK = re.compile(r"PINS\s+\d+\s*;(.*?)END\s+PINS", re.DOTALL)
 _RE_NETS_BLOCK = re.compile(
-    r'^NETS\s+\d+\s*;(.*?)END\s+NETS', re.DOTALL | re.MULTILINE,
+    r"^NETS\s+\d+\s*;(.*?)END\s+NETS",
+    re.DOTALL | re.MULTILINE,
 )
 _RE_SPECNETS_BLOCK = re.compile(
-    r'SPECIALNETS\s+\d+\s*;(.*?)END\s+SPECIALNETS', re.DOTALL,
+    r"SPECIALNETS\s+\d+\s*;(.*?)END\s+SPECIALNETS",
+    re.DOTALL,
 )
 
 # A component record is "- <inst> <macro> [+ STATUS ( x y ) orient] [+ SOURCE x] ;"
 _RE_COMPONENT = re.compile(
-    r'-\s+(\S+)\s+(\S+)'
-    r'(?:.*?\+\s+(PLACED|FIXED|COVER|UNPLACED)'
-    r'(?:\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+(\w+))?)?'
-    r'(?:.*?\+\s+SOURCE\s+(\w+))?'
-    r'\s*;',
+    r"-\s+(\S+)\s+(\S+)"
+    r"(?:.*?\+\s+(PLACED|FIXED|COVER|UNPLACED)"
+    r"(?:\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+(\w+))?)?"
+    r"(?:.*?\+\s+SOURCE\s+(\w+))?"
+    r"\s*;",
     re.DOTALL,
 )
 
 # A pin record. The body of the pin (between "-" and ";") may span lines.
 _RE_PIN = re.compile(
-    r'-\s+(\S+)\s+\+\s+NET\s+(\S+)(.*?);',
+    r"-\s+(\S+)\s+\+\s+NET\s+(\S+)(.*?);",
     re.DOTALL,
 )
-_RE_PIN_DIR = re.compile(r'\+\s+DIRECTION\s+(\w+)')
-_RE_PIN_USE = re.compile(r'\+\s+USE\s+(\w+)')
+_RE_PIN_DIR = re.compile(r"\+\s+DIRECTION\s+(\w+)")
+_RE_PIN_USE = re.compile(r"\+\s+USE\s+(\w+)")
 _RE_PIN_LAYER = re.compile(
-    r'\+\s+LAYER\s+(\w+)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)'
+    r"\+\s+LAYER\s+(\w+)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)"
 )
-_RE_PIN_PLACED = re.compile(
-    r'\+\s+(?:PLACED|FIXED|COVER)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+(\w+)'
-)
+_RE_PIN_PLACED = re.compile(r"\+\s+(?:PLACED|FIXED|COVER)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+(\w+)")
 
 # Net record.
-_RE_NET = re.compile(r'-\s+(\S+)\s+(.*?);', re.DOTALL)
-_RE_NET_CONN = re.compile(r'\(\s*(\S+)\s+(\S+)\s*\)')
-_RE_NET_USE = re.compile(r'\+\s+USE\s+(\w+)')
-_RE_NET_SOURCE = re.compile(r'\+\s+SOURCE\s+(\w+)')
+_RE_NET = re.compile(r"-\s+(\S+)\s+(.*?);", re.DOTALL)
+_RE_NET_CONN = re.compile(r"\(\s*(\S+)\s+(\S+)\s*\)")
+_RE_NET_USE = re.compile(r"\+\s+USE\s+(\w+)")
+_RE_NET_SOURCE = re.compile(r"\+\s+SOURCE\s+(\w+)")
 
 # A ROUTED / NEW segment: layer + sequence of points and via tokens.
 _RE_ROUTE = re.compile(
-    r'(?:\+\s+ROUTED|\+\s+FIXED|NEW)\s+(\w+)'
-    r'((?:\s+\(\s*[-*\d]+\s+[-*\d]+(?:\s+-?\d+)?\s*\)|\s+[a-zA-Z_]\w*)+)'
+    r"(?:\+\s+ROUTED|\+\s+FIXED|NEW)\s+(\w+)"
+    r"((?:\s+\(\s*[-*\d]+\s+[-*\d]+(?:\s+-?\d+)?\s*\)|\s+[a-zA-Z_]\w*)+)"
 )
 # Optional SHAPE keyword for SPECIALNETS routes.
 _RE_ROUTE_SHAPE = re.compile(
-    r'(?:\+\s+ROUTED|NEW)\s+(\w+)\s+(\d+)(?:\s+\+\s+SHAPE\s+(\w+))?'
-    r'((?:\s+\(\s*[-*\d]+\s+[-*\d]+(?:\s+-?\d+)?\s*\)|\s+[a-zA-Z_]\w*)+)'
+    r"(?:\+\s+ROUTED|NEW)\s+(\w+)\s+(\d+)(?:\s+\+\s+SHAPE\s+(\w+))?"
+    r"((?:\s+\(\s*[-*\d]+\s+[-*\d]+(?:\s+-?\d+)?\s*\)|\s+[a-zA-Z_]\w*)+)"
 )
-_RE_POINT = re.compile(
-    r'\(\s*([-*\d]+)\s+([-*\d]+)(?:\s+(-?\d+))?\s*\)'
-)
+_RE_POINT = re.compile(r"\(\s*([-*\d]+)\s+([-*\d]+)(?:\s+(-?\d+))?\s*\)")
 
 
 def _parse_route_points(
-    pts_str: str, last_x: float = 0.0, last_y: float = 0.0,
+    pts_str: str,
+    last_x: float = 0.0,
+    last_y: float = 0.0,
 ) -> tuple[list[tuple[float, float, float]], str]:
     """Parse the point/via list of a ROUTED segment.
 
@@ -575,7 +588,7 @@ def _parse_route_points(
             continue
         # Otherwise it might be a via cell name (alphanumeric token)
         ws = pos
-        while ws < len(pts_str) and not pts_str[ws].isspace() and pts_str[ws] != '(':
+        while ws < len(pts_str) and not pts_str[ws].isspace() and pts_str[ws] != "(":
             ws += 1
         token = pts_str[pos:ws].strip()
         if token and token[0].isalpha():
@@ -655,8 +668,10 @@ def _parse_header(text: str, design: DefDesign) -> None:
     m = _RE_DIEAREA.search(text)
     if m:
         design.die_area = DefRect(
-            float(m.group(1)), float(m.group(2)),
-            float(m.group(3)), float(m.group(4)),
+            float(m.group(1)),
+            float(m.group(2)),
+            float(m.group(3)),
+            float(m.group(4)),
         )
 
 
@@ -705,15 +720,15 @@ def _parse_components(text: str, design: DefDesign) -> None:
 
     # Iterate by splitting on the leading "-" so multi-line component records
     # work even when they wrap. We re-add the dash before parsing.
-    for chunk in re.split(r'(?m)^\s*-\s+', body):
+    for chunk in re.split(r"(?m)^\s*-\s+", body):
         chunk = chunk.strip()
         if not chunk:
             continue
         # Stop at the trailing semicolon
-        end = chunk.find(';')
+        end = chunk.find(";")
         if end < 0:
             continue
-        record = '- ' + chunk[:end + 1]
+        record = "- " + chunk[: end + 1]
         m = _RE_COMPONENT.match(record)
         if not m:
             continue
@@ -755,8 +770,10 @@ def _parse_pins(text: str, design: DefDesign) -> None:
         if layer_m:
             pin.layer = layer_m.group(1)
             pin.layer_rect = DefRect(
-                float(layer_m.group(2)), float(layer_m.group(3)),
-                float(layer_m.group(4)), float(layer_m.group(5)),
+                float(layer_m.group(2)),
+                float(layer_m.group(3)),
+                float(layer_m.group(4)),
+                float(layer_m.group(5)),
             )
 
         placed_m = _RE_PIN_PLACED.search(extras)
@@ -777,20 +794,20 @@ def _parse_nets(text: str, design: DefDesign) -> None:
     body = block.group(1)
 
     # Split on leading "- " at line start to grab one net record per chunk.
-    for chunk in re.split(r'(?m)^\s*-\s+', body):
+    for chunk in re.split(r"(?m)^\s*-\s+", body):
         chunk = chunk.strip()
         if not chunk:
             continue
-        end = chunk.find(';')
+        end = chunk.find(";")
         if end < 0:
             continue
         record = chunk[:end]
         # First token is the net name.
-        first_ws = re.search(r'\s', record)
+        first_ws = re.search(r"\s", record)
         if not first_ws:
             continue
-        net_name = record[:first_ws.start()]
-        rest = record[first_ws.end():]
+        net_name = record[: first_ws.start()]
+        rest = record[first_ws.end() :]
 
         net = DefNet(name=net_name)
 
@@ -822,13 +839,21 @@ def _parse_net_routes(record: str, net: DefNet) -> None:
         points, via = _parse_route_points(pts_str)
         if not points:
             # Pure via segment with no coordinates: still record it.
-            net.routes.append(DefRouteSegment(
-                layer=layer, via=via, is_via_only=True,
-            ))
+            net.routes.append(
+                DefRouteSegment(
+                    layer=layer,
+                    via=via,
+                    is_via_only=True,
+                )
+            )
             continue
-        net.routes.append(DefRouteSegment(
-            layer=layer, points=points, via=via,
-        ))
+        net.routes.append(
+            DefRouteSegment(
+                layer=layer,
+                points=points,
+                via=via,
+            )
+        )
 
 
 def _parse_special_nets(text: str, design: DefDesign) -> None:
@@ -838,19 +863,19 @@ def _parse_special_nets(text: str, design: DefDesign) -> None:
         return
     body = block.group(1)
 
-    for chunk in re.split(r'(?m)^\s*-\s+', body):
+    for chunk in re.split(r"(?m)^\s*-\s+", body):
         chunk = chunk.strip()
         if not chunk:
             continue
-        end = chunk.find(';')
+        end = chunk.find(";")
         if end < 0:
             continue
         record = chunk[:end]
-        first_ws = re.search(r'\s', record)
+        first_ws = re.search(r"\s", record)
         if not first_ws:
             continue
-        net_name = record[:first_ws.start()]
-        rest = record[first_ws.end():]
+        net_name = record[: first_ws.start()]
+        rest = record[first_ws.end() :]
 
         net = DefNet(name=net_name, is_special=True)
 
@@ -873,10 +898,15 @@ def _parse_special_nets(text: str, design: DefDesign) -> None:
             shape = m.group(3) or ""
             pts_str = m.group(4) or ""
             points, via = _parse_route_points(pts_str)
-            net.routes.append(DefRouteSegment(
-                layer=layer, points=points, via=via,
-                width=width, shape=shape,
-            ))
+            net.routes.append(
+                DefRouteSegment(
+                    layer=layer,
+                    points=points,
+                    via=via,
+                    width=width,
+                    shape=shape,
+                )
+            )
 
         design.special_nets[net_name] = net
 

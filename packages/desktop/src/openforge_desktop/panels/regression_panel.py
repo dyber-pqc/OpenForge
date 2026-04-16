@@ -516,6 +516,7 @@ class RegressionPanel(QDockWidget):
             self._launch_worker([test])
         elif chosen is act_run_seed and test is not None:
             from random import randint
+
             self._launch_worker([test.with_seed(randint(1, 2**31 - 1))])
         elif chosen is act_log and result is not None and result.artifact_dir is not None:
             self.open_log_requested.emit(str(result.artifact_dir / "test.log"))
@@ -523,6 +524,7 @@ class RegressionPanel(QDockWidget):
             self.open_waveform_requested.emit(str(result.waveform))
         elif chosen is act_copy and test is not None:
             from PySide6.QtWidgets import QApplication
+
             cmd = "iverilog -g2012 " + " ".join(str(s) for s in test.sources)
             QApplication.clipboard().setText(cmd)
 
@@ -592,9 +594,7 @@ class RegressionPanel(QDockWidget):
         item.setText(self.COL_STATUS, f"{icon} {status}")
         item.setForeground(self.COL_STATUS, QBrush(color))
         item.setText(self.COL_DURATION, f"{duration:.2f}s" if duration else "")
-        item.setText(
-            self.COL_COVERAGE, f"{coverage:.1f}%" if coverage is not None else ""
-        )
+        item.setText(self.COL_COVERAGE, f"{coverage:.1f}%" if coverage is not None else "")
 
     def _find_item(self, name: str) -> QTreeWidgetItem | None:
         def walk(parent: QTreeWidgetItem) -> QTreeWidgetItem | None:
@@ -717,9 +717,7 @@ class RegressionPanel(QDockWidget):
         spark = "".join(glyphs.get(s, " ") for s in history)
         passed = sum(1 for s in history if s == "passed")
         rate = (passed / len(history) * 100.0) if history else 0.0
-        self.plot_view.setPlainText(
-            f"{spark}\n\nLast {len(history)} runs, pass rate {rate:.1f}%"
-        )
+        self.plot_view.setPlainText(f"{spark}\n\nLast {len(history)} runs, pass rate {rate:.1f}%")
 
     # ------------------------------------------------------------------
     # Stats
@@ -731,9 +729,7 @@ class RegressionPanel(QDockWidget):
         failed = sum(1 for r in results if r.status == "failed")
         errors = sum(1 for r in results if r.status in ("error", "timeout"))
         skipped = sum(1 for r in results if r.status == "skipped")
-        cov_vals = [
-            r.coverage.overall_pct for r in results if r.coverage is not None
-        ]
+        cov_vals = [r.coverage.overall_pct for r in results if r.coverage is not None]
         cov_text = "\u2014"
         if cov_vals:
             cov_text = f"{sum(cov_vals) / len(cov_vals):.1f}%"

@@ -95,7 +95,7 @@ class _VtBarChart(QWidget):
                 rect.width(),
                 bar_h - 4,
                 Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-                f"{vt}: {count} ({frac*100:.1f}%)",
+                f"{vt}: {count} ({frac * 100:.1f}%)",
             )
             y += bar_h
 
@@ -167,7 +167,7 @@ class MultiVtPanel(QDockWidget):
         self._target_speed.setValue(0)
         self._target_speed_label = QLabel("0.000 ns")
         self._target_speed.valueChanged.connect(
-            lambda v: self._target_speed_label.setText(f"{v/1000.0:+.3f} ns")
+            lambda v: self._target_speed_label.setText(f"{v / 1000.0:+.3f} ns")
         )
         speed_row = QHBoxLayout()
         speed_row.addWidget(self._target_speed)
@@ -188,9 +188,7 @@ class MultiVtPanel(QDockWidget):
         self._diff_table.setHorizontalHeaderLabels(
             ["Instance", "Before", "After", "Slack impact", "Leakage impact"]
         )
-        self._diff_table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
+        self._diff_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         rl.addWidget(self._diff_table)
         self._summary = QLabel("No optimization run yet.")
         self._summary.setStyleSheet(f"color: {_SUBTLE};")
@@ -254,7 +252,7 @@ class MultiVtPanel(QDockWidget):
         for row in range(self._heatmap.rowCount()):
             for col in range(self._heatmap.columnCount()):
                 val = rng.random()
-                cell = QTableWidgetItem(f"{val*10:.1f} pW")
+                cell = QTableWidgetItem(f"{val * 10:.1f} pW")
                 r = int(255 * val)
                 cell.setBackground(QBrush(QColor(r, 40, 120 - int(80 * val))))
                 cell.setForeground(QBrush(QColor(_TEXT)))
@@ -294,9 +292,7 @@ class MultiVtPanel(QDockWidget):
         self._diff_table.setRowCount(0)
         for row, cmd in enumerate(script.commands):
             self._diff_table.insertRow(row)
-            self._diff_table.setItem(
-                row, 0, QTableWidgetItem(cmd.target_inst or "-")
-            )
+            self._diff_table.setItem(row, 0, QTableWidgetItem(cmd.target_inst or "-"))
             # Try to look up the original cell from the optimizer map
             before = "-"
             if self._optimizer is not None and cmd.target_inst:
@@ -304,16 +300,12 @@ class MultiVtPanel(QDockWidget):
                     cmd.target_inst, "-"
                 )
             self._diff_table.setItem(row, 1, QTableWidgetItem(before))
-            self._diff_table.setItem(
-                row, 2, QTableWidgetItem(cmd.new_cell or "-")
-            )
+            self._diff_table.setItem(row, 2, QTableWidgetItem(cmd.new_cell or "-"))
             slack_impact = "-"
             if cmd.slack_before_ns is not None and cmd.slack_after_ns is not None:
                 slack_impact = f"{cmd.slack_after_ns - cmd.slack_before_ns:+.3f}"
             self._diff_table.setItem(row, 3, QTableWidgetItem(slack_impact))
-            self._diff_table.setItem(
-                row, 4, QTableWidgetItem(cmd.notes or "")
-            )
+            self._diff_table.setItem(row, 4, QTableWidgetItem(cmd.notes or ""))
 
     def _emit_script(self) -> None:
         if self._last_script is None:

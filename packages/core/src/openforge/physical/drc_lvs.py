@@ -77,13 +77,15 @@ def _parse_drc_output(text: str) -> list[DRCViolation]:
         text,
         re.IGNORECASE,
     ):
-        violations.append(DRCViolation(
-            rule=m.group(1),
-            message=m.group(0).strip(),
-            x=float(m.group(2)),
-            y=float(m.group(3)),
-            layer=m.group(4) or "",
-        ))
+        violations.append(
+            DRCViolation(
+                rule=m.group(1),
+                message=m.group(0).strip(),
+                x=float(m.group(2)),
+                y=float(m.group(3)),
+                layer=m.group(4) or "",
+            )
+        )
 
     # Pattern 2: grouped "drc listall why" output
     # Format: "<rule description>\n  (<x1> <y1> <x2> <y2>)\n ..."
@@ -104,12 +106,14 @@ def _parse_drc_output(text: str) -> list[DRCViolation]:
             if coord_match:
                 x = (float(coord_match.group(1)) + float(coord_match.group(3))) / 2
                 y = (float(coord_match.group(2)) + float(coord_match.group(4))) / 2
-                violations.append(DRCViolation(
-                    rule=rule_line,
-                    message=rule_line,
-                    x=x,
-                    y=y,
-                ))
+                violations.append(
+                    DRCViolation(
+                        rule=rule_line,
+                        message=rule_line,
+                        x=x,
+                        y=y,
+                    )
+                )
 
     return violations
 

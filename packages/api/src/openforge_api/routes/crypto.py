@@ -32,6 +32,7 @@ _security_scores: dict[UUID, SecurityScore] = {}
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _create_crypto_job(
     body: CryptoAnalysisRequest,
     analysis_type: CryptoAnalysisType,
@@ -52,6 +53,7 @@ def _create_crypto_job(
 # ---------------------------------------------------------------------------
 # Analysis endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/constant-time", response_model=JobBase, status_code=status.HTTP_202_ACCEPTED)
 async def run_constant_time_analysis(body: CryptoAnalysisRequest) -> JobBase:
@@ -92,6 +94,7 @@ async def run_ntt_validation(body: CryptoAnalysisRequest) -> JobBase:
 # ---------------------------------------------------------------------------
 # Result retrieval
 # ---------------------------------------------------------------------------
+
 
 @router.get("/{job_id}", response_model=CryptoAnalysisResult)
 async def get_crypto_result(job_id: UUID) -> CryptoAnalysisResult:

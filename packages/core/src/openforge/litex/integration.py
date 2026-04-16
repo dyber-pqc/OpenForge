@@ -59,9 +59,7 @@ SUPPORTED_BOARDS: dict[str, LiteXBoardInfo] = {
         "bin",
         "tinyfpga_bx",
     ),
-    "fomu": LiteXBoardInfo(
-        "fomu", "litex_boards.targets.fomu", "vexriscv", 12, "bin", "fomu"
-    ),
+    "fomu": LiteXBoardInfo("fomu", "litex_boards.targets.fomu", "vexriscv", 12, "bin", "fomu"),
     "ulx3s": LiteXBoardInfo(
         "ulx3s", "litex_boards.targets.radiona_ulx3s", "vexriscv", 50, "bit", "ulx3s"
     ),
@@ -201,8 +199,7 @@ class LiteXBuilder:
     ) -> None:
         if board_name not in SUPPORTED_BOARDS:
             raise ValueError(
-                f"Unsupported LiteX board: {board_name!r}. "
-                f"Supported: {sorted(SUPPORTED_BOARDS)}"
+                f"Unsupported LiteX board: {board_name!r}. Supported: {sorted(SUPPORTED_BOARDS)}"
             )
         self.board_name = board_name
         self.board_info = SUPPORTED_BOARDS[board_name]
@@ -316,9 +313,7 @@ class LiteXBuilder:
         cmd.append(str(bit_path))
         start = time.monotonic()
         try:
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=timeout
-            )
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
             return ToolResult(
                 returncode=proc.returncode,
                 stdout=proc.stdout,

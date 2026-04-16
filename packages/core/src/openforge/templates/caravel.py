@@ -15,6 +15,7 @@ official ``caravel_user_project`` repository layout:
 The wrapper Verilog matches the official Caravel user_project_wrapper
 interface (38-bit io, 128-bit logic analyzer, wishbone slave, 3 IRQs).
 """
+
 from __future__ import annotations
 
 import json
@@ -284,6 +285,7 @@ The wrapper matches the official Caravel ``user_project_wrapper`` pinout:
 # ---------------------------------------------------------------------------
 # Generator
 # ---------------------------------------------------------------------------
+
 
 def _format_verilog(module: str, cfg: CaravelConfig) -> str:
     return _USER_MODULE_TMPL.format(

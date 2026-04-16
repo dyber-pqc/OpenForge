@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 # Status indicator
 # ---------------------------------------------------------------------------
 
+
 class StepStatus(Enum):
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
@@ -35,10 +36,10 @@ class StepStatus(Enum):
 
 
 _STATUS_COLORS: dict[StepStatus, str] = {
-    StepStatus.NOT_STARTED: "#585b70",   # gray (surface2)
-    StepStatus.IN_PROGRESS: "#89b4fa",   # blue
-    StepStatus.COMPLETED: "#a6e3a1",     # green
-    StepStatus.ERROR: "#f38ba8",         # red
+    StepStatus.NOT_STARTED: "#585b70",  # gray (surface2)
+    StepStatus.IN_PROGRESS: "#89b4fa",  # blue
+    StepStatus.COMPLETED: "#a6e3a1",  # green
+    StepStatus.ERROR: "#f38ba8",  # red
 }
 
 
@@ -58,6 +59,7 @@ def _make_dot_icon(color_hex: str, size: int = 12) -> QIcon:
 # ---------------------------------------------------------------------------
 # Individual flow item (clickable label with status dot)
 # ---------------------------------------------------------------------------
+
 
 class _FlowItem(QWidget):
     """A single clickable item inside a flow section."""
@@ -139,13 +141,16 @@ class _FlowItem(QWidget):
 # Collapsible section header + children
 # ---------------------------------------------------------------------------
 
+
 class _FlowSection(QWidget):
     """A collapsible section with a header and a list of flow items."""
 
     action_requested = Signal(str)
     run_from_requested = Signal(str)
 
-    def __init__(self, title: str, items: list[tuple[str, str]], parent: QWidget | None = None) -> None:
+    def __init__(
+        self, title: str, items: list[tuple[str, str]], parent: QWidget | None = None
+    ) -> None:
         super().__init__(parent)
         self._expanded = True
         self._items: list[_FlowItem] = []
@@ -158,14 +163,12 @@ class _FlowSection(QWidget):
         self._header = QWidget()
         self._header.setFixedHeight(28)
         self._header.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._header.setStyleSheet(
-            "background-color: #181825;"
-        )
+        self._header.setStyleSheet("background-color: #181825;")
         hdr_layout = QHBoxLayout(self._header)
         hdr_layout.setContentsMargins(8, 0, 8, 0)
         hdr_layout.setSpacing(6)
 
-        self._arrow = QLabel("\u25BC")  # down arrow
+        self._arrow = QLabel("\u25bc")  # down arrow
         self._arrow.setFixedWidth(14)
         self._arrow.setStyleSheet("color: #89b4fa; background: transparent;")
         hdr_layout.addWidget(self._arrow)
@@ -202,7 +205,7 @@ class _FlowSection(QWidget):
     def _toggle(self, event: Any = None) -> None:
         self._expanded = not self._expanded
         self._content.setVisible(self._expanded)
-        self._arrow.setText("\u25BC" if self._expanded else "\u25B6")
+        self._arrow.setText("\u25bc" if self._expanded else "\u25b6")
 
     def items(self) -> list[_FlowItem]:
         return list(self._items)
@@ -213,59 +216,87 @@ class _FlowSection(QWidget):
 # ---------------------------------------------------------------------------
 
 _FLOW_SECTIONS: list[tuple[str, list[tuple[str, str]]]] = [
-    ("RUN FULL FLOW", [
-        ("\u25b6 Run Full Flow (RTL\u2192GDS)", "run_full_flow"),
-    ]),
-    ("PROJECT MANAGER", [
-        ("Open Project", "open_project"),
-        ("Project Settings", "project_settings"),
-        ("Close Project", "close_project"),
-    ]),
-    ("IP INTEGRATOR", [
-        ("IP Catalog", "ip_catalog"),
-        ("Create Block Design", "create_block_design"),
-        ("Generate Output Products", "generate_output_products"),
-    ]),
-    ("RTL ANALYSIS", [
-        ("Run Synthesis", "synth_design"),
-        ("Open Elaborated Design", "open_elaborated_design"),
-        ("Lint Check", "lint_check"),
-    ]),
-    ("SYNTHESIS", [
-        ("Run Synthesis (Yosys)", "synth_design"),
-        ("Open Synthesized Design", "open_synthesized_design"),
-        ("View Reports", "view_synth_reports"),
-        ("Schematic", "view_schematic"),
-    ]),
-    ("IMPLEMENTATION", [
-        ("Run Placement", "run_placement"),
-        ("Run CTS", "run_cts"),
-        ("Run Routing", "run_routing"),
-        ("Open Implemented Design", "open_implemented_design"),
-        ("View Reports", "view_impl_reports"),
-    ]),
-    ("TIMING ANALYSIS", [
-        ("Run STA", "run_sta"),
-        ("Timing Summary", "timing_summary"),
-        ("Constraint Editor", "constraint_editor"),
-    ]),
-    ("SIMULATION", [
-        ("Run Simulation", "run_simulation"),
-        ("Run Formal Verification", "run_formal"),
-        ("View Waveforms", "view_waveforms"),
-    ]),
-    ("PROGRAM & DEBUG", [
-        ("Generate Bitstream (FPGA)", "synth_fpga"),
-        ("Export GDSII (ASIC)", "export_gds"),
-        ("DRC Check", "run_drc"),
-        ("LVS Check", "run_lvs"),
-    ]),
+    (
+        "RUN FULL FLOW",
+        [
+            ("\u25b6 Run Full Flow (RTL\u2192GDS)", "run_full_flow"),
+        ],
+    ),
+    (
+        "PROJECT MANAGER",
+        [
+            ("Open Project", "open_project"),
+            ("Project Settings", "project_settings"),
+            ("Close Project", "close_project"),
+        ],
+    ),
+    (
+        "IP INTEGRATOR",
+        [
+            ("IP Catalog", "ip_catalog"),
+            ("Create Block Design", "create_block_design"),
+            ("Generate Output Products", "generate_output_products"),
+        ],
+    ),
+    (
+        "RTL ANALYSIS",
+        [
+            ("Run Synthesis", "synth_design"),
+            ("Open Elaborated Design", "open_elaborated_design"),
+            ("Lint Check", "lint_check"),
+        ],
+    ),
+    (
+        "SYNTHESIS",
+        [
+            ("Run Synthesis (Yosys)", "synth_design"),
+            ("Open Synthesized Design", "open_synthesized_design"),
+            ("View Reports", "view_synth_reports"),
+            ("Schematic", "view_schematic"),
+        ],
+    ),
+    (
+        "IMPLEMENTATION",
+        [
+            ("Run Placement", "run_placement"),
+            ("Run CTS", "run_cts"),
+            ("Run Routing", "run_routing"),
+            ("Open Implemented Design", "open_implemented_design"),
+            ("View Reports", "view_impl_reports"),
+        ],
+    ),
+    (
+        "TIMING ANALYSIS",
+        [
+            ("Run STA", "run_sta"),
+            ("Timing Summary", "timing_summary"),
+            ("Constraint Editor", "constraint_editor"),
+        ],
+    ),
+    (
+        "SIMULATION",
+        [
+            ("Run Simulation", "run_simulation"),
+            ("Run Formal Verification", "run_formal"),
+            ("View Waveforms", "view_waveforms"),
+        ],
+    ),
+    (
+        "PROGRAM & DEBUG",
+        [
+            ("Generate Bitstream (FPGA)", "synth_fpga"),
+            ("Export GDSII (ASIC)", "export_gds"),
+            ("DRC Check", "run_drc"),
+            ("LVS Check", "run_lvs"),
+        ],
+    ),
 ]
 
 
 # ---------------------------------------------------------------------------
 # Main panel
 # ---------------------------------------------------------------------------
+
 
 class FlowNavigatorPanel(QDockWidget):
     """Vivado-style collapsible flow navigator dock widget.
@@ -287,9 +318,7 @@ class FlowNavigatorPanel(QDockWidget):
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet(
-            "QScrollArea { background-color: #1e1e2e; border: none; }"
-        )
+        scroll.setStyleSheet("QScrollArea { background-color: #1e1e2e; border: none; }")
 
         container = QWidget()
         container.setStyleSheet("background-color: #1e1e2e;")
@@ -343,9 +372,7 @@ class FlowNavigatorPanel(QDockWidget):
         # Update scroll area and container
         scroll = self.widget()
         if scroll is not None:
-            scroll.setStyleSheet(
-                f"QScrollArea {{ background-color: {bg}; border: none; }}"
-            )
+            scroll.setStyleSheet(f"QScrollArea {{ background-color: {bg}; border: none; }}")
             container = scroll.widget() if hasattr(scroll, "widget") else None
             if container is not None:
                 container.setStyleSheet(f"background-color: {bg};")

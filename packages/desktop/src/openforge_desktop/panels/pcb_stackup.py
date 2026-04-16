@@ -1,4 +1,5 @@
 """PCB stackup editor panel with live impedance calculator."""
+
 from __future__ import annotations
 
 import json
@@ -30,12 +31,14 @@ try:
         StackupValidator,
         default_4layer_stackup,
     )
+
     _HAS_IMPEDANCE = True
 except Exception:  # noqa: BLE001
     _HAS_IMPEDANCE = False
 
 try:
     from openforge_desktop.widgets.pcb_3d_viewer import Pcb3dViewer
+
     _HAS_3D = True
 except Exception:  # noqa: BLE001
     _HAS_3D = False
@@ -83,9 +86,7 @@ class PcbStackupPanel(QWidget):
         self._table.setHorizontalHeaderLabels(
             ["Name", "Kind", "Thickness (mm)", "Material", "er", "tan delta", "Cu oz"]
         )
-        self._table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeToContents
-        )
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         llay.addWidget(self._table, 1)
 
         btn_row = QHBoxLayout()
@@ -121,8 +122,13 @@ class PcbStackupPanel(QWidget):
         form = QFormLayout(imp_group)
         self._imp_kind = QComboBox()
         self._imp_kind.addItems(
-            ["microstrip (SE)", "microstrip (diff)", "stripline (SE)",
-             "stripline (diff)", "coplanar (SE)"]
+            [
+                "microstrip (SE)",
+                "microstrip (diff)",
+                "stripline (SE)",
+                "stripline (diff)",
+                "coplanar (SE)",
+            ]
         )
         form.addRow("Type:", self._imp_kind)
 
@@ -161,9 +167,7 @@ class PcbStackupPanel(QWidget):
         form.addRow("Copper thickness:", self._copper_t)
 
         self._impedance_label = QLabel()
-        self._impedance_label.setStyleSheet(
-            "font-size: 16px; color: #9cdcfe; font-weight: bold;"
-        )
+        self._impedance_label.setStyleSheet("font-size: 16px; color: #9cdcfe; font-weight: bold;")
         form.addRow("Z0:", self._impedance_label)
 
         self._extra_label = QLabel()
@@ -229,23 +233,21 @@ class PcbStackupPanel(QWidget):
             self._table.setItem(row, 2, QTableWidgetItem(f"{layer.thickness_mm:.4f}"))
             self._table.setItem(row, 3, QTableWidgetItem(layer.material or ""))
             self._table.setItem(
-                row, 4,
+                row,
+                4,
                 QTableWidgetItem(
-                    "" if layer.dielectric_constant is None
-                    else f"{layer.dielectric_constant:.3f}"
+                    "" if layer.dielectric_constant is None else f"{layer.dielectric_constant:.3f}"
                 ),
             )
             self._table.setItem(
-                row, 5,
-                QTableWidgetItem(
-                    "" if layer.loss_tangent is None else f"{layer.loss_tangent:.4f}"
-                ),
+                row,
+                5,
+                QTableWidgetItem("" if layer.loss_tangent is None else f"{layer.loss_tangent:.4f}"),
             )
             self._table.setItem(
-                row, 6,
-                QTableWidgetItem(
-                    "" if layer.copper_oz is None else f"{layer.copper_oz:.2f}"
-                ),
+                row,
+                6,
+                QTableWidgetItem("" if layer.copper_oz is None else f"{layer.copper_oz:.2f}"),
             )
         self._table.blockSignals(False)
         self._update_summary()
@@ -297,7 +299,7 @@ class PcbStackupPanel(QWidget):
             return
         self._layers.append(
             StackupLayer(
-                name=f"Layer{len(self._layers)+1}",
+                name=f"Layer{len(self._layers) + 1}",
                 kind="signal",
                 thickness_mm=0.035,
                 material="copper",
@@ -326,9 +328,7 @@ class PcbStackupPanel(QWidget):
         self._er_spin.setValue(float(preset.get("er", 4.4)))
 
     def _on_save(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Save Stackup", "stackup.json", "JSON (*.json)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Save Stackup", "stackup.json", "JSON (*.json)")
         if not path:
             return
         data = [l.model_dump() for l in self._layers]
@@ -337,9 +337,7 @@ class PcbStackupPanel(QWidget):
     def _on_load(self) -> None:
         if not _HAS_IMPEDANCE:
             return
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Load Stackup", "", "JSON (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Load Stackup", "", "JSON (*.json)")
         if not path:
             return
         try:
@@ -379,7 +377,7 @@ class PcbStackupPanel(QWidget):
         self._extra_label.setText(
             f"L = {res.inductance_nh_per_mm:.3f} nH/mm  |  "
             f"C = {res.capacitance_pf_per_mm:.3f} pF/mm  |  "
-            f"delay = {res.delay_ns_per_mm*1000:.2f} ps/mm  |  "
+            f"delay = {res.delay_ns_per_mm * 1000:.2f} ps/mm  |  "
             f"er_eff = {res.er_effective:.3f}"
         )
 

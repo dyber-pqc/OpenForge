@@ -154,7 +154,7 @@ class OpenForgeSplash(QSplashScreen):
         painter.setPen(QPen(QColor("#45475a")))
         cr_font = QFont("Segoe UI", 8)
         painter.setFont(cr_font)
-        painter.drawText(bar_margin, h - 14, "\u00A9 2026 Dyber Inc. All rights reserved.")
+        painter.drawText(bar_margin, h - 14, "\u00a9 2026 Dyber Inc. All rights reserved.")
 
         # Rounded inner border
         painter.setPen(QPen(QColor("#313244"), 1))

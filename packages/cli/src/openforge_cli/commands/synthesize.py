@@ -134,8 +134,7 @@ def synth(
     except Exception as e:
         console.print(f"[red]Error initializing synthesis runner:[/] {e}")
         console.print(
-            "[dim]Hint: ensure Yosys is installed. "
-            "Run [bold]openforge tools list[/] to check.[/]"
+            "[dim]Hint: ensure Yosys is installed. Run [bold]openforge tools list[/] to check.[/]"
         )
         raise typer.Exit(code=1)
 
@@ -159,10 +158,14 @@ def synth(
 
     if not result.success:
         if json_output:
-            console.print(json_mod.dumps({
-                "status": "failed",
-                "errors": result.errors[:20],
-            }))
+            console.print(
+                json_mod.dumps(
+                    {
+                        "status": "failed",
+                        "errors": result.errors[:20],
+                    }
+                )
+            )
         else:
             console.print("[red bold]Synthesis FAILED[/]")
             console.print()
@@ -177,16 +180,20 @@ def synth(
 
     # JSON output
     if json_output:
-        console.print(json_mod.dumps({
-            "status": "passed",
-            "gate_count": result.gate_count,
-            "area_um2": result.area_um2,
-            "timing_estimate_ns": result.timing_estimate_ns,
-            "warnings": len(result.warnings),
-            "netlist_path": result.netlist_path,
-            "cell_usage": result.cell_usage,
-            "duration_s": result.duration,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": "passed",
+                    "gate_count": result.gate_count,
+                    "area_um2": result.area_um2,
+                    "timing_estimate_ns": result.timing_estimate_ns,
+                    "warnings": len(result.warnings),
+                    "netlist_path": result.netlist_path,
+                    "cell_usage": result.cell_usage,
+                    "duration_s": result.duration,
+                }
+            )
+        )
         return
 
     # Display results
@@ -247,8 +254,7 @@ def _show_report(project_dir: Path, build_dir: str, json_output: bool) -> None:
 
     if not netlist_path.exists():
         console.print(
-            "[red]Error:[/] no synthesized netlist found. "
-            "Run [bold]openforge synth[/] first."
+            "[red]Error:[/] no synthesized netlist found. Run [bold]openforge synth[/] first."
         )
         raise typer.Exit(code=1)
 
@@ -270,12 +276,16 @@ def _show_report(project_dir: Path, build_dir: str, json_output: bool) -> None:
     gate_count, cell_usage, area = _parse_stat_output(synth_log)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "gate_count": gate_count,
-            "area_um2": area,
-            "cell_types": len(cell_usage),
-            "cell_usage": cell_usage,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "gate_count": gate_count,
+                    "area_um2": area,
+                    "cell_types": len(cell_usage),
+                    "cell_usage": cell_usage,
+                }
+            )
+        )
         return
 
     area_table = Table(title="Synthesis Report", show_header=True, header_style="bold cyan")
@@ -320,7 +330,5 @@ def _export_schematic(synth_build: Path, output_path: str) -> None:
         except subprocess.CalledProcessError as e:
             console.print(f"[red]Error running netlistsvg:[/] {e.stderr.decode()[:200]}")
     else:
-        console.print(
-            "[yellow]netlistsvg not found.[/] Install with: npm install -g netlistsvg"
-        )
+        console.print("[yellow]netlistsvg not found.[/] Install with: npm install -g netlistsvg")
         console.print(f"  [dim]Netlist JSON at: {netlist_json}[/]")

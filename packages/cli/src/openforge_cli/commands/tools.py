@@ -72,13 +72,15 @@ def list_tools(
             version = "-"
             status_str = "OK (binary)" if installed else "Missing"
 
-        results.append({
-            "name": name,
-            "binary": binary,
-            "status": status_str,
-            "version": version,
-            "installed": str(installed),
-        })
+        results.append(
+            {
+                "name": name,
+                "binary": binary,
+                "status": status_str,
+                "version": version,
+                "installed": str(installed),
+            }
+        )
 
     if json_output:
         console.print(json_mod.dumps(results))
@@ -227,7 +229,12 @@ def doctor(
     # Check Python version
     py_ver = sys.version_info
     if py_ver < (3, 12):
-        issues.append({"level": "warning", "msg": f"Python {py_ver.major}.{py_ver.minor} -- 3.12+ recommended"})
+        issues.append(
+            {
+                "level": "warning",
+                "msg": f"Python {py_ver.major}.{py_ver.minor} -- 3.12+ recommended",
+            }
+        )
 
     # Check each tool
     for name, class_path, binary in _TOOL_REGISTRY:
@@ -242,7 +249,9 @@ def doctor(
     if platform.system() == "Windows":
         wsl = shutil.which("wsl")
         if not wsl:
-            issues.append({"level": "warning", "msg": "WSL not available -- many EDA tools require Linux"})
+            issues.append(
+                {"level": "warning", "msg": "WSL not available -- many EDA tools require Linux"}
+            )
 
     # Check git
     if not shutil.which("git"):

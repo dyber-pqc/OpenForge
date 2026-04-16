@@ -41,7 +41,9 @@ def _resolve_sources(project_dir: Path, config) -> list[str]:
 @app.command()
 def synth(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    device: str = typer.Option("ice40", "--device", "-d", help="FPGA device family (ice40, ecp5, gowin)."),
+    device: str = typer.Option(
+        "ice40", "--device", "-d", help="FPGA device family (ice40, ecp5, gowin)."
+    ),
     top: str | None = typer.Option(None, "--top", help="Top-level module name."),
     json_out: str | None = typer.Option(None, "--json-out", help="Write JSON netlist to file."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
@@ -68,7 +70,9 @@ def synth(
 
     engine = YosysEngine()
     if not engine.check_installed():
-        console.print("[red]Error:[/] Yosys not found. Install it or run [bold]openforge tools install yosys[/].")
+        console.print(
+            "[red]Error:[/] Yosys not found. Install it or run [bold]openforge tools install yosys[/]."
+        )
         raise typer.Exit(code=1)
 
     if not quiet:
@@ -119,13 +123,17 @@ def synth(
 @app.command()
 def pnr(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    device: str = typer.Option("", "--device", "-d", help="FPGA device (e.g. hx8k, lfe5u-85f, GW1NR-9C)."),
+    device: str = typer.Option(
+        "", "--device", "-d", help="FPGA device (e.g. hx8k, lfe5u-85f, GW1NR-9C)."
+    ),
     package: str = typer.Option("", "--package", help="Device package (e.g. ct256, CABGA381)."),
     pcf: str | None = typer.Option(None, "--pcf", help="Pin constraints file (iCE40)."),
     lpf: str | None = typer.Option(None, "--lpf", help="Pin constraints file (ECP5)."),
     xdc: str | None = typer.Option(None, "--xdc", help="Pin constraints file (Xilinx)."),
     freq: float | None = typer.Option(None, "--freq", help="Target frequency in MHz."),
-    json_netlist: str | None = typer.Option(None, "--json", help="Input JSON netlist (from synth)."),
+    json_netlist: str | None = typer.Option(
+        None, "--json", help="Input JSON netlist (from synth)."
+    ),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
 ) -> None:
@@ -181,7 +189,8 @@ def pnr(
 
     # Build nextpnr command
     args: list[str] = [
-        "--json", json_in,
+        "--json",
+        json_in,
     ]
     if device:
         # Determine which nextpnr variant to use
@@ -237,7 +246,9 @@ def pack(
     # Find routed ASC/config
     asc_file = fpga_build / "routed.asc"
     if not asc_file.exists():
-        console.print("[red]Error:[/] no routed design found. Run [bold]openforge fpga pnr[/] first.")
+        console.print(
+            "[red]Error:[/] no routed design found. Run [bold]openforge fpga pnr[/] first."
+        )
         raise typer.Exit(code=1)
 
     output_bin = output or str(fpga_build / "bitstream.bin")
@@ -263,7 +274,9 @@ def pack(
 @app.command()
 def flash(
     path: str = typer.Argument(".", help="Path to the design directory."),
-    board: str | None = typer.Option(None, "--board", "-b", help="Board name (auto-detect if omitted)."),
+    board: str | None = typer.Option(
+        None, "--board", "-b", help="Board name (auto-detect if omitted)."
+    ),
     bitstream: str | None = typer.Option(None, "--bitstream", help="Path to bitstream file."),
     mode: str = typer.Option("sram", "--mode", "-m", help="Programming mode: sram or flash."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress."),
@@ -324,10 +337,19 @@ def detect(
         devices = detect_devices()
 
     if json_output:
-        console.print(json_mod.dumps([
-            {"name": d.name, "usb_id": d.usb_id, "type": d.device_type, "programmer": d.programmer}
-            for d in devices
-        ]))
+        console.print(
+            json_mod.dumps(
+                [
+                    {
+                        "name": d.name,
+                        "usb_id": d.usb_id,
+                        "type": d.device_type,
+                        "programmer": d.programmer,
+                    }
+                    for d in devices
+                ]
+            )
+        )
         return
 
     if not devices:
@@ -359,18 +381,22 @@ def list_boards(
     from openforge.fpga.boards import BOARDS
 
     if json_output:
-        console.print(json_mod.dumps([
-            {
-                "name": b.name,
-                "vendor": b.vendor,
-                "family": b.family,
-                "device": b.device,
-                "package": b.package,
-                "constraint_format": b.constraint_format.value,
-                "clock_mhz": b.default_clk_freq_mhz,
-            }
-            for b in BOARDS.values()
-        ]))
+        console.print(
+            json_mod.dumps(
+                [
+                    {
+                        "name": b.name,
+                        "vendor": b.vendor,
+                        "family": b.family,
+                        "device": b.device,
+                        "package": b.package,
+                        "constraint_format": b.constraint_format.value,
+                        "clock_mhz": b.default_clk_freq_mhz,
+                    }
+                    for b in BOARDS.values()
+                ]
+            )
+        )
         return
 
     table = Table(title="Supported FPGA Boards", show_header=True, header_style="bold cyan")

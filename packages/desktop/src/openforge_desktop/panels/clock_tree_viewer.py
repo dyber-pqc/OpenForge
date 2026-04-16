@@ -167,11 +167,7 @@ class _ClockTreeScene(QGraphicsScene):
                 continue
             p0 = positions[nearest.name]
             p1 = positions[sink.instance]
-            frac = (
-                min(1.0, sink.arrival_ns / max_delay)
-                if max_delay > 0
-                else 0.0
-            )
+            frac = min(1.0, sink.arrival_ns / max_delay) if max_delay > 0 else 0.0
             pen = QPen(_lerp_color(_BLUE, _RED, frac), 1.2)
             line = QGraphicsLineItem(p0.x() + 12, p0.y() + 8, p1.x(), p1.y() + 8)
             line.setPen(pen)
@@ -463,9 +459,7 @@ class ClockTreeViewerPanel(QDockWidget):
         )
         self._table.setSortingEnabled(True)
         self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self._table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
+        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._table.itemSelectionChanged.connect(self._on_row_selected)
         right_layout.addWidget(self._table, 3)
 
@@ -550,9 +544,7 @@ class ClockTreeViewerPanel(QDockWidget):
             self._table.setItem(r, 1, QTableWidgetItem(str(sink.level)))
             self._table.setItem(r, 2, QTableWidgetItem(f"{sink.arrival_ns:.4f}"))
             self._table.setItem(r, 3, QTableWidgetItem(f"{sink.transition_ns:.4f}"))
-            self._table.setItem(
-                r, 4, QTableWidgetItem(f"{sink.x_um:.1f}, {sink.y_um:.1f}")
-            )
+            self._table.setItem(r, 4, QTableWidgetItem(f"{sink.x_um:.1f}, {sink.y_um:.1f}"))
         self._table.setSortingEnabled(True)
 
     # ------------------------------------------------------------------
@@ -604,9 +596,7 @@ class ClockTreeViewerPanel(QDockWidget):
         else:
             from PySide6.QtGui import QImage
 
-            img = QImage(
-                int(rect.width()), int(rect.height()), QImage.Format.Format_ARGB32
-            )
+            img = QImage(int(rect.width()), int(rect.height()), QImage.Format.Format_ARGB32)
             img.fill(_BG)
             painter = QPainter(img)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -651,7 +641,7 @@ class ClockTreeViewerPanel(QDockWidget):
         sinks = sorted(self._active.sinks, key=lambda s: s.arrival_ns)
         n = len(sinks)
         fastest = sinks[: max(1, n // 10)]
-        slowest = sinks[-max(1, n // 10):]
+        slowest = sinks[-max(1, n // 10) :]
         max_gain = (slowest[-1].arrival_ns - fastest[0].arrival_ns) * 0.4
         self._set_tile(
             self._tile_max_skew,

@@ -4,6 +4,7 @@ Provides schematic capture, board layout, 3D view, and BOM tabs in
 a single dock widget. Uses QGraphicsScene/View for the editing
 canvases with grid snap, pan/zoom, selection and drawing tools.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,24 +13,28 @@ from pathlib import Path
 
 try:
     from openforge_desktop.widgets.schematic_editor import SchematicEditor
+
     _HAS_SCHEMATIC_EDITOR = True
 except Exception:  # pragma: no cover - optional dep guard
     _HAS_SCHEMATIC_EDITOR = False
 
 try:
     from openforge_desktop.panels.erc_panel import ErcPanel
+
     _HAS_ERC_PANEL = True
 except Exception:  # pragma: no cover
     _HAS_ERC_PANEL = False
 
 try:
     from openforge.pcb.sheet_templates import BUILTIN_TEMPLATES
+
     _HAS_SHEET_TEMPLATES = True
 except Exception:  # pragma: no cover
     _HAS_SHEET_TEMPLATES = False
 
 try:
     from openforge_desktop.widgets.pcb_layout_editor import PcbLayoutEditor
+
     _HAS_PCB_EDITOR = True
 except Exception:  # pragma: no cover - optional dep guard
     _HAS_PCB_EDITOR = False
@@ -37,36 +42,42 @@ except Exception:  # pragma: no cover - optional dep guard
 try:
     from openforge.pcb.gerber import GerberExporter
     from openforge.pcb.model import PcbBoard, PcbStackup
+
     _HAS_PCB_MODEL = True
 except Exception:  # pragma: no cover
     _HAS_PCB_MODEL = False
 
 try:
     from openforge.pcb.ipc2581 import Ipc2581Exporter
+
     _HAS_IPC2581 = True
 except Exception:  # pragma: no cover
     _HAS_IPC2581 = False
 
 try:
     from openforge.pcb.fab_rules import KNOWN_FAB_CLASSES, FabRuleChecker
+
     _HAS_FAB_RULES = True
 except Exception:  # pragma: no cover
     _HAS_FAB_RULES = False
 
 try:
     from openforge_desktop.widgets.pcb_3d_viewer import Pcb3dViewer
+
     _HAS_PCB_3D = True
 except Exception:  # pragma: no cover
     _HAS_PCB_3D = False
 
 try:
     from openforge_desktop.panels.pcb_stackup import PcbStackupPanel
+
     _HAS_STACKUP_PANEL = True
 except Exception:  # pragma: no cover
     _HAS_STACKUP_PANEL = False
 
 try:
     from openforge_desktop.dialogs.jlcpcb_picker import JlcpcbPickerDialog
+
     _HAS_JLC_DIALOG = True
 except Exception:  # pragma: no cover
     _HAS_JLC_DIALOG = False
@@ -468,12 +479,8 @@ class SchematicScene(QGraphicsScene):
                 pen = self._preview_item.pen()
                 pen.setStyle(Qt.PenStyle.SolidLine)
                 self._preview_item.setPen(pen)
-                self._preview_item.setFlag(
-                    QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True
-                )
-                self._preview_item.setFlag(
-                    QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True
-                )
+                self._preview_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+                self._preview_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
                 self.modified.emit()
             self._draw_start = None
             self._preview_item = None
@@ -510,9 +517,7 @@ class BoardScene(QGraphicsScene):
         self.setBackgroundBrush(QBrush(QColor(CAT_CRUST)))
         self._show_grid = True
         self._active_layer = "F.Cu"
-        self._layer_visible: dict[str, bool] = {
-            name: True for name in self.LAYER_COLORS
-        }
+        self._layer_visible: dict[str, bool] = {name: True for name in self.LAYER_COLORS}
         self._current_tool = Tool.SELECT
         self._draw_start: QPointF | None = None
         self._preview_item: QGraphicsItem | None = None
@@ -585,9 +590,7 @@ class BoardScene(QGraphicsScene):
         pad_w = 1.5 * self.MM_TO_PX
         pad_h = 1.0 * self.MM_TO_PX
         for _i, px in enumerate((-w / 2 + pad_w / 2, w / 2 - pad_w / 2)):
-            pad = QGraphicsRectItem(
-                px - pad_w / 2, -pad_h / 2, pad_w, pad_h, parent=rect
-            )
+            pad = QGraphicsRectItem(px - pad_w / 2, -pad_h / 2, pad_w, pad_h, parent=rect)
             pad.setBrush(QBrush(QColor(CAT_RED)))
             pad.setPen(QPen(Qt.PenStyle.NoPen))
         self.modified.emit()
@@ -623,9 +626,7 @@ class BoardScene(QGraphicsScene):
             self._draw_start = pos
             self._preview_item = QGraphicsLineItem(pos.x(), pos.y(), pos.x(), pos.y())
             color = QColor(self.LAYER_COLORS.get(self._active_layer, CAT_RED))
-            self._preview_item.setPen(
-                QPen(color, 4, Qt.PenStyle.DashLine, Qt.PenCapStyle.RoundCap)
-            )
+            self._preview_item.setPen(QPen(color, 4, Qt.PenStyle.DashLine, Qt.PenCapStyle.RoundCap))
             self.addItem(self._preview_item)
         elif self._current_tool == Tool.VIA:
             self.add_via(pos)
@@ -663,12 +664,8 @@ class BoardScene(QGraphicsScene):
                 pen = self._preview_item.pen()
                 pen.setStyle(Qt.PenStyle.SolidLine)
                 self._preview_item.setPen(pen)
-                self._preview_item.setFlag(
-                    QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True
-                )
-                self._preview_item.setFlag(
-                    QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True
-                )
+                self._preview_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+                self._preview_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
                 self.modified.emit()
             self._draw_start = None
             self._preview_item = None
@@ -683,13 +680,10 @@ class ZoomPanView(QGraphicsView):
     def __init__(self, scene: QGraphicsScene, parent=None):
         super().__init__(scene, parent)
         self.setRenderHints(
-            QPainter.RenderHint.Antialiasing
-            | QPainter.RenderHint.SmoothPixmapTransform
+            QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform
         )
         self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
-        self.setTransformationAnchor(
-            QGraphicsView.ViewportAnchor.AnchorUnderMouse
-        )
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self._zoom = 0
 
@@ -749,6 +743,7 @@ class Board3DView(QWidget):
         bw, bh = 260, 160
         thickness = 10
         th = math.radians(self._angle)
+
         # Project simple iso
         def iso(x, y, z):
             return (
@@ -850,6 +845,7 @@ class PcbDesignerPanel(QDockWidget):
             self._stackup_panel = None
         try:
             from openforge_desktop.panels.pcb_router import PcbRouterPanel
+
             self._router_panel = PcbRouterPanel()
             self._tabs.addTab(self._router_panel, "Routing")
         except Exception:  # noqa: BLE001
@@ -861,10 +857,10 @@ class PcbDesignerPanel(QDockWidget):
                 self._erc_panel = ErcPanel()
                 if getattr(self, "_schematic_editor", None) is not None:
                     self._erc_panel.set_schematic(
-                        getattr(self._schematic_editor, "_schematic", None))
+                        getattr(self._schematic_editor, "_schematic", None)
+                    )
                     # Jump to component when a violation is clicked
-                    self._erc_panel.violation_selected.connect(
-                        self._on_erc_jump_to_component)
+                    self._erc_panel.violation_selected.connect(self._on_erc_jump_to_component)
                 self._tabs.addTab(self._erc_panel, "ERC")
             else:
                 self._erc_panel = None
@@ -1027,9 +1023,7 @@ class PcbDesignerPanel(QDockWidget):
         elif "led" in name.lower() or "diode" in name.lower():
             prefix = "D"
         refdes = f"{prefix}{n}"
-        self._sch_scene.add_component(
-            refdes, name, QPointF(200 + (n * 30) % 600, 400), 4
-        )
+        self._sch_scene.add_component(refdes, name, QPointF(200 + (n * 30) % 600, 400), 4)
         self._status.showMessage(f"Placed {refdes} ({name})")
 
     def _run_erc(self) -> None:
@@ -1065,16 +1059,12 @@ class PcbDesignerPanel(QDockWidget):
             cb.setChecked(True)
             swatch = QLabel()
             swatch.setFixedSize(14, 14)
-            swatch.setStyleSheet(
-                f"background:{color}; border:1px solid {CAT_SURFACE0};"
-            )
+            swatch.setStyleSheet(f"background:{color}; border:1px solid {CAT_SURFACE0};")
             rl.addWidget(swatch)
             rl.addWidget(cb, 1)
             ll.addWidget(row)
             self._layer_checks[layer] = cb
-            cb.toggled.connect(
-                lambda v, l=layer: self._board_scene.set_layer_visible(l, v)
-            )
+            cb.toggled.connect(lambda v, l=layer: self._board_scene.set_layer_visible(l, v))
         ll.addStretch(1)
         splitter.addWidget(layers)
 
@@ -1176,9 +1166,7 @@ class PcbDesignerPanel(QDockWidget):
         QMessageBox.information(
             self,
             "Auto-Router",
-            "Routed 12 of 12 nets successfully.\n"
-            "Total track length: 142.3 mm\n"
-            "Via count: 8",
+            "Routed 12 of 12 nets successfully.\nTotal track length: 142.3 mm\nVia count: 8",
         )
 
     def _run_drc(self) -> None:
@@ -1192,9 +1180,7 @@ class PcbDesignerPanel(QDockWidget):
         out = QFileDialog.getExistingDirectory(self, "Gerber output directory")
         if out:
             self._status.showMessage(f"Exported Gerbers to {out}")
-            QMessageBox.information(
-                self, "Gerber Export", f"Exported 9 files to:\n{out}"
-            )
+            QMessageBox.information(self, "Gerber Export", f"Exported 9 files to:\n{out}")
 
     # ------------------------------------------------------------------
     def _build_3d_tab(self) -> None:
@@ -1247,9 +1233,7 @@ class PcbDesignerPanel(QDockWidget):
         gen.clicked.connect(self._generate_bom)
         exp_csv.clicked.connect(self._export_bom_csv)
         exp_html.clicked.connect(self._export_bom_html)
-        price.clicked.connect(
-            lambda: self._status.showMessage("Pricing refreshed (mock)")
-        )
+        price.clicked.connect(lambda: self._status.showMessage("Pricing refreshed (mock)"))
 
         self._tabs.addTab(tab, "BOM")
 
@@ -1310,8 +1294,13 @@ class PcbDesignerPanel(QDockWidget):
         self._mfg_btn_pnp = QPushButton("Pick and Place")
         self._mfg_btn_bom = QPushButton("BOM")
         self._mfg_btn_zip = QPushButton("Pack ZIP (JLCPCB)")
-        for b in (self._mfg_btn_gerber, self._mfg_btn_drill,
-                  self._mfg_btn_pnp, self._mfg_btn_bom, self._mfg_btn_zip):
+        for b in (
+            self._mfg_btn_gerber,
+            self._mfg_btn_drill,
+            self._mfg_btn_pnp,
+            self._mfg_btn_bom,
+            self._mfg_btn_zip,
+        ):
             row.addWidget(b)
         row.addStretch(1)
         al.addLayout(row)
@@ -1384,8 +1373,11 @@ class PcbDesignerPanel(QDockWidget):
         if self._pcb_editor is not None and hasattr(self._pcb_editor, "board"):
             return self._pcb_editor.board
         if _HAS_PCB_MODEL:
-            return PcbBoard(name="board", stackup=PcbStackup.two_layer(),
-                            outline=[(0, 0), (80, 0), (80, 60), (0, 60)])
+            return PcbBoard(
+                name="board",
+                stackup=PcbStackup.two_layer(),
+                outline=[(0, 0), (80, 0), (80, 60), (0, 60)],
+            )
         return None
 
     # ------------------------------------------------------------------
@@ -1400,7 +1392,9 @@ class PcbDesignerPanel(QDockWidget):
             QMessageBox.warning(self, "IPC-2581", "No PCB board loaded")
             return
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export IPC-2581", f"{board.name}.ipc2581.xml",
+            self,
+            "Export IPC-2581",
+            f"{board.name}.ipc2581.xml",
             "IPC-2581 (*.xml *.ipc2581)",
         )
         if not path:
@@ -1449,15 +1443,11 @@ class PcbDesignerPanel(QDockWidget):
         try:
             viols = FabRuleChecker(board, fc).check_all()
             if not viols:
-                QMessageBox.information(
-                    self, "Fab DRC",
-                    f"{fc.name}: no fab rule violations."
-                )
+                QMessageBox.information(self, "Fab DRC", f"{fc.name}: no fab rule violations.")
             else:
                 msg = "\n".join(f"{v.rule}: {v.message}" for v in viols[:40])
                 QMessageBox.warning(
-                    self, "Fab DRC",
-                    f"{fc.name}: {len(viols)} violation(s)\n\n{msg}"
+                    self, "Fab DRC", f"{fc.name}: {len(viols)} violation(s)\n\n{msg}"
                 )
         except Exception as e:  # noqa: BLE001
             QMessageBox.critical(self, "Fab DRC", str(e))
@@ -1476,6 +1466,7 @@ class PcbDesignerPanel(QDockWidget):
 
     def _mfg_add_files(self, paths) -> None:
         from os.path import getsize
+
         if isinstance(paths, dict):
             paths = list(paths.values())
         elif not isinstance(paths, (list, tuple)):
@@ -1543,9 +1534,7 @@ class PcbDesignerPanel(QDockWidget):
 
     # ------------------------------------------------------------------
     def _save_project(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Save PCB project", "", "OpenForge PCB (*.ofp)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Save PCB project", "", "OpenForge PCB (*.ofp)")
         if path:
             data = {
                 "version": 1,
@@ -1555,9 +1544,7 @@ class PcbDesignerPanel(QDockWidget):
             self._status.showMessage(f"Saved to {path}")
 
     def _load_project(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Load PCB project", "", "OpenForge PCB (*.ofp)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Load PCB project", "", "OpenForge PCB (*.ofp)")
         if path:
             self._status.showMessage(f"Loaded {path}")
 
@@ -1583,9 +1570,7 @@ class PcbDesignerPanel(QDockWidget):
         menu = QMenu(btn)
         for tpl in BUILTIN_TEMPLATES:
             act = menu.addAction(f"{tpl.title}  -  {tpl.description}")
-            act.triggered.connect(
-                lambda _=False, t=tpl: self._drop_sheet_template(t)
-            )
+            act.triggered.connect(lambda _=False, t=tpl: self._drop_sheet_template(t))
         btn.setMenu(menu)
         toolbar.addSeparator()
         toolbar.addWidget(btn)
@@ -1612,8 +1597,8 @@ class PcbDesignerPanel(QDockWidget):
             self._refresh_sheet_browser()
         except Exception as exc:  # noqa: BLE001
             QMessageBox.warning(
-                self, "Template error",
-                f"Failed to drop template '{template.title}':\n{exc}")
+                self, "Template error", f"Failed to drop template '{template.title}':\n{exc}"
+            )
 
     # ------------------------------------------------------------------
 
@@ -1627,8 +1612,7 @@ class PcbDesignerPanel(QDockWidget):
         browser.setMaximumWidth(220)
         browser.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         browser.itemDoubleClicked.connect(self._on_sheet_browser_double)
-        browser.customContextMenuRequested.connect(
-            self._on_sheet_browser_ctx)
+        browser.customContextMenuRequested.connect(self._on_sheet_browser_ctx)
         self._sheet_browser = browser
 
         # Insert into the editor's main layout as a sidebar on the right
@@ -1645,18 +1629,22 @@ class PcbDesignerPanel(QDockWidget):
         sch = getattr(editor, "_schematic", None)
         if sch is None:
             return
-        root = QTreeWidgetItem([
-            sch.title or "top",
-            "-",
-            str(len(getattr(sch, "wires", []))),
-        ])
+        root = QTreeWidgetItem(
+            [
+                sch.title or "top",
+                "-",
+                str(len(getattr(sch, "wires", []))),
+            ]
+        )
         tree.addTopLevelItem(root)
         for sub in getattr(sch, "sub_sheets", []) or []:
-            child = QTreeWidgetItem([
-                sub.name,
-                str(len(sub.ports)),
-                "-",
-            ])
+            child = QTreeWidgetItem(
+                [
+                    sub.name,
+                    str(len(sub.ports)),
+                    "-",
+                ]
+            )
             child.setData(0, Qt.ItemDataRole.UserRole, sub)
             root.addChild(child)
         root.setExpanded(True)

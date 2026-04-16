@@ -175,8 +175,12 @@ class OpenLaneRunner:
         pdk_manager: PDKManager | None = None,
     ) -> None:
         self._project_path = Path(project_path).resolve()
-        self._config = config if config is not None else load_config(
-            search_dir=self._project_path,
+        self._config = (
+            config
+            if config is not None
+            else load_config(
+                search_dir=self._project_path,
+            )
         )
         self._pdk_name = pdk
         self._pdk_manager = pdk_manager
@@ -192,6 +196,7 @@ class OpenLaneRunner:
         # Auto-detect Docker fallback for Yosys
         if not self._yosys.check_installed():
             from openforge.engine.base import ExecutionBackend
+
             self._yosys = YosysEngine(backend=ExecutionBackend.DOCKER)
 
         # Build output directory
@@ -333,8 +338,14 @@ class OpenLaneRunner:
 
         # Create subdirectories for each stage
         for subdir in [
-            "synthesis", "floorplan", "placement", "cts",
-            "routing", "signoff", "gds", "reports",
+            "synthesis",
+            "floorplan",
+            "placement",
+            "cts",
+            "routing",
+            "signoff",
+            "gds",
+            "reports",
         ]:
             (build / subdir).mkdir(exist_ok=True)
 
@@ -351,7 +362,11 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         step_result = self._run_synthesis_step(
-            sources, top_module, lib_path, build / "synthesis", timeout,
+            sources,
+            top_module,
+            lib_path,
+            build / "synthesis",
+            timeout,
         )
         result.step_logs["synthesis"] = step_result.log
         result.step_durations["synthesis"] = step_result.duration
@@ -366,9 +381,16 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         step_result = self._run_floorplan_step(
-            netlist_path, str(sdc_path), top_module,
-            die_area, core_utilization, lib_path, tech_lef, cell_lef,
-            build / "floorplan", timeout,
+            netlist_path,
+            str(sdc_path),
+            top_module,
+            die_area,
+            core_utilization,
+            lib_path,
+            tech_lef,
+            cell_lef,
+            build / "floorplan",
+            timeout,
         )
         result.step_logs["floorplan"] = step_result.log
         result.step_durations["floorplan"] = step_result.duration
@@ -382,10 +404,16 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         pnr_result = self._run_pnr_script(
-            netlist_path, str(sdc_path), top_module,
-            die_area, core_utilization,
-            lib_path, tech_lef, cell_lef,
-            build, timeout,
+            netlist_path,
+            str(sdc_path),
+            top_module,
+            die_area,
+            core_utilization,
+            lib_path,
+            tech_lef,
+            cell_lef,
+            build,
+            timeout,
         )
         for step_name in ["placement", "cts", "routing"]:
             result.step_logs[step_name] = pnr_result.log
@@ -407,7 +435,9 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         drc_result = self._run_drc_step(
-            pnr_result.def_path, build / "signoff", timeout,
+            pnr_result.def_path,
+            build / "signoff",
+            timeout,
         )
         result.step_logs["drc"] = drc_result.log
         result.step_durations["drc"] = drc_result.duration
@@ -418,8 +448,10 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         lvs_result = self._run_lvs_step(
-            pnr_result.def_path, str(netlist_path),
-            build / "signoff", timeout,
+            pnr_result.def_path,
+            str(netlist_path),
+            build / "signoff",
+            timeout,
         )
         result.step_logs["lvs"] = lvs_result.log
         result.step_durations["lvs"] = lvs_result.duration
@@ -430,8 +462,10 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         gds_result = self._run_gds_export_step(
-            pnr_result.def_path, top_module,
-            build / "gds", timeout,
+            pnr_result.def_path,
+            top_module,
+            build / "gds",
+            timeout,
         )
         result.step_logs["gds_export"] = gds_result.log
         result.step_durations["gds_export"] = gds_result.duration
@@ -443,10 +477,14 @@ class OpenLaneRunner:
         if self._cancelled:
             return result
         sta_result = self._run_signoff_timing_step(
-            str(netlist_path), str(sdc_path),
-            lib_path, tech_lef, cell_lef,
+            str(netlist_path),
+            str(sdc_path),
+            lib_path,
+            tech_lef,
+            cell_lef,
             pnr_result.def_path,
-            build / "signoff", timeout,
+            build / "signoff",
+            timeout,
         )
         result.step_logs["signoff_timing"] = sta_result.log
         result.step_durations["signoff_timing"] = sta_result.duration
@@ -498,11 +536,15 @@ class OpenLaneRunner:
         if step == "synthesis":
             if not sources:
                 return PhysicalDesignResult(
-                    success=False, log="No source files provided for synthesis",
+                    success=False,
+                    log="No source files provided for synthesis",
                 )
             return self._run_synthesis_step(
-                sources, top_module, lib_path,
-                build / "synthesis", timeout,
+                sources,
+                top_module,
+                lib_path,
+                build / "synthesis",
+                timeout,
             )
         elif step == "floorplan":
             if not netlist or not sdc:
@@ -511,10 +553,16 @@ class OpenLaneRunner:
                     log="Floorplan requires netlist and SDC files",
                 )
             return self._run_floorplan_step(
-                netlist, str(sdc), top_module,
-                die_area, core_utilization,
-                lib_path, tech_lef, cell_lef,
-                build / "floorplan", timeout,
+                netlist,
+                str(sdc),
+                top_module,
+                die_area,
+                core_utilization,
+                lib_path,
+                tech_lef,
+                cell_lef,
+                build / "floorplan",
+                timeout,
             )
         elif step in ("placement", "pnr", "place_route"):
             if not netlist or not sdc:
@@ -523,33 +571,50 @@ class OpenLaneRunner:
                     log="P&R requires netlist and SDC files",
                 )
             return self._run_pnr_script(
-                netlist, str(sdc), top_module,
-                die_area, core_utilization,
-                lib_path, tech_lef, cell_lef,
-                build, timeout,
+                netlist,
+                str(sdc),
+                top_module,
+                die_area,
+                core_utilization,
+                lib_path,
+                tech_lef,
+                cell_lef,
+                build,
+                timeout,
             )
         elif step == "cts":
             if not def_input:
                 return PhysicalDesignResult(
-                    success=False, log="CTS requires a DEF input file",
+                    success=False,
+                    log="CTS requires a DEF input file",
                 )
             return self._run_cts_step(
-                def_input, lib_path, tech_lef, cell_lef,
-                build / "cts", timeout,
+                def_input,
+                lib_path,
+                tech_lef,
+                cell_lef,
+                build / "cts",
+                timeout,
             )
         elif step in ("routing", "route"):
             if not def_input:
                 return PhysicalDesignResult(
-                    success=False, log="Routing requires a DEF input file",
+                    success=False,
+                    log="Routing requires a DEF input file",
                 )
             return self._run_routing_step(
-                def_input, lib_path, tech_lef, cell_lef,
-                build / "routing", timeout,
+                def_input,
+                lib_path,
+                tech_lef,
+                cell_lef,
+                build / "routing",
+                timeout,
             )
         elif step == "drc":
             if not def_input:
                 return PhysicalDesignResult(
-                    success=False, log="DRC requires a DEF input file",
+                    success=False,
+                    log="DRC requires a DEF input file",
                 )
             return self._run_drc_step(def_input, build / "signoff", timeout)
         elif step == "lvs":
@@ -559,15 +624,22 @@ class OpenLaneRunner:
                     log="LVS requires DEF and netlist files",
                 )
             return self._run_lvs_step(
-                def_input, str(netlist), build / "signoff", timeout,
+                def_input,
+                str(netlist),
+                build / "signoff",
+                timeout,
             )
         elif step == "gds_export":
             if not def_input:
                 return PhysicalDesignResult(
-                    success=False, log="GDS export requires a DEF input file",
+                    success=False,
+                    log="GDS export requires a DEF input file",
                 )
             return self._run_gds_export_step(
-                def_input, top_module, build / "gds", timeout,
+                def_input,
+                top_module,
+                build / "gds",
+                timeout,
             )
         elif step == "signoff_timing":
             if not netlist or not sdc or not def_input:
@@ -576,13 +648,19 @@ class OpenLaneRunner:
                     log="Signoff timing requires netlist, SDC, and DEF",
                 )
             return self._run_signoff_timing_step(
-                str(netlist), str(sdc),
-                lib_path, tech_lef, cell_lef,
-                str(def_input), build / "signoff", timeout,
+                str(netlist),
+                str(sdc),
+                lib_path,
+                tech_lef,
+                cell_lef,
+                str(def_input),
+                build / "signoff",
+                timeout,
             )
         else:
             return PhysicalDesignResult(
-                success=False, log=f"Unknown step: {step_name}",
+                success=False,
+                log=f"Unknown step: {step_name}",
             )
 
     # ------------------------------------------------------------------
@@ -650,23 +728,29 @@ class OpenLaneRunner:
             else:
                 lines.append(f"read_verilog {p}")
 
-        lines.extend([
-            f"hierarchy -top {top_module} -check",
-            "proc; opt; memory; opt; fsm; opt",
-            "techmap; opt",
-        ])
+        lines.extend(
+            [
+                f"hierarchy -top {top_module} -check",
+                "proc; opt; memory; opt; fsm; opt",
+                "techmap; opt",
+            ]
+        )
 
         if liberty:
-            lines.extend([
-                f"dfflibmap -liberty {liberty}",
-                f"abc -liberty {liberty}",
-            ])
+            lines.extend(
+                [
+                    f"dfflibmap -liberty {liberty}",
+                    f"abc -liberty {liberty}",
+                ]
+            )
 
-        lines.extend([
-            "opt_clean",
-            f"write_verilog {out_dir / 'netlist.v'}",
-            f"write_json {out_dir / 'netlist.json'}",
-        ])
+        lines.extend(
+            [
+                "opt_clean",
+                f"write_verilog {out_dir / 'netlist.v'}",
+                f"write_json {out_dir / 'netlist.json'}",
+            ]
+        )
 
         if liberty:
             lines.append(f"stat -liberty {liberty}")
@@ -725,7 +809,8 @@ class OpenLaneRunner:
         cfg = self._pdk_cfg
         if cfg is None:
             return PhysicalDesignResult(
-                success=False, log=f"Unsupported PDK: {self._pdk_name}",
+                success=False,
+                log=f"Unsupported PDK: {self._pdk_name}",
             )
 
         # Generate floorplan configuration
@@ -733,8 +818,10 @@ class OpenLaneRunner:
             fp_config = FloorplanConfig(
                 die_area=die_area,
                 core_area=(
-                    die_area[0] + 50, die_area[1] + 50,
-                    die_area[2] - 50, die_area[3] - 50,
+                    die_area[0] + 50,
+                    die_area[1] + 50,
+                    die_area[2] - 50,
+                    die_area[3] - 50,
                 ),
                 site_name=cfg.site,
                 tracks_config=self._floorplan_gen.generate_tracks_config(),
@@ -771,7 +858,11 @@ class OpenLaneRunner:
         ]
 
         return self._run_openroad_tcl(
-            tcl_lines, out_dir, "floorplan", output_def, timeout,
+            tcl_lines,
+            out_dir,
+            "floorplan",
+            output_def,
+            timeout,
         )
 
     # ------------------------------------------------------------------
@@ -797,7 +888,8 @@ class OpenLaneRunner:
         cfg = self._pdk_cfg
         if cfg is None:
             return PhysicalDesignResult(
-                success=False, log=f"Unsupported PDK: {self._pdk_name}",
+                success=False,
+                log=f"Unsupported PDK: {self._pdk_name}",
             )
 
         # Compute floorplan
@@ -805,8 +897,10 @@ class OpenLaneRunner:
             fp_config = FloorplanConfig(
                 die_area=die_area,
                 core_area=(
-                    die_area[0] + 50, die_area[1] + 50,
-                    die_area[2] - 50, die_area[3] - 50,
+                    die_area[0] + 50,
+                    die_area[1] + 50,
+                    die_area[2] - 50,
+                    die_area[3] - 50,
                 ),
                 site_name=cfg.site,
                 tracks_config=self._floorplan_gen.generate_tracks_config(),
@@ -878,7 +972,8 @@ class OpenLaneRunner:
             f"detailed_route -output_drc {drc_report} -output_maze {maze_log}",
             "",
             "# ---- Fill insertion ----",
-            "filler_placement sky130_fd_sc_hd__fill_*" if self._pdk_name == "sky130"
+            "filler_placement sky130_fd_sc_hd__fill_*"
+            if self._pdk_name == "sky130"
             else "# filler_placement (PDK-specific)",
             "",
             "# ---- Write outputs ----",
@@ -897,7 +992,11 @@ class OpenLaneRunner:
         ]
 
         return self._run_openroad_tcl(
-            tcl_lines, build / "routing", "pnr_flow", output_def, timeout,
+            tcl_lines,
+            build / "routing",
+            "pnr_flow",
+            output_def,
+            timeout,
         )
 
     # ------------------------------------------------------------------
@@ -919,7 +1018,8 @@ class OpenLaneRunner:
         cfg = self._pdk_cfg
         if cfg is None:
             return PhysicalDesignResult(
-                success=False, log=f"Unsupported PDK: {self._pdk_name}",
+                success=False,
+                log=f"Unsupported PDK: {self._pdk_name}",
             )
 
         output_def = out_dir / "cts.def"
@@ -936,7 +1036,11 @@ class OpenLaneRunner:
         ]
 
         return self._run_openroad_tcl(
-            tcl_lines, out_dir, "cts", output_def, timeout,
+            tcl_lines,
+            out_dir,
+            "cts",
+            output_def,
+            timeout,
         )
 
     # ------------------------------------------------------------------
@@ -958,7 +1062,8 @@ class OpenLaneRunner:
         cfg = self._pdk_cfg
         if cfg is None:
             return PhysicalDesignResult(
-                success=False, log=f"Unsupported PDK: {self._pdk_name}",
+                success=False,
+                log=f"Unsupported PDK: {self._pdk_name}",
             )
 
         output_def = out_dir / "routed.def"
@@ -982,7 +1087,11 @@ class OpenLaneRunner:
         ]
 
         return self._run_openroad_tcl(
-            tcl_lines, out_dir, "routing", output_def, timeout,
+            tcl_lines,
+            out_dir,
+            "routing",
+            output_def,
+            timeout,
         )
 
     # ------------------------------------------------------------------
@@ -1023,8 +1132,10 @@ class OpenLaneRunner:
 
         start = time.monotonic()
         result = self._magic.run_tcl(
-            tcl_path, tech_file=tech_file,
-            cwd=str(self._project_path), timeout=timeout,
+            tcl_path,
+            tech_file=tech_file,
+            cwd=str(self._project_path),
+            timeout=timeout,
         )
         elapsed = time.monotonic() - start
 
@@ -1034,8 +1145,7 @@ class OpenLaneRunner:
 
         self._emit_step(
             FlowStep.DRC,
-            f"{'DRC Clean' if drc_count == 0 else f'{drc_count} violations'} "
-            f"({elapsed:.1f}s)",
+            f"{'DRC Clean' if drc_count == 0 else f'{drc_count} violations'} ({elapsed:.1f}s)",
         )
 
         return PhysicalDesignResult(
@@ -1079,14 +1189,17 @@ class OpenLaneRunner:
 
         tech_file = self._resolve_tech_file()
         self._magic.run_tcl(
-            extract_tcl_path, tech_file=tech_file,
-            cwd=str(self._project_path), timeout=timeout,
+            extract_tcl_path,
+            tech_file=tech_file,
+            cwd=str(self._project_path),
+            timeout=timeout,
         )
 
         # Run Netgen LVS
         start = time.monotonic()
         result = self._netgen.run_lvs(
-            str(spice_path), netlist_path,
+            str(spice_path),
+            netlist_path,
             setup_file=setup_file,
             output=str(lvs_report),
             cwd=str(self._project_path),
@@ -1142,8 +1255,10 @@ class OpenLaneRunner:
 
         start = time.monotonic()
         result = self._magic.run_tcl(
-            tcl_path, tech_file=tech_file,
-            cwd=str(self._project_path), timeout=timeout,
+            tcl_path,
+            tech_file=tech_file,
+            cwd=str(self._project_path),
+            timeout=timeout,
         )
         elapsed = time.monotonic() - start
 
@@ -1153,8 +1268,7 @@ class OpenLaneRunner:
         actual_gds = str(gds_path) if gds_path.exists() else ""
         self._emit_step(
             FlowStep.GDS_EXPORT,
-            f"{'Exported' if actual_gds else 'Export failed'}: {gds_path.name} "
-            f"({elapsed:.1f}s)",
+            f"{'Exported' if actual_gds else 'Export failed'}: {gds_path.name} ({elapsed:.1f}s)",
         )
 
         return PhysicalDesignResult(
@@ -1204,7 +1318,9 @@ class OpenLaneRunner:
         ]
 
         return self._run_openroad_tcl(
-            tcl_lines, out_dir, "signoff_timing",
+            tcl_lines,
+            out_dir,
+            "signoff_timing",
             out_dir / "signoff.def",  # dummy DEF
             timeout,
         )

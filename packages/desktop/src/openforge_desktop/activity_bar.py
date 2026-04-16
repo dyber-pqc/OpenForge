@@ -9,6 +9,7 @@ represents a *group* of docks. Clicking an icon:
 This keeps the default main window clean (only a handful of docks visible
 at a time) while making every tool one click away.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -27,6 +28,7 @@ from PySide6.QtWidgets import (
 @dataclass
 class ActivityGroup:
     """A named group of docks that share the activity bar button."""
+
     id: str
     title: str
     icon_glyph: str  # single-char or short unicode glyph
@@ -43,7 +45,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="project",
         title="Project",
-        icon_glyph="\U0001F4C1",  # 📁
+        icon_glyph="\U0001f4c1",  # 📁
         tooltip="Project Explorer, Hierarchy, Flow Navigator",
         default=True,
         dock_names=[
@@ -95,7 +97,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="physical",
         title="Physical Design",
-        icon_glyph="\U0001F4D0",  # 📐
+        icon_glyph="\U0001f4d0",  # 📐
         tooltip="Floorplan, Placement, Routing, CTS, Layout",
         dock_names=[
             "floorplan_editor_dock",
@@ -112,7 +114,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="signoff",
         title="Sign-off",
-        icon_glyph="\U0001F4CA",  # 📊
+        icon_glyph="\U0001f4ca",  # 📊
         tooltip="Timing, DRC, LVS, Power, IR, EM, Antenna, Reliability",
         dock_names=[
             "timing_dock",
@@ -140,7 +142,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="fpga",
         title="FPGA",
-        icon_glyph="\U0001F4E1",  # 📡
+        icon_glyph="\U0001f4e1",  # 📡
         tooltip="FPGA target, pin planner, ILA debug, OpenLane",
         dock_names=[
             "fpga_target_dock",
@@ -154,7 +156,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="pcb",
         title="PCB",
-        icon_glyph="\U0001F50C",  # 🔌
+        icon_glyph="\U0001f50c",  # 🔌
         tooltip="PCB Designer, Library Manager, Components",
         dock_names=[
             "pcb_designer_dock",
@@ -166,7 +168,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="analog",
         title="Analog",
-        icon_glyph="\u26A1",  # ⚡
+        icon_glyph="\u26a1",  # ⚡
         tooltip="SPICE Simulator, Transistor Layout, Cell Library",
         dock_names=[
             "spice_simulator_dock",
@@ -179,7 +181,7 @@ DEFAULT_GROUPS: list[ActivityGroup] = [
     ActivityGroup(
         id="ai",
         title="AI Assistant",
-        icon_glyph="\U0001F916",  # 🤖
+        icon_glyph="\U0001f916",  # 🤖
         tooltip="AI assistant, collaboration",
         dock_names=[
             "ai_assistant_dock",
@@ -320,7 +322,9 @@ class ActivityBar(QToolBar):
         self.group_activated.emit(group_id)
 
     def activate_default(self) -> None:
-        default = next((g for g in self._groups if g.default), self._groups[0] if self._groups else None)
+        default = next(
+            (g for g in self._groups if g.default), self._groups[0] if self._groups else None
+        )
         if default is not None:
             self.activate(default.id)
 

@@ -30,6 +30,7 @@ try:
     import numpy as np
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
+
     _HAVE_MPL = True
 except Exception:  # pragma: no cover - matplotlib optional at import time
     _HAVE_MPL = False
@@ -135,16 +136,12 @@ class ParasiticHeatmapPanel(QWidget):
         bv.addLayout(filter_bar)
 
         self._table = QTableWidget(0, 5)
-        self._table.setHorizontalHeaderLabels(
-            ["Net", "Cap (pF)", "Res (Ω)", "Max C (pF)", "Aggr."]
-        )
+        self._table.setHorizontalHeaderLabels(["Net", "Cap (pF)", "Res (Ω)", "Max C (pF)", "Aggr."])
         self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._table.setSortingEnabled(True)
         self._table.horizontalHeader().setStretchLastSection(True)
-        self._table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
+        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._table.itemSelectionChanged.connect(self._on_row_selected)
         bv.addWidget(self._table)
         rv.addWidget(browser_box)
@@ -191,23 +188,23 @@ class ParasiticHeatmapPanel(QWidget):
     def _on_export_csv(self) -> None:
         if not self._spef:
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export nets CSV", "nets.csv", "CSV (*.csv)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Export nets CSV", "nets.csv", "CSV (*.csv)")
         if not path:
             return
         with open(path, "w", newline="", encoding="utf-8") as fh:
             w = csv.writer(fh)
             w.writerow(["net", "cap_pf", "res_ohm", "max_cap_pf", "max_res_ohm", "aggressors"])
             for n in self._spef.nets:
-                w.writerow([
-                    n.name,
-                    f"{n.total_cap_pf:.6g}",
-                    f"{n.total_res_ohm:.6g}",
-                    f"{n.max_cap_pf:.6g}",
-                    f"{n.max_res_ohm:.6g}",
-                    n.aggressor_count,
-                ])
+                w.writerow(
+                    [
+                        n.name,
+                        f"{n.total_cap_pf:.6g}",
+                        f"{n.total_res_ohm:.6g}",
+                        f"{n.max_cap_pf:.6g}",
+                        f"{n.max_res_ohm:.6g}",
+                        n.aggressor_count,
+                    ]
+                )
 
     # -------------------------------------------------------------- loaders
 
@@ -330,7 +327,7 @@ class ParasiticHeatmapPanel(QWidget):
             # fallback: sorted bar of worst offenders
             top = sorted(
                 self._spef.nets,
-                key=lambda n: (n.total_res_ohm if use_res else n.total_cap_pf),
+                key=lambda n: n.total_res_ohm if use_res else n.total_cap_pf,
                 reverse=True,
             )[:25]
             ax.barh(
@@ -380,16 +377,24 @@ class ParasiticHeatmapPanel(QWidget):
         cap_edges, cap_counts = self._spef.histogram_cap(bins=30)
         res_edges, res_counts = self._spef.histogram_res(bins=30)
         if cap_counts:
-            ax1.bar(cap_edges[:-1], cap_counts,
-                    width=[cap_edges[i + 1] - cap_edges[i] for i in range(len(cap_counts))],
-                    align="edge", color="#3498db")
+            ax1.bar(
+                cap_edges[:-1],
+                cap_counts,
+                width=[cap_edges[i + 1] - cap_edges[i] for i in range(len(cap_counts))],
+                align="edge",
+                color="#3498db",
+            )
             ax1.set_title("Capacitance distribution")
             ax1.set_xlabel("pF")
             ax1.set_ylabel("nets")
         if res_counts:
-            ax2.bar(res_edges[:-1], res_counts,
-                    width=[res_edges[i + 1] - res_edges[i] for i in range(len(res_counts))],
-                    align="edge", color="#2ecc71")
+            ax2.bar(
+                res_edges[:-1],
+                res_counts,
+                width=[res_edges[i + 1] - res_edges[i] for i in range(len(res_counts))],
+                align="edge",
+                color="#2ecc71",
+            )
             ax2.set_title("Resistance distribution")
             ax2.set_xlabel("Ω")
             ax2.set_ylabel("nets")

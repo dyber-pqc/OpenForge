@@ -27,8 +27,10 @@ from PySide6.QtWidgets import (
 try:
     from openforge_desktop.panels._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:
         return extra
+
 
 try:
     from openforge.block_design.auto_connect import AutoConnector
@@ -37,6 +39,7 @@ try:
         generate_axi4_lite_monitor,
         generate_axis_monitor,
     )
+
     _CORE_OK = True
 except Exception:  # pragma: no cover
     _CORE_OK = False
@@ -90,9 +93,7 @@ class AxiCheckerPanel(QDockWidget):
         # Tree of interfaces
         self._tree = QTreeWidget()
         self._tree.setColumnCount(5)
-        self._tree.setHeaderLabels(
-            ["Interface", "Kind", "Direction", "Monitored", "Status"]
-        )
+        self._tree.setHeaderLabels(["Interface", "Kind", "Direction", "Monitored", "Status"])
         self._tree.itemSelectionChanged.connect(self._on_select)
         split.addWidget(self._tree)
 
@@ -155,9 +156,7 @@ class AxiCheckerPanel(QDockWidget):
             ac = AutoConnector(self._design)
             ifaces = ac.detect_axi_interfaces()
         except Exception as exc:
-            self._tree.addTopLevelItem(
-                QTreeWidgetItem([f"(error: {exc})", "", "", "", ""])
-            )
+            self._tree.addTopLevelItem(QTreeWidgetItem([f"(error: {exc})", "", "", "", ""]))
             return
         for inst, group in ifaces.items():
             parent = QTreeWidgetItem([inst, "", "", "", ""])
@@ -166,10 +165,15 @@ class AxiCheckerPanel(QDockWidget):
                 key = f"{inst}.{ifc['prefix']}"
                 monitored = "yes" if key in self._monitors else "no"
                 status = self._status.get(key, {}).get("state", "idle")
-                item = QTreeWidgetItem([
-                    ifc["prefix"], ifc["kind"], ifc["direction"],
-                    monitored, status,
-                ])
+                item = QTreeWidgetItem(
+                    [
+                        ifc["prefix"],
+                        ifc["kind"],
+                        ifc["direction"],
+                        monitored,
+                        status,
+                    ]
+                )
                 item.setData(0, Qt.ItemDataRole.UserRole, key)
                 item.setData(1, Qt.ItemDataRole.UserRole, ifc)
                 parent.addChild(item)
@@ -193,10 +197,7 @@ class AxiCheckerPanel(QDockWidget):
         st = self._status.get(key, {})
         cov = st.get("coverage", {})
         if cov:
-            self._cov_label.setText(
-                "Coverage: "
-                + ", ".join(f"{k}={v}" for k, v in cov.items())
-            )
+            self._cov_label.setText("Coverage: " + ", ".join(f"{k}={v}" for k, v in cov.items()))
         else:
             self._cov_label.setText("Coverage: (no data)")
 
@@ -240,9 +241,7 @@ class AxiCheckerPanel(QDockWidget):
         self.refresh()
 
     def _run_sim(self) -> None:
-        self._log.appendPlainText(
-            "[sim] request emitted (wire this to the simulation runner)"
-        )
+        self._log.appendPlainText("[sim] request emitted (wire this to the simulation runner)")
         # Marker for parent to hook: write a flag on the widget
         self.setProperty("sim_requested", True)
 

@@ -298,7 +298,11 @@ def init(
         TemplateName.gowin: "cst",
     }
 
-    if kind in (ProjectKind.fpga,) or template in (TemplateName.ice40, TemplateName.ecp5, TemplateName.gowin):
+    if kind in (ProjectKind.fpga,) or template in (
+        TemplateName.ice40,
+        TemplateName.ecp5,
+        TemplateName.gowin,
+    ):
         yaml_content = _YAML_FPGA.format(
             name=name,
             constraint_ext=constraint_ext_map.get(template, "pcf"),
@@ -350,12 +354,16 @@ def open_project(
     console.print(f"  [dim]PDK:[/]   {config.project.target_pdk or 'none'}")
 
     if json_output:
-        console.print(json_mod.dumps({
-            "name": config.project.name,
-            "path": str(path),
-            "top_module": config.project.top_module,
-            "target_pdk": config.project.target_pdk,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "name": config.project.name,
+                    "path": str(path),
+                    "top_module": config.project.top_module,
+                    "target_pdk": config.project.target_pdk,
+                }
+            )
+        )
 
 
 @app.command()
@@ -392,18 +400,24 @@ def info(
             tb_files.extend(str(p) for p in path.glob(pattern))
 
     if json_output:
-        console.print(json_mod.dumps({
-            "name": config.project.name,
-            "top_module": config.project.top_module,
-            "target_pdk": config.project.target_pdk,
-            "source_count": len(source_files),
-            "constraint_count": len(constraint_files),
-            "testbench_count": len(tb_files),
-            "sources": source_files,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "name": config.project.name,
+                    "top_module": config.project.top_module,
+                    "target_pdk": config.project.target_pdk,
+                    "source_count": len(source_files),
+                    "constraint_count": len(constraint_files),
+                    "testbench_count": len(tb_files),
+                    "sources": source_files,
+                }
+            )
+        )
         return
 
-    table = Table(title=f"Project: {config.project.name}", show_header=True, header_style="bold cyan")
+    table = Table(
+        title=f"Project: {config.project.name}", show_header=True, header_style="bold cyan"
+    )
     table.add_column("Property", style="bold")
     table.add_column("Value")
 
@@ -471,11 +485,18 @@ def validate(
     # Check constraint files
     for pattern in config.design.constraints:
         if not list(path.glob(pattern)):
-            issues.append({"level": "warning", "msg": f"Constraint glob '{pattern}' matches no files"})
+            issues.append(
+                {"level": "warning", "msg": f"Constraint glob '{pattern}' matches no files"}
+            )
 
     # Check top module name is set
     if not config.project.top_module or config.project.top_module == "top":
-        issues.append({"level": "warning", "msg": "Top module is default ('top') -- consider setting it explicitly"})
+        issues.append(
+            {
+                "level": "warning",
+                "msg": "Top module is default ('top') -- consider setting it explicitly",
+            }
+        )
 
     # Check build dirs
     synth_build = path / "synth_build"

@@ -49,12 +49,8 @@ _MODULE_RE = re.compile(
     r"\((.*?)\)\s*;",
     re.DOTALL,
 )
-_PARAM_RE = re.compile(
-    r"parameter\s+(?:\[.*?\]\s*)?(\w+)\s*=\s*([^,\)]+)"
-)
-_PORT_RE = re.compile(
-    r"(input|output|inout)\s+(?:wire|reg|logic)?\s*(\[.*?\])?\s*(\w+)"
-)
+_PARAM_RE = re.compile(r"parameter\s+(?:\[.*?\]\s*)?(\w+)\s*=\s*([^,\)]+)")
+_PORT_RE = re.compile(r"(input|output|inout)\s+(?:wire|reg|logic)?\s*(\[.*?\])?\s*(\w+)")
 
 
 def _parse_verilog_module(source: str) -> dict[str, Any] | None:
@@ -73,11 +69,13 @@ def _parse_verilog_module(source: str) -> dict[str, Any] | None:
     ports: list[dict[str, str]] = []
     for pm in _PORT_RE.finditer(source):
         width = pm.group(2) or ""
-        ports.append({
-            "direction": pm.group(1),
-            "width": width.strip(),
-            "name": pm.group(3),
-        })
+        ports.append(
+            {
+                "direction": pm.group(1),
+                "width": width.strip(),
+                "name": pm.group(3),
+            }
+        )
 
     return {"module": mod_name, "parameters": params, "ports": ports}
 
@@ -111,6 +109,7 @@ def _generate_instantiation(info: dict[str, Any]) -> str:
 # Catalog data loader
 # ---------------------------------------------------------------------------
 
+
 def _load_catalog_yaml(path: Path) -> list[dict[str, Any]]:
     """Load the IP catalog from catalog.yaml."""
     catalog_file = path / "catalog.yaml"
@@ -135,18 +134,24 @@ def _scan_ip_directory(ip_root: Path) -> list[dict[str, Any]]:
     catalog_names = {e.get("name", "") for e in entries}
     if ip_root.exists():
         for child in sorted(ip_root.iterdir()):
-            if child.is_dir() and child.name not in catalog_names and not child.name.startswith("."):
+            if (
+                child.is_dir()
+                and child.name not in catalog_names
+                and not child.name.startswith(".")
+            ):
                 # Best-effort: find a top-level .v file
                 v_files = list(child.rglob("*.v"))
                 if v_files:
-                    entries.append({
-                        "name": child.name,
-                        "description": f"IP block in {child.name}/",
-                        "category": "Uncategorized",
-                        "path": str(v_files[0].relative_to(ip_root)),
-                        "top_module": child.name,
-                        "parameters": [],
-                    })
+                    entries.append(
+                        {
+                            "name": child.name,
+                            "description": f"IP block in {child.name}/",
+                            "category": "Uncategorized",
+                            "path": str(v_files[0].relative_to(ip_root)),
+                            "top_module": child.name,
+                            "parameters": [],
+                        }
+                    )
     return entries
 
 
@@ -169,6 +174,7 @@ def _category_label(raw: str) -> str:
 # ---------------------------------------------------------------------------
 # IP detail widget (shown when an IP is selected)
 # ---------------------------------------------------------------------------
+
 
 class _IpDetailWidget(QWidget):
     """Shows IP name, description, ports, and parameters."""
@@ -253,6 +259,7 @@ class _IpDetailWidget(QWidget):
 # ---------------------------------------------------------------------------
 # Main panel
 # ---------------------------------------------------------------------------
+
 
 class IpCatalogPanel(QDockWidget):
     """IP Catalog dock widget with tree browser and detail pane.
@@ -435,7 +442,9 @@ class IpCatalogPanel(QDockWidget):
             return None
         return item.data(0, Qt.ItemDataRole.UserRole)
 
-    def _on_selection_changed(self, current: QTreeWidgetItem | None, _prev: QTreeWidgetItem | None) -> None:
+    def _on_selection_changed(
+        self, current: QTreeWidgetItem | None, _prev: QTreeWidgetItem | None
+    ) -> None:
         entry = self._entry_from_item(current)
         if entry:
             parsed = self._get_parsed(entry)
@@ -487,6 +496,7 @@ class IpCatalogPanel(QDockWidget):
 
     def _copy_instantiation(self, entry: dict[str, Any]) -> None:
         from PySide6.QtWidgets import QApplication
+
         template = self._get_instantiation(entry)
         clipboard = QApplication.clipboard()
         if clipboard:

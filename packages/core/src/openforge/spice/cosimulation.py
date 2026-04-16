@@ -327,9 +327,7 @@ class MixedSignalSimulator:
         output_vcd.parent.mkdir(parents=True, exist_ok=True)
         output_vcd.write_text("\n".join(out) + "\n", encoding="utf-8")
         _ = timescale_ns
-        self.last_log.append(
-            f"spice_raw_to_vcd: {sample_count} sample edges -> {output_vcd}"
-        )
+        self.last_log.append(f"spice_raw_to_vcd: {sample_count} sample edges -> {output_vcd}")
         return sample_count
 
     # ------------------------------------------------------------------

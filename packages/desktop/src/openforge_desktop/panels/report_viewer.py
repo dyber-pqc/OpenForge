@@ -1,4 +1,5 @@
 """In-app report viewer panel for OpenForge EDA - Dyber branded."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -88,14 +89,10 @@ class ReportViewerPanel(QDockWidget):
             "color: #89b4fa; font-size: 16px; font-weight: 600; "
             "background: transparent; padding-bottom: 8px;"
         )
-        ph_body = QLabel(
-            "Generate a report or select one from the list on the left."
-        )
+        ph_body = QLabel("Generate a report or select one from the list on the left.")
         ph_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         ph_body.setWordWrap(True)
-        ph_body.setStyleSheet(
-            "color: #a6adc8; font-size: 12px; background: transparent;"
-        )
+        ph_body.setStyleSheet("color: #a6adc8; font-size: 12px; background: transparent;")
         ph_layout.addWidget(ph_title)
         ph_layout.addWidget(ph_body)
         self._right_stack.addWidget(placeholder)  # index 0
@@ -117,8 +114,7 @@ class ReportViewerPanel(QDockWidget):
             fallback.setAlignment(Qt.AlignmentFlag.AlignCenter)
             fallback.setWordWrap(True)
             fallback.setStyleSheet(
-                "background-color: #1e1e2e; color: #a6adc8; "
-                "font-size: 12px; padding: 24px;"
+                "background-color: #1e1e2e; color: #a6adc8; font-size: 12px; padding: 24px;"
             )
             self._right_stack.addWidget(fallback)  # index 1
 

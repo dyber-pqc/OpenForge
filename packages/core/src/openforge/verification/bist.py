@@ -4,6 +4,7 @@ A Mentor Tessent MemoryBIST replacement: detects memories in a netlist,
 generates per-memory BIST controllers (MARCH-C-, MATS+, Checkerboard,
 Walking-1), and stitches them in.
 """
+
 from __future__ import annotations
 
 import re
@@ -141,7 +142,7 @@ class BistInserter:
         algorithm = algorithm.upper()
         aw = memory.addr_width
         dw = memory.width
-        cycles_per_pass = (1 << aw)
+        cycles_per_pass = 1 << aw
         if algorithm == "MARCH-C-":
             algo_body = self._march_body(aw, dw)
             n_passes = 6
@@ -385,8 +386,11 @@ endmodule
 
         out_path = netlist.with_name(netlist.stem + "_bist.v")
         try:
-            original = netlist.read_text(encoding="utf-8", errors="ignore") \
-                if netlist.exists() else f"// (no source for {top_module})\n"
+            original = (
+                netlist.read_text(encoding="utf-8", errors="ignore")
+                if netlist.exists()
+                else f"// (no source for {top_module})\n"
+            )
             content = (
                 f"// OpenForge BIST-instrumented netlist\n"
                 f"// Top: {top_module}\n"

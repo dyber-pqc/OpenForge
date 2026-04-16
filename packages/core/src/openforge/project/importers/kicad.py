@@ -52,9 +52,7 @@ def _parse_pcb_stackup(pcb_path: Path) -> list[dict[str, str]]:
     text = pcb_path.read_text(encoding="utf-8", errors="replace")
     stackup: list[dict[str, str]] = []
     # Match (layer N "name" type)
-    layer_re = re.compile(
-        r'\(layer\s+(\d+)\s+"([^"]+)"\s+(\w+)(?:\s+"[^"]*")?\s*\)'
-    )
+    layer_re = re.compile(r'\(layer\s+(\d+)\s+"([^"]+)"\s+(\w+)(?:\s+"[^"]*")?\s*\)')
     for m in layer_re.finditer(text):
         stackup.append(
             {

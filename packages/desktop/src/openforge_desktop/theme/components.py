@@ -354,7 +354,7 @@ class CollapsibleSection(QWidget):
         self._title_text = title
 
     def _set_header_text(self, title: str) -> None:
-        arrow = "\u25BE" if self._expanded else "\u25B8"
+        arrow = "\u25be" if self._expanded else "\u25b8"
         self._header.setText(f"  {arrow}   {title.upper()}")
 
     def add_widget(self, widget: QWidget) -> None:
@@ -724,8 +724,7 @@ class EmptyState(QWidget):
             desc_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             desc_lbl.setWordWrap(True)
             desc_lbl.setStyleSheet(
-                f"color: {p.text_secondary}; font-size: 12px; "
-                f"background: transparent;"
+                f"color: {p.text_secondary}; font-size: 12px; background: transparent;"
             )
             layout.addWidget(desc_lbl)
 
@@ -862,8 +861,7 @@ class KeyValueRow(QWidget):
         family = TYPOGRAPHY.family_mono if self._mono else TYPOGRAPHY.family_sans
         self._value = QLabel(value)
         self._value.setStyleSheet(
-            f"color: {color}; font-size: 12px; background: transparent; "
-            f"font-family: {family};"
+            f"color: {color}; font-size: 12px; background: transparent; font-family: {family};"
         )
         self._value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self._value, 1)

@@ -182,9 +182,7 @@ class _VcdParser:
                 if name and val in ("0", "1"):
                     self.activity[name] = self.activity.get(name, 0) + 1
                     if evcount < max_events:
-                        self.events.append(
-                            _SwitchEvent(current_time_ps / 1000.0, name, int(val))
-                        )
+                        self.events.append(_SwitchEvent(current_time_ps / 1000.0, name, int(val)))
                         evcount += 1
             elif line.startswith("b"):
                 # vector value
@@ -488,9 +486,7 @@ class DynamicIrAnalyzer:
         )
 
     # ------------------------------------------------------------------
-    def get_peak_drops(
-        self, ir_map: DynamicIrMap, top_n: int = 20
-    ) -> list[DynamicIrPoint]:
+    def get_peak_drops(self, ir_map: DynamicIrMap, top_n: int = 20) -> list[DynamicIrPoint]:
         pts = ir_map.all_points()
         pts.sort(key=lambda p: p.peak_drop_mv, reverse=True)
         return pts[:top_n]

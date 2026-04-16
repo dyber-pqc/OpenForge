@@ -4,6 +4,7 @@ Given a group of nets with a target length and tolerance, this module
 measures each net's routed length and adds serpentine (tromboning)
 detours to bring shorter nets up to target.
 """
+
 from __future__ import annotations
 
 import math

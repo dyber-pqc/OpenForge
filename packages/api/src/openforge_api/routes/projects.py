@@ -15,6 +15,7 @@ router = APIRouter()
 # Models
 # ---------------------------------------------------------------------------
 
+
 class ProjectCreate(BaseModel):
     """Request body for creating a project."""
 
@@ -53,13 +54,13 @@ _projects: dict[UUID, ProjectDetail] = {}
 # Routes
 # ---------------------------------------------------------------------------
 
+
 @router.get("/", response_model=list[ProjectSummary])
 async def list_projects() -> list[ProjectSummary]:
     """List all projects."""
     # TODO: Replace with database query via openforge-core
     return [
-        ProjectSummary(id=p.id, name=p.name, created_at=p.created_at)
-        for p in _projects.values()
+        ProjectSummary(id=p.id, name=p.name, created_at=p.created_at) for p in _projects.values()
     ]
 
 

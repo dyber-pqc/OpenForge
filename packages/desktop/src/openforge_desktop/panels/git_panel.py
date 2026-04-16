@@ -215,9 +215,7 @@ class GitRunner:
     def log(self, limit: int = 50) -> list[GitCommit]:
         sep = "\x1f"
         fmt = sep.join(["%H", "%h", "%an", "%ad", "%s"])
-        res = self._run(
-            ["log", f"-n{limit}", f"--pretty=format:{fmt}", "--date=iso"], check=False
-        )
+        res = self._run(["log", f"-n{limit}", f"--pretty=format:{fmt}", "--date=iso"], check=False)
         commits: list[GitCommit] = []
         for line in res.stdout.splitlines():
             parts = line.split(sep)
@@ -517,37 +515,37 @@ class GitPanel(QDockWidget):
         p = self._palette
         self.setStyleSheet(
             f"""
-            QDockWidget#GitPanel {{ color: {p['text']}; }}
-            QWidget {{ background: {p['base']}; color: {p['text']}; }}
-            QToolBar {{ background: {p['mantle']}; border: none; padding: 4px; }}
+            QDockWidget#GitPanel {{ color: {p["text"]}; }}
+            QWidget {{ background: {p["base"]}; color: {p["text"]}; }}
+            QToolBar {{ background: {p["mantle"]}; border: none; padding: 4px; }}
             QToolBar QToolButton {{
-                background: {p['surface0']}; color: {p['text']};
-                border: 1px solid {p['surface1']}; border-radius: 4px;
+                background: {p["surface0"]}; color: {p["text"]};
+                border: 1px solid {p["surface1"]}; border-radius: 4px;
                 padding: 3px 8px; margin: 2px;
             }}
-            QToolBar QToolButton:hover {{ background: {p['surface1']}; }}
+            QToolBar QToolButton:hover {{ background: {p["surface1"]}; }}
             QTreeWidget, QTextEdit, QComboBox {{
-                background: {p['mantle']}; color: {p['text']};
-                border: 1px solid {p['surface0']};
-                selection-background-color: {p['blue']};
-                selection-color: {p['base']};
+                background: {p["mantle"]}; color: {p["text"]};
+                border: 1px solid {p["surface0"]};
+                selection-background-color: {p["blue"]};
+                selection-color: {p["base"]};
             }}
             QHeaderView::section {{
-                background: {p['surface0']}; color: {p['text']};
+                background: {p["surface0"]}; color: {p["text"]};
                 border: none; padding: 4px;
             }}
             QPushButton {{
-                background: {p['green']}; color: {p['base']};
+                background: {p["green"]}; color: {p["base"]};
                 border: none; border-radius: 4px; padding: 6px 14px;
                 font-weight: bold;
             }}
-            QPushButton:hover {{ background: {p['blue']}; }}
+            QPushButton:hover {{ background: {p["blue"]}; }}
             QTabBar::tab {{
-                background: {p['surface0']}; color: {p['text']};
+                background: {p["surface0"]}; color: {p["text"]};
                 padding: 6px 12px;
             }}
-            QTabBar::tab:selected {{ background: {p['blue']}; color: {p['base']}; }}
-            QLabel {{ color: {p['subtext0']}; }}
+            QTabBar::tab:selected {{ background: {p["blue"]}; color: {p["base"]}; }}
+            QLabel {{ color: {p["subtext0"]}; }}
             """
         )
 
@@ -571,8 +569,11 @@ class GitPanel(QDockWidget):
         if not text and fs.status == "??":
             try:
                 full = (self._project_root or Path()) / fs.path
-                text = "+++ Untracked file: " + fs.path + "\n" + full.read_text(
-                    encoding="utf-8", errors="replace"
+                text = (
+                    "+++ Untracked file: "
+                    + fs.path
+                    + "\n"
+                    + full.read_text(encoding="utf-8", errors="replace")
                 )
             except OSError as exc:
                 text = f"(could not read file: {exc})"

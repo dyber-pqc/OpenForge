@@ -8,6 +8,7 @@ Captures published manufacturing constraints for common PCB fab houses
 - A cost estimate (board area, quantity-based scaling) using the
   houses' public pricing as of 2024.
 """
+
 from __future__ import annotations
 
 import math

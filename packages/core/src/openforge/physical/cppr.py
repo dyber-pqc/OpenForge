@@ -71,9 +71,10 @@ class CpprAnalyzer:
         # summary output), fall back to a heuristic: assume 40% of the
         # smaller clock path is shared (clock root + common trunk).
         if not common and (path.launch_clock_path or path.capture_clock_path):
-            common = [f"<common_trunk_{i}>" for i in range(
-                max(1, int(0.4 * max(len(launch), len(capture))))
-            )]
+            common = [
+                f"<common_trunk_{i}>"
+                for i in range(max(1, int(0.4 * max(len(launch), len(capture)))))
+            ]
 
         # Compute delay along the common prefix using launch_clock_path
         common_delay_ns = 0.0

@@ -106,8 +106,10 @@ class VerilatorEngine(ToolEngine):
             "--cc",
             "--exe",
             "--build",
-            "--top-module", top_module,
-            "-Mdir", str(output_dir),
+            "--top-module",
+            top_module,
+            "-Mdir",
+            str(output_dir),
         ]
 
         if trace:

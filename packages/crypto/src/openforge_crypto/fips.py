@@ -34,61 +34,116 @@ class CheckStatus(Enum):
 
 # ── NIST approved algorithm families (FIPS 140-3 / SP 800-140C) ──────
 
-APPROVED_SYMMETRIC: frozenset[str] = frozenset({
-    "AES-128", "AES-192", "AES-256",
-    "AES-128-GCM", "AES-256-GCM",
-    "AES-128-CCM", "AES-256-CCM",
-    "AES-128-CMAC", "AES-256-CMAC",
-    "AES-128-XTS", "AES-256-XTS",
-    "AES-KW", "AES-KWP",
-    "TDES",  # legacy, transitional only
-})
+APPROVED_SYMMETRIC: frozenset[str] = frozenset(
+    {
+        "AES-128",
+        "AES-192",
+        "AES-256",
+        "AES-128-GCM",
+        "AES-256-GCM",
+        "AES-128-CCM",
+        "AES-256-CCM",
+        "AES-128-CMAC",
+        "AES-256-CMAC",
+        "AES-128-XTS",
+        "AES-256-XTS",
+        "AES-KW",
+        "AES-KWP",
+        "TDES",  # legacy, transitional only
+    }
+)
 
-APPROVED_HASH: frozenset[str] = frozenset({
-    "SHA-224", "SHA-256", "SHA-384", "SHA-512",
-    "SHA-512/224", "SHA-512/256",
-    "SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512",
-    "SHAKE128", "SHAKE256",
-    "cSHAKE128", "cSHAKE256",
-    "KMAC128", "KMAC256",
-    "TupleHash128", "TupleHash256",
-    "ParallelHash128", "ParallelHash256",
-})
+APPROVED_HASH: frozenset[str] = frozenset(
+    {
+        "SHA-224",
+        "SHA-256",
+        "SHA-384",
+        "SHA-512",
+        "SHA-512/224",
+        "SHA-512/256",
+        "SHA3-224",
+        "SHA3-256",
+        "SHA3-384",
+        "SHA3-512",
+        "SHAKE128",
+        "SHAKE256",
+        "cSHAKE128",
+        "cSHAKE256",
+        "KMAC128",
+        "KMAC256",
+        "TupleHash128",
+        "TupleHash256",
+        "ParallelHash128",
+        "ParallelHash256",
+    }
+)
 
-APPROVED_ASYMMETRIC: frozenset[str] = frozenset({
-    "RSA-2048", "RSA-3072", "RSA-4096",
-    "ECDSA-P256", "ECDSA-P384", "ECDSA-P521",
-    "EdDSA-Ed25519", "EdDSA-Ed448",
-    "ML-KEM-512", "ML-KEM-768", "ML-KEM-1024",
-    "ML-DSA-44", "ML-DSA-65", "ML-DSA-87",
-    "SLH-DSA-SHA2-128s", "SLH-DSA-SHA2-128f",
-    "SLH-DSA-SHA2-192s", "SLH-DSA-SHA2-192f",
-    "SLH-DSA-SHA2-256s", "SLH-DSA-SHA2-256f",
-    "SLH-DSA-SHAKE-128s", "SLH-DSA-SHAKE-128f",
-    "SLH-DSA-SHAKE-192s", "SLH-DSA-SHAKE-192f",
-    "SLH-DSA-SHAKE-256s", "SLH-DSA-SHAKE-256f",
-})
+APPROVED_ASYMMETRIC: frozenset[str] = frozenset(
+    {
+        "RSA-2048",
+        "RSA-3072",
+        "RSA-4096",
+        "ECDSA-P256",
+        "ECDSA-P384",
+        "ECDSA-P521",
+        "EdDSA-Ed25519",
+        "EdDSA-Ed448",
+        "ML-KEM-512",
+        "ML-KEM-768",
+        "ML-KEM-1024",
+        "ML-DSA-44",
+        "ML-DSA-65",
+        "ML-DSA-87",
+        "SLH-DSA-SHA2-128s",
+        "SLH-DSA-SHA2-128f",
+        "SLH-DSA-SHA2-192s",
+        "SLH-DSA-SHA2-192f",
+        "SLH-DSA-SHA2-256s",
+        "SLH-DSA-SHA2-256f",
+        "SLH-DSA-SHAKE-128s",
+        "SLH-DSA-SHAKE-128f",
+        "SLH-DSA-SHAKE-192s",
+        "SLH-DSA-SHAKE-192f",
+        "SLH-DSA-SHAKE-256s",
+        "SLH-DSA-SHAKE-256f",
+    }
+)
 
-APPROVED_MAC: frozenset[str] = frozenset({
-    "HMAC-SHA-224", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512",
-    "HMAC-SHA3-224", "HMAC-SHA3-256", "HMAC-SHA3-384", "HMAC-SHA3-512",
-    "AES-128-CMAC", "AES-256-CMAC",
-    "KMAC128", "KMAC256",
-})
+APPROVED_MAC: frozenset[str] = frozenset(
+    {
+        "HMAC-SHA-224",
+        "HMAC-SHA-256",
+        "HMAC-SHA-384",
+        "HMAC-SHA-512",
+        "HMAC-SHA3-224",
+        "HMAC-SHA3-256",
+        "HMAC-SHA3-384",
+        "HMAC-SHA3-512",
+        "AES-128-CMAC",
+        "AES-256-CMAC",
+        "KMAC128",
+        "KMAC256",
+    }
+)
 
-APPROVED_DRBG: frozenset[str] = frozenset({
-    "CTR_DRBG-AES-128", "CTR_DRBG-AES-256",
-    "Hash_DRBG-SHA-256", "Hash_DRBG-SHA-512",
-    "HMAC_DRBG-SHA-256", "HMAC_DRBG-SHA-512",
-})
+APPROVED_DRBG: frozenset[str] = frozenset(
+    {
+        "CTR_DRBG-AES-128",
+        "CTR_DRBG-AES-256",
+        "Hash_DRBG-SHA-256",
+        "Hash_DRBG-SHA-512",
+        "HMAC_DRBG-SHA-256",
+        "HMAC_DRBG-SHA-512",
+    }
+)
 
 ALL_APPROVED_ALGORITHMS: frozenset[str] = (
-    APPROVED_SYMMETRIC | APPROVED_HASH | APPROVED_ASYMMETRIC
-    | APPROVED_MAC | APPROVED_DRBG
+    APPROVED_SYMMETRIC | APPROVED_HASH | APPROVED_ASYMMETRIC | APPROVED_MAC | APPROVED_DRBG
 )
 
 
 # ── Data classes ──────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True, slots=True)
 class CheckResult:
@@ -121,9 +176,9 @@ class FIPSReport:
 
     level: FIPSLevel
     checks: list[CheckResult] = field(default_factory=list)
-    timestamp: str = field(default_factory=lambda: datetime.datetime.now(
-        tz=datetime.UTC
-    ).isoformat())
+    timestamp: str = field(
+        default_factory=lambda: datetime.datetime.now(tz=datetime.UTC).isoformat()
+    )
     design_name: str = ""
 
     @property
@@ -158,6 +213,7 @@ class FIPSReport:
 
 
 # ── FIPS Compliance Checker ───────────────────────────────────────────
+
 
 class FIPSComplianceChecker:
     """Verify RTL designs against FIPS 140-3 requirements.
@@ -194,14 +250,17 @@ class FIPSComplianceChecker:
         # Placeholder: actual invocations require domain-specific signals,
         # so we run a minimal self-check and note that full checks require
         # parameterised invocations.
-        report.checks.append(CheckResult(
-            name="design_metadata",
-            description="Design metadata present",
-            status=CheckStatus.PASS if self._signals else CheckStatus.FAIL,
-            evidence=f"{len(self._signals)} signals, {len(self._fsm_states)} FSM states",
-            recommendation="Provide complete signal list for thorough analysis."
-            if not self._signals else "",
-        ))
+        report.checks.append(
+            CheckResult(
+                name="design_metadata",
+                description="Design metadata present",
+                status=CheckStatus.PASS if self._signals else CheckStatus.FAIL,
+                evidence=f"{len(self._signals)} signals, {len(self._fsm_states)} FSM states",
+                recommendation="Provide complete signal list for thorough analysis."
+                if not self._signals
+                else "",
+            )
+        )
 
         return report
 
@@ -245,8 +304,8 @@ class FIPSComplianceChecker:
                 f"##[1:{max_cycles}] ({sig} == '0);\n"
                 f"endproperty\n"
                 f"assert property ({prop_name})\n"
-                f"  else $error(\"FIPS: {sig} not zeroized within "
-                f"{max_cycles} cycles\");\n"
+                f'  else $error("FIPS: {sig} not zeroized within '
+                f'{max_cycles} cycles");\n'
             )
             sva_lines.append(prop)
 
@@ -260,8 +319,8 @@ class FIPSComplianceChecker:
                 f"##[{max_cycles}:$] ({sig} == '0);\n"
                 f"endproperty\n"
                 f"assert property ({hold_name})\n"
-                f"  else $error(\"FIPS: {sig} not held at zero after "
-                f"zeroization\");\n"
+                f'  else $error("FIPS: {sig} not held at zero after '
+                f'zeroization");\n'
             )
             sva_lines.append(hold_prop)
 
@@ -319,8 +378,8 @@ class FIPSComplianceChecker:
                 f"  ({mod}_enable) |-> ({done_sig});\n"
                 f"endproperty\n"
                 f"assert property ({prop_name})\n"
-                f"  else $error(\"FIPS: {mod} enabled before self-test "
-                f"completion\");\n"
+                f'  else $error("FIPS: {mod} enabled before self-test '
+                f'completion");\n'
             )
             sva_lines.append(prop)
 
@@ -334,12 +393,9 @@ class FIPSComplianceChecker:
                 status=CheckStatus.FAIL,
                 sva_property=sva_text,
                 evidence=(
-                    f"Covered: {', '.join(covered) or 'none'}. "
-                    f"Missing: {', '.join(missing)}."
+                    f"Covered: {', '.join(covered) or 'none'}. Missing: {', '.join(missing)}."
                 ),
-                recommendation=(
-                    f"Add KAT self-test for: {', '.join(missing)}"
-                ),
+                recommendation=(f"Add KAT self-test for: {', '.join(missing)}"),
             )
 
         return CheckResult(
@@ -385,8 +441,8 @@ class FIPSComplianceChecker:
                 f"  ({error_signal}) |-> ({sig} == '0);\n"
                 f"endproperty\n"
                 f"assert property ({prop_name})\n"
-                f"  else $error(\"FIPS: Output {sig} not inhibited during "
-                f"error state\");\n"
+                f'  else $error("FIPS: Output {sig} not inhibited during '
+                f'error state");\n'
             )
             sva_lines.append(prop)
 
@@ -396,8 +452,7 @@ class FIPSComplianceChecker:
         return CheckResult(
             name="error_output_inhibit",
             description=(
-                f"Verify {len(output_signals)} output(s) inhibited when "
-                f"{error_signal} asserted"
+                f"Verify {len(output_signals)} output(s) inhibited when {error_signal} asserted"
             ),
             status=CheckStatus.PASS,
             sva_property=sva_text,
@@ -438,8 +493,8 @@ class FIPSComplianceChecker:
             f"  $rose({health_test_fail}) |-> ##[0:2] (!{rng_valid});\n"
             f"endproperty\n"
             f"assert property ({prop1_name})\n"
-            f"  else $error(\"FIPS: RNG valid not deasserted after health "
-            f"test failure\");\n"
+            f'  else $error("FIPS: RNG valid not deasserted after health '
+            f'test failure");\n'
         )
         sva_lines.append(prop1)
 
@@ -453,8 +508,8 @@ class FIPSComplianceChecker:
             f"##[1:{max_repeat_cycles}] ({rng_output} != captured);\n"
             f"endproperty\n"
             f"assert property ({prop2_name})\n"
-            f"  else $error(\"FIPS: RNG output stuck for "
-            f">{max_repeat_cycles} cycles\");\n"
+            f'  else $error("FIPS: RNG output stuck for '
+            f'>{max_repeat_cycles} cycles");\n'
         )
         sva_lines.append(prop2)
 
@@ -468,8 +523,8 @@ class FIPSComplianceChecker:
             f"endproperty\n"
             f"// Note: sticky check -- verify health failure latches\n"
             f"assert property ({prop3_name})\n"
-            f"  else $error(\"FIPS: RNG valid re-asserted prematurely "
-            f"after health failure\");\n"
+            f'  else $error("FIPS: RNG valid re-asserted prematurely '
+            f'after health failure");\n'
         )
         sva_lines.append(prop3)
 
@@ -485,8 +540,7 @@ class FIPSComplianceChecker:
             status=CheckStatus.PASS,
             sva_property=sva_text,
             evidence=(
-                "Generated 3 SVA properties: health inhibit, output "
-                "liveness, failure latch."
+                "Generated 3 SVA properties: health inhibit, output liveness, failure latch."
             ),
             recommendation="Run formal verification with these properties.",
         )
@@ -561,8 +615,8 @@ class FIPSComplianceChecker:
                     f"  1 |-> ({ext} != {secret});\n"
                     f"endproperty\n"
                     f"assert property ({prop_name})\n"
-                    f"  else $error(\"FIPS: Secret {secret} leaked to "
-                    f"external interface {ext}\");\n"
+                    f'  else $error("FIPS: Secret {secret} leaked to '
+                    f'external interface {ext}");\n'
                 )
                 sva_lines.append(prop)
 
@@ -577,8 +631,7 @@ class FIPSComplianceChecker:
                 status=CheckStatus.WARNING,
                 evidence="No secret signals identified for boundary check.",
                 recommendation=(
-                    "Identify all secret/CSP signals and re-run with "
-                    "secret_signals parameter."
+                    "Identify all secret/CSP signals and re-run with secret_signals parameter."
                 ),
             )
 
@@ -635,9 +688,7 @@ class FIPSComplianceChecker:
         ]
 
         # 1. Valid state check -- FSM is always in a valid state
-        states_or = " || ".join(
-            f"({state_reg} == {s})" for s in valid_states
-        )
+        states_or = " || ".join(f"({state_reg} == {s})" for s in valid_states)
         prop1_name = "fips_fsm_valid_state"
         prop1 = (
             f"property {prop1_name};\n"
@@ -645,7 +696,7 @@ class FIPSComplianceChecker:
             f"  1 |-> ({states_or});\n"
             f"endproperty\n"
             f"assert property ({prop1_name})\n"
-            f"  else $error(\"FIPS: FSM in illegal state\");\n"
+            f'  else $error("FIPS: FSM in illegal state");\n'
         )
         sva_lines.append(prop1)
 
@@ -658,7 +709,7 @@ class FIPSComplianceChecker:
             f"({state_reg} == {error_state});\n"
             f"endproperty\n"
             f"assert property ({prop2_name})\n"
-            f"  else $error(\"FIPS: Error state is not absorbing\");\n"
+            f'  else $error("FIPS: Error state is not absorbing");\n'
         )
         sva_lines.append(prop2)
 
@@ -670,7 +721,7 @@ class FIPSComplianceChecker:
             f"  (!rst_n) |=> ({state_reg} == {reset_state});\n"
             f"endproperty\n"
             f"assert property ({prop3_name})\n"
-            f"  else $error(\"FIPS: FSM not in reset state after reset\");\n"
+            f'  else $error("FIPS: FSM not in reset state after reset");\n'
         )
         sva_lines.append(prop3)
 
@@ -682,7 +733,7 @@ class FIPSComplianceChecker:
             f"  1 |-> (!$isunknown({state_reg}));\n"
             f"endproperty\n"
             f"assert property ({prop4_name})\n"
-            f"  else $error(\"FIPS: FSM state contains X/Z values\");\n"
+            f'  else $error("FIPS: FSM state contains X/Z values");\n'
         )
         sva_lines.append(prop4)
 
@@ -691,15 +742,11 @@ class FIPSComplianceChecker:
 
         return CheckResult(
             name="fsm_integrity",
-            description=(
-                f"FSM integrity for {state_reg} with "
-                f"{len(valid_states)} valid states"
-            ),
+            description=(f"FSM integrity for {state_reg} with {len(valid_states)} valid states"),
             status=CheckStatus.PASS,
             sva_property=sva_text,
             evidence=(
-                "Generated 4 SVA properties: valid state, error sticky, "
-                "reset state, no X/Z."
+                "Generated 4 SVA properties: valid state, error sticky, reset state, no X/Z."
             ),
             recommendation="Run formal verification with these properties.",
         )
@@ -725,9 +772,7 @@ class FIPSComplianceChecker:
         csp_regs: list[str] = csp_signals.get("csp_regs", [])
         zeroize = csp_signals.get("zeroize_signal", "zeroize")
         external_ports: list[str] = csp_signals.get("external_ports", [])
-        approved_prefixes: list[str] = csp_signals.get(
-            "approved_storage", []
-        )
+        approved_prefixes: list[str] = csp_signals.get("approved_storage", [])
 
         if not csp_regs:
             return CheckResult(
@@ -762,7 +807,7 @@ class FIPSComplianceChecker:
                 f"  $rose({zeroize}) |-> ##[1:100] ({csp} == '0);\n"
                 f"endproperty\n"
                 f"assert property ({prop_name})\n"
-                f"  else $error(\"FIPS: CSP {csp} not zeroized\");\n"
+                f'  else $error("FIPS: CSP {csp} not zeroized");\n'
             )
             sva_lines.append(prop)
 
@@ -776,8 +821,8 @@ class FIPSComplianceChecker:
                     f"  1 |-> ({port} != {csp});\n"
                     f"endproperty\n"
                     f"assert property ({prop_name})\n"
-                    f"  else $error(\"FIPS: CSP {csp} leaked to "
-                    f"port {port}\");\n"
+                    f'  else $error("FIPS: CSP {csp} leaked to '
+                    f'port {port}");\n'
                 )
                 sva_lines.append(prop)
 
@@ -788,18 +833,13 @@ class FIPSComplianceChecker:
 
         return CheckResult(
             name="csp_management",
-            description=(
-                f"CSP management for {len(csp_regs)} parameter(s)"
-            ),
+            description=(f"CSP management for {len(csp_regs)} parameter(s)"),
             status=status,
             sva_property=sva_text,
             evidence=(
                 f"Issues: {'; '.join(issues)}"
                 if issues
-                else (
-                    f"All {len(csp_regs)} CSPs are zeroizable and "
-                    f"boundary-isolated."
-                )
+                else (f"All {len(csp_regs)} CSPs are zeroizable and boundary-isolated.")
             ),
             recommendation=(
                 "Move CSPs to approved storage locations."
@@ -866,8 +906,7 @@ class FIPSComplianceChecker:
         formal verification environment.
         """
         lines: list[str] = [
-            f"// Auto-generated FIPS 140-3 SVA properties for "
-            f"{self._design_name}",
+            f"// Auto-generated FIPS 140-3 SVA properties for {self._design_name}",
             f"// Generated: {datetime.datetime.now(tz=datetime.UTC).isoformat()}",
             "//",
             "// Include this file in your formal verification bind:",

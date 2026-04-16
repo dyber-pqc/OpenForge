@@ -102,9 +102,19 @@ _SKY130_DRIVE_CELLS: Final[list[str]] = [
 # ── IO standards ─────────────────────────────────────────────────────────────
 
 _IO_STANDARDS: Final[list[str]] = [
-    "LVCMOS33", "LVCMOS25", "LVCMOS18", "LVCMOS15", "LVCMOS12",
-    "LVTTL", "HSTL_I", "HSTL_II", "SSTL135", "SSTL15",
-    "DIFF_SSTL135", "DIFF_SSTL15", "LVDS_25",
+    "LVCMOS33",
+    "LVCMOS25",
+    "LVCMOS18",
+    "LVCMOS15",
+    "LVCMOS12",
+    "LVTTL",
+    "HSTL_I",
+    "HSTL_II",
+    "SSTL135",
+    "SSTL15",
+    "DIFF_SSTL135",
+    "DIFF_SSTL15",
+    "LVDS_25",
 ]
 
 # ── Verilog port parser ─────────────────────────────────────────────────────
@@ -118,15 +128,18 @@ def _parse_ports(source: str) -> list[dict[str, str]]:
     """Extract ports from Verilog source."""
     ports: list[dict[str, str]] = []
     for m in _PORT_RE.finditer(source):
-        ports.append({
-            "direction": m.group(1),
-            "width": m.group(2) or "",
-            "name": m.group(3),
-        })
+        ports.append(
+            {
+                "direction": m.group(1),
+                "width": m.group(2) or "",
+                "name": m.group(3),
+            }
+        )
     return ports
 
 
 # ── SDC syntax highlighter ──────────────────────────────────────────────────
+
 
 class _SDCSyntaxHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for SDC/XDC constraint files."""
@@ -140,13 +153,28 @@ class _SDCSyntaxHighlighter(QSyntaxHighlighter):
         cmd_fmt.setForeground(QColor(_BLUE))
         cmd_fmt.setFontWeight(QFont.Weight.Bold)
         sdc_commands = [
-            "create_clock", "create_generated_clock", "set_clock_uncertainty",
-            "set_clock_latency", "set_input_delay", "set_output_delay",
-            "set_false_path", "set_multicycle_path", "set_max_delay",
-            "set_min_delay", "set_input_transition", "set_load",
-            "set_driving_cell", "get_ports", "get_pins", "get_clocks",
-            "get_nets", "get_cells", "all_inputs", "all_outputs",
-            "set_property", "set_io_standard",
+            "create_clock",
+            "create_generated_clock",
+            "set_clock_uncertainty",
+            "set_clock_latency",
+            "set_input_delay",
+            "set_output_delay",
+            "set_false_path",
+            "set_multicycle_path",
+            "set_max_delay",
+            "set_min_delay",
+            "set_input_transition",
+            "set_load",
+            "set_driving_cell",
+            "get_ports",
+            "get_pins",
+            "get_clocks",
+            "get_nets",
+            "get_cells",
+            "all_inputs",
+            "all_outputs",
+            "set_property",
+            "set_io_standard",
         ]
         for cmd in sdc_commands:
             self._rules.append((re.compile(rf"\b{cmd}\b"), cmd_fmt))
@@ -185,6 +213,7 @@ class _SDCSyntaxHighlighter(QSyntaxHighlighter):
 
 
 # ── Clock waveform preview widget ───────────────────────────────────────────
+
 
 class _ClockWaveformWidget(QWidget):
     """Draws a clock waveform showing period and duty cycle."""
@@ -248,12 +277,14 @@ class _ClockWaveformWidget(QWidget):
         painter.setFont(QFont("Monospace", 7))
         arr_y = low_y + 10
         painter.drawLine(int(margin), int(arr_y), int(margin + cycle_w), int(arr_y))
-        painter.drawText(int(margin + cycle_w / 2 - 20), int(arr_y + 10),
-                         f"T = {self._period_ns:.2f} ns")
+        painter.drawText(
+            int(margin + cycle_w / 2 - 20), int(arr_y + 10), f"T = {self._period_ns:.2f} ns"
+        )
         painter.end()
 
 
 # ── Add Clock Dialog ────────────────────────────────────────────────────────
+
 
 class _AddClockDialog(QDialog):
     """Dialog for creating a new clock constraint."""
@@ -320,6 +351,7 @@ class _AddClockDialog(QDialog):
 
 # ── Add Generated Clock Dialog ──────────────────────────────────────────────
 
+
 class _AddGenClockDialog(QDialog):
     """Dialog for creating a generated clock constraint."""
 
@@ -369,6 +401,7 @@ class _AddGenClockDialog(QDialog):
 
 
 # ── Timing Exception Dialog ─────────────────────────────────────────────────
+
 
 class _AddExceptionDialog(QDialog):
     """Dialog for adding timing exceptions."""
@@ -434,6 +467,7 @@ class _AddExceptionDialog(QDialog):
 
 
 # ── Pin Assignment Grid ─────────────────────────────────────────────────────
+
 
 class _PinGridScene(QGraphicsScene):
     """Simplified FPGA package pin grid."""
@@ -505,6 +539,7 @@ class _PinGridScene(QGraphicsScene):
 
 
 # ── Main Constraint Editor Panel ────────────────────────────────────────────
+
 
 class ConstraintEditorPanel(QDockWidget):
     """Dock widget with tabbed constraint editor."""
@@ -675,10 +710,17 @@ class ConstraintEditorPanel(QDockWidget):
         layout.addWidget(info)
 
         self._io_table = QTableWidget(0, 7)
-        self._io_table.setHorizontalHeaderLabels([
-            "Port", "Direction", "Clock Domain", "Input Delay (ns)",
-            "Output Delay (ns)", "Driving Cell", "Load (pF)",
-        ])
+        self._io_table.setHorizontalHeaderLabels(
+            [
+                "Port",
+                "Direction",
+                "Clock Domain",
+                "Input Delay (ns)",
+                "Output Delay (ns)",
+                "Driving Cell",
+                "Load (pF)",
+            ]
+        )
         self._io_table.horizontalHeader().setStretchLastSection(True)
         self._io_table.setAlternatingRowColors(True)
         self._io_table.cellChanged.connect(self._on_io_changed)
@@ -879,9 +921,16 @@ class ConstraintEditorPanel(QDockWidget):
         layout.addLayout(btn_row)
 
         self._exc_table = QTableWidget(0, 6)
-        self._exc_table.setHorizontalHeaderLabels([
-            "Type", "From", "Through", "To", "Value", "SDC Command",
-        ])
+        self._exc_table.setHorizontalHeaderLabels(
+            [
+                "Type",
+                "From",
+                "Through",
+                "To",
+                "Value",
+                "SDC Command",
+            ]
+        )
         self._exc_table.horizontalHeader().setStretchLastSection(True)
         self._exc_table.setAlternatingRowColors(True)
         self._exc_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -981,9 +1030,7 @@ class ConstraintEditorPanel(QDockWidget):
 
         # Validation area
         self._validation_label = QLabel("")
-        self._validation_label.setStyleSheet(
-            f"color: {_GREEN}; font-size: 10px; padding: 4px;"
-        )
+        self._validation_label.setStyleSheet(f"color: {_GREEN}; font-size: 10px; padding: 4px;")
         layout.addWidget(self._validation_label)
 
         self._tabs.addTab(tab, "Raw SDC")
@@ -1002,23 +1049,28 @@ class ConstraintEditorPanel(QDockWidget):
             if not line or line.startswith("#"):
                 continue
             valid_starts = [
-                "create_clock", "create_generated_clock", "set_clock",
-                "set_input_delay", "set_output_delay", "set_false_path",
-                "set_multicycle_path", "set_max_delay", "set_min_delay",
-                "set_input_transition", "set_load", "set_driving_cell",
-                "set_property", "set_io_standard",
+                "create_clock",
+                "create_generated_clock",
+                "set_clock",
+                "set_input_delay",
+                "set_output_delay",
+                "set_false_path",
+                "set_multicycle_path",
+                "set_max_delay",
+                "set_min_delay",
+                "set_input_transition",
+                "set_load",
+                "set_driving_cell",
+                "set_property",
+                "set_io_standard",
             ]
             if not any(line.startswith(vs) for vs in valid_starts):
                 errors.append(f"Line {i}: Unknown command")
         if errors:
-            self._validation_label.setStyleSheet(
-                f"color: {_RED}; font-size: 10px; padding: 4px;"
-            )
+            self._validation_label.setStyleSheet(f"color: {_RED}; font-size: 10px; padding: 4px;")
             self._validation_label.setText("; ".join(errors[:3]))
         else:
-            self._validation_label.setStyleSheet(
-                f"color: {_GREEN}; font-size: 10px; padding: 4px;"
-            )
+            self._validation_label.setStyleSheet(f"color: {_GREEN}; font-size: 10px; padding: 4px;")
             self._validation_label.setText("SDC syntax OK")
 
     def _parse_sdc_text(self, text: str) -> None:
@@ -1042,13 +1094,15 @@ class ConstraintEditorPanel(QDockWidget):
                 duty = 50.0
                 wf = m.group(3) or ""
                 source = m.group(4) or m.group(5) or ""
-                new_clocks.append({
-                    "name": m.group(1),
-                    "period": period,
-                    "duty": duty,
-                    "waveform": f"{{{wf}}}" if wf else "",
-                    "source": source,
-                })
+                new_clocks.append(
+                    {
+                        "name": m.group(1),
+                        "period": period,
+                        "duty": duty,
+                        "waveform": f"{{{wf}}}" if wf else "",
+                        "source": source,
+                    }
+                )
                 continue
 
             # create_generated_clock
@@ -1057,13 +1111,15 @@ class ConstraintEditorPanel(QDockWidget):
                 line,
             )
             if m:
-                new_gen_clocks.append({
-                    "name": m.group(1),
-                    "source": m.group(2),
-                    "divide_by": int(m.group(3)),
-                    "multiply_by": 1,
-                    "pin": "",
-                })
+                new_gen_clocks.append(
+                    {
+                        "name": m.group(1),
+                        "source": m.group(2),
+                        "divide_by": int(m.group(3)),
+                        "multiply_by": 1,
+                        "pin": "",
+                    }
+                )
                 continue
 
             # set_false_path
@@ -1081,8 +1137,14 @@ class ConstraintEditorPanel(QDockWidget):
             # set_multicycle_path
             m2 = re.match(r"set_multicycle_path\s+(\d+)", line)
             if m2:
-                exc2: dict[str, Any] = {"type": "multicycle_path", "multiplier": int(m2.group(1)),
-                                         "from": "", "through": "", "to": "", "value": 0}
+                exc2: dict[str, Any] = {
+                    "type": "multicycle_path",
+                    "multiplier": int(m2.group(1)),
+                    "from": "",
+                    "through": "",
+                    "to": "",
+                    "value": 0,
+                }
                 fm2 = re.search(r"-from\s+\[get_ports?\s+\{?(\w+)\}?\]", line)
                 if fm2:
                     exc2["from"] = fm2.group(1)
@@ -1149,9 +1211,7 @@ class ConstraintEditorPanel(QDockWidget):
                         f"{val:.3f} [get_ports {{{name}}}]"
                     )
                 if drv_cell:
-                    lines.append(
-                        f"set_driving_cell -lib_cell {drv_cell} [get_ports {{{name}}}]"
-                    )
+                    lines.append(f"set_driving_cell -lib_cell {drv_cell} [get_ports {{{name}}}]")
             elif direction == "output" and clk_domain:
                 val = float(out_delay.text()) if out_delay else 0.0
                 if val != 0.0:
@@ -1172,9 +1232,7 @@ class ConstraintEditorPanel(QDockWidget):
             lines.append("")
             lines.append("# ── Pin Assignments ─────────────────────────────────────")
             for a in self._pin_assignments:
-                lines.append(
-                    f"set_property PACKAGE_PIN {a['pin']} [get_ports {{{a['signal']}}}]"
-                )
+                lines.append(f"set_property PACKAGE_PIN {a['pin']} [get_ports {{{a['signal']}}}]")
                 if a.get("io_standard"):
                     lines.append(
                         f"set_property IOSTANDARD {a['io_standard']} [get_ports {{{a['signal']}}}]"
@@ -1203,7 +1261,9 @@ class ConstraintEditorPanel(QDockWidget):
 
     def _open_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open Constraints", "",
+            self,
+            "Open Constraints",
+            "",
             "SDC/XDC Files (*.sdc *.xdc);;All Files (*)",
         )
         if path:
@@ -1223,13 +1283,13 @@ class ConstraintEditorPanel(QDockWidget):
         if self._sdc_path is None:
             self._save_file_as()
             return
-        self._sdc_path.write_text(
-            self._sdc_editor.toPlainText(), encoding="utf-8"
-        )
+        self._sdc_path.write_text(self._sdc_editor.toPlainText(), encoding="utf-8")
 
     def _save_file_as(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Constraints", "constraints.sdc",
+            self,
+            "Save Constraints",
+            "constraints.sdc",
             "SDC Files (*.sdc);;XDC Files (*.xdc);;All Files (*)",
         )
         if path:
@@ -1238,7 +1298,9 @@ class ConstraintEditorPanel(QDockWidget):
 
     def _load_verilog(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Verilog Source", "",
+            self,
+            "Load Verilog Source",
+            "",
             "Verilog Files (*.v *.sv);;All Files (*)",
         )
         if path:

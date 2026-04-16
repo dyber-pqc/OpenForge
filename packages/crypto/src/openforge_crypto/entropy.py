@@ -13,13 +13,14 @@ from enum import Enum, auto
 
 # ── Enums ─────────────────────────────────────────────────────────────
 
+
 class EntropySourceType(Enum):
     """Type of entropy source."""
 
-    QRNG = auto()    # Quantum random number generator
-    TRNG = auto()    # True random number generator
-    PRNG = auto()    # Pseudo-random number generator
-    DRBG = auto()    # Deterministic random bit generator
+    QRNG = auto()  # Quantum random number generator
+    TRNG = auto()  # True random number generator
+    PRNG = auto()  # Pseudo-random number generator
+    DRBG = auto()  # Deterministic random bit generator
 
 
 class EntropySinkPurpose(Enum):
@@ -58,13 +59,14 @@ class IssueSeverity(Enum):
 
 # ── Data classes ──────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True, slots=True)
 class EntropySource:
     """An entropy source node in the flow graph."""
 
     signal: str
-    min_entropy: float          # bits of min-entropy per output bit
-    rate: float                 # bits per cycle
+    min_entropy: float  # bits of min-entropy per output bit
+    rate: float  # bits per cycle
     source_type: EntropySourceType
 
 
@@ -73,7 +75,7 @@ class EntropySink:
     """An entropy consumer node in the flow graph."""
 
     signal: str
-    required_bits: float        # minimum required entropy bits
+    required_bits: float  # minimum required entropy bits
     purpose: EntropySinkPurpose
 
 
@@ -94,9 +96,7 @@ class EntropyConditioner:
         output_bits of entropy if input has sufficient min-entropy.
         Weaker conditioners (LFSR, von Neumann) have reduced factors.
         """
-        if self.conditioning_type in (
-            ConditioningType.HASH, ConditioningType.CBC_MAC
-        ):
+        if self.conditioning_type in (ConditioningType.HASH, ConditioningType.CBC_MAC):
             # Full-entropy source: preserves min(input_entropy, output_bits)
             return min(1.0, self.output_bits / self.input_bits)
         elif self.conditioning_type == ConditioningType.VON_NEUMANN:
@@ -125,9 +125,7 @@ class EntropyIssue:
     recommendation: str
 
     def __str__(self) -> str:
-        return (
-            f"[{self.severity.name}] {self.location}: {self.message}"
-        )
+        return f"[{self.severity.name}] {self.location}: {self.message}"
 
 
 @dataclass(slots=True)
@@ -151,9 +149,7 @@ class EntropyFlowReport:
 
     @property
     def warning_count(self) -> int:
-        return sum(
-            1 for i in self.issues if i.severity == IssueSeverity.WARNING
-        )
+        return sum(1 for i in self.issues if i.severity == IssueSeverity.WARNING)
 
     def summary(self) -> str:
         status = "FAIL" if self.has_errors else "PASS"
@@ -161,8 +157,7 @@ class EntropyFlowReport:
             f"Entropy Flow Report [{status}]",
             f"  Sources: {len(self.sources)}",
             f"  Sinks:   {len(self.sinks)}",
-            f"  Issues:  {self.error_count} errors, "
-            f"{self.warning_count} warnings",
+            f"  Issues:  {self.error_count} errors, {self.warning_count} warnings",
             "",
         ]
         for sink_sig, entropy in self.entropy_at_sinks.items():
@@ -175,15 +170,16 @@ class EntropyFlowReport:
 # ── Entropy-reducing operations ───────────────────────────────────────
 
 _ENTROPY_REDUCERS: dict[str, float] = {
-    "xor_fold": 0.5,        # XOR folding halves effective entropy
-    "truncation": -1.0,     # factor depends on ratio, computed dynamically
+    "xor_fold": 0.5,  # XOR folding halves effective entropy
+    "truncation": -1.0,  # factor depends on ratio, computed dynamically
     "majority_vote": 0.81,  # 3-of-5 majority: H_out ~ 0.81 * H_in
-    "and_gate": 0.5,        # AND of independent bits reduces entropy
-    "or_gate": 0.5,         # OR of independent bits reduces entropy
+    "and_gate": 0.5,  # AND of independent bits reduces entropy
+    "or_gate": 0.5,  # OR of independent bits reduces entropy
 }
 
 
 # ── Entropy Flow Analyzer ────────────────────────────────────────────
+
 
 class EntropyFlowAnalyzer:
     """Trace and verify entropy flow through a cryptographic design.
@@ -200,8 +196,8 @@ class EntropyFlowAnalyzer:
         self._sinks: dict[str, EntropySink] = {}
         self._conditioners: dict[str, EntropyConditioner] = {}
         self._health_tests: dict[str, EntropyHealthTest] = {}
-        self._graph: dict[str, list[str]] = {}   # adjacency: signal -> [signals]
-        self._node_types: dict[str, str] = {}     # signal -> "source"/"sink"/etc.
+        self._graph: dict[str, list[str]] = {}  # adjacency: signal -> [signals]
+        self._node_types: dict[str, str] = {}  # signal -> "source"/"sink"/etc.
 
     # ── Node registration ─────────────────────────────────────────
 
@@ -314,18 +310,20 @@ class EntropyFlowAnalyzer:
         for sink_sig, sink in self._sinks.items():
             path = self._find_path_to_source(sink_sig)
             if path is None:
-                report.issues.append(EntropyIssue(
-                    severity=IssueSeverity.ERROR,
-                    message=(
-                        f"No entropy path found to sink '{sink_sig}' "
-                        f"(purpose: {sink.purpose.name})"
-                    ),
-                    location=sink_sig,
-                    recommendation=(
-                        "Ensure an entropy source is connected to this sink "
-                        "through the dataflow."
-                    ),
-                ))
+                report.issues.append(
+                    EntropyIssue(
+                        severity=IssueSeverity.ERROR,
+                        message=(
+                            f"No entropy path found to sink '{sink_sig}' "
+                            f"(purpose: {sink.purpose.name})"
+                        ),
+                        location=sink_sig,
+                        recommendation=(
+                            "Ensure an entropy source is connected to this sink "
+                            "through the dataflow."
+                        ),
+                    )
+                )
                 report.entropy_at_sinks[sink_sig] = 0.0
             else:
                 report.paths[sink_sig] = path
@@ -335,19 +333,21 @@ class EntropyFlowAnalyzer:
                 report.entropy_at_sinks[sink_sig] = entropy
 
                 if entropy < sink.required_bits:
-                    report.issues.append(EntropyIssue(
-                        severity=IssueSeverity.ERROR,
-                        message=(
-                            f"Insufficient entropy at '{sink_sig}': "
-                            f"{entropy:.2f} bits < {sink.required_bits} "
-                            f"bits required"
-                        ),
-                        location=sink_sig,
-                        recommendation=(
-                            "Increase source entropy, add stronger "
-                            "conditioning, or reduce requirements."
-                        ),
-                    ))
+                    report.issues.append(
+                        EntropyIssue(
+                            severity=IssueSeverity.ERROR,
+                            message=(
+                                f"Insufficient entropy at '{sink_sig}': "
+                                f"{entropy:.2f} bits < {sink.required_bits} "
+                                f"bits required"
+                            ),
+                            location=sink_sig,
+                            recommendation=(
+                                "Increase source entropy, add stronger "
+                                "conditioning, or reduce requirements."
+                            ),
+                        )
+                    )
 
         # 3. Health tests before conditioning
         for cond_sig in self._conditioners:
@@ -356,18 +356,19 @@ class EntropyFlowAnalyzer:
             for src_sig in sources_for_cond:
                 has_test = self._health_test_on_path(src_sig, cond_sig)
                 if not has_test:
-                    report.issues.append(EntropyIssue(
-                        severity=IssueSeverity.WARNING,
-                        message=(
-                            f"No health test between source '{src_sig}' "
-                            f"and conditioner '{cond_sig}'"
-                        ),
-                        location=cond_sig,
-                        recommendation=(
-                            "Add repetition count and adaptive proportion "
-                            "tests per SP 800-90B."
-                        ),
-                    ))
+                    report.issues.append(
+                        EntropyIssue(
+                            severity=IssueSeverity.WARNING,
+                            message=(
+                                f"No health test between source '{src_sig}' "
+                                f"and conditioner '{cond_sig}'"
+                            ),
+                            location=cond_sig,
+                            recommendation=(
+                                "Add repetition count and adaptive proportion tests per SP 800-90B."
+                            ),
+                        )
+                    )
 
         # 4. Conditioning output entropy
         for cond_sig, cond in self._conditioners.items():
@@ -377,49 +378,54 @@ class EntropyFlowAnalyzer:
                 float(cond.output_bits),
             )
             if output_entropy < cond.output_bits * 0.9:
-                report.issues.append(EntropyIssue(
-                    severity=IssueSeverity.WARNING,
-                    message=(
-                        f"Conditioner '{cond_sig}' output entropy "
-                        f"({output_entropy:.1f} bits) below output width "
-                        f"({cond.output_bits} bits)"
-                    ),
-                    location=cond_sig,
-                    recommendation=(
-                        "Increase input entropy or use a stronger "
-                        "conditioning function."
-                    ),
-                ))
+                report.issues.append(
+                    EntropyIssue(
+                        severity=IssueSeverity.WARNING,
+                        message=(
+                            f"Conditioner '{cond_sig}' output entropy "
+                            f"({output_entropy:.1f} bits) below output width "
+                            f"({cond.output_bits} bits)"
+                        ),
+                        location=cond_sig,
+                        recommendation=(
+                            "Increase input entropy or use a stronger conditioning function."
+                        ),
+                    )
+                )
 
         # 6. SP 800-90B compliance for sources
         for src_sig, src in self._sources.items():
             if src.source_type == EntropySourceType.PRNG:
-                report.issues.append(EntropyIssue(
-                    severity=IssueSeverity.WARNING,
-                    message=(
-                        f"Source '{src_sig}' is PRNG -- not a valid "
-                        f"entropy source per SP 800-90B"
-                    ),
-                    location=src_sig,
-                    recommendation=(
-                        "Use a TRNG or QRNG as the entropy source. "
-                        "A PRNG/DRBG can only be used after seeding."
-                    ),
-                ))
+                report.issues.append(
+                    EntropyIssue(
+                        severity=IssueSeverity.WARNING,
+                        message=(
+                            f"Source '{src_sig}' is PRNG -- not a valid "
+                            f"entropy source per SP 800-90B"
+                        ),
+                        location=src_sig,
+                        recommendation=(
+                            "Use a TRNG or QRNG as the entropy source. "
+                            "A PRNG/DRBG can only be used after seeding."
+                        ),
+                    )
+                )
 
             if src.min_entropy < 0.1:
-                report.issues.append(EntropyIssue(
-                    severity=IssueSeverity.ERROR,
-                    message=(
-                        f"Source '{src_sig}' has very low min-entropy: "
-                        f"{src.min_entropy:.3f} bits/bit"
-                    ),
-                    location=src_sig,
-                    recommendation=(
-                        "Verify entropy source quality. Min-entropy should "
-                        "be at least 0.1 bits/bit before conditioning."
-                    ),
-                ))
+                report.issues.append(
+                    EntropyIssue(
+                        severity=IssueSeverity.ERROR,
+                        message=(
+                            f"Source '{src_sig}' has very low min-entropy: "
+                            f"{src.min_entropy:.3f} bits/bit"
+                        ),
+                        location=src_sig,
+                        recommendation=(
+                            "Verify entropy source quality. Min-entropy should "
+                            "be at least 0.1 bits/bit before conditioning."
+                        ),
+                    )
+                )
 
             # Check health tests exist for this source
             source_has_tests = any(
@@ -428,20 +434,22 @@ class EntropyFlowAnalyzer:
                 for ht in self._health_tests.values()
             )
             if not source_has_tests and src.source_type in (
-                EntropySourceType.TRNG, EntropySourceType.QRNG,
+                EntropySourceType.TRNG,
+                EntropySourceType.QRNG,
             ):
-                report.issues.append(EntropyIssue(
-                    severity=IssueSeverity.ERROR,
-                    message=(
-                        f"Source '{src_sig}' ({src.source_type.name}) "
-                        f"has no health tests"
-                    ),
-                    location=src_sig,
-                    recommendation=(
-                        "SP 800-90B requires repetition count and "
-                        "adaptive proportion tests for all noise sources."
-                    ),
-                ))
+                report.issues.append(
+                    EntropyIssue(
+                        severity=IssueSeverity.ERROR,
+                        message=(
+                            f"Source '{src_sig}' ({src.source_type.name}) has no health tests"
+                        ),
+                        location=src_sig,
+                        recommendation=(
+                            "SP 800-90B requires repetition count and "
+                            "adaptive proportion tests for all noise sources."
+                        ),
+                    )
+                )
 
         return report
 
@@ -457,7 +465,9 @@ class EntropyFlowAnalyzer:
         return self._estimate_recursive(node, visited)
 
     def _estimate_recursive(
-        self, node: str, visited: set[str],
+        self,
+        node: str,
+        visited: set[str],
     ) -> float:
         if node in visited:
             return 0.0
@@ -606,18 +616,20 @@ class EntropyFlowAnalyzer:
         for dst, src, op in assignments:
             if op in _ENTROPY_REDUCERS and op != "pass":
                 factor = _ENTROPY_REDUCERS[op]
-                issues.append(EntropyIssue(
-                    severity=IssueSeverity.WARNING,
-                    message=(
-                        f"Entropy-reducing operation '{op}' on "
-                        f"'{src}' -> '{dst}' "
-                        f"(factor: {factor:.2f})"
-                    ),
-                    location=dst,
-                    recommendation=(
-                        f"Compensate for entropy reduction by increasing "
-                        f"input entropy or adding conditioning after '{dst}'."
-                    ),
-                ))
+                issues.append(
+                    EntropyIssue(
+                        severity=IssueSeverity.WARNING,
+                        message=(
+                            f"Entropy-reducing operation '{op}' on "
+                            f"'{src}' -> '{dst}' "
+                            f"(factor: {factor:.2f})"
+                        ),
+                        location=dst,
+                        recommendation=(
+                            f"Compensate for entropy reduction by increasing "
+                            f"input entropy or adding conditioning after '{dst}'."
+                        ),
+                    )
+                )
 
         return issues

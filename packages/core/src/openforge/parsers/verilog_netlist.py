@@ -185,7 +185,9 @@ class VerilogNetlistParser:
 
             # Port declarations
             dir_m = re.match(
-                r"(input|output|inout)\s+(.*)", stmt, re.DOTALL,
+                r"(input|output|inout)\s+(.*)",
+                stmt,
+                re.DOTALL,
             )
             if dir_m:
                 direction = dir_m.group(1)
@@ -217,7 +219,9 @@ class VerilogNetlistParser:
 
     @staticmethod
     def _parse_port_decl(
-        direction: str, rest: str, module: NetlistModule,
+        direction: str,
+        rest: str,
+        module: NetlistModule,
     ) -> None:
         """Parse a port declaration like 'input [7:0] data, clk'."""
         # Check for bus range
@@ -327,9 +331,20 @@ class VerilogNetlistParser:
 
         # Skip keywords that aren't cell types
         if cell_type in (
-            "module", "endmodule", "input", "output", "inout",
-            "wire", "reg", "assign", "always", "initial",
-            "parameter", "localparam", "generate", "genvar",
+            "module",
+            "endmodule",
+            "input",
+            "output",
+            "inout",
+            "wire",
+            "reg",
+            "assign",
+            "always",
+            "initial",
+            "parameter",
+            "localparam",
+            "generate",
+            "genvar",
         ):
             return None
 

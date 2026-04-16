@@ -16,39 +16,48 @@ from typing import Final
 
 # module foo (
 _RE_MODULE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*module\s+(\w+)", re.MULTILINE,
+    r"^\s*module\s+(\w+)",
+    re.MULTILINE,
 )
 # function [type] foo
 _RE_FUNCTION: Final[re.Pattern[str]] = re.compile(
-    r"^\s*(?:(?:static|automatic|virtual)\s+)?function\s+(?:\w+\s+)?(\w+)\s*[;(]", re.MULTILINE,
+    r"^\s*(?:(?:static|automatic|virtual)\s+)?function\s+(?:\w+\s+)?(\w+)\s*[;(]",
+    re.MULTILINE,
 )
 # task foo
 _RE_TASK: Final[re.Pattern[str]] = re.compile(
-    r"^\s*(?:(?:static|automatic|virtual)\s+)?task\s+(\w+)\s*[;(]", re.MULTILINE,
+    r"^\s*(?:(?:static|automatic|virtual)\s+)?task\s+(\w+)\s*[;(]",
+    re.MULTILINE,
 )
 # class foo
 _RE_CLASS: Final[re.Pattern[str]] = re.compile(
-    r"^\s*(?:virtual\s+)?class\s+(\w+)", re.MULTILINE,
+    r"^\s*(?:virtual\s+)?class\s+(\w+)",
+    re.MULTILINE,
 )
 # interface foo
 _RE_INTERFACE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*interface\s+(\w+)", re.MULTILINE,
+    r"^\s*interface\s+(\w+)",
+    re.MULTILINE,
 )
 # package foo
 _RE_PACKAGE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*package\s+(\w+)", re.MULTILINE,
+    r"^\s*package\s+(\w+)",
+    re.MULTILINE,
 )
 # parameter/localparam FOO =
 _RE_PARAM: Final[re.Pattern[str]] = re.compile(
-    r"^\s*(?:parameter|localparam)\s+(?:\w+\s+)?(\w+)\s*=", re.MULTILINE,
+    r"^\s*(?:parameter|localparam)\s+(?:\w+\s+)?(\w+)\s*=",
+    re.MULTILINE,
 )
 # typedef ... name;
 _RE_TYPEDEF: Final[re.Pattern[str]] = re.compile(
-    r"^\s*typedef\s+.*?\b(\w+)\s*;", re.MULTILINE,
+    r"^\s*typedef\s+.*?\b(\w+)\s*;",
+    re.MULTILINE,
 )
 # `define MACRO
 _RE_DEFINE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*`define\s+(\w+)", re.MULTILINE,
+    r"^\s*`define\s+(\w+)",
+    re.MULTILINE,
 )
 
 # Port / signal declarations for references
@@ -131,7 +140,7 @@ class VerilogNavigator:
             for match in pattern.finditer(text):
                 name = match.group(1)
                 # Calculate line number from position
-                line_num = text[:match.start()].count("\n") + 1
+                line_num = text[: match.start()].count("\n") + 1
                 if name not in self._definitions:
                     self._definitions[name] = []
                 self._definitions[name].append((file_str, line_num, kind))
@@ -139,7 +148,7 @@ class VerilogNavigator:
         # Find signal/port declarations for references
         for match in _RE_PORT_SIGNAL.finditer(text):
             name = match.group(1)
-            line_num = text[:match.start()].count("\n") + 1
+            line_num = text[: match.start()].count("\n") + 1
             if name not in self._references:
                 self._references[name] = []
             self._references[name].append((file_str, line_num))
@@ -228,7 +237,16 @@ class VerilogNavigator:
         for port_match in re.finditer(r"\b(\w+)\s*(?:,|$)", ports_text):
             name = port_match.group(1)
             # Skip keywords
-            if name not in {"input", "output", "inout", "wire", "reg", "logic", "signed", "unsigned"}:
+            if name not in {
+                "input",
+                "output",
+                "inout",
+                "wire",
+                "reg",
+                "logic",
+                "signed",
+                "unsigned",
+            }:
                 port_names.append(name)
 
         return port_names

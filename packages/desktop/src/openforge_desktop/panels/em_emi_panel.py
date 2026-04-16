@@ -239,11 +239,11 @@ class _EmTab(QWidget):
         self._wires_lbl.setText(str(result.wires_checked))
         self._viol_lbl.setText(str(len(result.violations)))
         self._crit_lbl.setText(str(result.critical_count))
-        self._avg_lbl.setText(f"{result.avg_density*1e3:.3f} mA/um")
+        self._avg_lbl.setText(f"{result.avg_density * 1e3:.3f} mA/um")
 
-        viol = sorted(
-            result.violations, key=lambda v: v.current_density_a_per_um2, reverse=True
-        )[:50]
+        viol = sorted(result.violations, key=lambda v: v.current_density_a_per_um2, reverse=True)[
+            :50
+        ]
         self._table.setRowCount(len(viol))
         for i, v in enumerate(viol):
             self._table.setItem(i, 0, QTableWidgetItem(v.wire.net))
@@ -251,11 +251,9 @@ class _EmTab(QWidget):
             self._table.setItem(
                 i,
                 2,
-                QTableWidgetItem(f"{v.current_density_a_per_um2*1e3:.3f}"),
+                QTableWidgetItem(f"{v.current_density_a_per_um2 * 1e3:.3f}"),
             )
-            self._table.setItem(
-                i, 3, QTableWidgetItem(f"{v.limit_a_per_um2*1e3:.3f}")
-            )
+            self._table.setItem(i, 3, QTableWidgetItem(f"{v.limit_a_per_um2 * 1e3:.3f}"))
             self._table.setItem(i, 4, QTableWidgetItem(f"{v.margin_pct:+.1f}"))
 
         self._layer_list.clear()
@@ -366,18 +364,14 @@ class _EsdTab(QWidget):
         self._hbm.setText("PASS" if result.hbm_compliant else "FAIL")
         self._cdm.setText("PASS" if result.cdm_compliant else "FAIL")
 
-        rows = sorted(
-            result.paths, key=lambda p: p.total_resistance, reverse=True
-        )[:50]
+        rows = sorted(result.paths, key=lambda p: p.total_resistance, reverse=True)[:50]
         self._table.setRowCount(len(rows))
         for i, p in enumerate(rows):
             self._table.setItem(i, 0, QTableWidgetItem(p.source_pin))
             self._table.setItem(i, 1, QTableWidgetItem(p.dest_pin))
             self._table.setItem(i, 2, QTableWidgetItem(f"{p.total_resistance:.3f}"))
             self._table.setItem(i, 3, QTableWidgetItem(f"{p.distance_um:.1f}"))
-            self._table.setItem(
-                i, 4, QTableWidgetItem("ok" if p.breakdown_ok else "FAIL")
-            )
+            self._table.setItem(i, 4, QTableWidgetItem("ok" if p.breakdown_ok else "FAIL"))
 
         self._violation_list.clear()
         for v in result.violations[:50]:
@@ -422,9 +416,7 @@ class EmEmiPanel(QDockWidget):
         self.setWidget(root)
 
         # Default FCC limits
-        self._emi_tab._chart.set_limits(
-            {30: 40, 88: 40, 216: 43, 960: 46, 1000: 54}
-        )
+        self._emi_tab._chart.set_limits({30: 40, 88: 40, 216: 43, 960: 46, 1000: 54})
         self._apply_theme()
 
     # ------------------------------------------------------------------

@@ -71,6 +71,7 @@ _KNOWN_TOOLS: dict[str, ToolInfo] = {
 # Routes
 # ---------------------------------------------------------------------------
 
+
 @router.get("/", response_model=list[ToolInfo])
 async def list_tools() -> list[ToolInfo]:
     """List all known EDA tools with installed status and version."""
@@ -96,6 +97,7 @@ async def list_tools() -> list[ToolInfo]:
         mod_name, cls_name = _ENGINE_MAP[name]
         try:
             import importlib
+
             mod = importlib.import_module(mod_name)
             engine_cls = getattr(mod, cls_name)
             engine = engine_cls()
@@ -114,9 +116,7 @@ async def list_tools() -> list[ToolInfo]:
         except Exception:
             return info
 
-    results = await asyncio.gather(
-        *[_check(name, info) for name, info in _KNOWN_TOOLS.items()]
-    )
+    results = await asyncio.gather(*[_check(name, info) for name, info in _KNOWN_TOOLS.items()])
     return list(results)
 
 
@@ -162,7 +162,9 @@ async def install_tool(name: str) -> JobBase:
 
     async def _pull(j_id: UUID, image: str) -> None:
         proc = await asyncio.create_subprocess_exec(
-            "docker", "pull", image,
+            "docker",
+            "pull",
+            image,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )

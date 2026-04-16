@@ -183,9 +183,7 @@ def _extract_port(text: str) -> str | None:
 
 def _extract_value(text: str, keyword: str) -> str | None:
     """Pull the token immediately following ``keyword`` in a set_property line."""
-    pattern = re.compile(
-        rf"set_property\s+{re.escape(keyword)}\s+([^\s\[]+)", re.IGNORECASE
-    )
+    pattern = re.compile(rf"set_property\s+{re.escape(keyword)}\s+([^\s\[]+)", re.IGNORECASE)
     if m := pattern.search(text):
         return m.group(1).strip("{}")
     return None
@@ -252,32 +250,24 @@ def parse_xdc_text(text: str) -> XdcFile:
             if "package_pin" in low and port:
                 pin_val = _extract_value(code, "PACKAGE_PIN")
                 if pin_val:
-                    pa = pin_map.setdefault(
-                        port, XdcPinAssignment(port=port, pin=pin_val)
-                    )
+                    pa = pin_map.setdefault(port, XdcPinAssignment(port=port, pin=pin_val))
                     pa.pin = pin_val
                     if pending_comment and not pa.comment:
                         pa.comment = pending_comment
             elif "iostandard" in low and port:
                 val = _extract_value(code, "IOSTANDARD")
                 if val:
-                    pa = pin_map.setdefault(
-                        port, XdcPinAssignment(port=port, pin="")
-                    )
+                    pa = pin_map.setdefault(port, XdcPinAssignment(port=port, pin=""))
                     pa.iostandard = val
             elif re.search(r"\bdrive\b", low) and port:
                 val = _extract_value(code, "DRIVE")
                 if val and val.isdigit():
-                    pa = pin_map.setdefault(
-                        port, XdcPinAssignment(port=port, pin="")
-                    )
+                    pa = pin_map.setdefault(port, XdcPinAssignment(port=port, pin=""))
                     pa.drive = int(val)
             elif re.search(r"\bslew\b", low) and port:
                 val = _extract_value(code, "SLEW")
                 if val:
-                    pa = pin_map.setdefault(
-                        port, XdcPinAssignment(port=port, pin="")
-                    )
+                    pa = pin_map.setdefault(port, XdcPinAssignment(port=port, pin=""))
                     pa.slew = val
             elif "pullup" in low and port:
                 pa = pin_map.setdefault(port, XdcPinAssignment(port=port, pin=""))
@@ -288,14 +278,10 @@ def parse_xdc_text(text: str) -> XdcFile:
             elif "pulltype" in low and port:
                 val = _extract_value(code, "PULLTYPE")
                 if val:
-                    pa = pin_map.setdefault(
-                        port, XdcPinAssignment(port=port, pin="")
-                    )
+                    pa = pin_map.setdefault(port, XdcPinAssignment(port=port, pin=""))
                     pa.pulltype = val
 
-            xdc.raw_constraints.append(
-                XdcConstraint(type="set_property", raw=code, line=lineno)
-            )
+            xdc.raw_constraints.append(XdcConstraint(type="set_property", raw=code, line=lineno))
             pending_comment = ""
             continue
 
@@ -303,9 +289,7 @@ def parse_xdc_text(text: str) -> XdcFile:
             clk = _parse_create_clock(code)
             if clk is not None:
                 xdc.clocks.append(clk)
-            xdc.raw_constraints.append(
-                XdcConstraint(type="create_clock", raw=code, line=lineno)
-            )
+            xdc.raw_constraints.append(XdcConstraint(type="create_clock", raw=code, line=lineno))
             pending_comment = ""
             continue
 
@@ -313,18 +297,14 @@ def parse_xdc_text(text: str) -> XdcFile:
             d = _parse_io_delay(code)
             if d is not None:
                 xdc.io_delays.append(d)
-            xdc.raw_constraints.append(
-                XdcConstraint(type=low.split()[0], raw=code, line=lineno)
-            )
+            xdc.raw_constraints.append(XdcConstraint(type=low.split()[0], raw=code, line=lineno))
             pending_comment = ""
             continue
 
         if low.startswith("set_false_path"):
             fp = _parse_false_path(code)
             xdc.false_paths.append(fp)
-            xdc.raw_constraints.append(
-                XdcConstraint(type="set_false_path", raw=code, line=lineno)
-            )
+            xdc.raw_constraints.append(XdcConstraint(type="set_false_path", raw=code, line=lineno))
             pending_comment = ""
             continue
 
@@ -418,8 +398,7 @@ def write_xdc(xdc: XdcFile, output: str | Path) -> None:
         for d in xdc.io_delays:
             cmd = "set_input_delay" if d.kind == "input" else "set_output_delay"
             lines.append(
-                f"{cmd} -clock {d.clock} -{d.max_min} {d.delay_ns} "
-                f"[get_ports {{{d.port}}}]"
+                f"{cmd} -clock {d.clock} -{d.max_min} {d.delay_ns} [get_ports {{{d.port}}}]"
             )
         lines.append("")
 
@@ -469,7 +448,5 @@ def make_default_xdc(
         )
     if leds:
         for port, pin in leds:
-            xdc.pin_assignments.append(
-                XdcPinAssignment(port=port, pin=pin, iostandard=iostandard)
-            )
+            xdc.pin_assignments.append(XdcPinAssignment(port=port, pin=pin, iostandard=iostandard))
     return xdc

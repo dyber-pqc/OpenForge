@@ -3,6 +3,7 @@
 Net class manager + autoroute + length matching + diff pair routing,
 all driven against an ``openforge.pcb.model.PcbBoard`` instance.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -187,9 +188,20 @@ class PcbRouterPanel(QWidget):
 
         self._class_table = QTableWidget(0, 8)
         self._class_table.setHorizontalHeaderLabels(
-            ["Name", "Width mm", "Clearance", "Via drill", "Via dia", "Z0 (Ω)", "Len target", "Topology"]
+            [
+                "Name",
+                "Width mm",
+                "Clearance",
+                "Via drill",
+                "Via dia",
+                "Z0 (Ω)",
+                "Len target",
+                "Topology",
+            ]
         )
-        self._class_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self._class_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
         self._class_table.itemChanged.connect(self._on_class_edited)
         lay.addWidget(self._class_table, 1)
         return w

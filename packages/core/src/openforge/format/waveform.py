@@ -292,9 +292,7 @@ class Waveform(BaseModel):
         # Fallback: fst2vcd
         fst2vcd = shutil.which("fst2vcd")
         if not fst2vcd:
-            raise RuntimeError(
-                "FST support requires pylibfst or fst2vcd in PATH"
-            )
+            raise RuntimeError("FST support requires pylibfst or fst2vcd in PATH")
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "out.vcd"
             subprocess.run(

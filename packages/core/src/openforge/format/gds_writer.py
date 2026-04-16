@@ -69,58 +69,58 @@ if TYPE_CHECKING:
 # RECORD TYPES (from the GDSII Stream Format specification)
 # ============================================================================
 
-HEADER       = 0x00
-BGNLIB       = 0x01
-LIBNAME      = 0x02
-UNITS        = 0x03
-ENDLIB       = 0x04
-BGNSTR       = 0x05
-STRNAME      = 0x06
-ENDSTR       = 0x07
-BOUNDARY     = 0x08
-PATH         = 0x09
-SREF         = 0x0A
-AREF         = 0x0B
-TEXT         = 0x0C
-LAYER        = 0x0D
-DATATYPE     = 0x0E
-WIDTH        = 0x0F
-XY           = 0x10
-ENDEL        = 0x11
-SNAME        = 0x12
-COLROW       = 0x13
-TEXTNODE     = 0x14
-NODE         = 0x15
-TEXTTYPE     = 0x16
+HEADER = 0x00
+BGNLIB = 0x01
+LIBNAME = 0x02
+UNITS = 0x03
+ENDLIB = 0x04
+BGNSTR = 0x05
+STRNAME = 0x06
+ENDSTR = 0x07
+BOUNDARY = 0x08
+PATH = 0x09
+SREF = 0x0A
+AREF = 0x0B
+TEXT = 0x0C
+LAYER = 0x0D
+DATATYPE = 0x0E
+WIDTH = 0x0F
+XY = 0x10
+ENDEL = 0x11
+SNAME = 0x12
+COLROW = 0x13
+TEXTNODE = 0x14
+NODE = 0x15
+TEXTTYPE = 0x16
 PRESENTATION = 0x17
-STRING       = 0x19
-STRANS       = 0x1A
-MAG          = 0x1B
-ANGLE        = 0x1C
-REFLIBS      = 0x1F
-FONTS        = 0x20
-PATHTYPE     = 0x21
-GENERATIONS  = 0x22
-ATTRTABLE    = 0x23
-ELFLAGS      = 0x26
-NODETYPE     = 0x2A
-PROPATTR     = 0x2B
-PROPVALUE    = 0x2C
-BOX          = 0x2D
-BOXTYPE      = 0x2E
-PLEX         = 0x2F
+STRING = 0x19
+STRANS = 0x1A
+MAG = 0x1B
+ANGLE = 0x1C
+REFLIBS = 0x1F
+FONTS = 0x20
+PATHTYPE = 0x21
+GENERATIONS = 0x22
+ATTRTABLE = 0x23
+ELFLAGS = 0x26
+NODETYPE = 0x2A
+PROPATTR = 0x2B
+PROPVALUE = 0x2C
+BOX = 0x2D
+BOXTYPE = 0x2E
+PLEX = 0x2F
 
 # ============================================================================
 # DATA TYPES
 # ============================================================================
 
-NO_DATA         = 0x00
-BIT_ARRAY       = 0x01
-TWO_BYTE_INT    = 0x02
-FOUR_BYTE_INT   = 0x03
-FOUR_BYTE_REAL  = 0x04
+NO_DATA = 0x00
+BIT_ARRAY = 0x01
+TWO_BYTE_INT = 0x02
+FOUR_BYTE_INT = 0x03
+FOUR_BYTE_REAL = 0x04
 EIGHT_BYTE_REAL = 0x05
-ASCII_STRING    = 0x06
+ASCII_STRING = 0x06
 
 
 # ============================================================================
@@ -133,40 +133,40 @@ ASCII_STRING    = 0x06
 # full PDK technology file.
 
 SKY130_LAYERS: dict[str, tuple[int, int]] = {
-    "nwell":      (64, 20),
-    "pwell":      (64, 44),
-    "dnwell":     (64, 18),
-    "diff":       (65, 20),
-    "ndiff":      (65, 20),
-    "pdiff":      (65, 20),
-    "tap":        (65, 44),
-    "psdm":       (94, 20),
-    "nsdm":       (93, 44),
-    "poly":       (66, 20),
+    "nwell": (64, 20),
+    "pwell": (64, 44),
+    "dnwell": (64, 18),
+    "diff": (65, 20),
+    "ndiff": (65, 20),
+    "pdiff": (65, 20),
+    "tap": (65, 44),
+    "psdm": (94, 20),
+    "nsdm": (93, 44),
+    "poly": (66, 20),
     "polysilicon": (66, 20),
-    "licon":      (66, 44),
-    "li1":        (67, 20),
-    "mcon":       (67, 44),
-    "met1":       (68, 20),
-    "metal1":     (68, 20),
-    "via1":       (68, 44),
-    "via":        (68, 44),
-    "met2":       (69, 20),
-    "metal2":     (69, 20),
-    "via2":       (69, 44),
-    "met3":       (70, 20),
-    "metal3":     (70, 20),
-    "via3":       (70, 44),
-    "met4":       (71, 20),
-    "metal4":     (71, 20),
-    "via4":       (71, 44),
-    "met5":       (72, 20),
-    "metal5":     (72, 20),
-    "pad":        (76, 20),
-    "text":       (83, 44),
-    "boundary":   (235, 4),
+    "licon": (66, 44),
+    "li1": (67, 20),
+    "mcon": (67, 44),
+    "met1": (68, 20),
+    "metal1": (68, 20),
+    "via1": (68, 44),
+    "via": (68, 44),
+    "met2": (69, 20),
+    "metal2": (69, 20),
+    "via2": (69, 44),
+    "met3": (70, 20),
+    "metal3": (70, 20),
+    "via3": (70, 44),
+    "met4": (71, 20),
+    "metal4": (71, 20),
+    "via4": (71, 44),
+    "met5": (72, 20),
+    "metal5": (72, 20),
+    "pad": (76, 20),
+    "text": (83, 44),
+    "boundary": (235, 4),
     "prboundary": (235, 4),
-    "contact":    (66, 44),
+    "contact": (66, 44),
 }
 
 
@@ -293,7 +293,7 @@ class GdsLibrary:
     name: str = "LIB"
     version: int = 600  # GDSII version 6
     user_units: float = 1e-6  # 1 micron
-    db_units: float = 1e-9    # 1 nanometre
+    db_units: float = 1e-9  # 1 nanometre
     structures: list[GdsStructure] = field(default_factory=list)
 
 
@@ -316,13 +316,9 @@ def _write_record(
     """
     length = len(data) + 4
     if length > 0xFFFF:
-        raise ValueError(
-            f"GDS record too long: {length} bytes (record type 0x{record_type:02X})"
-        )
+        raise ValueError(f"GDS record too long: {length} bytes (record type 0x{record_type:02X})")
     if length % 2 != 0:
-        raise ValueError(
-            f"GDS records must have even length, got {length} bytes"
-        )
+        raise ValueError(f"GDS records must have even length, got {length} bytes")
     f.write(struct.pack(">HBB", length, record_type, data_type))
     if data:
         f.write(data)
@@ -369,7 +365,7 @@ def _pack_real8(value: float) -> bytes:
 
     # Find hex exponent so that 1/16 <= mantissa < 1
     exponent = int(math.floor(math.log(value) / math.log(16))) + 1
-    mantissa_f = value / (16.0 ** exponent)
+    mantissa_f = value / (16.0**exponent)
 
     # Normalise mantissa into [1/16, 1)
     while mantissa_f >= 1.0:
@@ -450,9 +446,8 @@ def write_gds(library: GdsLibrary, output_path: Path | str) -> Path:
         # ----- UNITS -----
         # First real:  user units expressed in db units (e.g. 1e-3 = 1 nm per um)
         # Second real: db unit size in metres
-        units_payload = (
-            _pack_real8(library.db_units / library.user_units)
-            + _pack_real8(library.db_units)
+        units_payload = _pack_real8(library.db_units / library.user_units) + _pack_real8(
+            library.db_units
         )
         _write_record(f, UNITS, EIGHT_BYTE_REAL, units_payload)
 

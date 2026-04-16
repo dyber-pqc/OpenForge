@@ -47,10 +47,10 @@ class ConstantTimeResult:
 class ScaResult:
     """Power side-channel analysis result."""
 
-    risk_score: float = 0.0          # 0 (safe) to 100 (vulnerable)
+    risk_score: float = 0.0  # 0 (safe) to 100 (vulnerable)
     has_masking: bool = False
     has_hiding: bool = False
-    sbox_type: str = ""              # "table_lookup", "boolean", "composite"
+    sbox_type: str = ""  # "table_lookup", "boolean", "composite"
     recommendations: list[str] = field(default_factory=list)
 
 
@@ -61,8 +61,8 @@ class FaultResistance:
     has_tmr: bool = False
     has_dual_rail: bool = False
     has_error_detection: bool = False
-    fsm_encoding: str = ""           # "one_hot", "binary", "gray"
-    redundancy_score: float = 0.0    # 0-100
+    fsm_encoding: str = ""  # "one_hot", "binary", "gray"
+    redundancy_score: float = 0.0  # 0-100
     recommendations: list[str] = field(default_factory=list)
 
 
@@ -71,7 +71,7 @@ class FipsCheckItem:
     """Single FIPS 140-3 compliance check."""
 
     requirement: str
-    status: str = "N/A"              # "pass", "fail", "N/A"
+    status: str = "N/A"  # "pass", "fail", "N/A"
     detail: str = ""
 
 
@@ -89,7 +89,7 @@ class NttValidation:
 
     has_butterfly: bool = False
     has_modular_reduction: bool = False
-    geometry_type: str = ""          # "constant_geometry", "in_place"
+    geometry_type: str = ""  # "constant_geometry", "in_place"
     issues: list[str] = field(default_factory=list)
     passed: bool = True
 
@@ -184,10 +184,21 @@ class CryptoAnalyzer:
         violations: list[ConstantTimeViolation] = []
 
         # Default secret signal patterns if none provided
-        secret_pats = list(secret_signals) if secret_signals else [
-            "key", "secret", "plaintext", "plain_text", "pt",
-            "private", "priv_key", "seed", "nonce",
-        ]
+        secret_pats = (
+            list(secret_signals)
+            if secret_signals
+            else [
+                "key",
+                "secret",
+                "plaintext",
+                "plain_text",
+                "pt",
+                "private",
+                "priv_key",
+                "seed",
+                "nonce",
+            ]
+        )
         secret_re = "|".join(re.escape(s) for s in secret_pats)
 
         # Check 1: if/case conditioned on secret data
@@ -207,17 +218,21 @@ class CryptoAnalyzer:
                     re.IGNORECASE,
                 ):
                     signal = re.search(
-                        rf"\b({secret_re})\b", stripped, re.IGNORECASE,
+                        rf"\b({secret_re})\b",
+                        stripped,
+                        re.IGNORECASE,
                     )
-                    violations.append(ConstantTimeViolation(
-                        file=filename,
-                        line=i,
-                        signal=signal.group(1) if signal else "?",
-                        description=(
-                            "Conditional branch depends on potentially secret "
-                            "data -- may leak timing information."
-                        ),
-                    ))
+                    violations.append(
+                        ConstantTimeViolation(
+                            file=filename,
+                            line=i,
+                            signal=signal.group(1) if signal else "?",
+                            description=(
+                                "Conditional branch depends on potentially secret "
+                                "data -- may leak timing information."
+                            ),
+                        )
+                    )
 
                 # case (<secret>)
                 if re.search(
@@ -226,17 +241,21 @@ class CryptoAnalyzer:
                     re.IGNORECASE,
                 ):
                     signal = re.search(
-                        rf"\b({secret_re})\b", stripped, re.IGNORECASE,
+                        rf"\b({secret_re})\b",
+                        stripped,
+                        re.IGNORECASE,
                     )
-                    violations.append(ConstantTimeViolation(
-                        file=filename,
-                        line=i,
-                        signal=signal.group(1) if signal else "?",
-                        description=(
-                            "Case statement on secret data -- variable-time "
-                            "multiplexing may create a timing side channel."
-                        ),
-                    ))
+                    violations.append(
+                        ConstantTimeViolation(
+                            file=filename,
+                            line=i,
+                            signal=signal.group(1) if signal else "?",
+                            description=(
+                                "Case statement on secret data -- variable-time "
+                                "multiplexing may create a timing side channel."
+                            ),
+                        )
+                    )
 
         # Check 2: Variable-latency operations with secret operands
         for filename, content in file_contents:
@@ -248,22 +267,28 @@ class CryptoAnalyzer:
 
                 # Multiply or divide with secret operand
                 if re.search(r"[*/]", stripped) and re.search(
-                    rf"\b({secret_re})\b", stripped, re.IGNORECASE,
+                    rf"\b({secret_re})\b",
+                    stripped,
+                    re.IGNORECASE,
                 ):
                     signal = re.search(
-                        rf"\b({secret_re})\b", stripped, re.IGNORECASE,
+                        rf"\b({secret_re})\b",
+                        stripped,
+                        re.IGNORECASE,
                     )
                     if signal and ("*" in stripped or "/" in stripped or "%" in stripped):
-                        violations.append(ConstantTimeViolation(
-                            file=filename,
-                            line=i,
-                            signal=signal.group(1),
-                            description=(
-                                "Variable-latency arithmetic (multiply/divide) "
-                                "on secret data -- timing may depend on operand "
-                                "values."
-                            ),
-                        ))
+                        violations.append(
+                            ConstantTimeViolation(
+                                file=filename,
+                                line=i,
+                                signal=signal.group(1),
+                                description=(
+                                    "Variable-latency arithmetic (multiply/divide) "
+                                    "on secret data -- timing may depend on operand "
+                                    "values."
+                                ),
+                            )
+                        )
 
         # Check 3: Memory indexed by secret data (array[secret])
         for filename, content in file_contents:
@@ -279,17 +304,21 @@ class CryptoAnalyzer:
                     re.IGNORECASE,
                 ):
                     signal = re.search(
-                        rf"\b({secret_re})\b", stripped, re.IGNORECASE,
+                        rf"\b({secret_re})\b",
+                        stripped,
+                        re.IGNORECASE,
                     )
-                    violations.append(ConstantTimeViolation(
-                        file=filename,
-                        line=i,
-                        signal=signal.group(1) if signal else "?",
-                        description=(
-                            "Memory/array access indexed by secret data -- "
-                            "may create cache-timing side channel."
-                        ),
-                    ))
+                    violations.append(
+                        ConstantTimeViolation(
+                            file=filename,
+                            line=i,
+                            signal=signal.group(1) if signal else "?",
+                            description=(
+                                "Memory/array access indexed by secret data -- "
+                                "may create cache-timing side channel."
+                            ),
+                        )
+                    )
 
         return ConstantTimeResult(
             violations=violations,
@@ -520,18 +549,22 @@ class CryptoAnalyzer:
             r"(?:key|secret)\s*(?:=|<=)\s*\d+'h[0-9a-fA-F]{16,}",
         )
         if hardcoded:
-            checks.append(FipsCheckItem(
-                requirement="No hardcoded cryptographic keys",
-                status="fail",
-                detail=f"Found {len(hardcoded)} potential hardcoded key(s). "
-                       f"First at: {hardcoded[0][0]}:{hardcoded[0][1]}",
-            ))
+            checks.append(
+                FipsCheckItem(
+                    requirement="No hardcoded cryptographic keys",
+                    status="fail",
+                    detail=f"Found {len(hardcoded)} potential hardcoded key(s). "
+                    f"First at: {hardcoded[0][0]}:{hardcoded[0][1]}",
+                )
+            )
         else:
-            checks.append(FipsCheckItem(
-                requirement="No hardcoded cryptographic keys",
-                status="pass",
-                detail="No hardcoded key patterns detected.",
-            ))
+            checks.append(
+                FipsCheckItem(
+                    requirement="No hardcoded cryptographic keys",
+                    status="pass",
+                    detail="No hardcoded key patterns detected.",
+                )
+            )
 
         # 2. Zeroization -- check for key clearing logic
         zeroize_patterns = _find_pattern_in_sources(
@@ -543,12 +576,15 @@ class CryptoAnalyzer:
             r"(?:key|secret)\s*(?:<=|=)\s*(?:\d+'[hbdo])?0+\s*;",
         )
         has_zeroize = len(zeroize_patterns) > 0 or len(key_zero_assign) > 0
-        checks.append(FipsCheckItem(
-            requirement="Key zeroization capability",
-            status="pass" if has_zeroize else "fail",
-            detail="Key clearing logic detected." if has_zeroize
-                   else "No key zeroization mechanism found.",
-        ))
+        checks.append(
+            FipsCheckItem(
+                requirement="Key zeroization capability",
+                status="pass" if has_zeroize else "fail",
+                detail="Key clearing logic detected."
+                if has_zeroize
+                else "No key zeroization mechanism found.",
+            )
+        )
 
         # 3. Self-test / BIST
         bist_patterns = _find_pattern_in_sources(
@@ -556,13 +592,16 @@ class CryptoAnalyzer:
             r"\b(bist|self_test|selftest|kat|known_answer|health_check)\b",
         )
         has_bist = len(bist_patterns) > 0
-        checks.append(FipsCheckItem(
-            requirement="Self-test / BIST capability",
-            status="pass" if has_bist else "fail",
-            detail="BIST/self-test logic detected." if has_bist
-                   else "No self-test mechanism found. FIPS requires "
-                        "known-answer tests for approved algorithms.",
-        ))
+        checks.append(
+            FipsCheckItem(
+                requirement="Self-test / BIST capability",
+                status="pass" if has_bist else "fail",
+                detail="BIST/self-test logic detected."
+                if has_bist
+                else "No self-test mechanism found. FIPS requires "
+                "known-answer tests for approved algorithms.",
+            )
+        )
 
         # 4. Approved algorithms
         approved_algos = {
@@ -579,33 +618,38 @@ class CryptoAnalyzer:
                 found_algos.append(algo_name)
 
         if found_algos:
-            checks.append(FipsCheckItem(
-                requirement="Uses FIPS-approved algorithms",
-                status="pass",
-                detail=f"Detected: {', '.join(found_algos)}",
-            ))
+            checks.append(
+                FipsCheckItem(
+                    requirement="Uses FIPS-approved algorithms",
+                    status="pass",
+                    detail=f"Detected: {', '.join(found_algos)}",
+                )
+            )
         else:
-            checks.append(FipsCheckItem(
-                requirement="Uses FIPS-approved algorithms",
-                status="N/A",
-                detail="No recognized cryptographic algorithm patterns found.",
-            ))
+            checks.append(
+                FipsCheckItem(
+                    requirement="Uses FIPS-approved algorithms",
+                    status="N/A",
+                    detail="No recognized cryptographic algorithm patterns found.",
+                )
+            )
 
         # 5. Key wrapping / export protection
         wrap_patterns = _find_pattern_in_sources(
             file_contents,
             r"\b(key_wrap|kwp|aes_wrap|export_key)\b",
         )
-        checks.append(FipsCheckItem(
-            requirement="Key export protection (wrapping)",
-            status="pass" if wrap_patterns else "N/A",
-            detail="Key wrapping detected." if wrap_patterns
-                   else "No key export logic detected (may not be applicable).",
-        ))
-
-        overall = all(
-            c.status in ("pass", "N/A") for c in checks
+        checks.append(
+            FipsCheckItem(
+                requirement="Key export protection (wrapping)",
+                status="pass" if wrap_patterns else "N/A",
+                detail="Key wrapping detected."
+                if wrap_patterns
+                else "No key export logic detected (may not be applicable).",
+            )
         )
+
+        overall = all(c.status in ("pass", "N/A") for c in checks)
 
         return FipsResult(checks=checks, overall_passed=overall)
 

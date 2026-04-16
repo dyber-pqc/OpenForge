@@ -6,6 +6,7 @@ differential.
 
 All dimensions are in millimetres; impedance in ohms.
 """
+
 from __future__ import annotations
 
 import math
@@ -68,9 +69,7 @@ def _z0_microstrip(w_mm: float, h_mm: float, er_eff: float) -> float:
     sqrt_eff = math.sqrt(er_eff)
     if w_h < 1.0:
         return (60.0 / sqrt_eff) * math.log(8.0 / w_h + w_h / 4.0)
-    return (120.0 * math.pi) / (
-        sqrt_eff * (w_h + 1.393 + 0.667 * math.log(w_h + 1.444))
-    )
+    return (120.0 * math.pi) / (sqrt_eff * (w_h + 1.393 + 0.667 * math.log(w_h + 1.444)))
 
 
 def _build_result(z0: float, er_eff: float) -> ImpedanceResult:
@@ -104,9 +103,7 @@ class ImpedanceCalculator:
     """IPC-2141A controlled impedance calculator."""
 
     @staticmethod
-    def microstrip_se(
-        width_mm: float, height_mm: float, t_mm: float, er: float
-    ) -> ImpedanceResult:
+    def microstrip_se(width_mm: float, height_mm: float, t_mm: float, er: float) -> ImpedanceResult:
         """Single-ended microstrip (Hammerstad-Jensen, IPC-2141A)."""
         # Thickness correction (effective width grows with trace thickness)
         w_eff = width_mm
@@ -155,8 +152,7 @@ class ImpedanceCalculator:
                 1.0
                 - 0.5
                 * math.log(
-                    (x / (2.0 - x)) ** 2
-                    + (0.0796 * x / (max(width_mm / b, 1e-6) + 1.1 * x)) ** 2
+                    (x / (2.0 - x)) ** 2 + (0.0796 * x / (max(width_mm / b, 1e-6) + 1.1 * x)) ** 2
                 )
             )
             w_eff = width_mm + dw
@@ -195,13 +191,12 @@ class ImpedanceCalculator:
             return _build_result(0.0, er)
         k = width_mm / (width_mm + 2.0 * gap_mm)
         kp = math.sqrt(max(1.0 - k * k, 1e-12))
+
         # K(k)/K(k') ratio via Hilberg approximation
         def _kk_ratio(kk: float) -> float:
             if kk < 1.0 / math.sqrt(2.0):
                 kkp = math.sqrt(max(1.0 - kk * kk, 1e-12))
-                return math.pi / math.log(
-                    2.0 * (1.0 + math.sqrt(kkp)) / (1.0 - math.sqrt(kkp))
-                )
+                return math.pi / math.log(2.0 * (1.0 + math.sqrt(kkp)) / (1.0 - math.sqrt(kkp)))
             return math.log(2.0 * (1.0 + math.sqrt(kk)) / (1.0 - math.sqrt(kk))) / math.pi
 
         k1 = math.tanh(math.pi * width_mm / (4.0 * height_mm)) / math.tanh(
@@ -238,9 +233,7 @@ class ImpedanceCalculator:
                 return ImpedanceCalculator.stripline_se(
                     w, height_mm, height_mm, t_mm, er
                 ).impedance_ohm
-            return ImpedanceCalculator.microstrip_se(
-                w, height_mm, t_mm, er
-            ).impedance_ohm
+            return ImpedanceCalculator.microstrip_se(w, height_mm, t_mm, er).impedance_ohm
 
         # z decreases monotonically with w
         z_lo = _z(lo)
@@ -306,20 +299,52 @@ def default_4layer_stackup() -> list[StackupLayer]:
     return [
         StackupLayer(name="F.SilkS", kind="silk", thickness_mm=0.015, material="ink"),
         StackupLayer(name="F.Mask", kind="mask", thickness_mm=0.020, material="soldermask"),
-        StackupLayer(name="F.Cu", kind="signal", thickness_mm=0.035, material="copper",
-                     dielectric_constant=1.0, copper_oz=1.0),
-        StackupLayer(name="Prepreg", kind="dielectric", thickness_mm=0.2104,
-                     material="FR4", dielectric_constant=4.4, loss_tangent=0.02),
-        StackupLayer(name="In1.Cu", kind="plane", thickness_mm=0.0152,
-                     material="copper", copper_oz=0.5),
-        StackupLayer(name="Core", kind="dielectric", thickness_mm=1.065,
-                     material="FR4", dielectric_constant=4.6, loss_tangent=0.02),
-        StackupLayer(name="In2.Cu", kind="plane", thickness_mm=0.0152,
-                     material="copper", copper_oz=0.5),
-        StackupLayer(name="Prepreg", kind="dielectric", thickness_mm=0.2104,
-                     material="FR4", dielectric_constant=4.4, loss_tangent=0.02),
-        StackupLayer(name="B.Cu", kind="signal", thickness_mm=0.035, material="copper",
-                     dielectric_constant=1.0, copper_oz=1.0),
+        StackupLayer(
+            name="F.Cu",
+            kind="signal",
+            thickness_mm=0.035,
+            material="copper",
+            dielectric_constant=1.0,
+            copper_oz=1.0,
+        ),
+        StackupLayer(
+            name="Prepreg",
+            kind="dielectric",
+            thickness_mm=0.2104,
+            material="FR4",
+            dielectric_constant=4.4,
+            loss_tangent=0.02,
+        ),
+        StackupLayer(
+            name="In1.Cu", kind="plane", thickness_mm=0.0152, material="copper", copper_oz=0.5
+        ),
+        StackupLayer(
+            name="Core",
+            kind="dielectric",
+            thickness_mm=1.065,
+            material="FR4",
+            dielectric_constant=4.6,
+            loss_tangent=0.02,
+        ),
+        StackupLayer(
+            name="In2.Cu", kind="plane", thickness_mm=0.0152, material="copper", copper_oz=0.5
+        ),
+        StackupLayer(
+            name="Prepreg",
+            kind="dielectric",
+            thickness_mm=0.2104,
+            material="FR4",
+            dielectric_constant=4.4,
+            loss_tangent=0.02,
+        ),
+        StackupLayer(
+            name="B.Cu",
+            kind="signal",
+            thickness_mm=0.035,
+            material="copper",
+            dielectric_constant=1.0,
+            copper_oz=1.0,
+        ),
         StackupLayer(name="B.Mask", kind="mask", thickness_mm=0.020, material="soldermask"),
         StackupLayer(name="B.SilkS", kind="silk", thickness_mm=0.015, material="ink"),
     ]

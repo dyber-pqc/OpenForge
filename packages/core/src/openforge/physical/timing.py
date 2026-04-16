@@ -102,12 +102,12 @@ def _parse_timing_paths(text: str) -> list[TimingPath]:
         #   <pin>   <cell>   <delay>   <arrival>   <transition>   <fanout>
         # Lines vary by version, so we look for numeric columns
         stage_pattern = re.compile(
-            r"^\s*(\S+)\s+"           # pin name
-            r"(\S+)\s+"              # cell/instance
-            r"([-+]?[\d.]+)\s+"     # delay
-            r"([-+]?[\d.]+)"        # arrival
-            r"(?:\s+([-+]?[\d.]+))?" # transition (optional)
-            r"(?:\s+(\d+))?"        # fanout (optional)
+            r"^\s*(\S+)\s+"  # pin name
+            r"(\S+)\s+"  # cell/instance
+            r"([-+]?[\d.]+)\s+"  # delay
+            r"([-+]?[\d.]+)"  # arrival
+            r"(?:\s+([-+]?[\d.]+))?"  # transition (optional)
+            r"(?:\s+(\d+))?"  # fanout (optional)
             r"\s*$",
             re.MULTILINE,
         )
@@ -120,17 +120,21 @@ def _parse_timing_paths(text: str) -> list[TimingPath]:
             trans = float(sm.group(5)) if sm.group(5) else 0.0
             fo = int(sm.group(6)) if sm.group(6) else 0
 
-            stages.append(TimingStage(
-                cell_name=cell_name,
-                cell_type=cell_type,
-                delay_ns=delay,
-                arrival_ns=arr,
-                transition_ns=trans,
-                fanout=fo,
-            ))
+            stages.append(
+                TimingStage(
+                    cell_name=cell_name,
+                    cell_type=cell_type,
+                    delay_ns=delay,
+                    arrival_ns=arr,
+                    transition_ns=trans,
+                    fanout=fo,
+                )
+            )
 
         # Slack
-        if (m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?[\d.]+)", block)) or (m := re.search(r"slack\s+([-+]?[\d.]+)", block)):
+        if (m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?[\d.]+)", block)) or (
+            m := re.search(r"slack\s+([-+]?[\d.]+)", block)
+        ):
             slack = float(m.group(1))
 
         # Required time
@@ -141,19 +145,19 @@ def _parse_timing_paths(text: str) -> list[TimingPath]:
         if m := re.search(r"data arrival time\s+([-+]?[\d.]+)", block):
             arrival = float(m.group(1))
 
-        total_delay = arrival if arrival else (
-            stages[-1].arrival_ns if stages else 0.0
-        )
+        total_delay = arrival if arrival else (stages[-1].arrival_ns if stages else 0.0)
 
-        paths.append(TimingPath(
-            start_point=start_point,
-            end_point=end_point,
-            path_type=path_type,
-            delay_ns=total_delay,
-            required_ns=required,
-            slack_ns=slack,
-            stages=stages,
-        ))
+        paths.append(
+            TimingPath(
+                start_point=start_point,
+                end_point=end_point,
+                path_type=path_type,
+                delay_ns=total_delay,
+                required_ns=required,
+                slack_ns=slack,
+                stages=stages,
+            )
+        )
 
     return paths
 
@@ -279,10 +283,12 @@ class TimingAnalyzer:
             for corner_lib in corners:
                 extra_tcl.append(f"read_liberty {corner_lib}")
 
-        extra_tcl.extend([
-            f"report_checks -path_delay max -format full -fields {{capacitance slew input_pins nets fanout}} -digits 4 -endpoint_count {num_paths}",
-            f"report_checks -path_delay min -format full -fields {{capacitance slew input_pins nets fanout}} -digits 4 -endpoint_count {num_paths}",
-        ])
+        extra_tcl.extend(
+            [
+                f"report_checks -path_delay max -format full -fields {{capacitance slew input_pins nets fanout}} -digits 4 -endpoint_count {num_paths}",
+                f"report_checks -path_delay min -format full -fields {{capacitance slew input_pins nets fanout}} -digits 4 -endpoint_count {num_paths}",
+            ]
+        )
 
         result = self._sta.run_timing(
             liberty=liberty,

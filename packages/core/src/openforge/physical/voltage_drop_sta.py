@@ -4,6 +4,7 @@ Combines an IR drop map with cell delay sensitivity to produce per-instance
 timing derates. Generates OpenSTA TCL with `set_timing_derate -instance`
 commands and parses the resulting timing report.
 """
+
 from __future__ import annotations
 
 import re
@@ -133,12 +134,8 @@ class VoltageDropAwareSta:
         cwd = Path(cwd) if cwd else Path.cwd()
         cwd.mkdir(parents=True, exist_ok=True)
         derates = self.derate_from_ir_map(ir_map, cell_positions)
-        nominal_wns = self._run_sta(
-            netlist, sdc, liberty, derates={}, cwd=cwd, tag="nominal"
-        )
-        derated_wns = self._run_sta(
-            netlist, sdc, liberty, derates=derates, cwd=cwd, tag="derated"
-        )
+        nominal_wns = self._run_sta(netlist, sdc, liberty, derates={}, cwd=cwd, tag="nominal")
+        derated_wns = self._run_sta(netlist, sdc, liberty, derates=derates, cwd=cwd, tag="derated")
         worst_inst = ""
         worst_drop = 0.0
         entries: list[VoltageDerateEntry] = []
@@ -214,10 +211,7 @@ class VoltageDropAwareSta:
     def _derate_line(instance: str, derate: float) -> str:
         late = derate
         early = max(2.0 - derate, 0.5)
-        return (
-            f"set_timing_derate -instance {instance} "
-            f"-late {late:.4f} -early {early:.4f}"
-        )
+        return f"set_timing_derate -instance {instance} -late {late:.4f} -early {early:.4f}"
 
     def generate_sta_with_derates_tcl(self, derates: dict[str, float]) -> str:
         """Standalone TCL generator (no STA invocation)."""
@@ -251,8 +245,9 @@ class VoltageDropAwareSta:
         lines.append(f"Nominal WNS:           {result.nominal_wns:.4f} ns")
         lines.append(f"Voltage-aware WNS:     {result.voltage_aware_wns:.4f} ns")
         lines.append(f"Degradation:           {result.degradation_ns:.4f} ns")
-        lines.append(f"Worst drop:            {result.worst_drop_mv:.2f} mV "
-                     f"@ {result.worst_drop_instance}")
+        lines.append(
+            f"Worst drop:            {result.worst_drop_mv:.2f} mV @ {result.worst_drop_instance}"
+        )
         lines.append(f"Instances derated:     {result.instances_affected}")
         lines.append("=" * 72)
         return "\n".join(lines)

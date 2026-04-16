@@ -207,7 +207,7 @@ def _nice_tick_step(rough: float) -> float:
     if rough <= 0:
         return 1.0
     exp = math.floor(math.log10(rough))
-    frac = rough / (10 ** exp)
+    frac = rough / (10**exp)
     if frac <= 1.5:
         nice = 1.0
     elif frac <= 3.5:
@@ -216,7 +216,7 @@ def _nice_tick_step(rough: float) -> float:
         nice = 5.0
     else:
         nice = 10.0
-    return nice * (10 ** exp)
+    return nice * (10**exp)
 
 
 def _make_signal_icon(color: str, kind: SignalKind) -> QPixmap:
@@ -229,13 +229,30 @@ def _make_signal_icon(color: str, kind: SignalKind) -> QPixmap:
     p.setPen(QPen(c, 1.5))
     if kind == SignalKind.CLOCK:
         # Square wave icon
-        p.drawPolyline([QPoint(1, 12), QPoint(1, 4), QPoint(5, 4),
-                         QPoint(5, 12), QPoint(9, 12), QPoint(9, 4),
-                         QPoint(13, 4), QPoint(13, 12)])
+        p.drawPolyline(
+            [
+                QPoint(1, 12),
+                QPoint(1, 4),
+                QPoint(5, 4),
+                QPoint(5, 12),
+                QPoint(9, 12),
+                QPoint(9, 4),
+                QPoint(13, 4),
+                QPoint(13, 12),
+            ]
+        )
     elif kind == SignalKind.BUS:
         # Bus diamond icon
-        p.drawPolygon([QPoint(2, 8), QPoint(5, 3), QPoint(11, 3),
-                        QPoint(14, 8), QPoint(11, 13), QPoint(5, 13)])
+        p.drawPolygon(
+            [
+                QPoint(2, 8),
+                QPoint(5, 3),
+                QPoint(11, 3),
+                QPoint(14, 8),
+                QPoint(11, 13),
+                QPoint(5, 13),
+            ]
+        )
     elif kind == SignalKind.ANALOG:
         # Sine-ish icon
         path = QPainterPath()
@@ -244,8 +261,7 @@ def _make_signal_icon(color: str, kind: SignalKind) -> QPixmap:
         p.drawPath(path)
     else:
         # Digital step icon
-        p.drawPolyline([QPoint(1, 12), QPoint(1, 4), QPoint(8, 4),
-                         QPoint(8, 12), QPoint(15, 12)])
+        p.drawPolyline([QPoint(1, 12), QPoint(1, 4), QPoint(8, 4), QPoint(8, 12), QPoint(15, 12)])
     p.end()
     return px
 
@@ -588,8 +604,7 @@ class _WaveformCanvas(QWidget):
         p.setPen(QPen(QColor(_SURFACE0), 1.0))
         p.drawLine(0, _RULER_HEIGHT, w, _RULER_HEIGHT)
 
-    def _draw_grid(self, p: QPainter, w: int, h: int, wave_top: int,
-                   vis: tuple[int, int]) -> None:
+    def _draw_grid(self, p: QPainter, w: int, h: int, wave_top: int, vis: tuple[int, int]) -> None:
         duration = self._time_end - self._time_start
         if duration <= 0:
             return
@@ -641,12 +656,23 @@ class _WaveformCanvas(QWidget):
             if is_bus:
                 self._draw_bus_segment(p, sig, val, x, x_next, high_y, low_y, mid_y, color, is_xz)
             else:
-                self._draw_bit_segment(p, val, x, x_next, high_y, low_y, mid_y, color,
-                                       is_xz, i, sig)
+                self._draw_bit_segment(
+                    p, val, x, x_next, high_y, low_y, mid_y, color, is_xz, i, sig
+                )
 
-    def _draw_bus_segment(self, p: QPainter, sig: SignalData, val: str,
-                          x: float, x_next: float, high_y: int, low_y: int,
-                          mid_y: int, color: QColor, is_xz: bool) -> None:
+    def _draw_bus_segment(
+        self,
+        p: QPainter,
+        sig: SignalData,
+        val: str,
+        x: float,
+        x_next: float,
+        high_y: int,
+        low_y: int,
+        mid_y: int,
+        color: QColor,
+        is_xz: bool,
+    ) -> None:
         dx = min(4.0, (x_next - x) / 3.0)
         ix, ix_next = int(x), int(x_next)
 
@@ -692,9 +718,20 @@ class _WaveformCanvas(QWidget):
             p.setPen(QPen(QColor(_TEXT), 1.0))
             p.drawText(tx, mid_y + fm.ascent() // 2 - 1, elided)
 
-    def _draw_bit_segment(self, p: QPainter, val: str, x: float, x_next: float,
-                          high_y: int, low_y: int, mid_y: int, color: QColor,
-                          is_xz: bool, i: int, sig: SignalData) -> None:
+    def _draw_bit_segment(
+        self,
+        p: QPainter,
+        val: str,
+        x: float,
+        x_next: float,
+        high_y: int,
+        low_y: int,
+        mid_y: int,
+        color: QColor,
+        is_xz: bool,
+        i: int,
+        sig: SignalData,
+    ) -> None:
         if is_xz:
             # Hatched region
             clip_rect = QRect(int(x), high_y, int(x_next - x), low_y - high_y)
@@ -729,8 +766,7 @@ class _WaveformCanvas(QWidget):
                 p.setPen(QPen(color, 1.5))
                 p.drawLine(int(x), prev_y, int(x), y)
 
-    def _draw_analog(self, p: QPainter, sig: SignalData, y0: int,
-                     row_h: int, w: int) -> None:
+    def _draw_analog(self, p: QPainter, sig: SignalData, y0: int, row_h: int, w: int) -> None:
         if not sig.timestamps:
             return
         color = QColor(sig.color)
@@ -816,8 +852,9 @@ class _WaveformCanvas(QWidget):
         """Return (first, past-last) indices of signals visible in the viewport."""
         wave_top = _RULER_HEIGHT - self._scroll_offset
         first = max(0, int((_RULER_HEIGHT - wave_top) / _SIGNAL_ROW_HEIGHT))
-        last = min(len(self._signals),
-                   int((h - _MINIMAP_HEIGHT - wave_top) / _SIGNAL_ROW_HEIGHT) + 1)
+        last = min(
+            len(self._signals), int((h - _MINIMAP_HEIGHT - wave_top) / _SIGNAL_ROW_HEIGHT) + 1
+        )
         return (first, last)
 
     def _recalc_full_range(self) -> None:
@@ -940,7 +977,9 @@ class _WaveformCanvas(QWidget):
 
         action = menu.exec(event.globalPos())
         if action == add_marker_act:
-            name, ok = QInputDialog.getText(self, "Marker Name", "Name:", text=f"M{len(self._markers) + 1}")
+            name, ok = QInputDialog.getText(
+                self, "Marker Name", "Name:", text=f"M{len(self._markers) + 1}"
+            )
             if ok and name:
                 self._markers.append(Marker(name=name, time=t))
                 self._schedule_repaint()
@@ -1135,9 +1174,11 @@ class _SignalTree(QTreeWidget):
 
         if action == copy_name_act and idx is not None and idx < len(self._signals):
             from PySide6.QtWidgets import QApplication
+
             QApplication.clipboard().setText(self._signals[idx].name)
         elif action == copy_val_act and idx is not None and idx < len(self._signals):
             from PySide6.QtWidgets import QApplication
+
             val_text = item.text(1) if item.text(1) else ""
             QApplication.clipboard().setText(val_text)
         elif action == remove_act and idx is not None:
@@ -1159,14 +1200,11 @@ class _SignalTree(QTreeWidget):
             pass  # placeholder -- would seek to previous transition
         elif action == color_act and idx is not None and idx < len(self._signals):
             from PySide6.QtWidgets import QColorDialog
-            color = QColorDialog.getColor(
-                QColor(self._signals[idx].color), self, "Signal Color"
-            )
+
+            color = QColorDialog.getColor(QColor(self._signals[idx].color), self, "Signal Color")
             if color.isValid():
                 self._signals[idx].color = color.name()
                 self.set_signals(self._signals)
-
-
 
 
 # ── Value Panel ──────────────────────────────────────────────────────────
@@ -1304,8 +1342,13 @@ class _LegacyWaveformPanel(QDockWidget):
         self._status_count = QLabel("Signals: 0")
         self._status_file = QLabel("")
 
-        for lbl in (self._status_cursor, self._status_delta, self._status_freq,
-                     self._status_count, self._status_file):
+        for lbl in (
+            self._status_cursor,
+            self._status_delta,
+            self._status_freq,
+            self._status_count,
+            self._status_file,
+        ):
             lbl.setStyleSheet(f"color: {_SUBTEXT}; padding: 0 8px;")
             self._statusbar.addWidget(lbl)
 
@@ -1459,8 +1502,12 @@ class _LegacyWaveformPanel(QDockWidget):
                 kind = SignalKind.BUS
 
         sig = SignalData(
-            name=name, values=values, timestamps=timestamps,
-            color=color, kind=kind, group=group,
+            name=name,
+            values=values,
+            timestamps=timestamps,
+            color=color,
+            kind=kind,
+            group=group,
         )
         self._signals.append(sig)
         self._refresh()
@@ -1479,9 +1526,15 @@ class _LegacyWaveformPanel(QDockWidget):
         color = _SIGNAL_COLORS[self._color_idx % len(_SIGNAL_COLORS)]
         self._color_idx += 1
         sig = SignalData(
-            name=name, values=values, timestamps=timestamps,
-            color=color, kind=SignalKind.ANALOG, group=group,
-            analog_min=y_min, analog_max=y_max, analog_auto=auto_scale,
+            name=name,
+            values=values,
+            timestamps=timestamps,
+            color=color,
+            kind=SignalKind.ANALOG,
+            group=group,
+            analog_min=y_min,
+            analog_max=y_max,
+            analog_auto=auto_scale,
         )
         self._signals.append(sig)
         self._refresh()
@@ -1532,11 +1585,11 @@ class _LegacyWaveformPanel(QDockWidget):
             if delta > 0:
                 freq = 1.0 / delta
                 if freq >= 1e9:
-                    self._status_freq.setText(f"f: {freq/1e9:.3f} GHz")
+                    self._status_freq.setText(f"f: {freq / 1e9:.3f} GHz")
                 elif freq >= 1e6:
-                    self._status_freq.setText(f"f: {freq/1e6:.3f} MHz")
+                    self._status_freq.setText(f"f: {freq / 1e6:.3f} MHz")
                 elif freq >= 1e3:
-                    self._status_freq.setText(f"f: {freq/1e3:.3f} kHz")
+                    self._status_freq.setText(f"f: {freq / 1e3:.3f} kHz")
                 else:
                     self._status_freq.setText(f"f: {freq:.3f} Hz")
             else:
@@ -1584,15 +1637,20 @@ class _LegacyWaveformPanel(QDockWidget):
 
     def _save_config(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Waveform Config", "waveform.wcfg",
-            "Waveform Config (*.wcfg)"
+            self, "Save Waveform Config", "waveform.wcfg", "Waveform Config (*.wcfg)"
         )
         if path:
             import json
+
             cfg = {
                 "signals": [
-                    {"name": s.name, "color": s.color, "radix": s.radix.value,
-                     "kind": s.kind.value, "group": s.group}
+                    {
+                        "name": s.name,
+                        "color": s.color,
+                        "radix": s.radix.value,
+                        "kind": s.kind.value,
+                        "group": s.group,
+                    }
                     for s in self._signals
                 ],
                 "markers": [
@@ -1609,8 +1667,10 @@ class _LegacyWaveformPanel(QDockWidget):
 
     def _load_config(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Waveform", "",
-            "Waveform Files (*.vcd *.fst *.wcfg);;VCD Files (*.vcd);;FST Files (*.fst);;Config Files (*.wcfg);;All Files (*)"
+            self,
+            "Load Waveform",
+            "",
+            "Waveform Files (*.vcd *.fst *.wcfg);;VCD Files (*.vcd);;FST Files (*.fst);;Config Files (*.wcfg);;All Files (*)",
         )
         if not path:
             return
@@ -1621,6 +1681,7 @@ class _LegacyWaveformPanel(QDockWidget):
 
         if path.endswith(".wcfg"):
             import json
+
             with open(path) as f:
                 cfg = json.load(f)
             # Restore signal display settings
@@ -1646,10 +1707,12 @@ class _LegacyWaveformPanel(QDockWidget):
     def _add_signals_dialog(self) -> None:
         """Placeholder for signal browser dialog."""
         from PySide6.QtWidgets import QMessageBox
+
         QMessageBox.information(
-            self, "Add Signals",
+            self,
+            "Add Signals",
             "Signal browser not yet connected to VCD parser.\n"
-            "Use add_signal() API to add signals programmatically."
+            "Use add_signal() API to add signals programmatically.",
         )
 
 
@@ -1664,9 +1727,7 @@ try:
     class WaveformPanel(QDockWidget):  # type: ignore[no-redef]
         """Dock wrapper around the production waveform viewer."""
 
-        def __init__(
-            self, title: str = "Waveform Viewer", parent: QWidget | None = None
-        ) -> None:
+        def __init__(self, title: str = "Waveform Viewer", parent: QWidget | None = None) -> None:
             super().__init__(title, parent)
             self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
             self.setMinimumSize(600, 300)
@@ -1675,6 +1736,7 @@ try:
 
         def load_file(self, path) -> None:  # pragma: no cover
             from pathlib import Path as _P
+
             self._inner.load_file(_P(str(path)))
 
         def load_vcd(self, path) -> None:  # pragma: no cover
@@ -1682,4 +1744,3 @@ try:
 
 except Exception:  # pragma: no cover
     WaveformPanel = _LegacyWaveformPanel  # type: ignore[misc,assignment]
-

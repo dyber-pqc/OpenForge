@@ -51,6 +51,7 @@ class NetgenEngine(ToolEngine):
         if self._which() is not None:
             return True
         import shutil
+
         return shutil.which(self._FALLBACK_BINARY) is not None
 
     def version(self) -> str:

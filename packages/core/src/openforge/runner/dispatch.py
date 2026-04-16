@@ -79,8 +79,9 @@ class WorkerPool(BaseModel):
         return {"stage": stage.model_dump(mode="json")}
 
 
-def dispatch(stage: RunStage, worker: WorkerNode, poll_interval: float = 0.5,
-             timeout: float = 3600.0) -> dict[str, Any]:
+def dispatch(
+    stage: RunStage, worker: WorkerNode, poll_interval: float = 0.5, timeout: float = 3600.0
+) -> dict[str, Any]:
     """POST a stage to ``worker``, then poll /status/{id} until terminal.
 
     Returns the final status dict from the worker.
@@ -103,9 +104,7 @@ def dispatch(stage: RunStage, worker: WorkerNode, poll_interval: float = 0.5,
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             try:
-                with urllib.request.urlopen(
-                    f"{worker.url}/status/{run_id}", timeout=10
-                ) as r:
+                with urllib.request.urlopen(f"{worker.url}/status/{run_id}", timeout=10) as r:
                     status = json.loads(r.read().decode("utf-8"))
             except Exception as e:
                 status = {"error": str(e)}
@@ -160,9 +159,7 @@ def _run_stage_job(job_id: str, stage: RunStage, workdir: Path) -> None:
                 logf.flush()
             rc = proc.wait()
         job["exit_code"] = rc
-        job["status"] = (
-            RunStatus.SUCCESS.value if rc == 0 else RunStatus.FAILED.value
-        )
+        job["status"] = RunStatus.SUCCESS.value if rc == 0 else RunStatus.FAILED.value
     except Exception as e:  # noqa: BLE001
         job["status"] = RunStatus.FAILED.value
         job["error"] = str(e)
@@ -203,7 +200,7 @@ def serve_worker(port: int = 8765, workdir: str | Path | None = None) -> Threadi
                 self._json(200, {"status": "up", "jobs": len(_JOBS)})
                 return
             if path.startswith("/status/"):
-                jid = path[len("/status/"):]
+                jid = path[len("/status/") :]
                 with _JOBS_LOCK:
                     job = _JOBS.get(jid)
                 if not job:
@@ -212,7 +209,7 @@ def serve_worker(port: int = 8765, workdir: str | Path | None = None) -> Threadi
                 self._json(200, {"run_id": jid, **{k: v for k, v in job.items() if k != "stage"}})
                 return
             if path.startswith("/logs/"):
-                jid = path[len("/logs/"):]
+                jid = path[len("/logs/") :]
                 with _JOBS_LOCK:
                     job = _JOBS.get(jid)
                 if not job or not job.get("log_path"):
@@ -230,7 +227,7 @@ def serve_worker(port: int = 8765, workdir: str | Path | None = None) -> Threadi
                 self.wfile.write(data)
                 return
             if path.startswith("/artifact/"):
-                rest = path[len("/artifact/"):]
+                rest = path[len("/artifact/") :]
                 if "/" not in rest:
                     self._json(400, {"error": "bad path"})
                     return

@@ -64,12 +64,12 @@ class NetlistCell:
 class CrossProbeManager(QObject):
     """Coordinates highlighting and navigation across panels."""
 
-    rtl_location_selected = Signal(str, int)        # (file, line)
-    netlist_cell_selected = Signal(str)             # cell instance
+    rtl_location_selected = Signal(str, int)  # (file, line)
+    netlist_cell_selected = Signal(str)  # cell instance
     layout_cell_selected = Signal(str, float, float)  # (name, x, y)
-    waveform_signal_selected = Signal(str)          # signal name
+    waveform_signal_selected = Signal(str)  # signal name
     selection_cleared = Signal()
-    map_loaded = Signal(str)                        # source ("yosys", "def", ...)
+    map_loaded = Signal(str)  # source ("yosys", "def", ...)
 
     # The Yosys src attribute format is:
     #   "<file>:<line>.<col>-<line>.<col>"
@@ -401,12 +401,17 @@ class CrossProbeManager(QObject):
                 for k, v in self._source_map.items()
             },
             "layout_map": {
-                k: {"x": v.x, "y": v.y, "width": v.width, "height": v.height, "orient": v.orientation}
+                k: {
+                    "x": v.x,
+                    "y": v.y,
+                    "width": v.width,
+                    "height": v.height,
+                    "orient": v.orientation,
+                }
                 for k, v in self._layout_map.items()
             },
             "netlist": {
-                k: {"type": v.cell_type, "nets": v.nets}
-                for k, v in self._netlist_map.items()
+                k: {"type": v.cell_type, "nets": v.nets} for k, v in self._netlist_map.items()
             },
         }
         Path(path).write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -417,7 +422,9 @@ class CrossProbeManager(QObject):
         except (OSError, json.JSONDecodeError):
             return
         for k, v in data.get("source_map", {}).items():
-            self._source_map[k] = RtlLocation(file=v.get("file", ""), line=int(v.get("line", 0)), col=int(v.get("col", 0)))
+            self._source_map[k] = RtlLocation(
+                file=v.get("file", ""), line=int(v.get("line", 0)), col=int(v.get("col", 0))
+            )
         for k, v in data.get("layout_map", {}).items():
             self._layout_map[k] = LayoutBox(
                 name=k,
@@ -429,7 +436,9 @@ class CrossProbeManager(QObject):
             )
         for k, v in data.get("netlist", {}).items():
             nets = list(v.get("nets", []))
-            self._netlist_map[k] = NetlistCell(instance=k, cell_type=str(v.get("type", "")), nets=nets)
+            self._netlist_map[k] = NetlistCell(
+                instance=k, cell_type=str(v.get("type", "")), nets=nets
+            )
             for n in nets:
                 self._signal_to_cells.setdefault(n, []).append(k)
                 self._cell_to_signals.setdefault(k, []).append(n)

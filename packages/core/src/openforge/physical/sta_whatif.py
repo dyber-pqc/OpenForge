@@ -103,9 +103,7 @@ class StaWhatIf:
         self._recompute_summary(self._working)
         return out
 
-    def change_driver_strength(
-        self, cell_pattern: str, scale: float
-    ) -> list[WhatIfResult]:
+    def change_driver_strength(self, cell_pattern: str, scale: float) -> list[WhatIfResult]:
         """Scale effective cell delay for any stage whose cell_type matches
         ``cell_pattern`` (glob) by ``1/scale``.
 

@@ -270,9 +270,7 @@ class JtagBridge:
         usb_ids: set[str] = set()
         try:
             if os.name == "posix" and shutil.which("lsusb"):
-                out = subprocess.run(
-                    ["lsusb"], capture_output=True, text=True, timeout=4
-                ).stdout
+                out = subprocess.run(["lsusb"], capture_output=True, text=True, timeout=4).stdout
                 for m in re.finditer(r"ID\s+([0-9a-f]{4}):([0-9a-f]{4})", out):
                     usb_ids.add(f"{m.group(1)}:{m.group(2)}")
             elif os.name == "nt":
@@ -289,9 +287,7 @@ class JtagBridge:
                     text=True,
                     timeout=6,
                 ).stdout
-                for m in re.finditer(
-                    r"VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})", out
-                ):
+                for m in re.finditer(r"VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})", out):
                     usb_ids.add(f"{m.group(1).lower()}:{m.group(2).lower()}")
         except Exception:
             return None
@@ -309,9 +305,7 @@ class JtagBridge:
         """Spawn openocd in TCL server mode and connect."""
         if self._proc is not None:
             return True
-        if shutil.which(self.openocd_path) is None and not Path(
-            self.openocd_path
-        ).exists():
+        if shutil.which(self.openocd_path) is None and not Path(self.openocd_path).exists():
             return False
 
         cfg_lines: list[str] = []
@@ -439,9 +433,7 @@ class JtagBridge:
         m = self._IDCODE_RE.search(resp)
         return int(m.group(1), 16) if m else 0
 
-    def write_dr(
-        self, data: int, length_bits: int, tap: str = "openforge.tap"
-    ) -> None:
+    def write_dr(self, data: int, length_bits: int, tap: str = "openforge.tap") -> None:
         self.cmd(f"drscan {tap} {length_bits} 0x{data:x}")
 
     def read_dr(self, length_bits: int, tap: str = "openforge.tap") -> int:

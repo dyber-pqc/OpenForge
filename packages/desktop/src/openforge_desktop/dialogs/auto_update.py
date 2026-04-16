@@ -127,9 +127,7 @@ class _DownloadWorker(QObject):
 
     def run(self) -> None:
         try:
-            req = urllib.request.Request(
-                self._url, headers={"User-Agent": "OpenForge"}
-            )
+            req = urllib.request.Request(self._url, headers={"User-Agent": "OpenForge"})
             with urllib.request.urlopen(req, timeout=30) as resp:
                 total = int(resp.headers.get("Content-Length", "0") or 0)
                 downloaded = 0
@@ -209,8 +207,10 @@ class AutoUpdater(QObject):
         if self._release is None or not self._release.asset_url:
             self.update_error.emit("No downloadable asset for this platform.")
             return
-        dest = Path(tempfile.gettempdir()) / "openforge-updates" / (
-            self._release.asset_name or "openforge-update.bin"
+        dest = (
+            Path(tempfile.gettempdir())
+            / "openforge-updates"
+            / (self._release.asset_name or "openforge-update.bin")
         )
         self._dl_worker = _DownloadWorker(self._release.asset_url, dest)
         self._dl_thread = QThread(self)
@@ -365,6 +365,7 @@ def check_via_core(current_version: str = "0.0.0", repo: str = "openforge/openfo
     """
     try:
         from openforge.setup.updater import Updater
+
         return Updater(repo=repo, current_version=current_version).check_for_updates()
     except Exception:  # noqa: BLE001
         return None

@@ -23,9 +23,9 @@ class Corner:
 
     name: str
     liberty_file: str
-    temperature: float = 25.0    # Celsius
-    voltage: float = 1.8         # Volts
-    process: str = "typical"     # "typical", "slow", "fast"
+    temperature: float = 25.0  # Celsius
+    voltage: float = 1.8  # Volts
+    process: str = "typical"  # "typical", "slow", "fast"
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,13 +263,15 @@ class MultiCornerAnalyzer:
             resolved: list[Corner] = []
             for c in corners:
                 resolved_lib = str(ld / c.liberty_file)
-                resolved.append(Corner(
-                    name=c.name,
-                    liberty_file=resolved_lib,
-                    temperature=c.temperature,
-                    voltage=c.voltage,
-                    process=c.process,
-                ))
+                resolved.append(
+                    Corner(
+                        name=c.name,
+                        liberty_file=resolved_lib,
+                        temperature=c.temperature,
+                        voltage=c.voltage,
+                        process=c.process,
+                    )
+                )
             corners = resolved
 
         return self.run_multicorner(
@@ -313,7 +315,9 @@ class MultiCornerAnalyzer:
 
         # Parse WNS
         wns = 0.0
-        if (m := re.search(r"wns\s+([-+]?\d+\.?\d*)", text)) or (m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?\d+\.?\d*)", text)):
+        if (m := re.search(r"wns\s+([-+]?\d+\.?\d*)", text)) or (
+            m := re.search(r"slack\s+\((?:VIOLATED|MET)\)\s+([-+]?\d+\.?\d*)", text)
+        ):
             wns = float(m.group(1))
 
         # Parse TNS

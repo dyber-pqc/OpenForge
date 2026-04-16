@@ -4,6 +4,7 @@ Targets PcbBoard (openforge.pcb.model). Produces valid modern Gerber
 (X2 attributes omitted for portability) with %FSLAX46Y46*% and %MOMM*%,
 aperture definitions, linear draws, and polygon fill regions (G36/G37).
 """
+
 from __future__ import annotations
 
 import csv
@@ -35,10 +36,14 @@ def _xy(x: float, y: float) -> str:
 
 def _layer_ext(layer: str) -> str:
     mapping = {
-        "F.Cu": "GTL", "B.Cu": "GBL",
-        "F.Mask": "GTS", "B.Mask": "GBS",
-        "F.SilkS": "GTO", "B.SilkS": "GBO",
-        "F.Paste": "GTP", "B.Paste": "GBP",
+        "F.Cu": "GTL",
+        "B.Cu": "GBL",
+        "F.Mask": "GTS",
+        "B.Mask": "GBS",
+        "F.SilkS": "GTO",
+        "B.SilkS": "GBO",
+        "F.Paste": "GTP",
+        "B.Paste": "GBP",
         "Edge.Cuts": "GM1",
     }
     if layer in mapping:
@@ -153,7 +158,7 @@ class GerberExporter:
         # --- Silkscreen segments
         if is_silk and not is_edge:
             for fp in self.board.footprints:
-                for (x1, y1, x2, y2) in fp.silkscreen:
+                for x1, y1, x2, y2 in fp.silkscreen:
                     # rotate around footprint origin
                     rot = math.radians(fp.rotation_deg)
                     cs, sn = math.cos(rot), math.sin(rot)
@@ -210,8 +215,17 @@ class GerberExporter:
             if l.kind in ("signal", "plane", "mask", "silk", "paste", "edge"):
                 layers_to_export.append(l.name)
         if not layers_to_export:
-            layers_to_export = ["F.Cu", "B.Cu", "F.Mask", "B.Mask",
-                                "F.SilkS", "B.SilkS", "F.Paste", "B.Paste", "Edge.Cuts"]
+            layers_to_export = [
+                "F.Cu",
+                "B.Cu",
+                "F.Mask",
+                "B.Mask",
+                "F.SilkS",
+                "B.SilkS",
+                "F.Paste",
+                "B.Paste",
+                "Edge.Cuts",
+            ]
         results: dict[str, Path] = {}
         for layer in layers_to_export:
             ext = _layer_ext(layer)
@@ -274,12 +288,17 @@ class GerberExporter:
             w = csv.writer(fh)
             w.writerow(["Ref", "Value", "Footprint", "X_mm", "Y_mm", "Rot_deg", "Side"])
             for fp in self.board.footprints:
-                w.writerow([
-                    fp.ref, fp.value, fp.name,
-                    f"{fp.x_mm:.4f}", f"{fp.y_mm:.4f}",
-                    f"{fp.rotation_deg:.2f}",
-                    "top" if fp.layer == "top" else "bottom",
-                ])
+                w.writerow(
+                    [
+                        fp.ref,
+                        fp.value,
+                        fp.name,
+                        f"{fp.x_mm:.4f}",
+                        f"{fp.y_mm:.4f}",
+                        f"{fp.rotation_deg:.2f}",
+                        "top" if fp.layer == "top" else "bottom",
+                    ]
+                )
         return output_path
 
     # ------------------------------------------------------------------
@@ -324,6 +343,7 @@ class GerberExporter:
 class OdbPlusPlusExporter:  # pragma: no cover - thin re-export
     def __init__(self, board: PcbBoard) -> None:
         from openforge.pcb.odbpp import OdbppExporter
+
         self._inner = OdbppExporter(board)
 
     def export(self, output_dir: Path) -> Path:

@@ -320,9 +320,7 @@ def _parse_fp_text(node: list) -> _LocalPcbText | None:
         at = _first(node, "at")
         x = _num(at[1]) if at and len(at) >= 2 else 0.0
         y = _num(at[2]) if at and len(at) >= 3 else 0.0
-        return _LocalPcbText(
-            text=text, kind=kind, x=x, y=y, layer=_layer_of(node, "F.SilkS")
-        )
+        return _LocalPcbText(text=text, kind=kind, x=x, y=y, layer=_layer_of(node, "F.SilkS"))
     except Exception:
         return None
 
@@ -369,9 +367,7 @@ def parse_kicad_mod_text(text: str, library: str = "") -> Any:
     tags = _unquote(tags_node[1]) if tags_node and len(tags_node) >= 2 else ""
     layer = _unquote(layer_node[1]) if layer_node and len(layer_node) >= 2 else "F.Cu"
 
-    fp = _LocalPcbFootprint(
-        name=name, library=library, description=descr, tags=tags, layer=layer
-    )
+    fp = _LocalPcbFootprint(name=name, library=library, description=descr, tags=tags, layer=layer)
 
     for p in _children(tree, "pad"):
         pad = _parse_pad(p)

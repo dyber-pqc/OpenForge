@@ -3,6 +3,7 @@
 A Mentor Calibre xRC replacement that produces SPEF (Standard Parasitic
 Exchange Format) files from a routed DEF.
 """
+
 from __future__ import annotations
 
 import math
@@ -52,14 +53,11 @@ class NetParasitics:
 
     def recompute_totals(self) -> None:
         self.total_resistance = sum(r.resistance for r in self.resistors)
-        self.total_capacitance = (
-            sum(c.capacitance for c in self.capacitors)
-            + sum(c.capacitance for c in self.couplings)
+        self.total_capacitance = sum(c.capacitance for c in self.capacitors) + sum(
+            c.capacitance for c in self.couplings
         )
         # Elmore-style first-order RC delay (s -> ps).
-        self.delay_estimate_ps = (
-            self.total_resistance * self.total_capacitance * 1e12
-        )
+        self.delay_estimate_ps = self.total_resistance * self.total_capacitance * 1e12
 
 
 @dataclass
@@ -95,13 +93,13 @@ class SpefFile:
         lines.append('*PROGRAM "openforge.parasitic_extraction"')
         lines.append('*VERSION "1.0"')
         lines.append('*DESIGN_FLOW "PIN_CAP NONE" "NAME_SCOPE LOCAL"')
-        lines.append('*DIVIDER /')
-        lines.append('*DELIMITER :')
-        lines.append('*BUS_DELIMITER [ ]')
-        lines.append(f'*T_UNIT {self.units_t}')
-        lines.append(f'*C_UNIT {self.units_c}')
-        lines.append(f'*R_UNIT {self.units_r}')
-        lines.append('*L_UNIT 1 HENRY')
+        lines.append("*DIVIDER /")
+        lines.append("*DELIMITER :")
+        lines.append("*BUS_DELIMITER [ ]")
+        lines.append(f"*T_UNIT {self.units_t}")
+        lines.append(f"*C_UNIT {self.units_c}")
+        lines.append(f"*R_UNIT {self.units_r}")
+        lines.append("*L_UNIT 1 HENRY")
         lines.append("")
 
         # Name map
@@ -118,15 +116,10 @@ class SpefFile:
                 lines.append("*CAP")
                 idx = 1
                 for c in net.capacitors:
-                    lines.append(
-                        f"{idx} {c.node} {c.capacitance * 1e15:.4f}"
-                    )
+                    lines.append(f"{idx} {c.node} {c.capacitance * 1e15:.4f}")
                     idx += 1
                 for c in net.couplings:
-                    lines.append(
-                        f"{idx} {c.node1} {c.node2} "
-                        f"{c.capacitance * 1e15:.4f}"
-                    )
+                    lines.append(f"{idx} {c.node1} {c.node2} {c.capacitance * 1e15:.4f}")
                     idx += 1
             if net.resistors:
                 lines.append("*RES")
@@ -181,12 +174,42 @@ class ParasiticExtractor:
     @staticmethod
     def _default_sky130_tech() -> dict:
         return {
-            "li1":  {"sheet_r": 12.800, "cap_per_um2": 0.0040, "fringe_per_um": 0.030, "default_w": 0.17},
-            "met1": {"sheet_r": 0.125,  "cap_per_um2": 0.0035, "fringe_per_um": 0.027, "default_w": 0.14},
-            "met2": {"sheet_r": 0.125,  "cap_per_um2": 0.0030, "fringe_per_um": 0.024, "default_w": 0.14},
-            "met3": {"sheet_r": 0.047,  "cap_per_um2": 0.0025, "fringe_per_um": 0.021, "default_w": 0.30},
-            "met4": {"sheet_r": 0.047,  "cap_per_um2": 0.0020, "fringe_per_um": 0.018, "default_w": 0.30},
-            "met5": {"sheet_r": 0.029,  "cap_per_um2": 0.0015, "fringe_per_um": 0.015, "default_w": 1.60},
+            "li1": {
+                "sheet_r": 12.800,
+                "cap_per_um2": 0.0040,
+                "fringe_per_um": 0.030,
+                "default_w": 0.17,
+            },
+            "met1": {
+                "sheet_r": 0.125,
+                "cap_per_um2": 0.0035,
+                "fringe_per_um": 0.027,
+                "default_w": 0.14,
+            },
+            "met2": {
+                "sheet_r": 0.125,
+                "cap_per_um2": 0.0030,
+                "fringe_per_um": 0.024,
+                "default_w": 0.14,
+            },
+            "met3": {
+                "sheet_r": 0.047,
+                "cap_per_um2": 0.0025,
+                "fringe_per_um": 0.021,
+                "default_w": 0.30,
+            },
+            "met4": {
+                "sheet_r": 0.047,
+                "cap_per_um2": 0.0020,
+                "fringe_per_um": 0.018,
+                "default_w": 0.30,
+            },
+            "met5": {
+                "sheet_r": 0.029,
+                "cap_per_um2": 0.0015,
+                "fringe_per_um": 0.015,
+                "default_w": 1.60,
+            },
         }
 
     # ------------------------------------------------------------------
@@ -218,8 +241,7 @@ class ParasiticExtractor:
             np.recompute_totals()
             spef.add_net(np)
             if on_progress and i % 50 == 0:
-                on_progress(0.4 + 0.55 * (i / total),
-                            f"Net {i}/{total}: {net_name}")
+                on_progress(0.4 + 0.55 * (i / total), f"Net {i}/{total}: {net_name}")
 
         if on_progress:
             on_progress(0.97, "Adding coupling caps")
@@ -305,9 +327,7 @@ class ParasiticExtractor:
                         x2 = x1 if x2_raw == "*" else float(x2_raw) / units
                         y2 = y1 if y2_raw == "*" else float(y2_raw) / units
                         width = self.tech.get(layer, {}).get("default_w", 0.14)
-                        nets[current_net].append(
-                            _WireSeg(layer, x1, y1, x2, y2, width)
-                        )
+                        nets[current_net].append(_WireSeg(layer, x1, y1, x2, y2, width))
 
                     if line.strip().endswith(";"):
                         current_net = None
@@ -321,7 +341,9 @@ class ParasiticExtractor:
     # ------------------------------------------------------------------
 
     def compute_net_rc(
-        self, segments: list[_WireSeg], layer_data: dict,
+        self,
+        segments: list[_WireSeg],
+        layer_data: dict,
     ) -> NetParasitics:
         net = NetParasitics(name="")
         for i, seg in enumerate(segments):
@@ -360,8 +382,7 @@ class ParasiticExtractor:
                 sb = nets[nb]
                 added = 0.0
                 for s1 in sa:
-                    if not s1.is_horizontal() and s1.x1 == s1.x2 \
-                            and s1.y1 == s1.y2:
+                    if not s1.is_horizontal() and s1.x1 == s1.x2 and s1.y1 == s1.y2:
                         continue
                     for s2 in sb:
                         if s1.layer != s2.layer:
@@ -372,9 +393,7 @@ class ParasiticExtractor:
                         # crude coupling: 0.05 fF per um of parallel run
                         added += overlap * 0.05e-15
                 if added > 0 and na in spef.nets and nb in spef.nets:
-                    spef.nets[na].couplings.append(
-                        ParasiticCoupling(f"{na}:1", f"{nb}:1", added)
-                    )
+                    spef.nets[na].couplings.append(ParasiticCoupling(f"{na}:1", f"{nb}:1", added))
                     spef.nets[na].recompute_totals()
 
     @staticmethod
@@ -384,16 +403,14 @@ class ParasiticExtractor:
             if abs(a.y1 - b.y1) > 0.5:
                 return 0.0
             x_overlap = max(
-                0.0, min(max(a.x1, a.x2), max(b.x1, b.x2))
-                - max(min(a.x1, a.x2), min(b.x1, b.x2))
+                0.0, min(max(a.x1, a.x2), max(b.x1, b.x2)) - max(min(a.x1, a.x2), min(b.x1, b.x2))
             )
             return x_overlap
         if not a.is_horizontal() and not b.is_horizontal():
             if abs(a.x1 - b.x1) > 0.5:
                 return 0.0
             y_overlap = max(
-                0.0, min(max(a.y1, a.y2), max(b.y1, b.y2))
-                - max(min(a.y1, a.y2), min(b.y1, b.y2))
+                0.0, min(max(a.y1, a.y2), max(b.y1, b.y2)) - max(min(a.y1, a.y2), min(b.y1, b.y2))
             )
             return y_overlap
         return 0.0

@@ -43,7 +43,7 @@ except Exception:  # pragma: no cover
             self.target = target
 
         def to_verilog(self):
-            return f"(* {self.type} = \"{self.value}\" *)"
+            return f'(* {self.type} = "{self.value}" *)'
 
     def find_attributes_in_source(text):  # type: ignore
         return []
@@ -236,9 +236,7 @@ class SynthAttributesDialog(QDialog):
         title.setObjectName("TitleLabel")
         outer.addWidget(title)
 
-        subtitle = QLabel(
-            "Insert a Verilog synthesis attribute (e.g. (* keep = \"true\" *))."
-        )
+        subtitle = QLabel('Insert a Verilog synthesis attribute (e.g. (* keep = "true" *)).')
         subtitle.setStyleSheet(f"color: {_SUBTEXT};")
         outer.addWidget(subtitle)
 
@@ -308,9 +306,7 @@ class SynthAttributesDialog(QDialog):
         outer.addWidget(existing_group)
 
         # Buttons
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         ok_btn = button_box.button(QDialogButtonBox.Ok)
         if ok_btn is not None:
             ok_btn.setText("Insert")
@@ -363,16 +359,16 @@ class SynthAttributesDialog(QDialog):
 
         # Update description
         if attr_type is not None and attr_type in ATTRIBUTE_DESCRIPTIONS:
-            self.description_browser.setPlainText(
-                ATTRIBUTE_DESCRIPTIONS[attr_type]
-            )
+            self.description_browser.setPlainText(ATTRIBUTE_DESCRIPTIONS[attr_type])
         else:
             self.description_browser.setPlainText("")
 
         # Update value choices
         self.cb_value.blockSignals(True)
         self.cb_value.clear()
-        choices = ATTRIBUTE_VALUES.get(attr_type, ["true", "false"]) if attr_type else ["true", "false"]
+        choices = (
+            ATTRIBUTE_VALUES.get(attr_type, ["true", "false"]) if attr_type else ["true", "false"]
+        )
         for choice in choices:
             self.cb_value.addItem(choice)
         self.cb_value.setCurrentIndex(0)

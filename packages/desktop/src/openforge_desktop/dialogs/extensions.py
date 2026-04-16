@@ -68,93 +68,116 @@ _DEFAULT_EXTENSIONS: list[ExtensionInfo] = [
         version="1.2.0",
         author="OpenForge Team",
         description="Auto-format Verilog and SystemVerilog code with configurable style rules. "
-                    "Supports IEEE-1364 and IEEE-1800 standards.",
-        rating=4.7, downloads="12.4k",
-        installed=True, enabled=True,
-        category="Code Quality", color=_BLUE,
+        "Supports IEEE-1364 and IEEE-1800 standards.",
+        rating=4.7,
+        downloads="12.4k",
+        installed=True,
+        enabled=True,
+        category="Code Quality",
+        color=_BLUE,
     ),
     ExtensionInfo(
         name="VHDL Support",
         version="2.0.1",
         author="HDL Community",
         description="Full VHDL syntax highlighting, code snippets, and entity/architecture "
-                    "navigation for VHDL-93, VHDL-2008, and VHDL-2019.",
-        rating=4.5, downloads="8.7k",
-        installed=True, enabled=False,
-        category="Language Support", color=_GREEN,
+        "navigation for VHDL-93, VHDL-2008, and VHDL-2019.",
+        rating=4.5,
+        downloads="8.7k",
+        installed=True,
+        enabled=False,
+        category="Language Support",
+        color=_GREEN,
     ),
     ExtensionInfo(
         name="Chisel/SpinalHDL",
         version="0.9.3",
         author="Scala HDL Group",
         description="Scala-based HDL support with Chisel3 and SpinalHDL integration. "
-                    "Includes FIRRTL viewer and elaboration preview.",
-        rating=4.2, downloads="3.1k",
-        category="Language Support", color=_MAUVE,
+        "Includes FIRRTL viewer and elaboration preview.",
+        rating=4.2,
+        downloads="3.1k",
+        category="Language Support",
+        color=_MAUVE,
     ),
     ExtensionInfo(
         name="Git Integration",
         version="1.5.0",
         author="OpenForge Team",
         description="Version control sidebar with diff viewer, commit history, "
-                    "branch management, and blame annotations for HDL files.",
-        rating=4.8, downloads="15.2k",
-        installed=True, enabled=True,
-        category="Productivity", color=_PEACH,
+        "branch management, and blame annotations for HDL files.",
+        rating=4.8,
+        downloads="15.2k",
+        installed=True,
+        enabled=True,
+        category="Productivity",
+        color=_PEACH,
     ),
     ExtensionInfo(
         name="Waveform Comparison",
         version="1.1.0",
         author="VerifTools",
         description="Compare two VCD/FST waveform files side-by-side with automatic "
-                    "signal alignment and mismatch highlighting.",
-        rating=4.3, downloads="5.6k",
-        category="Verification", color=_TEAL,
+        "signal alignment and mismatch highlighting.",
+        rating=4.3,
+        downloads="5.6k",
+        category="Verification",
+        color=_TEAL,
     ),
     ExtensionInfo(
         name="Power Profiler",
         version="0.8.2",
         author="EDA Analytics",
         description="Interactive power analysis visualization with heatmaps, "
-                    "per-module breakdown, and switching activity correlation.",
-        rating=4.0, downloads="2.3k",
-        category="Analysis", color=_YELLOW,
+        "per-module breakdown, and switching activity correlation.",
+        rating=4.0,
+        downloads="2.3k",
+        category="Analysis",
+        color=_YELLOW,
     ),
     ExtensionInfo(
         name="Security Scanner",
         version="1.3.1",
         author="CryptoForge Labs",
         description="Automated cryptographic security checks including constant-time "
-                    "verification, fault injection resistance, and side-channel leakage detection.",
-        rating=4.6, downloads="7.8k",
-        category="Security", color=_RED,
+        "verification, fault injection resistance, and side-channel leakage detection.",
+        rating=4.6,
+        downloads="7.8k",
+        category="Security",
+        color=_RED,
     ),
     ExtensionInfo(
         name="PDK Browser",
         version="1.0.0",
         author="OpenPDK Collective",
         description="Browse standard cells visually with parametric views, "
-                    "timing arcs, and layout cross-reference for SKY130 and GF180MCU.",
-        rating=4.4, downloads="4.5k",
-        category="Physical Design", color=_BLUE,
+        "timing arcs, and layout cross-reference for SKY130 and GF180MCU.",
+        rating=4.4,
+        downloads="4.5k",
+        category="Physical Design",
+        color=_BLUE,
     ),
     ExtensionInfo(
         name="IP Catalog Pro",
         version="0.7.0",
         author="OpenForge Team",
         description="Enhanced IP integration with bus adapters, clock domain "
-                    "crossing bridges, and parameterized FIFO/memory generators.",
-        rating=3.9, downloads="1.8k",
-        category="IP Integration", color=_MAUVE,
+        "crossing bridges, and parameterized FIFO/memory generators.",
+        rating=3.9,
+        downloads="1.8k",
+        category="IP Integration",
+        color=_MAUVE,
     ),
     ExtensionInfo(
         name="Cloud Synthesis",
         version="2.1.0",
         author="ForgeCloud Inc.",
         description="Remote synthesis on cloud servers with distributed compilation, "
-                    "result caching, and multi-target parallel builds.",
-        rating=4.1, downloads="6.2k",
-        category="Cloud", color=_TEAL,
+        "result caching, and multi-target parallel builds.",
+        rating=4.1,
+        downloads="6.2k",
+        category="Cloud",
+        color=_TEAL,
     ),
 ]
 
@@ -339,8 +362,9 @@ class _ExtensionCard(QFrame):
         else:
             self._status_label.setVisible(False)
 
-    def _make_button(self, text: str, bg: str, fg: str, hover_bg: str,
-                     hover_text: str = "", bold: bool = False) -> QPushButton:
+    def _make_button(
+        self, text: str, bg: str, fg: str, hover_bg: str, hover_text: str = "", bold: bool = False
+    ) -> QPushButton:
         btn = QPushButton(text)
         weight = "bold" if bold else "normal"
         h_fg = hover_text if hover_text else fg
@@ -471,8 +495,7 @@ class ExtensionManagerDialog(QDialog):
         # Status bar
         self._status = QLabel()
         self._status.setStyleSheet(
-            f"color: {_GREEN}; font-size: 11px; padding: 6px 16px; "
-            f"background-color: {_CRUST};"
+            f"color: {_GREEN}; font-size: 11px; padding: 6px 16px; background-color: {_CRUST};"
         )
         self._status.setVisible(False)
         main_layout.addWidget(self._status)
@@ -555,16 +578,23 @@ class ExtensionManagerDialog(QDialog):
         if search:
             q = search.lower()
             exts = [
-                e for e in exts
-                if q in e.name.lower() or q in e.description.lower()
-                or q in e.category.lower() or q in e.author.lower()
+                e
+                for e in exts
+                if q in e.name.lower()
+                or q in e.description.lower()
+                or q in e.category.lower()
+                or q in e.author.lower()
             ]
 
         if not exts:
             empty = QLabel(
-                "No extensions found." if search
-                else ("No extensions installed yet.\nBrowse the Marketplace tab to install."
-                      if installed_only else "No extensions available.")
+                "No extensions found."
+                if search
+                else (
+                    "No extensions installed yet.\nBrowse the Marketplace tab to install."
+                    if installed_only
+                    else "No extensions available."
+                )
             )
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet(f"color: {_SUBTEXT}; font-size: 13px; padding: 40px;")

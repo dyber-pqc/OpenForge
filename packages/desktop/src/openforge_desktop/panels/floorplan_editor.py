@@ -617,9 +617,7 @@ class PinPlacementDialog(QDialog):
         self.table.setHorizontalHeaderLabels(
             ["Port Name", "Direction", "Side", "Position (um)", "Layer"]
         )
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table)
 
         if existing_pins:
@@ -769,9 +767,7 @@ class RegionItem(_BaseRectItem):
         pen.setStyle(Qt.PenStyle.DashLine)
         self.setPen(pen)
         self.setZValue(Z_REGION if region.region_type != "keepout" else Z_EXCLUSION)
-        self._label = QGraphicsSimpleTextItem(
-            f"{region.name} [{region.region_type}]", self
-        )
+        self._label = QGraphicsSimpleTextItem(f"{region.name} [{region.region_type}]", self)
         font = QFont()
         font.setPointSizeF(7.5)
         self._label.setFont(font)
@@ -1113,9 +1109,7 @@ class TclGenerator:
             f"{{{core.margin:g} {core.margin:g} "
             f"{die.width - core.margin:g} {die.height - core.margin:g}}}"
         )
-        lines.append(
-            f"initialize_floorplan -die_area {die_area} \\"
-        )
+        lines.append(f"initialize_floorplan -die_area {die_area} \\")
         lines.append(f"                     -core_area {core_area} \\")
         lines.append(f"                     -site {die.site}")
         lines.append("")
@@ -1171,18 +1165,14 @@ class TclGenerator:
         lines.append("")
 
         lines.append("# Power grid")
-        lines.append(
-            f"set_voltage_domain -name CORE -power {pg.vdd_net} -ground {pg.vss_net}"
-        )
+        lines.append(f"set_voltage_domain -name CORE -power {pg.vdd_net} -ground {pg.vss_net}")
         lines.append("define_pdn_grid -name top_grid -voltage_domain CORE")
         ring_layers = " ".join(pg.ring_layers)
         lines.append(
             f"add_pdn_ring -grid top_grid -layers {{{ring_layers}}} "
             f"-widths {pg.ring_width:g} -spacings {pg.ring_spacing:g} \\"
         )
-        lines.append(
-            "             -core_offsets {2 2 2 2}"
-        )
+        lines.append("             -core_offsets {2 2 2 2}")
         for layer, info in pg.strap_layers.items():
             width = info.get("width", 0.48)
             pitch = info.get("pitch", 6.0)
@@ -1581,17 +1571,13 @@ class FloorplanEditorPanel(QDockWidget):
         if dlg.exec() == QDialog.DialogCode.Accepted:
             v = dlg.values()
             self.floorplan = Floorplan(
-                die=DieArea(
-                    width=v["die_width"], height=v["die_height"], site=v["site"]
-                ),
+                die=DieArea(width=v["die_width"], height=v["die_height"], site=v["site"]),
                 core=CoreArea(margin=v["core_margin"]),
             )
             self._rebuild_scene()
             self._rebuild_list()
             self.view.zoom_fit()
-            self.status.setText(
-                f"New floorplan: {v['die_width']:g} x {v['die_height']:g} um"
-            )
+            self.status.setText(f"New floorplan: {v['die_width']:g} x {v['die_height']:g} um")
             self.floorplan_changed.emit()
 
     def _action_load_def(self) -> None:
@@ -1608,18 +1594,14 @@ class FloorplanEditorPanel(QDockWidget):
         if not path:
             return
         try:
-            Path(path).write_text(
-                json.dumps(self.floorplan.to_dict(), indent=2), encoding="utf-8"
-            )
+            Path(path).write_text(json.dumps(self.floorplan.to_dict(), indent=2), encoding="utf-8")
             self._current_path = Path(path)
             self.status.setText(f"Saved: {path}")
         except OSError as e:
             QMessageBox.warning(self, "Save Failed", str(e))
 
     def _action_open(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Open Floorplan", "", "JSON Files (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Open Floorplan", "", "JSON Files (*.json)")
         if not path:
             return
         try:

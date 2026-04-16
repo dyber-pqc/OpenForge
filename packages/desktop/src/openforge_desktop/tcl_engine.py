@@ -332,9 +332,7 @@ class TclEngine:
         ]
         if result.cell_usage:
             lines.append("Cell usage:")
-            for cell, count in sorted(
-                result.cell_usage.items(), key=lambda x: -x[1]
-            )[:15]:
+            for cell, count in sorted(result.cell_usage.items(), key=lambda x: -x[1])[:15]:
                 lines.append(f"  {cell:40s} {count:>6d}")
         return "\n".join(lines)
 
@@ -429,9 +427,7 @@ class TclEngine:
             lines.append(f"  {'Cell Type':<40s} {'Count':>8s} {'% Total':>8s}")
             lines.append(f"  {'-' * 40} {'-' * 8} {'-' * 8}")
             total = sum(result.cell_usage.values()) or 1
-            for cell, count in sorted(
-                result.cell_usage.items(), key=lambda x: -x[1]
-            ):
+            for cell, count in sorted(result.cell_usage.items(), key=lambda x: -x[1]):
                 pct = 100.0 * count / total
                 lines.append(f"  {cell:<40s} {count:>8d} {pct:>7.1f}%")
         else:
@@ -453,9 +449,7 @@ class TclEngine:
         for sdc_file in constraints:
             try:
                 content = sdc_file.read_text(encoding="utf-8", errors="replace")
-                for m in re.finditer(
-                    r"create_clock\s+(.+)", content
-                ):
+                for m in re.finditer(r"create_clock\s+(.+)", content):
                     clocks.append(m.group(0).strip())
             except OSError:
                 continue
@@ -512,9 +506,7 @@ class TclEngine:
                             direction = m.group(1)
                             bus = m.group(2) or ""
                             name = m.group(3)
-                            ports.append(
-                                f"  {direction:<8s} {bus:<12s} {name}"
-                            )
+                            ports.append(f"  {direction:<8s} {bus:<12s} {name}")
                         if re.search(r"\bendmodule\b", line):
                             in_top = False
             except OSError:
@@ -573,6 +565,7 @@ class TclEngine:
             netlist = self._project.netlist_path()
             if netlist and netlist.exists():
                 import shutil
+
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(netlist, out_path)
                 return f"Wrote netlist to: {out_path}"
@@ -633,10 +626,7 @@ class TclEngine:
             return "Error: create_clock requires -period <ns>"
 
         freq_mhz = 1000.0 / period if period > 0 else 0
-        self._emit(
-            f"Clock '{name}' created: period={period:.3f} ns "
-            f"({freq_mhz:.1f} MHz)"
-        )
+        self._emit(f"Clock '{name}' created: period={period:.3f} ns ({freq_mhz:.1f} MHz)")
         return f"Clock {name}: period {period} ns"
 
     def _cmd_set_input_delay(self, *args: str) -> str:
@@ -669,10 +659,7 @@ class TclEngine:
             return "Error: set_input_delay requires port name(s)"
 
         port_str = " ".join(ports)
-        self._emit(
-            f"Input delay: {delay:.3f} ns on [{port_str}] "
-            f"relative to clock '{clock}'"
-        )
+        self._emit(f"Input delay: {delay:.3f} ns on [{port_str}] relative to clock '{clock}'")
         return f"set_input_delay {delay} [{port_str}] -clock {clock}"
 
     def _cmd_set_output_delay(self, *args: str) -> str:
@@ -705,10 +692,7 @@ class TclEngine:
             return "Error: set_output_delay requires port name(s)"
 
         port_str = " ".join(ports)
-        self._emit(
-            f"Output delay: {delay:.3f} ns on [{port_str}] "
-            f"relative to clock '{clock}'"
-        )
+        self._emit(f"Output delay: {delay:.3f} ns on [{port_str}] relative to clock '{clock}'")
         return f"set_output_delay {delay} [{port_str}] -clock {clock}"
 
     def _cmd_run_all(self, *args: str) -> str:
@@ -759,8 +743,10 @@ class TclEngine:
             # Auto-compute core area with 50um margin
             margin = 50.0
             core_area = (
-                die_area[0] + margin, die_area[1] + margin,
-                die_area[2] - margin, die_area[3] - margin,
+                die_area[0] + margin,
+                die_area[1] + margin,
+                die_area[2] - margin,
+                die_area[3] - margin,
             )
 
         die_w = die_area[2] - die_area[0]
@@ -850,6 +836,7 @@ class TclEngine:
             ]:
                 if candidate.exists():
                     import shutil
+
                     out_path.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(candidate, out_path)
                     return f"Wrote DEF to: {out_path}"
@@ -877,6 +864,7 @@ class TclEngine:
                 gds_files = list(gds_dir.glob("*.gds"))
                 if gds_files:
                     import shutil
+
                     out_path.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(gds_files[0], out_path)
                     return f"Wrote GDS to: {out_path}"
@@ -930,14 +918,15 @@ class TclEngine:
 
         device = args[0].lower()
         known = {
-            "ice40-hx1k", "ice40-hx8k", "ice40-lp8k",
-            "ecp5-25k", "ecp5-45k", "ecp5-85k",
+            "ice40-hx1k",
+            "ice40-hx8k",
+            "ice40-lp8k",
+            "ecp5-25k",
+            "ecp5-45k",
+            "ecp5-85k",
         }
         if device not in known:
-            return (
-                f"Warning: '{device}' not in known devices. "
-                f"Known: {', '.join(sorted(known))}"
-            )
+            return f"Warning: '{device}' not in known devices. Known: {', '.join(sorted(known))}"
 
         self._emit(f"FPGA target device set to: {device}")
         return f"Target device: {device}"

@@ -132,9 +132,7 @@ def _probe_rename_wires(probes: Sequence[DebugProbe]) -> str:
         if p.width == 1:
             out.append(f"    wire {p.signal} = probe_{p.name}_i;")
         else:
-            out.append(
-                f"    wire [{p.width - 1}:0] {p.signal} = probe_{p.name}_i;"
-            )
+            out.append(f"    wire [{p.width - 1}:0] {p.signal} = probe_{p.name}_i;")
     return "\n".join(out)
 
 
@@ -486,10 +484,10 @@ class CaptureMode(StrEnum):
 
 
 class IlaVendor(StrEnum):
-    XILINX = "xilinx"        # BSCANE2 primitive
-    LATTICE_ECP5 = "ecp5"    # JTAGG primitive
+    XILINX = "xilinx"  # BSCANE2 primitive
+    LATTICE_ECP5 = "ecp5"  # JTAGG primitive
     LATTICE_ICE40 = "ice40"  # software-only (no BSCAN)
-    GOWIN = "gowin"          # similar to Lattice JTAGG
+    GOWIN = "gowin"  # similar to Lattice JTAGG
 
 
 # JTAG register-file address layout (exposed through the user TAP).
@@ -555,9 +553,7 @@ def render_advanced_ila(
         if p.width == 1:
             port_decls.append(f"    input  wire probe_{p.name}_i,")
         else:
-            port_decls.append(
-                f"    input  wire [{p.width - 1}:0] probe_{p.name}_i,"
-            )
+            port_decls.append(f"    input  wire [{p.width - 1}:0] probe_{p.name}_i,")
     port_decls_s = "\n".join(port_decls).rstrip(",")
 
     # Per-probe registered delayed signal for edge detection.
@@ -570,9 +566,7 @@ def render_advanced_ila(
     probe_aliases_s = "\n".join(probe_aliases)
     probe_delays_s = "\n".join(probe_delays)
 
-    delay_assigns = "\n".join(
-        f"        probe_{p.name}_d <= probe_{p.name};" for p in probes
-    )
+    delay_assigns = "\n".join(f"        probe_{p.name}_d <= probe_{p.name};" for p in probes)
 
     # Stage comparator expressions.
     stage_exprs: list[str] = []
@@ -681,11 +675,11 @@ module {module_name} (
     reg [15:0]         stage_limits [0:7];
 
     // Concatenated sample (MSB-first for parse_capture compatibility).
-    wire [SAMPLE_W-1:0] sample_q = {{{ ", ".join(f"probe_{p.name}" for p in probes) if probes else "1'b0" } }};
+    wire [SAMPLE_W-1:0] sample_q = {{{", ".join(f"probe_{p.name}" for p in probes) if probes else "1'b0"} }};
 
     // Stage comparators
 {stage_hits}
-    wire [N_STAGES-1:0] stage_hit_vec = {{{ ", ".join(f"stage_hit_{i}" for i in reversed(range(max(n_stages, 1)))) } }};
+    wire [N_STAGES-1:0] stage_hit_vec = {{{", ".join(f"stage_hit_{i}" for i in reversed(range(max(n_stages, 1))))} }};
     wire current_hit = stage_hit_vec[stage_ptr];
 
 {bscan_primitive}

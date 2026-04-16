@@ -37,6 +37,7 @@ try:
         QVBoxLayout,
         QWidget,
     )
+
     _QT_OK = True
 except Exception:  # pragma: no cover
     _QT_OK = False
@@ -65,9 +66,7 @@ if _QT_OK:
             self.tabs.addTab(self._build_telemetry_tab(), "Telemetry")
 
             buttons = QDialogButtonBox(
-                QDialogButtonBox.Ok
-                | QDialogButtonBox.Cancel
-                | QDialogButtonBox.Apply,
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Apply,
                 self,
             )
             buttons.accepted.connect(self._on_accept)
@@ -112,9 +111,7 @@ if _QT_OK:
                 for name in ALL_SCHEMES:
                     self.scheme_combo.addItem(name)
             except Exception:
-                self.scheme_combo.addItems(
-                    ["OpenForge Default", "Vivado", "Innovus", "KiCad"]
-                )
+                self.scheme_combo.addItems(["OpenForge Default", "Vivado", "Innovus", "KiCad"])
             self.scheme_combo.addItem("Custom")
             top.addWidget(self.scheme_combo, 1)
             self.scheme_combo.currentTextChanged.connect(self._refresh_binding_table)
@@ -218,9 +215,7 @@ if _QT_OK:
         def _build_telemetry_tab(self) -> QWidget:
             w = QWidget()
             layout = QVBoxLayout(w)
-            self.telemetry_cb = QCheckBox(
-                "Share anonymous usage telemetry (opt-in)"
-            )
+            self.telemetry_cb = QCheckBox("Share anonymous usage telemetry (opt-in)")
             layout.addWidget(self.telemetry_cb)
             layout.addWidget(
                 QLabel(
@@ -236,9 +231,7 @@ if _QT_OK:
         def _load_values(self) -> None:
             s = self.settings
             self.theme_combo.setCurrentText(str(s.value("appearance/theme", "Dark")))
-            self.density_combo.setCurrentText(
-                str(s.value("appearance/density", "Comfortable"))
-            )
+            self.density_combo.setCurrentText(str(s.value("appearance/density", "Comfortable")))
             try:
                 self.font_scale_spin.setValue(float(s.value("a11y/font_scale", 1.0)))
             except Exception:
@@ -256,16 +249,10 @@ if _QT_OK:
             self.motion_reduced_cb.setChecked(
                 str(s.value("a11y/motion_reduced", "false")).lower() == "true"
             )
-            self.ollama_host_edit.setText(
-                str(s.value("ai/ollama_host", "http://localhost:11434"))
-            )
+            self.ollama_host_edit.setText(str(s.value("ai/ollama_host", "http://localhost:11434")))
             self.ollama_model_edit.setText(str(s.value("ai/model", "llama3.1")))
-            self.embed_model_edit.setText(
-                str(s.value("ai/embed_model", "nomic-embed-text"))
-            )
-            self.enable_rag_cb.setChecked(
-                str(s.value("ai/enable_rag", "true")).lower() == "true"
-            )
+            self.embed_model_edit.setText(str(s.value("ai/embed_model", "nomic-embed-text")))
+            self.enable_rag_cb.setChecked(str(s.value("ai/enable_rag", "true")).lower() == "true")
             self.enable_tools_cb.setChecked(
                 str(s.value("ai/enable_tools", "true")).lower() == "true"
             )

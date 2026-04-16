@@ -174,15 +174,23 @@ class _SpicePlot(QWidget):
         for i in range(steps + 1):
             xv = x_min + (x_max - x_min) * i / steps
             xpx = plot_rect.left() + plot_rect.width() * i / steps
-            p.drawText(QRectF(xpx - 30, plot_rect.bottom() + 2, 60, 14),
-                       Qt.AlignmentFlag.AlignCenter, _fmt_eng(xv))
+            p.drawText(
+                QRectF(xpx - 30, plot_rect.bottom() + 2, 60, 14),
+                Qt.AlignmentFlag.AlignCenter,
+                _fmt_eng(xv),
+            )
             yv = y_max - (y_max - y_min) * i / steps
             ypx = plot_rect.top() + plot_rect.height() * i / steps
-            p.drawText(QRectF(2, ypx - 7, margin_l - 6, 14),
-                       Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                       _fmt_eng(yv))
-        p.drawText(QRectF(plot_rect.left(), plot_rect.bottom() + 18, plot_rect.width(), 14),
-                   Qt.AlignmentFlag.AlignCenter, self._x_label)
+            p.drawText(
+                QRectF(2, ypx - 7, margin_l - 6, 14),
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                _fmt_eng(yv),
+            )
+        p.drawText(
+            QRectF(plot_rect.left(), plot_rect.bottom() + 18, plot_rect.width(), 14),
+            Qt.AlignmentFlag.AlignCenter,
+            self._x_label,
+        )
         p.save()
         p.translate(12, plot_rect.center().y())
         p.rotate(-90)
@@ -209,8 +217,11 @@ class _SpicePlot(QWidget):
             ly = plot_rect.top() + 4 + idx * 14
             p.fillRect(QRectF(plot_rect.right() - 110, ly, 12, 10), color)
             p.setPen(QColor(self._palette.text))
-            p.drawText(QRectF(plot_rect.right() - 92, ly - 2, 90, 14),
-                       Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, name)
+            p.drawText(
+                QRectF(plot_rect.right() - 92, ly - 2, 90, 14),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                name,
+            )
 
         p.end()
 
@@ -220,19 +231,19 @@ def _fmt_eng(v: float) -> str:
         return "0"
     av = abs(v)
     if av >= 1e9:
-        return f"{v/1e9:.2g}G"
+        return f"{v / 1e9:.2g}G"
     if av >= 1e6:
-        return f"{v/1e6:.2g}M"
+        return f"{v / 1e6:.2g}M"
     if av >= 1e3:
-        return f"{v/1e3:.2g}k"
+        return f"{v / 1e3:.2g}k"
     if av >= 1:
         return f"{v:.3g}"
     if av >= 1e-3:
-        return f"{v*1e3:.2g}m"
+        return f"{v * 1e3:.2g}m"
     if av >= 1e-6:
-        return f"{v*1e6:.2g}u"
+        return f"{v * 1e6:.2g}u"
     if av >= 1e-9:
-        return f"{v*1e9:.2g}n"
+        return f"{v * 1e9:.2g}n"
     return f"{v:.2e}"
 
 
@@ -295,7 +306,6 @@ class SpicePanel(QDockWidget):
         with contextlib.suppress(Exception):
             self._tabs.addTab(self._build_monte_carlo_tab(), "Monte Carlo")
 
-
         # ---- Status bar -----------------------------------------------------
         self._status = QStatusBar(root)
         self._status.showMessage("Idle")
@@ -356,12 +366,8 @@ class SpicePanel(QDockWidget):
         w = QWidget()
         layout = QVBoxLayout(w)
         self._components_tree = QTreeWidget()
-        self._components_tree.setHeaderLabels(
-            ["Name", "Type", "Nodes", "Value", "Params"]
-        )
-        self._components_tree.header().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
+        self._components_tree.setHeaderLabels(["Name", "Type", "Nodes", "Value", "Params"])
+        self._components_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         layout.addWidget(self._components_tree)
         return w
 
@@ -370,9 +376,7 @@ class SpicePanel(QDockWidget):
         layout = QVBoxLayout(w)
         self._models_tree = QTreeWidget()
         self._models_tree.setHeaderLabels(["Name", "Type", "Parameters"])
-        self._models_tree.header().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
+        self._models_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         layout.addWidget(self._models_tree)
         return w
 
@@ -402,9 +406,7 @@ class SpicePanel(QDockWidget):
         layout = QVBoxLayout(w)
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self._plot_signals = QListWidget()
-        self._plot_signals.setSelectionMode(
-            self._plot_signals.SelectionMode.MultiSelection
-        )
+        self._plot_signals.setSelectionMode(self._plot_signals.SelectionMode.MultiSelection)
         self._plot_signals.itemSelectionChanged.connect(self._refresh_plot)
         splitter.addWidget(self._plot_signals)
         self._plot = _SpicePlot()
@@ -435,6 +437,7 @@ class SpicePanel(QDockWidget):
         self._path_edit.setText(str(self._netlist_path))
         try:
             from openforge.spice.parser import parse_spice
+
             self._netlist_obj = parse_spice(self._netlist_path)
         except Exception as exc:  # pragma: no cover - defensive
             self._status.showMessage(f"Parse error: {exc}")
@@ -531,8 +534,11 @@ class SpicePanel(QDockWidget):
         try:
             from openforge.engine.base import ExecutionBackend
             from openforge.engine.ngspice import NgspiceEngine
+
             backend = (
-                ExecutionBackend.DOCKER if self._docker_check.isChecked() else ExecutionBackend.NATIVE
+                ExecutionBackend.DOCKER
+                if self._docker_check.isChecked()
+                else ExecutionBackend.NATIVE
             )
             engine = NgspiceEngine(backend=backend)
         except Exception as exc:  # pragma: no cover - import-time guard
@@ -571,9 +577,7 @@ class SpicePanel(QDockWidget):
         self._log.appendPlainText(result.stdout or "")
         if result.stderr:
             self._log.appendPlainText(result.stderr)
-        self._log.appendPlainText(
-            f"Done (rc={result.returncode}, dur={result.duration:.2f}s)"
-        )
+        self._log.appendPlainText(f"Done (rc={result.returncode}, dur={result.duration:.2f}s)")
         raw_path: Path | None = None
         for tok in result.command:
             if tok.startswith("#raw="):
@@ -596,6 +600,7 @@ class SpicePanel(QDockWidget):
     def _load_raw(self, raw_path: Path, kind: str) -> None:
         try:
             from openforge.engine.ngspice import NgspiceEngine
+
             data = NgspiceEngine.parse_raw_ascii(raw_path)
         except Exception as exc:  # pragma: no cover - defensive
             self._log.appendPlainText(f"Failed to parse raw: {exc}")
@@ -692,7 +697,6 @@ class SpicePanel(QDockWidget):
             """
         )
 
-
     # ------------------------------------------------------------------
     # IP Library tab
     # ------------------------------------------------------------------
@@ -726,6 +730,7 @@ class SpicePanel(QDockWidget):
 
     def _selected_ip(self):
         from openforge.analog.ip_library import ANALOG_IP_LIBRARY
+
         item = self._ip_list.currentItem()
         if not item:
             return None
@@ -739,6 +744,7 @@ class SpicePanel(QDockWidget):
 
     def _on_load_ip_testbench(self) -> None:
         import tempfile
+
         ip = self._selected_ip()
         if not ip:
             return
@@ -788,6 +794,7 @@ class SpicePanel(QDockWidget):
     def _on_run_monte_carlo(self) -> None:
         import random
         import statistics
+
         var = self._mc_var.text().strip()
         nom = float(self._mc_nominal.value())
         sigma = float(self._mc_sigma.value())
@@ -817,6 +824,7 @@ class SpicePanel(QDockWidget):
     # ------------------------------------------------------------------
     def _on_schematic_to_netlist(self) -> None:
         import tempfile
+
         try:
             from openforge.spice.schematic_netlister import SpiceSchematic
         except Exception as e:
@@ -828,6 +836,7 @@ class SpicePanel(QDockWidget):
             from openforge_desktop.widgets.schematic_editor import (
                 SchematicEditor,
             )
+
             mw = self.window()
             if mw is not None:
                 editor = mw.findChild(SchematicEditor)

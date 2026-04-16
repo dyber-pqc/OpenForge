@@ -57,9 +57,7 @@ class _PbaTab(QWidget):
 
         bar = QHBoxLayout()
         self.reduction_label = QLabel("Total pessimism reduction: --")
-        self.reduction_label.setStyleSheet(
-            "font-weight: bold; font-size: 12pt; color: #4caf50;"
-        )
+        self.reduction_label.setStyleSheet("font-weight: bold; font-size: 12pt; color: #4caf50;")
         bar.addWidget(self.reduction_label)
         bar.addStretch(1)
         self.apply_btn = QPushButton("Apply PBA to STA")
@@ -71,9 +69,7 @@ class _PbaTab(QWidget):
         self.table.setHorizontalHeaderLabels(
             ["Endpoint", "GBA slack (ns)", "PBA slack (ns)", "GBA delay (ns)", "PBA delay (ns)"]
         )
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         lay.addWidget(self.table, 1)
 
     def set_results(self, results: list[Any]) -> None:
@@ -90,12 +86,8 @@ class _PbaTab(QWidget):
             else:
                 item.setForeground(QColor("#4caf50"))
             self.table.setItem(i, 2, item)
-            self.table.setItem(
-                i, 3, QTableWidgetItem(f"{float(getattr(r, 'gba_delay', 0.0)):.3f}")
-            )
-            self.table.setItem(
-                i, 4, QTableWidgetItem(f"{float(getattr(r, 'pba_delay', 0.0)):.3f}")
-            )
+            self.table.setItem(i, 3, QTableWidgetItem(f"{float(getattr(r, 'gba_delay', 0.0)):.3f}"))
+            self.table.setItem(i, 4, QTableWidgetItem(f"{float(getattr(r, 'pba_delay', 0.0)):.3f}"))
             total += float(getattr(r, "pessimism_reduction_ps", 0.0))
         self.reduction_label.setText(
             f"Total pessimism reduction: {total:.1f} ps across {len(results)} paths"
@@ -110,9 +102,7 @@ class _CpprTab(QWidget):
         lay = QVBoxLayout(self)
         bar = QHBoxLayout()
         self.total_label = QLabel("Total CPPR credit: --")
-        self.total_label.setStyleSheet(
-            "font-weight: bold; font-size: 12pt; color: #4caf50;"
-        )
+        self.total_label.setStyleSheet("font-weight: bold; font-size: 12pt; color: #4caf50;")
         bar.addWidget(self.total_label)
         bar.addStretch(1)
         self.apply_btn = QPushButton("Apply CPPR to STA")
@@ -124,9 +114,7 @@ class _CpprTab(QWidget):
         self.table.setHorizontalHeaderLabels(
             ["Endpoint", "Common segment", "Common delay (ps)", "Credit (ps)"]
         )
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         lay.addWidget(self.table, 1)
 
     def set_results(self, rows: list[dict]) -> None:
@@ -134,12 +122,8 @@ class _CpprTab(QWidget):
         total = 0.0
         for i, r in enumerate(rows):
             self.table.setItem(i, 0, QTableWidgetItem(str(r.get("endpoint", ""))))
-            self.table.setItem(
-                i, 1, QTableWidgetItem(" > ".join(r.get("common_segment", [])))
-            )
-            self.table.setItem(
-                i, 2, QTableWidgetItem(f"{r.get('common_delay_ps', 0.0):.1f}")
-            )
+            self.table.setItem(i, 1, QTableWidgetItem(" > ".join(r.get("common_segment", []))))
+            self.table.setItem(i, 2, QTableWidgetItem(f"{r.get('common_delay_ps', 0.0):.1f}"))
             credit = float(r.get("credit_ps", 0.0))
             self.table.setItem(i, 3, QTableWidgetItem(f"{credit:.1f}"))
             total += credit
@@ -154,9 +138,7 @@ class _XtalkTab(QWidget):
         lay = QVBoxLayout(self)
         bar = QHBoxLayout()
         self.summary_label = QLabel("Crosstalk: --")
-        self.summary_label.setStyleSheet(
-            "font-weight: bold; font-size: 12pt; color: #ffb74d;"
-        )
+        self.summary_label.setStyleSheet("font-weight: bold; font-size: 12pt; color: #ffb74d;")
         bar.addWidget(self.summary_label)
         bar.addStretch(1)
         self.apply_btn = QPushButton("Apply Crosstalk to STA")
@@ -174,9 +156,7 @@ class _XtalkTab(QWidget):
                 "Glitch (V)",
             ]
         )
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.itemSelectionChanged.connect(self._on_select)
         lay.addWidget(self.table, 1)
 
@@ -238,9 +218,7 @@ class _StatTab(QWidget):
         lay = QVBoxLayout(self)
         bar = QHBoxLayout()
         self.yield_label = QLabel("Yield: --")
-        self.yield_label.setStyleSheet(
-            "font-weight: bold; font-size: 14pt; color: #4caf50;"
-        )
+        self.yield_label.setStyleSheet("font-weight: bold; font-size: 14pt; color: #4caf50;")
         bar.addWidget(self.yield_label)
         bar.addStretch(1)
         lay.addLayout(bar)
@@ -249,18 +227,14 @@ class _StatTab(QWidget):
         self.table.setHorizontalHeaderLabels(
             ["Endpoint", "Mean slack (ns)", "Std (ns)", "P1 (ns)", "Yield (%)"]
         )
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         lay.addWidget(self.table, 1)
 
         corner_box = QGroupBox("Sigma Corners")
         cl = QVBoxLayout(corner_box)
         self.sigma_table = QTableWidget(0, 2)
         self.sigma_table.setHorizontalHeaderLabels(["Sigma", "Worst slack (ns)"])
-        self.sigma_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.sigma_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         cl.addWidget(self.sigma_table)
         lay.addWidget(corner_box)
 
@@ -283,12 +257,8 @@ class _StatTab(QWidget):
             self.table.setItem(
                 i, 1, QTableWidgetItem(f"{float(getattr(d, 'mean_slack', 0.0)):.3f}")
             )
-            self.table.setItem(
-                i, 2, QTableWidgetItem(f"{float(getattr(d, 'std_slack', 0.0)):.3f}")
-            )
-            self.table.setItem(
-                i, 3, QTableWidgetItem(f"{float(getattr(d, 'p01_slack', 0.0)):.3f}")
-            )
+            self.table.setItem(i, 2, QTableWidgetItem(f"{float(getattr(d, 'std_slack', 0.0)):.3f}"))
+            self.table.setItem(i, 3, QTableWidgetItem(f"{float(getattr(d, 'p01_slack', 0.0)):.3f}"))
             y = float(getattr(d, "yield_pct", 0.0))
             item = QTableWidgetItem(f"{y:.1f}")
             if y < 90:
@@ -331,9 +301,7 @@ class _StatTab(QWidget):
                 series = QBarSeries()
                 series.append(bset)
                 chart.addSeries(series)
-                cats = [
-                    f"{lo + i * step:.2f}" for i in range(nbins)
-                ]
+                cats = [f"{lo + i * step:.2f}" for i in range(nbins)]
                 ax_x = QBarCategoryAxis()
                 ax_x.append(cats)
                 ax_y = QValueAxis()
@@ -414,9 +382,7 @@ class PbaXtalkPanel(QWidget):
             pass
 
     def _on_load_spef(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Load SPEF", "", "SPEF (*.spef);;All files (*)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Load SPEF", "", "SPEF (*.spef);;All files (*)")
         if not path:
             return
         try:

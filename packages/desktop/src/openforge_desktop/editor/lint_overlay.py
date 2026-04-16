@@ -21,21 +21,22 @@ from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QToolTip
 
 class Diagnostic(TypedDict, total=False):
     """A single lint diagnostic."""
+
     file: str
-    line: int       # 1-based
-    col: int        # 1-based
-    end_col: int    # 1-based (optional, defaults to col + 1)
-    severity: str   # "error", "warning", "info", "hint"
+    line: int  # 1-based
+    col: int  # 1-based
+    end_col: int  # 1-based (optional, defaults to col + 1)
+    severity: str  # "error", "warning", "info", "hint"
     message: str
-    rule: str       # rule identifier
+    rule: str  # rule identifier
 
 
 # Colors for severity levels
 _SEVERITY_COLORS: Final[dict[str, str]] = {
-    "error": "#f38ba8",    # Catppuccin red
+    "error": "#f38ba8",  # Catppuccin red
     "warning": "#f9e2af",  # Catppuccin yellow
-    "info": "#89b4fa",     # Catppuccin blue
-    "hint": "#6c7086",     # Catppuccin overlay0
+    "info": "#89b4fa",  # Catppuccin blue
+    "hint": "#6c7086",  # Catppuccin overlay0
 }
 
 
@@ -196,8 +197,10 @@ class LintOverlay(QObject):
 
         for diag in self._diagnostics:
             line = diag.get("line", 1) - 1  # 0-based
-            col = diag.get("col", 1) - 1    # 0-based
-            end_col = diag.get("end_col", col + len(diag.get("message", "x").split()[0]) if col else col + 5)
+            col = diag.get("col", 1) - 1  # 0-based
+            end_col = diag.get(
+                "end_col", col + len(diag.get("message", "x").split()[0]) if col else col + 5
+            )
 
             block = self._editor.document().findBlockByLineNumber(line)
             if not block.isValid():
@@ -214,20 +217,28 @@ class LintOverlay(QObject):
             fmt.format.setToolTip(self._format_tooltip(diag))
 
             cursor = QTextCursor(block)
-            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, col)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, col
+            )
             # Clamp end_col to block length
             block_len = block.length() - 1  # -1 for newline
             actual_end = min(end_col, block_len)
             length = max(actual_end - col, 1)
-            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, length)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, length
+            )
             fmt.cursor = cursor
 
             selections.append(fmt)
 
         # Merge with existing extra selections (keep line/bracket highlights)
-        existing = [s for s in self._editor.extraSelections()
-                    if not s.format.underlineColor().isValid()
-                    or s.format.underlineStyle() != QTextEdit.ExtraSelection().format.UnderlineStyle.WaveUnderline]
+        existing = [
+            s
+            for s in self._editor.extraSelections()
+            if not s.format.underlineColor().isValid()
+            or s.format.underlineStyle()
+            != QTextEdit.ExtraSelection().format.UnderlineStyle.WaveUnderline
+        ]
         self._editor.setExtraSelections(existing + selections)
 
     @staticmethod

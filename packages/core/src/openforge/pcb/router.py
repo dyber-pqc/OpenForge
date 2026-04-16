@@ -22,6 +22,7 @@ Algorithm:
 
 A ``use_freerouting`` hook shells out to a freerouting.jar if present.
 """
+
 from __future__ import annotations
 
 import heapq
@@ -96,7 +97,12 @@ class PcbRouter:
         # Origin at bbox min so that negative coords work.
         x1, y1, x2, y2 = board.bounding_box()
         if x2 <= x1 or y2 <= y1:
-            x1, y1, x2, y2 = 0.0, 0.0, board.bounding_box()[2] or 100.0, board.bounding_box()[3] or 100.0
+            x1, y1, x2, y2 = (
+                0.0,
+                0.0,
+                board.bounding_box()[2] or 100.0,
+                board.bounding_box()[3] or 100.0,
+            )
         margin = 2.0
         self.origin = (x1 - margin, y1 - margin)
         self.cols = max(4, int(math.ceil((x2 - x1 + 2 * margin) / grid_mm)))
@@ -127,7 +133,9 @@ class PcbRouter:
             self.origin[1] + row * self.grid_mm,
         )
 
-    def _stamp_rect(self, grid: np.ndarray, cx: float, cy: float, hw: float, hh: float, value: int) -> None:
+    def _stamp_rect(
+        self, grid: np.ndarray, cx: float, cy: float, hw: float, hh: float, value: int
+    ) -> None:
         r0, c0 = self._mm_to_cell(cx - hw, cy - hh)
         r1, c1 = self._mm_to_cell(cx + hw, cy + hh)
         r0, r1 = sorted((r0, r1))
@@ -154,10 +162,18 @@ class PcbRouter:
                 continue
             g = self.grid[t.layer]
             self._paint_line(
-                g, t.x1_mm, t.y1_mm, t.x2_mm, t.y2_mm, max(1, int(round(t.width_mm / self.grid_mm / 2))), t.net or BLOCKED_CELL
+                g,
+                t.x1_mm,
+                t.y1_mm,
+                t.x2_mm,
+                t.y2_mm,
+                max(1, int(round(t.width_mm / self.grid_mm / 2))),
+                t.net or BLOCKED_CELL,
             )
 
-    def _paint_line(self, grid: np.ndarray, x1: float, y1: float, x2: float, y2: float, radius: int, value: int) -> None:
+    def _paint_line(
+        self, grid: np.ndarray, x1: float, y1: float, x2: float, y2: float, radius: int, value: int
+    ) -> None:
         r0, c0 = self._mm_to_cell(x1, y1)
         r1, c1 = self._mm_to_cell(x2, y2)
         steps = max(abs(r1 - r0), abs(c1 - c0), 1)
@@ -348,11 +364,11 @@ class PcbRouter:
         result.success = not failed
         result.track_count = new_tracks
         result.via_count = new_vias
-        result.total_length_mm = self.board.tracks and sum(t.length_mm() for t in self.board.tracks) or 0.0
-        result.runtime_s = time.perf_counter() - start_time
-        result.message = (
-            f"Routed {routed_count}/{len(target_ids)} nets in {result.runtime_s:.2f}s"
+        result.total_length_mm = (
+            self.board.tracks and sum(t.length_mm() for t in self.board.tracks) or 0.0
         )
+        result.runtime_s = time.perf_counter() - start_time
+        result.message = f"Routed {routed_count}/{len(target_ids)} nets in {result.runtime_s:.2f}s"
         return result
 
     def route_diff_pair(self, net_p: str, net_n: str) -> RouteResult:
@@ -377,7 +393,11 @@ class PcbRouter:
         return result
 
     def push_and_shove(
-        self, start: tuple[float, float], end: tuple[float, float], net: str, layer: str | None = None
+        self,
+        start: tuple[float, float],
+        end: tuple[float, float],
+        net: str,
+        layer: str | None = None,
     ) -> list[tuple[float, float]]:
         layer = layer or self.layers[0]
         name_to_id = {nm: nid for nid, nm in self.board.nets.items() if nm}
@@ -398,7 +418,11 @@ class PcbRouter:
         return [self._cell_to_mm(r, c) for r, c in path]
 
     def walkaround(
-        self, start: tuple[float, float], end: tuple[float, float], net: str, layer: str | None = None
+        self,
+        start: tuple[float, float],
+        end: tuple[float, float],
+        net: str,
+        layer: str | None = None,
     ) -> list[tuple[float, float]]:
         layer = layer or self.layers[0]
         name_to_id = {nm: nid for nid, nm in self.board.nets.items() if nm}
@@ -494,7 +518,9 @@ class PcbRouter:
     # ------------------------------------------------------------------
     # helpers: commit / rip
     # ------------------------------------------------------------------
-    def _commit_path(self, layer: str, path: list[tuple[int, int]], net_id: int, width_mm: float) -> None:
+    def _commit_path(
+        self, layer: str, path: list[tuple[int, int]], net_id: int, width_mm: float
+    ) -> None:
         radius = max(1, int(round(width_mm / self.grid_mm / 2)))
         grid = self.grid[layer]
         for r, c in path:
@@ -508,7 +534,9 @@ class PcbRouter:
             cells[mask] = net_id
             grid[r0 : r1 + 1, c0 : c1 + 1] = cells
 
-    def _path_to_tracks(self, layer: str, path: list[tuple[int, int]], net_id: int, width_mm: float) -> list:
+    def _path_to_tracks(
+        self, layer: str, path: list[tuple[int, int]], net_id: int, width_mm: float
+    ) -> list:
         """Collapse a cell path into straight-line segments and push them onto the board."""
         from openforge.pcb.model import PcbTrack
 

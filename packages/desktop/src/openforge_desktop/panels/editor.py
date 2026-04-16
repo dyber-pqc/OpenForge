@@ -44,6 +44,7 @@ from PySide6.QtWidgets import (
 _HAS_QSCI = False
 try:
     from Qsci import QsciLexerVerilog, QsciScintilla  # type: ignore[import-untyped]
+
     _HAS_QSCI = True
 except ImportError:
     pass
@@ -66,23 +67,86 @@ _MINIMAP_VIEWPORT: Final[str] = "#313244"
 
 # Verilog keyword lists for syntax highlighting and auto-completion
 _KEYWORDS = {
-    "module", "endmodule", "input", "output", "inout", "wire", "reg", "logic",
-    "assign", "always", "always_ff", "always_comb", "always_latch",
-    "begin", "end", "if", "else", "case", "casex", "casez", "endcase",
-    "for", "while", "repeat", "forever", "generate", "endgenerate",
-    "function", "endfunction", "task", "endtask",
-    "parameter", "localparam", "defparam", "typedef", "enum", "struct",
-    "initial", "posedge", "negedge", "or", "and", "not",
-    "integer", "real", "time", "genvar",
-    "assert", "assume", "cover", "property", "endproperty",
-    "sequence", "endsequence", "disable", "iff",
-    "interface", "endinterface", "modport", "clocking", "endclocking",
-    "package", "endpackage", "import", "export",
+    "module",
+    "endmodule",
+    "input",
+    "output",
+    "inout",
+    "wire",
+    "reg",
+    "logic",
+    "assign",
+    "always",
+    "always_ff",
+    "always_comb",
+    "always_latch",
+    "begin",
+    "end",
+    "if",
+    "else",
+    "case",
+    "casex",
+    "casez",
+    "endcase",
+    "for",
+    "while",
+    "repeat",
+    "forever",
+    "generate",
+    "endgenerate",
+    "function",
+    "endfunction",
+    "task",
+    "endtask",
+    "parameter",
+    "localparam",
+    "defparam",
+    "typedef",
+    "enum",
+    "struct",
+    "initial",
+    "posedge",
+    "negedge",
+    "or",
+    "and",
+    "not",
+    "integer",
+    "real",
+    "time",
+    "genvar",
+    "assert",
+    "assume",
+    "cover",
+    "property",
+    "endproperty",
+    "sequence",
+    "endsequence",
+    "disable",
+    "iff",
+    "interface",
+    "endinterface",
+    "modport",
+    "clocking",
+    "endclocking",
+    "package",
+    "endpackage",
+    "import",
+    "export",
 }
 
 _TYPES = {
-    "bit", "byte", "shortint", "int", "longint", "shortreal",
-    "string", "void", "automatic", "static", "signed", "unsigned",
+    "bit",
+    "byte",
+    "shortint",
+    "int",
+    "longint",
+    "shortreal",
+    "string",
+    "void",
+    "automatic",
+    "static",
+    "signed",
+    "unsigned",
 }
 
 # Combined keywords for auto-completion
@@ -102,6 +166,7 @@ def _make_font() -> QFont:
 
 
 # ── QSyntaxHighlighter for Verilog (fallback when QScintilla unavailable) ─
+
 
 class VerilogHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for Verilog/SystemVerilog using QRegularExpression."""
@@ -189,6 +254,7 @@ class VerilogHighlighter(QSyntaxHighlighter):
 
 # ── Line number area for QPlainTextEdit ────��─────────────────────────────
 
+
 class _LineNumberArea(QWidget):
     """Paints line numbers alongside a QPlainTextEdit."""
 
@@ -204,6 +270,7 @@ class _LineNumberArea(QWidget):
 
 
 # ── Auto-completion popup ─────────���──────────────────────────────────────
+
 
 class _CompletionPopup(QListWidget):
     """Popup list for Verilog keyword auto-completion."""
@@ -276,6 +343,7 @@ class _CompletionPopup(QListWidget):
 
 
 # ── Minimap widget ──────────────────────────────────────���────────────────
+
 
 class _Minimap(QPlainTextEdit):
     """Narrow read-only preview of the editor content (minimap)."""
@@ -501,7 +569,9 @@ class _CodeEditor(QPlainTextEdit):
                         sel.format.setFontWeight(QFont.Weight.Bold)
                         c = self.textCursor()
                         c.setPosition(bp)
-                        c.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                        c.movePosition(
+                            QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1
+                        )
                         sel.cursor = c
                         selections.append(sel)
 
@@ -518,7 +588,9 @@ class _CodeEditor(QPlainTextEdit):
                         sel.format.setFontWeight(QFont.Weight.Bold)
                         c = self.textCursor()
                         c.setPosition(bp)
-                        c.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                        c.movePosition(
+                            QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1
+                        )
                         sel.cursor = c
                         selections.append(sel)
 
@@ -530,9 +602,11 @@ class _CodeEditor(QPlainTextEdit):
         """Show a dialog and scroll to the entered line number."""
         max_line = self.blockCount()
         line, ok = QInputDialog.getInt(
-            self, "Go to Line", f"Line number (1-{max_line}):",
+            self,
+            "Go to Line",
+            f"Line number (1-{max_line}):",
             self.textCursor().blockNumber() + 1,  # value
-            1,         # min
+            1,  # min
             max_line,  # max
         )
         if ok:
@@ -575,11 +649,15 @@ class _CodeEditor(QPlainTextEdit):
             cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
             line = cursor.block().text()
             if line.startswith("    "):
-                cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 4)
+                cursor.movePosition(
+                    QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 4
+                )
                 cursor.removeSelectedText()
                 end -= 4
             elif line.startswith("\t"):
-                cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                cursor.movePosition(
+                    QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1
+                )
                 cursor.removeSelectedText()
                 end -= 1
             if not cursor.movePosition(QTextCursor.MoveOperation.NextBlock):
@@ -626,14 +704,20 @@ class _CodeEditor(QPlainTextEdit):
                 # Uncomment: remove first //
                 idx = line.find("//")
                 if idx >= 0:
-                    cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, idx)
-                    cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 2)
+                    cursor.movePosition(
+                        QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, idx
+                    )
+                    cursor.movePosition(
+                        QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 2
+                    )
                     # Also remove a trailing space if present
                     if cursor.selectedText() == "//":
                         cursor.position()
-                        remaining = line[idx + 2:]
+                        remaining = line[idx + 2 :]
                         if remaining.startswith(" "):
-                            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                            cursor.movePosition(
+                                QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1
+                            )
                             end -= 3
                         else:
                             end -= 2
@@ -679,7 +763,10 @@ class _CodeEditor(QPlainTextEdit):
                 return
 
         # Ctrl+/ for comment toggle (explicit handling for Windows compatibility)
-        if event.key() == Qt.Key.Key_Slash and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+        if (
+            event.key() == Qt.Key.Key_Slash
+            and event.modifiers() == Qt.KeyboardModifier.ControlModifier
+        ):
             self.toggle_comment()
             return
 
@@ -790,9 +877,12 @@ class _CodeEditor(QPlainTextEdit):
             if block.isVisible() and bottom >= event.rect().top():
                 painter.setPen(QColor(_MARGIN_FG))
                 painter.drawText(
-                    0, top, self._line_area.width() - 6,
+                    0,
+                    top,
+                    self._line_area.width() - 6,
                     self.fontMetrics().height(),
-                    Qt.AlignmentFlag.AlignRight, str(block_num + 1)
+                    Qt.AlignmentFlag.AlignRight,
+                    str(block_num + 1),
                 )
             block = block.next()
             top = bottom
@@ -803,6 +893,7 @@ class _CodeEditor(QPlainTextEdit):
 
 
 # ── Editor Panel ──────���──────────────────────────────────────────────────
+
 
 class EditorPanel(QWidget):
     """Central editor panel with tabbed interface for source files."""
@@ -864,7 +955,10 @@ class EditorPanel(QWidget):
         return path.suffix.lower() in EditorPanel._VERILOG_EXTS
 
     def new_file(
-        self, content: str = "", title: str = "untitled", path: Path | None = None,
+        self,
+        content: str = "",
+        title: str = "untitled",
+        path: Path | None = None,
     ) -> QWidget:
         """Create a new editor tab."""
         use_verilog = self._is_verilog(path)
@@ -919,7 +1013,9 @@ class EditorPanel(QWidget):
 
     def open_file_dialog(self, start_dir: str = "") -> None:
         path_str, _ = QFileDialog.getOpenFileName(
-            self, "Open Source File", start_dir,
+            self,
+            "Open Source File",
+            start_dir,
             "Verilog (*.v *.sv *.vh *.svh);;VHDL (*.vhd *.vhdl);;All (*)",
         )
         if path_str:
@@ -943,7 +1039,9 @@ class EditorPanel(QWidget):
         if idx < 0:
             return
         path_str, _ = QFileDialog.getSaveFileName(
-            self, "Save File As", "",
+            self,
+            "Save File As",
+            "",
             "Verilog (*.v *.sv);;All (*)",
         )
         if path_str:
@@ -1099,6 +1197,7 @@ class EditorPanel(QWidget):
         """Open the file's containing folder in the system file explorer."""
         import subprocess
         import sys
+
         folder = str(path.parent)
         if sys.platform == "win32":
             subprocess.Popen(["explorer", "/select,", str(path)])
@@ -1109,6 +1208,7 @@ class EditorPanel(QWidget):
 
 
 # ── Search bar ───────────────────────────────────────────────────────────
+
 
 class _SearchBar(QWidget):
     search_requested = Signal(str, bool)
@@ -1122,7 +1222,9 @@ class _SearchBar(QWidget):
         layout.addWidget(QLabel("Find:"))
         self._find = QLineEdit()
         self._find.setPlaceholderText("Search...")
-        self._find.returnPressed.connect(lambda: self.search_requested.emit(self._find.text(), True))
+        self._find.returnPressed.connect(
+            lambda: self.search_requested.emit(self._find.text(), True)
+        )
         layout.addWidget(self._find)
 
         btn_prev = QPushButton("Prev")

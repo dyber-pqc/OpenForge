@@ -71,29 +71,56 @@ _ALGO_NAME_MAP: dict[str, Algorithm] = {
 }
 
 # Expected field names per algorithm family
-ML_KEM_KEYGEN_FIELDS: frozenset[str] = frozenset({
-    "z", "d", "ek", "dk",
-})
+ML_KEM_KEYGEN_FIELDS: frozenset[str] = frozenset(
+    {
+        "z",
+        "d",
+        "ek",
+        "dk",
+    }
+)
 
-ML_KEM_ENCAPS_FIELDS: frozenset[str] = frozenset({
-    "ek", "m", "K", "c",
-})
+ML_KEM_ENCAPS_FIELDS: frozenset[str] = frozenset(
+    {
+        "ek",
+        "m",
+        "K",
+        "c",
+    }
+)
 
-ML_KEM_DECAPS_FIELDS: frozenset[str] = frozenset({
-    "dk", "c", "K",
-})
+ML_KEM_DECAPS_FIELDS: frozenset[str] = frozenset(
+    {
+        "dk",
+        "c",
+        "K",
+    }
+)
 
-ML_DSA_KEYGEN_FIELDS: frozenset[str] = frozenset({
-    "xi", "pk", "sk",
-})
+ML_DSA_KEYGEN_FIELDS: frozenset[str] = frozenset(
+    {
+        "xi",
+        "pk",
+        "sk",
+    }
+)
 
-ML_DSA_SIGN_FIELDS: frozenset[str] = frozenset({
-    "sk", "message", "rnd", "signature",
-})
+ML_DSA_SIGN_FIELDS: frozenset[str] = frozenset(
+    {
+        "sk",
+        "message",
+        "rnd",
+        "signature",
+    }
+)
 
-ML_DSA_VERIFY_FIELDS: frozenset[str] = frozenset({
-    "pk", "message", "signature",
-})
+ML_DSA_VERIFY_FIELDS: frozenset[str] = frozenset(
+    {
+        "pk",
+        "message",
+        "signature",
+    }
+)
 
 
 class NISTVectorLoader:
@@ -111,9 +138,7 @@ class NISTVectorLoader:
     """
 
     # Regex for key = value lines (value is hex string or integer)
-    _KV_PATTERN: re.Pattern[str] = re.compile(
-        r"^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$"
-    )
+    _KV_PATTERN: re.Pattern[str] = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$")
 
     def load(
         self,
@@ -195,9 +220,7 @@ class NISTVectorLoader:
         for vec in vectors:
             missing = required_fields - vec.fields.keys()
             if missing:
-                errors.append(
-                    f"Vector count={vec.count}: missing fields {sorted(missing)}"
-                )
+                errors.append(f"Vector count={vec.count}: missing fields {sorted(missing)}")
         return errors
 
     # ── Internal parsing ───────────────────────────────────────────

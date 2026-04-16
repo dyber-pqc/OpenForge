@@ -105,7 +105,9 @@ def _parse_stat_output(text: str) -> tuple[int, dict[str, int], float]:
                 in_cell_section = False
 
         # Chip area
-        if (m := re.search(r"Chip area for (?:top-level )?module .+?:\s+([\d.]+)", stripped)) or (m := re.search(r"Estimated chip area:\s+([\d.]+)", stripped)):
+        if (m := re.search(r"Chip area for (?:top-level )?module .+?:\s+([\d.]+)", stripped)) or (
+            m := re.search(r"Estimated chip area:\s+([\d.]+)", stripped)
+        ):
             area = float(m.group(1))
 
     return total_cells, cell_usage, area
@@ -113,20 +115,12 @@ def _parse_stat_output(text: str) -> tuple[int, dict[str, int], float]:
 
 def _collect_warnings(text: str) -> list[str]:
     """Extract warning lines from Yosys output."""
-    return [
-        line.strip()
-        for line in text.splitlines()
-        if re.search(r"(?i)\bwarning\b", line)
-    ]
+    return [line.strip() for line in text.splitlines() if re.search(r"(?i)\bwarning\b", line)]
 
 
 def _collect_errors(text: str) -> list[str]:
     """Extract error lines from Yosys output."""
-    return [
-        line.strip()
-        for line in text.splitlines()
-        if re.search(r"(?i)\berror\b", line)
-    ]
+    return [line.strip() for line in text.splitlines() if re.search(r"(?i)\berror\b", line)]
 
 
 def _resolve_liberty(
@@ -149,7 +143,11 @@ def _resolve_liberty(
         # Search paths (in priority order)
         search_dirs = [
             Path.cwd(),
-            Path(__file__).resolve().parents[5] / "share" / "pdk" / pdk_name / "lib",  # repo share/pdk/
+            Path(__file__).resolve().parents[5]
+            / "share"
+            / "pdk"
+            / pdk_name
+            / "lib",  # repo share/pdk/
             Path.home() / ".openforge" / "pdks" / pdk_name,
         ]
         for search_dir in search_dirs:
@@ -187,14 +185,19 @@ class SynthesisRunner:
         pdk_manager: PDKManager | None = None,
     ) -> None:
         self._project_path = Path(project_path).resolve()
-        self._config = config if config is not None else load_config(
-            search_dir=self._project_path,
+        self._config = (
+            config
+            if config is not None
+            else load_config(
+                search_dir=self._project_path,
+            )
         )
         self._pdk_manager = pdk_manager
         # Auto-detect: use Docker backend if native Yosys not installed
         self._yosys = YosysEngine()
         if not self._yosys.check_installed():
             from openforge.engine.base import ExecutionBackend
+
             self._yosys = YosysEngine(backend=ExecutionBackend.DOCKER)
 
     @property
@@ -264,6 +267,7 @@ class SynthesisRunner:
         elif liberty:
             # Copy Liberty file into project build dir for Docker access
             import shutil
+
             local_lib = out_dir / liberty.name
             if not local_lib.exists() or local_lib.stat().st_size != liberty.stat().st_size:
                 shutil.copy2(liberty, local_lib)
@@ -277,7 +281,7 @@ class SynthesisRunner:
         target_delay_ps: float | None = None
         if target_frequency and target_frequency > 0:
             period_ns = 1000.0 / target_frequency  # MHz -> ns
-            target_delay_ps = period_ns * 1000.0    # ns -> ps
+            target_delay_ps = period_ns * 1000.0  # ns -> ps
 
         # Generate the Yosys script (use relative output dir for Docker compat)
         try:
@@ -304,17 +308,13 @@ class SynthesisRunner:
             posix = p.as_posix()
             suffix = p.suffix.lower()
             if suffix in (".sv", ".svh"):
-                custom_reads.append(
-                    " ".join(x for x in ("read_verilog -sv", rd_extra, posix) if x)
-                )
+                custom_reads.append(" ".join(x for x in ("read_verilog -sv", rd_extra, posix) if x))
             elif suffix in (".vhd", ".vhdl"):
                 has_vhdl = True
                 custom_reads.append(f"ghdl --std=08 {posix} -e")
             else:
                 base = "read_verilog -sv" if sv_mode else "read_verilog"
-                custom_reads.append(
-                    " ".join(x for x in (base, rd_extra, posix) if x)
-                )
+                custom_reads.append(" ".join(x for x in (base, rd_extra, posix) if x))
         if has_vhdl:
             custom_reads.insert(0, "plugin -i ghdl")
 
@@ -405,9 +405,7 @@ class SynthesisRunner:
         from openforge.elaboration import Elaborator
 
         out_dir = Path(output_dir) if output_dir else self._project_path / "elab_build"
-        src_objs = [
-            SourceFile(path=Path(s), language="auto") for s in sources
-        ]
+        src_objs = [SourceFile(path=Path(s), language="auto") for s in sources]
         inc = [Path(d) for d in include_dirs]
         elab = Elaborator(self._project_path)
         result = elab.elaborate(

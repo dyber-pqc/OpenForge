@@ -143,9 +143,7 @@ class CoverageClosureManager:
             data = json.loads(self.history_db.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return
-        self.snapshots = [
-            CoverageSnapshot.from_json(s) for s in data.get("snapshots", [])
-        ]
+        self.snapshots = [CoverageSnapshot.from_json(s) for s in data.get("snapshots", [])]
         self.goals = [
             CoverageGoal(
                 name=g["name"],
@@ -163,9 +161,7 @@ class CoverageClosureManager:
             "snapshots": [s.to_json() for s in self.snapshots],
             "goals": [asdict(g) for g in self.goals],
         }
-        self.history_db.write_text(
-            json.dumps(payload, indent=2), encoding="utf-8"
-        )
+        self.history_db.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Snapshots
@@ -176,6 +172,7 @@ class CoverageClosureManager:
         Accepts either a dict or any object with attributes matching the
         snapshot field names. Missing fields default to 0.0.
         """
+
         def grab(key: str, default: float = 0.0) -> float:
             if isinstance(coverage_report, dict):
                 return float(coverage_report.get(key, default))
@@ -222,18 +219,12 @@ class CoverageClosureManager:
     def latest(self) -> CoverageSnapshot | None:
         return self.snapshots[-1] if self.snapshots else None
 
-    def get_trend(
-        self, metric: str = "total", days: int = 30
-    ) -> list[tuple[datetime, float]]:
+    def get_trend(self, metric: str = "total", days: int = 30) -> list[tuple[datetime, float]]:
         """Return ``(timestamp, pct)`` points for the requested window."""
         if metric not in _METRICS:
             metric = "total"
         cutoff = datetime.utcnow() - timedelta(days=days)
-        return [
-            (s.timestamp, s.get(metric))
-            for s in self.snapshots
-            if s.timestamp >= cutoff
-        ]
+        return [(s.timestamp, s.get(metric)) for s in self.snapshots if s.timestamp >= cutoff]
 
     # ------------------------------------------------------------------
     # Goals
@@ -455,10 +446,10 @@ h1, h2 {{ color: #f5c2e7; }}
 {latest_html}
 <h2>Goals</h2>
 <table><thead><tr><th>Name</th><th>Metric</th><th>Current</th><th>Target</th><th>Met</th><th>ETA</th></tr></thead>
-<tbody>{''.join(goals_rows) or '<tr><td colspan=6>(no goals defined)</td></tr>'}</tbody></table>
+<tbody>{"".join(goals_rows) or "<tr><td colspan=6>(no goals defined)</td></tr>"}</tbody></table>
 <h2>Recent History</h2>
 <table><thead><tr><th>Timestamp</th><th>Tests</th><th>Total %</th></tr></thead>
-<tbody>{''.join(history_rows) or '<tr><td colspan=3>(no snapshots)</td></tr>'}</tbody></table>
+<tbody>{"".join(history_rows) or "<tr><td colspan=3>(no snapshots)</td></tr>"}</tbody></table>
 </body></html>
 """
         output.parent.mkdir(parents=True, exist_ok=True)

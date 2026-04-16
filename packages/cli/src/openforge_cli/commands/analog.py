@@ -20,7 +20,9 @@ app = typer.Typer(
 @app.command(name="run")
 def spice_run(
     netlist: str = typer.Option(..., "--netlist", "-n", help="SPICE netlist file."),
-    analysis: str = typer.Option("tran", "--analysis", "-a", help="Analysis type: tran, dc, ac, op, noise."),
+    analysis: str = typer.Option(
+        "tran", "--analysis", "-a", help="Analysis type: tran, dc, ac, op, noise."
+    ),
     path: str = typer.Argument(".", help="Working directory."),
     output: str | None = typer.Option(None, "--output", "-o", help="Output raw file path."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
@@ -125,12 +127,16 @@ def spice_run(
         raise typer.Exit(code=1)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "status": "passed",
-            "analysis": analysis,
-            "output_raw": str(output_raw),
-            "duration_s": result.duration,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": "passed",
+                    "analysis": analysis,
+                    "output_raw": str(output_raw),
+                    "duration_s": result.duration,
+                }
+            )
+        )
         return
 
     console.print(f"[green bold]SPICE {analysis} PASSED[/] in {result.duration:.1f}s")
@@ -193,12 +199,18 @@ def monte_carlo(
         raise typer.Exit(code=1)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "status": "passed",
-            "samples": samples,
-            "output_dir": str(output_dir),
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": "passed",
+                    "samples": samples,
+                    "output_dir": str(output_dir),
+                }
+            )
+        )
         return
 
-    console.print(f"[green bold]Monte Carlo PASSED[/] ({samples} samples) in {result.duration:.1f}s")
+    console.print(
+        f"[green bold]Monte Carlo PASSED[/] ({samples} samples) in {result.duration:.1f}s"
+    )
     console.print(f"  Results: [cyan]{output_dir}[/]")

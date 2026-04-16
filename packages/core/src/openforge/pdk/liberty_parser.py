@@ -3,6 +3,7 @@
 Only extracts cells, pins, area, function, and basic timing arcs - enough
 to populate a cell library browser. Skips lookup tables and power tables.
 """
+
 from __future__ import annotations
 
 import re

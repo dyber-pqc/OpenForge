@@ -36,9 +36,9 @@ class DesktopProjectManager(QObject):
     """
 
     # Signals
-    project_opened = Signal(str)          # project path
+    project_opened = Signal(str)  # project path
     project_closed = Signal()
-    build_state_changed = Signal(str)     # idle / synthesizing / simulating / ...
+    build_state_changed = Signal(str)  # idle / synthesizing / simulating / ...
     source_files_changed = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:

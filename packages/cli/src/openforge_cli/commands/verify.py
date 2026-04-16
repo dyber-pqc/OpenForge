@@ -25,9 +25,7 @@ def _load_config(project_dir: Path):
     try:
         return load_config(search_dir=project_dir)
     except (FileNotFoundError, ConfigNotFoundError):
-        console.print(
-            f"[red]Error:[/] no openforge.yaml found in [cyan]{project_dir}[/]."
-        )
+        console.print(f"[red]Error:[/] no openforge.yaml found in [cyan]{project_dir}[/].")
         raise typer.Exit(code=1)
 
 
@@ -42,12 +40,15 @@ def _resolve_sources(project_dir: Path, config: Any) -> list[str]:
 # sim
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def sim(
     path: str = typer.Argument(".", help="Path to the design directory."),
     top: str | None = typer.Option(None, "--top", help="Top-level module."),
     tb: str | None = typer.Option(None, "--tb", help="Testbench file."),
-    sim_tool: str = typer.Option("icarus", "--sim", "-s", help="Simulator: verilator, icarus, ghdl."),
+    sim_tool: str = typer.Option(
+        "icarus", "--sim", "-s", help="Simulator: verilator, icarus, ghdl."
+    ),
     waves: bool = typer.Option(True, "--waves/--no-waves", "-w", help="Enable waveform tracing."),
     coverage: bool = typer.Option(False, "--coverage", help="Enable coverage collection."),
     merge: bool = typer.Option(False, "--merge", help="Merge coverage databases."),
@@ -109,7 +110,11 @@ def sim(
 
     if not compile_result.success:
         if json_output:
-            console.print(json_mod.dumps({"status": "failed", "phase": "compile", "errors": compile_result.errors_count}))
+            console.print(
+                json_mod.dumps(
+                    {"status": "failed", "phase": "compile", "errors": compile_result.errors_count}
+                )
+            )
         else:
             console.print(f"[red bold]Compilation FAILED[/] ({compile_result.errors_count} errors)")
             if compile_result.log:
@@ -124,11 +129,15 @@ def sim(
     sim_result = runner.simulate(tool=sim_tool, on_output=_on_output)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "status": "passed" if sim_result.success else "failed",
-            "duration_s": sim_result.duration,
-            "wave_file": sim_result.wave_file,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": "passed" if sim_result.success else "failed",
+                    "duration_s": sim_result.duration,
+                    "wave_file": sim_result.wave_file,
+                }
+            )
+        )
         if not sim_result.success:
             raise typer.Exit(code=1)
         return
@@ -148,6 +157,7 @@ def sim(
 # ---------------------------------------------------------------------------
 # formal
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def formal(
@@ -197,11 +207,15 @@ def formal(
     status_str = result.status.value.upper()
 
     if json_output:
-        console.print(json_mod.dumps({
-            "status": status_str,
-            "output": result.output[:1000] if result.output else "",
-            "errors": result.errors,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": status_str,
+                    "output": result.output[:1000] if result.output else "",
+                    "errors": result.errors,
+                }
+            )
+        )
         if status_str == "FAILED":
             raise typer.Exit(code=1)
         return
@@ -220,6 +234,7 @@ def formal(
 # ---------------------------------------------------------------------------
 # eqy (equivalence checking)
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def eqy(
@@ -285,7 +300,11 @@ def eqy(
     passed = proc.returncode == 0
 
     if json_output:
-        console.print(json_mod.dumps({"status": "passed" if passed else "failed", "returncode": proc.returncode}))
+        console.print(
+            json_mod.dumps(
+                {"status": "passed" if passed else "failed", "returncode": proc.returncode}
+            )
+        )
         if not passed:
             raise typer.Exit(code=1)
         return
@@ -303,6 +322,7 @@ def eqy(
 # ---------------------------------------------------------------------------
 # lint
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def lint(
@@ -345,16 +365,22 @@ def lint(
     result = run_lint(context)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "status": result.status.value,
-            "findings_count": result.artifacts.get("findings_count", "0"),
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "status": result.status.value,
+                    "findings_count": result.artifacts.get("findings_count", "0"),
+                }
+            )
+        )
         if result.status.value != "passed":
             raise typer.Exit(code=1)
         return
 
     if result.status.value == "passed":
-        console.print(f"[green bold]LINT PASS[/] -- {result.artifacts.get('findings_count', '0')} findings")
+        console.print(
+            f"[green bold]LINT PASS[/] -- {result.artifacts.get('findings_count', '0')} findings"
+        )
     else:
         console.print("[red bold]LINT FAIL[/]")
         if result.output:
@@ -368,6 +394,7 @@ def lint(
 # ---------------------------------------------------------------------------
 # cdc
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def cdc(
@@ -403,11 +430,15 @@ def cdc(
         )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "crossings": result.crossing_count,
-            "violations": result.violation_count,
-            "clock_domains": result.clock_domains,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "crossings": result.crossing_count,
+                    "violations": result.violation_count,
+                    "clock_domains": result.clock_domains,
+                }
+            )
+        )
         if result.violation_count > 0:
             raise typer.Exit(code=2)
         return
@@ -430,6 +461,7 @@ def cdc(
 # ---------------------------------------------------------------------------
 # regression
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def regression(
@@ -464,9 +496,13 @@ def regression(
         if json_output:
             console.print(json_mod.dumps({"failed_count": len(failed), "failed_tests": failed}))
         else:
-            console.print(f"[bold]Regression Triage:[/] {len(failed)} failures out of {len(data.get('tests', []))}")
+            console.print(
+                f"[bold]Regression Triage:[/] {len(failed)} failures out of {len(data.get('tests', []))}"
+            )
             for t in failed[:20]:
-                console.print(f"  [red]{t.get('name', 'unknown')}[/] -- {t.get('error', 'unknown error')[:100]}")
+                console.print(
+                    f"  [red]{t.get('name', 'unknown')}[/] -- {t.get('error', 'unknown error')[:100]}"
+                )
         if failed:
             raise typer.Exit(code=1)
         return
@@ -507,25 +543,35 @@ def regression(
 
         if not compile_result.success:
             total_fail += 1
-            results.append({"name": f"seed_{seed}", "status": "failed", "error": "compilation failed"})
+            results.append(
+                {"name": f"seed_{seed}", "status": "failed", "error": "compilation failed"}
+            )
             continue
 
         sim_result = runner.simulate(tool="icarus", on_output=_on_output)
 
         if sim_result.success:
             total_pass += 1
-            results.append({"name": f"seed_{seed}", "status": "passed", "duration": sim_result.duration})
+            results.append(
+                {"name": f"seed_{seed}", "status": "passed", "duration": sim_result.duration}
+            )
         else:
             total_fail += 1
-            results.append({"name": f"seed_{seed}", "status": "failed", "error": "simulation failed"})
+            results.append(
+                {"name": f"seed_{seed}", "status": "failed", "error": "simulation failed"}
+            )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "total": seeds,
-            "passed": total_pass,
-            "failed": total_fail,
-            "tests": results,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "total": seeds,
+                    "passed": total_pass,
+                    "failed": total_fail,
+                    "tests": results,
+                }
+            )
+        )
         if total_fail > 0:
             raise typer.Exit(code=1)
         return
@@ -536,7 +582,9 @@ def regression(
     table.add_column("Value", justify="right")
     table.add_row("Total tests", str(seeds))
     table.add_row("Passed", f"[green]{total_pass}[/]")
-    table.add_row("Failed", f"[red]{total_fail}[/]" if total_fail > 0 else f"[green]{total_fail}[/]")
+    table.add_row(
+        "Failed", f"[red]{total_fail}[/]" if total_fail > 0 else f"[green]{total_fail}[/]"
+    )
     console.print(table)
 
     if total_fail > 0:

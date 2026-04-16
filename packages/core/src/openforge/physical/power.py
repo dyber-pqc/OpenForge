@@ -66,11 +66,21 @@ def _parse_power_report(text: str) -> PowerResult:
 
     # Try multiple formats OpenSTA may produce
     # Format 1: "Total Power = <val> W" or "Total <val> W"
-    total = _extract_watts(r"total\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text)
-    dynamic = _extract_watts(r"dynamic\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text)
-    leakage = _extract_watts(r"leakage\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text)
-    internal = _extract_watts(r"internal\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text)
-    switching = _extract_watts(r"switching\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text)
+    total = _extract_watts(
+        r"total\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text
+    )
+    dynamic = _extract_watts(
+        r"dynamic\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text
+    )
+    leakage = _extract_watts(
+        r"leakage\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text
+    )
+    internal = _extract_watts(
+        r"internal\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text
+    )
+    switching = _extract_watts(
+        r"switching\s+(?:power\s*[=:])?\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*[wW]", text
+    )
 
     # Convert W to mW
     to_mw = 1000.0
@@ -193,12 +203,14 @@ class PowerAnalyzer:
                 # Try generic activity read
                 tcl_lines.append(f"read_power_activities -scope {top_module} {activity_file}")
 
-        tcl_lines.extend([
-            "report_power",
-            "report_power -hierarchy",
-            "report_power -cell_type",
-            "exit",
-        ])
+        tcl_lines.extend(
+            [
+                "report_power",
+                "report_power -hierarchy",
+                "report_power -cell_type",
+                "exit",
+            ]
+        )
 
         tcl_content = "\n".join(tcl_lines) + "\n"
 
@@ -258,7 +270,7 @@ class PowerAnalyzer:
         frequency_hz = frequency_mhz * 1e6
 
         # P = alpha * C * V^2 * f (Watts)
-        power_w = activity_factor * total_capacitance_f * (vdd ** 2) * frequency_hz
+        power_w = activity_factor * total_capacitance_f * (vdd**2) * frequency_hz
 
         # Add ~20% for leakage as a rough estimate
         leakage_factor = 1.2

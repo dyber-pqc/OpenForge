@@ -70,20 +70,24 @@ class NewProjectDialog(QDialog):
 
         # Template
         self._template_combo = QComboBox()
-        self._template_combo.addItems([
-            "empty",
-            "simple-counter",
-            "crypto-accelerator",
-        ])
+        self._template_combo.addItems(
+            [
+                "empty",
+                "simple-counter",
+                "crypto-accelerator",
+            ]
+        )
         form.addRow("Template:", self._template_combo)
 
         # Target PDK
         self._pdk_combo = QComboBox()
-        self._pdk_combo.addItems([
-            "sky130",
-            "gf180mcu",
-            "asap7",
-        ])
+        self._pdk_combo.addItems(
+            [
+                "sky130",
+                "gf180mcu",
+                "asap7",
+            ]
+        )
         form.addRow("Target PDK:", self._pdk_combo)
 
         layout.addLayout(form)
@@ -113,9 +117,7 @@ class NewProjectDialog(QDialog):
     # ── Internal ───────────────────────────────────────────────────
 
     def _browse_location(self) -> None:
-        directory = QFileDialog.getExistingDirectory(
-            self, "Select Project Location", ""
-        )
+        directory = QFileDialog.getExistingDirectory(self, "Select Project Location", "")
         if directory:
             self._location_edit.setText(directory)
 
@@ -153,9 +155,7 @@ class NewProjectDialog(QDialog):
             return
 
         if not Path(location).is_dir():
-            QMessageBox.warning(
-                self, "Invalid Location", "The selected location does not exist."
-            )
+            QMessageBox.warning(self, "Invalid Location", "The selected location does not exist.")
             return
 
         self.accept()

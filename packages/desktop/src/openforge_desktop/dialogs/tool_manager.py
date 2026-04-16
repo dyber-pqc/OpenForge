@@ -90,6 +90,7 @@ class ToolManagerDialog(QDialog):
 
         # Auto-check tools on open
         from PySide6.QtCore import QTimer
+
         QTimer.singleShot(100, self._on_check_all)
 
     def _build_ui(self) -> None:
@@ -99,9 +100,7 @@ class ToolManagerDialog(QDialog):
 
         # Header
         header = QLabel("OpenForge EDA Tool Manager")
-        header.setStyleSheet(
-            f"color: {_BLUE}; font-size: 16px; font-weight: bold; padding: 4px;"
-        )
+        header.setStyleSheet(f"color: {_BLUE}; font-size: 16px; font-weight: bold; padding: 4px;")
         layout.addWidget(header)
 
         desc = QLabel(
@@ -115,9 +114,16 @@ class ToolManagerDialog(QDialog):
         # Tool table
         self._table = QTableWidget()
         self._table.setColumnCount(6)
-        self._table.setHorizontalHeaderLabels([
-            "Category", "Tool", "Binary", "Installed", "Version", "Docker Image",
-        ])
+        self._table.setHorizontalHeaderLabels(
+            [
+                "Category",
+                "Tool",
+                "Binary",
+                "Installed",
+                "Version",
+                "Docker Image",
+            ]
+        )
         header_view = self._table.horizontalHeader()
         if header_view is not None:
             header_view.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -143,9 +149,7 @@ class ToolManagerDialog(QDialog):
 
         # Summary
         self._summary = QLabel("Click 'Check All' to scan installed tools")
-        self._summary.setStyleSheet(
-            f"color: {_SUBTEXT}; font-size: 12px; padding: 4px;"
-        )
+        self._summary.setStyleSheet(f"color: {_SUBTEXT}; font-size: 12px; padding: 4px;")
         layout.addWidget(self._summary)
 
         # Buttons
@@ -210,9 +214,7 @@ class ToolManagerDialog(QDialog):
 
                 status_item = QTableWidgetItem("--")
                 status_item.setForeground(QColor(_SUBTEXT))
-                status_item.setTextAlignment(
-                    Qt.AlignmentFlag.AlignCenter
-                )
+                status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self._table.setItem(row, 3, status_item)
 
                 ver_item = QTableWidgetItem("--")
@@ -281,9 +283,7 @@ class ToolManagerDialog(QDialog):
         total = sum(len(tools) for tools in _TOOL_CATEGORIES.values())
         pct = 100.0 * self._installed_count / total if total else 0
         color = _GREEN if pct > 80 else (_YELLOW if pct > 50 else _RED)
-        self._summary.setText(
-            f"{self._installed_count}/{total} tools installed ({pct:.0f}% ready)"
-        )
+        self._summary.setText(f"{self._installed_count}/{total} tools installed ({pct:.0f}% ready)")
         self._summary.setStyleSheet(
             f"color: {color}; font-size: 12px; font-weight: bold; padding: 4px;"
         )
@@ -391,7 +391,9 @@ class _InstallWorker(QThread):
         for k in self._keys:
             self.progress.emit(f"Installing {k}...", 0.0)
             try:
-                ok = installer.install(k, progress=lambda m, f, k=k: self.progress.emit(f"{k}: {m}", f))
+                ok = installer.install(
+                    k, progress=lambda m, f, k=k: self.progress.emit(f"{k}: {m}", f)
+                )
             except Exception as exc:  # noqa: BLE001
                 self.progress.emit(f"{k}: {exc}", 1.0)
                 ok = False

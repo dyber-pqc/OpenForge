@@ -25,9 +25,7 @@ def _load_config(project_dir: Path):
     try:
         return load_config(search_dir=project_dir)
     except (FileNotFoundError, ConfigNotFoundError):
-        console.print(
-            f"[red]Error:[/] no openforge.yaml found in [cyan]{project_dir}[/]."
-        )
+        console.print(f"[red]Error:[/] no openforge.yaml found in [cyan]{project_dir}[/].")
         raise typer.Exit(code=1)
 
 
@@ -110,20 +108,24 @@ def flow_run(
         )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "overall_status": result.overall_status,
-            "gds_path": result.gds_path,
-            "total_runtime_s": result.total_runtime_s,
-            "stages": [
+        console.print(
+            json_mod.dumps(
                 {
-                    "stage": s.stage,
-                    "status": s.status,
-                    "runtime_s": s.runtime_s,
-                    "errors": s.errors,
+                    "overall_status": result.overall_status,
+                    "gds_path": result.gds_path,
+                    "total_runtime_s": result.total_runtime_s,
+                    "stages": [
+                        {
+                            "stage": s.stage,
+                            "status": s.status,
+                            "runtime_s": s.runtime_s,
+                            "errors": s.errors,
+                        }
+                        for s in result.stages
+                    ],
                 }
-                for s in result.stages
-            ],
-        }))
+            )
+        )
         if result.overall_status != "success":
             raise typer.Exit(code=1)
         return
@@ -203,10 +205,12 @@ def status(
             elif (project_dir / candidate).exists():
                 found = True
                 break
-        stage_status.append({
-            "stage": stage,
-            "status": "done" if found else "pending",
-        })
+        stage_status.append(
+            {
+                "stage": stage,
+                "status": "done" if found else "pending",
+            }
+        )
 
     if json_output:
         console.print(json_mod.dumps({"stages": stage_status}))
@@ -246,10 +250,12 @@ def artifacts(
                 if f.is_file():
                     rel = f.relative_to(project_dir)
                     size_kb = f.stat().st_size / 1024
-                    all_artifacts.append({
-                        "path": str(rel),
-                        "size_kb": f"{size_kb:.1f}",
-                    })
+                    all_artifacts.append(
+                        {
+                            "path": str(rel),
+                            "size_kb": f"{size_kb:.1f}",
+                        }
+                    )
 
     if json_output:
         console.print(json_mod.dumps({"artifacts": all_artifacts}))

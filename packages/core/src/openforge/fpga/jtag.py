@@ -158,13 +158,7 @@ class SvfPlayer:
         freq: int,
         on_progress: Callable[[SvfProgress], None] | None,
     ) -> bool:
-        script = (
-            f"cable {self.cable}\n"
-            f"frequency {freq}\n"
-            "detect\n"
-            f"svf {svf}\n"
-            "quit\n"
-        )
+        script = f"cable {self.cable}\nfrequency {freq}\ndetect\nsvf {svf}\nquit\n"
         cmd = ["jtag"]
         return self._stream(cmd, on_progress, stdin=script)
 
@@ -220,9 +214,7 @@ class SvfPlayer:
 
         Uses ``openFPGALoader --detect`` when available.
         """
-        if self.backend == JtagBackend.OPENFPGALOADER or shutil.which(
-            "openFPGALoader"
-        ):
+        if self.backend == JtagBackend.OPENFPGALOADER or shutil.which("openFPGALoader"):
             return self._scan_ofl()
         if shutil.which("jtag"):
             return self._scan_urjtag()
@@ -241,9 +233,7 @@ class SvfPlayer:
 
         devices: list[JtagDevice] = []
         text = proc.stdout + proc.stderr
-        for i, m in enumerate(
-            re.finditer(r"idcode\s+(0x[0-9a-fA-F]+)", text, re.IGNORECASE)
-        ):
+        for i, m in enumerate(re.finditer(r"idcode\s+(0x[0-9a-fA-F]+)", text, re.IGNORECASE)):
             devices.append(JtagDevice(index=i, idcode=m.group(1)))
         return devices
 
@@ -306,9 +296,7 @@ def bitstream_to_svf(
             return True
 
     if shutil.which("bit2svf"):
-        proc = subprocess.run(
-            ["bit2svf", str(bs), str(out)], capture_output=True, text=True
-        )
+        proc = subprocess.run(["bit2svf", str(bs), str(out)], capture_output=True, text=True)
         return proc.returncode == 0 and out.exists()
 
     return False

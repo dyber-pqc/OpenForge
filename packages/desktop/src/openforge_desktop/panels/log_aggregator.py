@@ -66,8 +66,9 @@ class LogAggregatorPanel(QWidget):
 
     _entry_signal = Signal(object)
 
-    def __init__(self, aggregator: LogAggregator | None = None,
-                 parent: QWidget | None = None) -> None:
+    def __init__(
+        self, aggregator: LogAggregator | None = None, parent: QWidget | None = None
+    ) -> None:
         super().__init__(parent)
         self.setObjectName("LogAggregatorPanel")
         self.setStyleSheet(

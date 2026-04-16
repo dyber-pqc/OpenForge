@@ -375,9 +375,7 @@ class CommandPalette(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowFlags(
-            Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint
-        )
+        self.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setWindowTitle("Command Palette")
         self.resize(700, 460)
@@ -434,9 +432,7 @@ class CommandPalette(QDialog):
         body.addWidget(self._list, stretch=1)
 
         # Footer hints
-        self._footer = QLabel(
-            "↑↓ navigate    ↵ run    Esc close    type to search"
-        )
+        self._footer = QLabel("↑↓ navigate    ↵ run    Esc close    type to search")
         self._footer.setAlignment(Qt.AlignmentFlag.AlignCenter)
         body.addWidget(self._footer)
 
@@ -632,9 +628,7 @@ class CommandPalette(QDialog):
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
             """
         )
-        self._delegate.set_palette(
-            "#cdd6f4", "#9399b2", "#89b4fa", "#45475a", "#313244"
-        )
+        self._delegate.set_palette("#cdd6f4", "#9399b2", "#89b4fa", "#45475a", "#313244")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:

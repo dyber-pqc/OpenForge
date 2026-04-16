@@ -179,9 +179,7 @@ class ImportProjectDialog(QDialog):
         lines.append(f"Top module: {proj.top_module or '(none)'}")
         if proj.target is not None:
             t = proj.target
-            lines.append(
-                f"Target:     {t.vendor or '?'} / {t.family or '?'} / {t.device or '?'}"
-            )
+            lines.append(f"Target:     {t.vendor or '?'} / {t.family or '?'} / {t.device or '?'}")
         if proj.pdk is not None:
             lines.append(f"PDK:        {proj.pdk.name} ({proj.pdk.std_cell_lib or '-'})")
         lines.append(f"RTL sources:     {len(proj.rtl_sources)}")
@@ -226,7 +224,9 @@ class ImportProjectDialog(QDialog):
 
     def _on_import(self) -> None:
         if self._project is None:
-            QMessageBox.warning(self, "Import Project", "Nothing to import - refresh preview first.")
+            QMessageBox.warning(
+                self, "Import Project", "Nothing to import - refresh preview first."
+            )
             return
         out_path, _ = QFileDialog.getSaveFileName(
             self,

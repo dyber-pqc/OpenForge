@@ -345,8 +345,7 @@ class Floorplan(BaseModel):
         for blk in self.blockages:
             if blk.kind == "placement":
                 push(
-                    f'create_placement_blockage -area "{blk.x1:g} {blk.y1:g} '
-                    f'{blk.x2:g} {blk.y2:g}"'
+                    f'create_placement_blockage -area "{blk.x1:g} {blk.y1:g} {blk.x2:g} {blk.y2:g}"'
                 )
             elif blk.kind == "routing":
                 layer = blk.layer or "met1"
@@ -360,19 +359,12 @@ class Floorplan(BaseModel):
         # --- PDN ---
         push("# --- Power-delivery network (pdngen) ---")
         push("pdngen -reset")
+        push('add_global_connection -net VDD -inst_pattern ".*" -pin_pattern "^VPWR$|^VDD$" -power')
         push(
-            'add_global_connection -net VDD -inst_pattern ".*" '
-            '-pin_pattern "^VPWR$|^VDD$" -power'
-        )
-        push(
-            'add_global_connection -net VSS -inst_pattern ".*" '
-            '-pin_pattern "^VGND$|^VSS$" -ground'
+            'add_global_connection -net VSS -inst_pattern ".*" -pin_pattern "^VGND$|^VSS$" -ground'
         )
         push("set_voltage_domain -name CORE -power VDD -ground VSS")
-        push(
-            f"define_pdn_grid -name core_grid -voltage_domains "
-            f"{self.pdn.core_domain} -pins {{}}"
-        )
+        push(f"define_pdn_grid -name core_grid -voltage_domains {self.pdn.core_domain} -pins {{}}")
         if self.pdn.followpins:
             push(
                 f"add_pdn_stripe -grid core_grid -layer "
@@ -393,10 +385,7 @@ class Floorplan(BaseModel):
                 f"-offset {stripe.offset_um:g} -extend_to_core_ring"
             )
         for via in self.pdn.via_stack:
-            push(
-                f"add_pdn_connect -grid core_grid "
-                f"-layers {{{via.from_layer} {via.to_layer}}}"
-            )
+            push(f"add_pdn_connect -grid core_grid -layers {{{via.from_layer} {via.to_layer}}}")
         push("pdngen")
         push("")
 
@@ -428,9 +417,7 @@ class Floorplan(BaseModel):
                 status = "FIXED" if m.is_fixed else "PLACED"
                 x = int(m.x_um * units)
                 y = int(m.y_um * units)
-                lines.append(
-                    f"- {m.name} {m.cell} + {status} ( {x} {y} ) {m.orientation} ;"
-                )
+                lines.append(f"- {m.name} {m.cell} + {status} ( {x} {y} ) {m.orientation} ;")
             lines.append("END COMPONENTS")
 
         if self.io_pads:
@@ -454,9 +441,7 @@ class Floorplan(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _infer_pin_side(
-    x_um: float, y_um: float, w: float, h: float
-) -> tuple[Side, float]:
+def _infer_pin_side(x_um: float, y_um: float, w: float, h: float) -> tuple[Side, float]:
     """Infer which die edge a pin is closest to and return (side, offset)."""
     d_w = x_um
     d_e = max(w - x_um, 0.0)

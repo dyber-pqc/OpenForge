@@ -261,9 +261,7 @@ def _parse_component(line: str) -> SpiceComponent | None:
         else:
             nodes = positional
             value = ""
-        return SpiceComponent(
-            name=name, type=dev_type, nodes=nodes, value=value, parameters=params
-        )
+        return SpiceComponent(name=name, type=dev_type, nodes=nodes, value=value, parameters=params)
 
     nodes = positional[:expected]
     tail = positional[expected:]

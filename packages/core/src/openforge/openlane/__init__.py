@@ -1,4 +1,5 @@
 """OpenLane2 integration for OpenForge."""
+
 from openforge.openlane.openlane2 import (
     ArtifactKind,
     OpenLane2Config,

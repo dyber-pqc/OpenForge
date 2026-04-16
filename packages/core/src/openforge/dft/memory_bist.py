@@ -3,6 +3,7 @@
 Tessent MemoryBIST equivalent. Generates a BIST controller that
 runs March tests on each memory at boot or test mode.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,11 +17,11 @@ if TYPE_CHECKING:
 class MarchAlgorithm(Enum):
     """Supported March algorithms (length given in N = num cells)."""
 
-    MARCH_C = "march_c"        # 11N
+    MARCH_C = "march_c"  # 11N
     MARCH_C_PLUS = "march_c+"  # 14N
-    MARCH_SS = "march_ss"      # 16N
-    MARCH_LR = "march_lr"      # 18N
-    MARCH_BDS = "march_bds"    # 22N
+    MARCH_SS = "march_ss"  # 16N
+    MARCH_LR = "march_lr"  # 18N
+    MARCH_BDS = "march_bds"  # 22N
 
 
 @dataclass
@@ -192,9 +193,7 @@ class MemoryBistGenerator:
         lines.append("  always @* begin")
         lines.append("    next_state = state;")
         lines.append("    case (state)")
-        lines.append(
-            f"      S_IDLE: if ({config.bist_run}) next_state = S_STEP_0;"
-        )
+        lines.append(f"      S_IDLE: if ({config.bist_run}) next_state = S_STEP_0;")
         for i, step in enumerate(steps):
             nxt = f"S_STEP_{i + 1}" if i + 1 < len(steps) else "S_DONE"
             lines.append(
@@ -231,12 +230,12 @@ class MemoryBistGenerator:
         """Return the canonical march algorithm sequence."""
         if algo == MarchAlgorithm.MARCH_C:
             return [
-                {"direction": "up",   "operations": ["w0"]},
-                {"direction": "up",   "operations": ["r0", "w1"]},
-                {"direction": "up",   "operations": ["r1", "w0"]},
+                {"direction": "up", "operations": ["w0"]},
+                {"direction": "up", "operations": ["r0", "w1"]},
+                {"direction": "up", "operations": ["r1", "w0"]},
                 {"direction": "down", "operations": ["r0", "w1"]},
                 {"direction": "down", "operations": ["r1", "w0"]},
-                {"direction": "any",  "operations": ["r0"]},
+                {"direction": "any", "operations": ["r0"]},
             ]
         if algo == MarchAlgorithm.MARCH_C_PLUS:
             base = self.generate_march_sequence(MarchAlgorithm.MARCH_C)
@@ -245,40 +244,38 @@ class MemoryBistGenerator:
             return base
         if algo == MarchAlgorithm.MARCH_SS:
             return [
-                {"direction": "any",  "operations": ["w0"]},
-                {"direction": "up",   "operations": ["r0", "r0", "w0", "r0", "w1"]},
-                {"direction": "up",   "operations": ["r1", "r1", "w1", "r1", "w0"]},
+                {"direction": "any", "operations": ["w0"]},
+                {"direction": "up", "operations": ["r0", "r0", "w0", "r0", "w1"]},
+                {"direction": "up", "operations": ["r1", "r1", "w1", "r1", "w0"]},
                 {"direction": "down", "operations": ["r0", "r0", "w0", "r0", "w1"]},
                 {"direction": "down", "operations": ["r1", "r1", "w1", "r1", "w0"]},
-                {"direction": "any",  "operations": ["r0"]},
+                {"direction": "any", "operations": ["r0"]},
             ]
         if algo == MarchAlgorithm.MARCH_LR:
             return [
-                {"direction": "any",  "operations": ["w0"]},
+                {"direction": "any", "operations": ["w0"]},
                 {"direction": "down", "operations": ["r0", "w1"]},
-                {"direction": "up",   "operations": ["r1", "w0", "r0", "w1"]},
-                {"direction": "up",   "operations": ["r1", "w0"]},
-                {"direction": "up",   "operations": ["r0", "w1", "r1", "w0"]},
-                {"direction": "any",  "operations": ["r0"]},
+                {"direction": "up", "operations": ["r1", "w0", "r0", "w1"]},
+                {"direction": "up", "operations": ["r1", "w0"]},
+                {"direction": "up", "operations": ["r0", "w1", "r1", "w0"]},
+                {"direction": "any", "operations": ["r0"]},
             ]
         if algo == MarchAlgorithm.MARCH_BDS:
             return [
-                {"direction": "any",  "operations": ["w0"]},
-                {"direction": "up",   "operations": ["r0", "w1", "r1"]},
-                {"direction": "up",   "operations": ["r1", "w0", "r0"]},
+                {"direction": "any", "operations": ["w0"]},
+                {"direction": "up", "operations": ["r0", "w1", "r1"]},
+                {"direction": "up", "operations": ["r1", "w0", "r0"]},
                 {"direction": "down", "operations": ["r0", "w1", "r1"]},
                 {"direction": "down", "operations": ["r1", "w0", "r0"]},
-                {"direction": "up",   "operations": ["r0", "w1"]},
+                {"direction": "up", "operations": ["r0", "w1"]},
                 {"direction": "down", "operations": ["r1", "w0"]},
-                {"direction": "any",  "operations": ["r0"]},
+                {"direction": "any", "operations": ["r0"]},
             ]
         return []
 
     # ---------------- helpers ----------------
 
-    def estimate_cycles(
-        self, memories: list[MemoryInstance], algo: MarchAlgorithm
-    ) -> int:
+    def estimate_cycles(self, memories: list[MemoryInstance], algo: MarchAlgorithm) -> int:
         n = _ALGO_N.get(algo, 11)
         return sum(n * m.words for m in memories)
 
@@ -286,7 +283,6 @@ class MemoryBistGenerator:
         lines = [result.summary(), "=" * 60]
         for m in memories:
             lines.append(
-                f"  {m.name:<20s} {m.type:<4s} {m.depth}x{m.width} "
-                f"ports={m.ports} bits={m.bits}"
+                f"  {m.name:<20s} {m.type:<4s} {m.depth}x{m.width} ports={m.ports} bits={m.bits}"
             )
         return "\n".join(lines)

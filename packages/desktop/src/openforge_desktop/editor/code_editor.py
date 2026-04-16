@@ -133,7 +133,9 @@ class _CompletionPopup(QListWidget):
             self.hide()
             return
         prefix_lower = prefix.lower()
-        matches = [c for c in self._candidates if c.lower().startswith(prefix_lower) and c != prefix]
+        matches = [
+            c for c in self._candidates if c.lower().startswith(prefix_lower) and c != prefix
+        ]
         if not matches:
             self.hide()
             return
@@ -370,7 +372,9 @@ class CodeEditor(QPlainTextEdit):
                             sel.format.setFontWeight(QFont.Weight.Bold)
                             c = self.textCursor()
                             c.setPosition(bp)
-                            c.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+                            c.movePosition(
+                                QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1
+                            )
                             sel.cursor = c
                             selections.append(sel)
 
@@ -477,8 +481,12 @@ class CodeEditor(QPlainTextEdit):
     def go_to_line(self) -> None:
         max_line = self.blockCount()
         line, ok = QInputDialog.getInt(
-            self, "Go to Line", f"Line number (1-{max_line}):",
-            self.textCursor().blockNumber() + 1, 1, max_line,
+            self,
+            "Go to Line",
+            f"Line number (1-{max_line}):",
+            self.textCursor().blockNumber() + 1,
+            1,
+            max_line,
         )
         if ok:
             block = self.document().findBlockByLineNumber(line - 1)
@@ -520,13 +528,17 @@ class CodeEditor(QPlainTextEdit):
             line = cursor.block().text()
             if line.startswith(" " * self._tab_width):
                 cursor.movePosition(
-                    QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, self._tab_width,
+                    QTextCursor.MoveOperation.Right,
+                    QTextCursor.MoveMode.KeepAnchor,
+                    self._tab_width,
                 )
                 cursor.removeSelectedText()
                 end -= self._tab_width
             elif line.startswith("\t"):
                 cursor.movePosition(
-                    QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1,
+                    QTextCursor.MoveOperation.Right,
+                    QTextCursor.MoveMode.KeepAnchor,
+                    1,
                 )
                 cursor.removeSelectedText()
                 end -= 1
@@ -582,13 +594,17 @@ class CodeEditor(QPlainTextEdit):
             if all_commented:
                 idx = line.find(comment_str)
                 if idx >= 0:
-                    cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, idx)
+                    cursor.movePosition(
+                        QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, idx
+                    )
                     remove_len = len(comment_str)
-                    remaining = line[idx + len(comment_str):]
+                    remaining = line[idx + len(comment_str) :]
                     if remaining.startswith(" "):
                         remove_len += 1
                     cursor.movePosition(
-                        QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, remove_len,
+                        QTextCursor.MoveOperation.Right,
+                        QTextCursor.MoveMode.KeepAnchor,
+                        remove_len,
                     )
                     cursor.removeSelectedText()
                     end -= remove_len
@@ -619,9 +635,13 @@ class CodeEditor(QPlainTextEdit):
         if cursor.atEnd():
             # Last line: select to end including preceding newline
             cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
-            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor
+            )
             if cursor.position() > 0:
-                cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.KeepAnchor, 1)
+                cursor.movePosition(
+                    QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.KeepAnchor, 1
+                )
         cursor.removeSelectedText()
 
     # ── Word wrap toggle ─────────────────────────────────────────────
@@ -670,9 +690,8 @@ class CodeEditor(QPlainTextEdit):
             return
 
         # Ctrl+Shift+K delete line
-        if (
-            key == Qt.Key.Key_K
-            and mods == (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+        if key == Qt.Key.Key_K and mods == (
+            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
         ):
             self.delete_line()
             return
@@ -694,7 +713,10 @@ class CodeEditor(QPlainTextEdit):
             return
 
         # Smart Home: first press → first non-whitespace, second → column 0
-        if key == Qt.Key.Key_Home and mods in (Qt.KeyboardModifier.NoModifier, Qt.KeyboardModifier.ShiftModifier):
+        if key == Qt.Key.Key_Home and mods in (
+            Qt.KeyboardModifier.NoModifier,
+            Qt.KeyboardModifier.ShiftModifier,
+        ):
             self._smart_home(mods == Qt.KeyboardModifier.ShiftModifier)
             return
 
@@ -725,7 +747,9 @@ class CodeEditor(QPlainTextEdit):
         first_non_ws = len(line) - len(line.lstrip())
         col = cursor.columnNumber()
 
-        mode = QTextCursor.MoveMode.KeepAnchor if extend_selection else QTextCursor.MoveMode.MoveAnchor
+        mode = (
+            QTextCursor.MoveMode.KeepAnchor if extend_selection else QTextCursor.MoveMode.MoveAnchor
+        )
 
         if col == first_non_ws or col == 0:
             target = 0 if col == first_non_ws else first_non_ws
@@ -792,7 +816,9 @@ class CodeEditor(QPlainTextEdit):
         cursor.select(QTextCursor.SelectionType.WordUnderCursor)
         word = cursor.selectedText().strip()
         if word:
-            menu.addAction(f"Go to Definition: {word}", lambda: self.go_to_definition_requested.emit(word))
+            menu.addAction(
+                f"Go to Definition: {word}", lambda: self.go_to_definition_requested.emit(word)
+            )
         menu.addAction("Go to Line...", self.go_to_line)
         menu.addSeparator()
 
@@ -854,9 +880,12 @@ class CodeEditor(QPlainTextEdit):
                 else:
                     painter.setPen(QColor(_MARGIN_FG))
                 painter.drawText(
-                    0, top, self._line_area.width() - 8,
+                    0,
+                    top,
+                    self._line_area.width() - 8,
                     self.fontMetrics().height(),
-                    Qt.AlignmentFlag.AlignRight, str(block_num + 1),
+                    Qt.AlignmentFlag.AlignRight,
+                    str(block_num + 1),
                 )
             block = block.next()
             top = bottom

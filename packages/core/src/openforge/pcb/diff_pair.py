@@ -1,4 +1,5 @@
 """Differential pair detection, impedance calculation, and routing."""
+
 from __future__ import annotations
 
 import math
@@ -89,12 +90,12 @@ class DiffPairRouter:
             # Hammerstad-Jensen microstrip single-ended
             wh = w / h
             if wh < 1.0:
-                return (60.0 / math.sqrt((er + 1) / 2 + (er - 1) / 2 / math.sqrt(1 + 12 / wh))) * math.log(
-                    8 / wh + wh / 4
-                )
-            return (120.0 * math.pi / math.sqrt((er + 1) / 2 + (er - 1) / 2 / math.sqrt(1 + 12 / wh))) / (
-                wh + 1.393 + 0.667 * math.log(wh + 1.444)
-            )
+                return (
+                    60.0 / math.sqrt((er + 1) / 2 + (er - 1) / 2 / math.sqrt(1 + 12 / wh))
+                ) * math.log(8 / wh + wh / 4)
+            return (
+                120.0 * math.pi / math.sqrt((er + 1) / 2 + (er - 1) / 2 / math.sqrt(1 + 12 / wh))
+            ) / (wh + 1.393 + 0.667 * math.log(wh + 1.444))
 
         def zdiff(w: float, s: float) -> float:
             z0 = z0_microstrip(w)

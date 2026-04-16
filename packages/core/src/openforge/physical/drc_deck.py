@@ -3,6 +3,7 @@
 Loads SKY130/GF180MCU official DRC rules and runs them via KLayout.
 This module is a Mentor Calibre nmDRC replacement.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -41,42 +42,34 @@ class DrcRule:
         rid = self.rule_id
         desc = self.description.replace('"', "'")
         if self.rule_type == "width":
-            return (
-                f'# {rid}: {desc}\n'
-                f'{layer_var}.width({self.value}).output("{rid}", "{desc}")'
-            )
+            return f'# {rid}: {desc}\n{layer_var}.width({self.value}).output("{rid}", "{desc}")'
         if self.rule_type == "spacing":
             if self.layer2:
                 l2 = self._layer_var(self.layer2)
                 return (
-                    f'# {rid}: {desc}\n'
-                    f'{layer_var}.separation({l2}, {self.value})'
+                    f"# {rid}: {desc}\n"
+                    f"{layer_var}.separation({l2}, {self.value})"
                     f'.output("{rid}", "{desc}")'
                 )
-            return (
-                f'# {rid}: {desc}\n'
-                f'{layer_var}.space({self.value}).output("{rid}", "{desc}")'
-            )
+            return f'# {rid}: {desc}\n{layer_var}.space({self.value}).output("{rid}", "{desc}")'
         if self.rule_type == "area":
             return (
-                f'# {rid}: {desc}\n'
-                f'{layer_var}.with_area(0, {self.value})'
-                f'.output("{rid}", "{desc}")'
+                f'# {rid}: {desc}\n{layer_var}.with_area(0, {self.value}).output("{rid}", "{desc}")'
             )
         if self.rule_type == "enclosure":
             l2 = self._layer_var(self.layer2 or self.layer)
             return (
-                f'# {rid}: {desc}\n'
-                f'{layer_var}.enclosing({l2}, {self.value})'
+                f"# {rid}: {desc}\n"
+                f"{layer_var}.enclosing({l2}, {self.value})"
                 f'.output("{rid}", "{desc}")'
             )
         if self.rule_type == "density":
-            return f'# {rid}: density rule for {self.layer} target {self.value}'
+            return f"# {rid}: density rule for {self.layer} target {self.value}"
         if self.rule_type == "antenna":
-            return f'# {rid}: antenna ratio {self.value} for {self.layer}'
+            return f"# {rid}: antenna ratio {self.value} for {self.layer}"
         if self.rule_type == "latchup":
-            return f'# {rid}: latchup spacing {self.value} for {self.layer}'
-        return f'# {rid}: unknown rule type {self.rule_type}'
+            return f"# {rid}: latchup spacing {self.value} for {self.layer}"
+        return f"# {rid}: unknown rule type {self.rule_type}"
 
     @staticmethod
     def _layer_var(layer: str) -> str:
@@ -265,8 +258,7 @@ class DrcDeck:
             DrcRule("PO.1", "poly", "width", 0.15, "Min width of poly"),
             DrcRule("PO.2", "poly", "spacing", 0.21, "Min spacing of poly"),
             DrcRule("PO.3", "poly", "area", 0.0225, "Min area of poly"),
-            DrcRule("PO.4", "poly", "enclosure", 0.08, "Poly enclosure of diff",
-                    layer2="diff"),
+            DrcRule("PO.4", "poly", "enclosure", 0.08, "Poly enclosure of diff", layer2="diff"),
             # licon / li1
             DrcRule("LI.1", "licon", "width", 0.17, "Min width of licon"),
             DrcRule("LI.2", "licon", "spacing", 0.17, "Min spacing of licon"),
@@ -280,8 +272,7 @@ class DrcDeck:
             DrcRule("M1.1", "met1", "width", 0.14, "Min width of met1"),
             DrcRule("M1.2", "met1", "spacing", 0.14, "Min spacing of met1"),
             DrcRule("M1.3", "met1", "area", 0.083, "Min area of met1"),
-            DrcRule("M1.4", "met1", "enclosure", 0.06,
-                    "Met1 enclosure of mcon", layer2="mcon"),
+            DrcRule("M1.4", "met1", "enclosure", 0.06, "Met1 enclosure of mcon", layer2="mcon"),
             # via
             DrcRule("VI.1", "via", "width", 0.15, "Min width of via"),
             DrcRule("VI.2", "via", "spacing", 0.17, "Min spacing of via"),
@@ -289,8 +280,7 @@ class DrcDeck:
             DrcRule("M2.1", "met2", "width", 0.14, "Min width of met2"),
             DrcRule("M2.2", "met2", "spacing", 0.14, "Min spacing of met2"),
             DrcRule("M2.3", "met2", "area", 0.0676, "Min area of met2"),
-            DrcRule("M2.4", "met2", "enclosure", 0.055,
-                    "Met2 enclosure of via", layer2="via"),
+            DrcRule("M2.4", "met2", "enclosure", 0.055, "Met2 enclosure of via", layer2="via"),
             # via2
             DrcRule("V2.1", "via2", "width", 0.20, "Min width of via2"),
             DrcRule("V2.2", "via2", "spacing", 0.20, "Min spacing of via2"),
@@ -298,8 +288,7 @@ class DrcDeck:
             DrcRule("M3.1", "met3", "width", 0.30, "Min width of met3"),
             DrcRule("M3.2", "met3", "spacing", 0.30, "Min spacing of met3"),
             DrcRule("M3.3", "met3", "area", 0.240, "Min area of met3"),
-            DrcRule("M3.4", "met3", "enclosure", 0.085,
-                    "Met3 enclosure of via2", layer2="via2"),
+            DrcRule("M3.4", "met3", "enclosure", 0.085, "Met3 enclosure of via2", layer2="via2"),
             # via3
             DrcRule("V3.1", "via3", "width", 0.20, "Min width of via3"),
             DrcRule("V3.2", "via3", "spacing", 0.20, "Min spacing of via3"),
@@ -315,22 +304,21 @@ class DrcDeck:
             DrcRule("M5.2", "met5", "spacing", 1.60, "Min spacing of met5"),
             DrcRule("M5.3", "met5", "area", 4.000, "Min area of met5"),
             # antenna
-            DrcRule("ANT.M1", "met1", "antenna", 400.0,
-                    "Antenna ratio for met1", severity="warning"),
-            DrcRule("ANT.M2", "met2", "antenna", 400.0,
-                    "Antenna ratio for met2", severity="warning"),
-            DrcRule("ANT.M3", "met3", "antenna", 400.0,
-                    "Antenna ratio for met3", severity="warning"),
+            DrcRule(
+                "ANT.M1", "met1", "antenna", 400.0, "Antenna ratio for met1", severity="warning"
+            ),
+            DrcRule(
+                "ANT.M2", "met2", "antenna", 400.0, "Antenna ratio for met2", severity="warning"
+            ),
+            DrcRule(
+                "ANT.M3", "met3", "antenna", 400.0, "Antenna ratio for met3", severity="warning"
+            ),
             # density
-            DrcRule("DEN.M1", "met1", "density", 0.30,
-                    "Density target met1", severity="info"),
-            DrcRule("DEN.M2", "met2", "density", 0.30,
-                    "Density target met2", severity="info"),
-            DrcRule("DEN.M3", "met3", "density", 0.30,
-                    "Density target met3", severity="info"),
+            DrcRule("DEN.M1", "met1", "density", 0.30, "Density target met1", severity="info"),
+            DrcRule("DEN.M2", "met2", "density", 0.30, "Density target met2", severity="info"),
+            DrcRule("DEN.M3", "met3", "density", 0.30, "Density target met3", severity="info"),
             # latchup
-            DrcRule("LU.1", "tap", "latchup", 15.0,
-                    "Max distance to tap", severity="warning"),
+            DrcRule("LU.1", "tap", "latchup", 15.0, "Max distance to tap", severity="warning"),
         ]
         deck.add(*rules)
         return deck
@@ -339,12 +327,15 @@ class DrcDeck:
     def load_sky130_minimal(cls) -> DrcDeck:
         """Minimal sanity-check deck (just width + spacing on metal layers)."""
         deck = cls("sky130_minimal", "sky130A")
-        for layer, w in [("met1", 0.14), ("met2", 0.14), ("met3", 0.30),
-                          ("met4", 0.30), ("met5", 1.60)]:
-            deck.add(DrcRule(f"{layer.upper()}.W", layer, "width", w,
-                             f"Min width of {layer}"))
-            deck.add(DrcRule(f"{layer.upper()}.S", layer, "spacing", w,
-                             f"Min spacing of {layer}"))
+        for layer, w in [
+            ("met1", 0.14),
+            ("met2", 0.14),
+            ("met3", 0.30),
+            ("met4", 0.30),
+            ("met5", 1.60),
+        ]:
+            deck.add(DrcRule(f"{layer.upper()}.W", layer, "width", w, f"Min width of {layer}"))
+            deck.add(DrcRule(f"{layer.upper()}.S", layer, "spacing", w, f"Min spacing of {layer}"))
         return deck
 
     @classmethod
@@ -419,12 +410,18 @@ class DrcDeckRunner:
             cmd = [
                 "klayout",
                 "-b",
-                "-r", str(script_path),
-                "-rd", f"input={layout}",
-                "-rd", f"report={report_path}",
+                "-r",
+                str(script_path),
+                "-rd",
+                f"input={layout}",
+                "-rd",
+                f"report={report_path}",
             ]
             proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=600,
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
             output = (proc.stdout or "") + (proc.stderr or "")
             if report_path.exists():
@@ -432,8 +429,7 @@ class DrcDeckRunner:
             else:
                 parsed = self.parse_klayout_output(output)
             for v in parsed:
-                rule = next((r for r in self.deck.rules if r.rule_id == v.rule_id),
-                            None)
+                rule = next((r for r in self.deck.rules if r.rule_id == v.rule_id), None)
                 if rule:
                     v.severity = rule.severity
                 if v.severity == "warning":
@@ -519,7 +515,10 @@ class DrcDeckRunner:
                     rule_id=cat or "UNKNOWN",
                     layer=rule.layer if rule else "",
                     description=rule.description if rule else cat,
-                    x=x, y=y, width=w, height=h,
+                    x=x,
+                    y=y,
+                    width=w,
+                    height=h,
                     severity=rule.severity if rule else "error",
                     cell_context=cell,
                 )

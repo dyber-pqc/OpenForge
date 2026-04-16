@@ -4,6 +4,7 @@ Provides a local JSON-backed component catalog with a pluggable
 Octopart-style lookup hook. Ships with a curated set of builtin
 common parts so the database is useful out of the box.
 """
+
 from __future__ import annotations
 
 import csv

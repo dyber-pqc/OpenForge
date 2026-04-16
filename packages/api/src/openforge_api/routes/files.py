@@ -30,6 +30,7 @@ _project_files: dict[UUID, dict[str, str]] = {}
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _ensure_project(project_id: UUID) -> dict[str, str]:
     """Return the file store for a project, or raise 404."""
     files = _project_files.get(project_id)
@@ -41,6 +42,7 @@ def _ensure_project(project_id: UUID) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
 
 @router.get("/{project_id}/tree", response_model=FileNode)
 async def get_file_tree(project_id: UUID) -> FileNode:
@@ -182,9 +184,7 @@ async def search_files(
 
         for line_number, line in enumerate(content.splitlines(), start=1):
             if q in line:
-                results.append(
-                    FileSearchResult(path=path, line_number=line_number, line=line)
-                )
+                results.append(FileSearchResult(path=path, line_number=line_number, line=line))
                 if len(results) >= limit:
                     return results
 

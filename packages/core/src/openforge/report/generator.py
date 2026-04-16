@@ -72,7 +72,7 @@ def _generate_html(output_dir: Path, results: dict[str, Any]) -> Path:
         <div class="step">
             <span class="status" style="color:{color}">{status.upper()}</span>
             <span class="name">{step_name}</span>
-            <span class="duration">{step_data.get('duration', '-')}s</span>
+            <span class="duration">{step_data.get("duration", "-")}s</span>
         </div>
         """
 
@@ -80,7 +80,7 @@ def _generate_html(output_dir: Path, results: dict[str, Any]) -> Path:
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>OpenForge Report - {results['project']}</title>
+    <title>OpenForge Report - {results["project"]}</title>
     <style>
         body {{ font-family: 'Inter', sans-serif; background: #1e1e2e; color: #c0caf5; margin: 0; padding: 24px; }}
         h1 {{ color: #7aa2f7; border-bottom: 2px solid #3d3d5c; padding-bottom: 12px; }}
@@ -95,15 +95,15 @@ def _generate_html(output_dir: Path, results: dict[str, Any]) -> Path:
 <body>
     <h1>OpenForge EDA Report</h1>
     <div class="meta">
-        Project: {results['project']} |
-        Generated: {results['timestamp']} |
-        OpenForge v{results['openforge_version']}
+        Project: {results["project"]} |
+        Generated: {results["timestamp"]} |
+        OpenForge v{results["openforge_version"]}
     </div>
     <h2>Flow Steps</h2>
     {steps_html or '<p style="color:#a9b1d6">No flow results collected yet. Run <code>openforge verify --all</code> first.</p>'}
     <div class="summary">
         <h3>Summary</h3>
-        <p>Total steps: {len(results.get('steps', {}))}</p>
+        <p>Total steps: {len(results.get("steps", {}))}</p>
     </div>
 </body>
 </html>"""
@@ -143,22 +143,24 @@ def _generate_sarif(output_dir: Path, results: dict[str, Any]) -> Path:
     # Convert lint findings to SARIF results
     lint_data = results.get("steps", {}).get("lint", {})
     for finding in lint_data.get("findings", []):
-        sarif["runs"][0]["results"].append({
-            "ruleId": finding.get("rule", "unknown"),
-            "message": {"text": finding.get("message", "")},
-            "locations": [
-                {
-                    "physicalLocation": {
-                        "artifactLocation": {"uri": finding.get("file", "")},
-                        "region": {
-                            "startLine": finding.get("line", 1),
-                            "startColumn": finding.get("column", 1),
-                        },
+        sarif["runs"][0]["results"].append(
+            {
+                "ruleId": finding.get("rule", "unknown"),
+                "message": {"text": finding.get("message", "")},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": finding.get("file", "")},
+                            "region": {
+                                "startLine": finding.get("line", 1),
+                                "startColumn": finding.get("column", 1),
+                            },
+                        }
                     }
-                }
-            ],
-            "level": "warning",
-        })
+                ],
+                "level": "warning",
+            }
+        )
 
     output.write_text(json.dumps(sarif, indent=2))
     return output
@@ -195,7 +197,7 @@ def _generate_junit(output_dir: Path, results: dict[str, Any]) -> Path:
 
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="openforge" tests="{total}" failures="{failures}" timestamp="{results.get('timestamp', '')}">
+  <testsuite name="openforge" tests="{total}" failures="{failures}" timestamp="{results.get("timestamp", "")}">
     {test_cases}
   </testsuite>
 </testsuites>"""

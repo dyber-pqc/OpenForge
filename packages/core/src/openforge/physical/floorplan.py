@@ -16,8 +16,8 @@ from dataclasses import dataclass
 
 # Standard cell site dimensions (width x height in microns)
 _SITE_DIMENSIONS: dict[str, tuple[float, float]] = {
-    "sky130": (0.46, 2.72),      # unithd
-    "gf180mcu": (0.56, 3.92),    # GF018hv5v_green_sc7
+    "sky130": (0.46, 2.72),  # unithd
+    "gf180mcu": (0.56, 3.92),  # GF018hv5v_green_sc7
 }
 
 _SITE_NAMES: dict[str, str] = {
@@ -27,7 +27,7 @@ _SITE_NAMES: dict[str, str] = {
 
 # Metal track definitions: layer -> (direction, pitch_um, offset_um)
 _SKY130_TRACKS: dict[str, tuple[str, float, float]] = {
-    "li1":  ("X", 0.46, 0.23),
+    "li1": ("X", 0.46, 0.23),
     "met1": ("X", 0.34, 0.17),
     "met2": ("Y", 0.46, 0.23),
     "met3": ("X", 0.68, 0.34),
@@ -50,8 +50,8 @@ _PDK_TRACKS: dict[str, dict[str, tuple[str, float, float]]] = {
 
 # Typical gate density per um^2 (after technology mapping)
 _GATES_PER_UM2: dict[str, float] = {
-    "sky130": 800.0,     # ~800 gates per um^2 at hd library
-    "gf180mcu": 400.0,   # ~400 gates per um^2
+    "sky130": 800.0,  # ~800 gates per um^2 at hd library
+    "gf180mcu": 400.0,  # ~400 gates per um^2
 }
 
 
@@ -64,10 +64,10 @@ _GATES_PER_UM2: dict[str, float] = {
 class FloorplanConfig:
     """Complete floorplan configuration for OpenROAD."""
 
-    die_area: tuple[float, float, float, float]   # (x0, y0, x1, y1) in um
-    core_area: tuple[float, float, float, float]   # (x0, y0, x1, y1) in um
+    die_area: tuple[float, float, float, float]  # (x0, y0, x1, y1) in um
+    core_area: tuple[float, float, float, float]  # (x0, y0, x1, y1) in um
     site_name: str = "unithd"
-    tracks_config: str = ""   # TCL make_tracks commands
+    tracks_config: str = ""  # TCL make_tracks commands
     die_width_um: float = 0.0
     die_height_um: float = 0.0
     core_width_um: float = 0.0
@@ -302,8 +302,7 @@ class FloorplanGenerator:
             f"read_sdc {sdc}",
             "",
             "# ---- Initialize floorplan ----",
-            f"initialize_floorplan -die_area {{{da}}} -core_area {{{ca}}} "
-            f"-site {config.site_name}",
+            f"initialize_floorplan -die_area {{{da}}} -core_area {{{ca}}} -site {config.site_name}",
             "",
             "# ---- Metal tracks ----",
             config.tracks_config if config.tracks_config else "make_tracks",

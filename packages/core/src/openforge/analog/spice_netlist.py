@@ -358,7 +358,7 @@ def _parse_model_card(line: str) -> tuple[str, dict[str, str]]:
     rest = tokens[2]
     type_match = re.match(r"\s*([A-Za-z_]\w*)", rest)
     mtype = type_match.group(1) if type_match else ""
-    body = rest[len(mtype):].strip() if mtype else rest
+    body = rest[len(mtype) :].strip() if mtype else rest
     body = body.strip("()")
     params: dict[str, str] = {"__type__": mtype}
     for m in _PARAM_RX.finditer(body):

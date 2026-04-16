@@ -27,8 +27,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.cdc import CdcChecker, CdcReport
@@ -152,7 +154,9 @@ class CdcPanel(QWidget):
     def _on_export(self) -> None:
         if CdcChecker is None or self._report is None or not self._rtl_files or not self._top:
             return
-        path, _ = QFileDialog.getSaveFileName(self, "Export CDC HTML", "cdc_report.html", "HTML (*.html)")
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export CDC HTML", "cdc_report.html", "HTML (*.html)"
+        )
         if not path:
             return
         checker = CdcChecker(self._rtl_files, self._top)
@@ -193,11 +197,7 @@ class CdcPanel(QWidget):
             self._crossings_table.setRowCount(0)
             return
         wanted = self._severity.currentText()
-        rows = [
-            c
-            for c in self._report.crossings
-            if wanted == "all" or c.severity == wanted
-        ]
+        rows = [c for c in self._report.crossings if wanted == "all" or c.severity == wanted]
         self._crossings_table.setRowCount(len(rows))
         for r, c in enumerate(rows):
             vals = [

@@ -38,8 +38,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.uvm_lite.crv import (
@@ -348,7 +350,7 @@ class CrvBuilderPanel(QWidget):
             return
         wrapper = tmp / "tb_wrapper.sv"
         wrapper.write_text(
-            "module tb_wrapper; initial begin $display(\"crv ok\"); $finish; end endmodule\n",
+            'module tb_wrapper; initial begin $display("crv ok"); $finish; end endmodule\n',
             encoding="utf-8",
         )
         try:
@@ -361,9 +363,7 @@ class CrvBuilderPanel(QWidget):
             )
             ok = result.returncode == 0
             self._status.setText(
-                "Verilator: OK"
-                if ok
-                else f"Verilator: FAIL rc={result.returncode}"
+                "Verilator: OK" if ok else f"Verilator: FAIL rc={result.returncode}"
             )
         except Exception as exc:
             self._status.setText(f"verilator error: {exc}")

@@ -3,6 +3,7 @@
 Provides a uniform ``PdkInstaller`` API for downloading, verifying and
 removing open-source PDKs used by OpenForge's ASIC flow.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -127,9 +128,7 @@ class PdkInstaller:
 
     def __init__(self, install_root: Path | None = None) -> None:
         self.install_root = Path(
-            install_root
-            or os.environ.get("PDK_ROOT")
-            or Path.home() / ".volare"
+            install_root or os.environ.get("PDK_ROOT") or Path.home() / ".volare"
         )
 
     # ------------------------------------------------------------------
@@ -195,8 +194,10 @@ class PdkInstaller:
         cmd = [
             volare,
             "enable",
-            "--pdk", pdk_family,
-            "--pdk-root", str(root),
+            "--pdk",
+            pdk_family,
+            "--pdk-root",
+            str(root),
             info.version,
         ]
         emit(f"Running {' '.join(cmd)}", 0.1)
@@ -227,9 +228,7 @@ class PdkInstaller:
         emit(f"Installed {info.name} at {path}", 1.0)
         return path
 
-    def _install_git(
-        self, info: PdkInfo, root: Path, emit: Callable[[str, float], None]
-    ) -> Path:
+    def _install_git(self, info: PdkInfo, root: Path, emit: Callable[[str, float], None]) -> Path:
         git = shutil.which("git")
         if git is None:
             raise RuntimeError("git not found on PATH")

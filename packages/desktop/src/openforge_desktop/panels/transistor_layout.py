@@ -113,7 +113,7 @@ def default_layers() -> list[Layer]:
         Layer("pwell", 2, 0, QColor("#cd853f"), pattern=Qt.BrushStyle.FDiagPattern),
         Layer("ndiff", 3, 0, QColor("#00ff00"), pattern=Qt.BrushStyle.Dense6Pattern),
         Layer("pdiff", 4, 0, QColor("#ffa500"), pattern=Qt.BrushStyle.Dense6Pattern),
-        Layer("poly",  5, 0, QColor("#ff0000"), pattern=Qt.BrushStyle.Dense4Pattern),
+        Layer("poly", 5, 0, QColor("#ff0000"), pattern=Qt.BrushStyle.Dense4Pattern),
         Layer("contact", 6, 0, QColor("#000000"), pattern=Qt.BrushStyle.SolidPattern, opacity=0.8),
         Layer("met1", 7, 0, QColor("#4169e1"), pattern=Qt.BrushStyle.Dense5Pattern),
         Layer("via1", 8, 0, QColor("#1e90ff"), opacity=0.8),
@@ -743,26 +743,20 @@ class TransistorLayoutPanel(QDockWidget):
                         "pos": [item.pos().x(), item.pos().y()],
                     }
                 )
-        Path(path).write_text(
-            json.dumps({"shapes": shapes}, indent=2), encoding="utf-8"
-        )
+        Path(path).write_text(json.dumps({"shapes": shapes}, indent=2), encoding="utf-8")
         self.status.showMessage(f"Saved {path}")
 
     def _on_export_gds(self, path: Any = None) -> None:
         if not isinstance(path, str):
             path = None
         if not path:
-            path, _ = QFileDialog.getSaveFileName(
-                self, "Export GDS", "layout.gds", "GDS (*.gds)"
-            )
+            path, _ = QFileDialog.getSaveFileName(self, "Export GDS", "layout.gds", "GDS (*.gds)")
         if not path:
             return
         try:
             out = self._export_gds(Path(path))
         except Exception as exc:  # pragma: no cover - surfaced via UI
-            QMessageBox.critical(
-                self, "GDS export failed", f"Could not write GDSII file:\n{exc}"
-            )
+            QMessageBox.critical(self, "GDS export failed", f"Could not write GDSII file:\n{exc}")
             self.status.showMessage(f"GDS export failed: {exc}")
             return
         size = out.stat().st_size if out.exists() else 0
@@ -914,8 +908,9 @@ class TransistorLayoutPanel(QDockWidget):
             if isinstance(it, LayerRectItem):
                 r = it.sceneBoundingRect()
                 if r.width() < 0.1 or r.height() < 0.1:
-                    marker = DrcMarkerItem(r.adjusted(-0.05, -0.05, 0.05, 0.05),
-                                           "min width violation")
+                    marker = DrcMarkerItem(
+                        r.adjusted(-0.05, -0.05, 0.05, 0.05), "min width violation"
+                    )
                     self.scene.addItem(marker)
                     n_violations += 1
         self.status.showMessage(f"DRC: {n_violations} violations")
@@ -943,9 +938,7 @@ class TransistorLayoutPanel(QDockWidget):
     def _on_place_transistor(self, kind: str, w: float, l: float) -> None:
         item = TransistorItem(kind, w, l, self.layers)
         item.setPos(0, 0)
-        self.canvas.undo_stack.push(
-            AddItemCommand(self.scene, item, f"Place {kind} W={w} L={l}")
-        )
+        self.canvas.undo_stack.push(AddItemCommand(self.scene, item, f"Place {kind} W={w} L={l}"))
         self.status.showMessage(f"Placed {kind} W={w}u L={l}u")
 
     # ------------------------------------------------------------------

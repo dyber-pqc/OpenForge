@@ -170,11 +170,7 @@ def _parse_power(text: str) -> float:
 
 
 def _collect_warnings(text: str) -> list[str]:
-    return [
-        line.strip()
-        for line in text.splitlines()
-        if re.search(r"(?i)\bwarning\b", line)
-    ]
+    return [line.strip() for line in text.splitlines() if re.search(r"(?i)\bwarning\b", line)]
 
 
 # ---------------------------------------------------------------------------
@@ -198,8 +194,12 @@ class PhysicalDesignRunner:
         pdk_manager: PDKManager | None = None,
     ) -> None:
         self._project_path = Path(project_path).resolve()
-        self._config = config if config is not None else load_config(
-            search_dir=self._project_path,
+        self._config = (
+            config
+            if config is not None
+            else load_config(
+                search_dir=self._project_path,
+            )
         )
         self._pdk_name = pdk
         self._pdk_manager = pdk_manager
@@ -226,6 +226,7 @@ class PhysicalDesignRunner:
                 return str(lib)
         # Fallback to well-known names
         from openforge.synthesis.runner import _PDK_LIBERTY
+
         return _PDK_LIBERTY.get(self._pdk_name, "liberty.lib")
 
     def _resolve_lef(self, kind: str = "tech") -> str:

@@ -129,9 +129,7 @@ class ToolRegistry:
     def invoke(self, call: ToolCall) -> ToolResult:
         handler = self._handlers.get(call.tool)
         if handler is None:
-            return ToolResult(
-                tool=call.tool, success=False, error=f"unknown tool: {call.tool}"
-            )
+            return ToolResult(tool=call.tool, success=False, error=f"unknown tool: {call.tool}")
         try:
             output = handler(**call.arguments)
             return ToolResult(tool=call.tool, success=True, output=output)
@@ -374,7 +372,13 @@ def register_builtin_tools(registry: ToolRegistry) -> None:
         "read_file",
         _read_file,
         "Read a source file (RTL, SDC, YAML, report) from the project.",
-        [ToolParameter(name="path", type="string", description="Path to file, relative to project root or absolute.")],
+        [
+            ToolParameter(
+                name="path",
+                type="string",
+                description="Path to file, relative to project root or absolute.",
+            )
+        ],
     )
     registry.register(
         "search_rtl",
@@ -404,25 +408,48 @@ def register_builtin_tools(registry: ToolRegistry) -> None:
         "get_violations",
         _get_violations,
         "Query the violation database.",
-        [ToolParameter(name="kind", type="string", description="Optional filter: drc|lvs|lint|timing", required=False)],
+        [
+            ToolParameter(
+                name="kind",
+                type="string",
+                description="Optional filter: drc|lvs|lint|timing",
+                required=False,
+            )
+        ],
     )
     registry.register(
         "apply_sta_what_if",
         _apply_sta_what_if,
         "Apply a hypothetical STA change and return estimated slack delta.",
-        [ToolParameter(name="change", type="object", description="Dict describing the what-if change.")],
+        [
+            ToolParameter(
+                name="change", type="object", description="Dict describing the what-if change."
+            )
+        ],
     )
     registry.register(
         "get_panel_state",
         _get_panel_state,
         "Read the current state of a named desktop panel.",
-        [ToolParameter(name="panel", type="string", description="Panel identifier (e.g. 'timing', 'violations').")],
+        [
+            ToolParameter(
+                name="panel",
+                type="string",
+                description="Panel identifier (e.g. 'timing', 'violations').",
+            )
+        ],
     )
     registry.register(
         "suggest_sdc",
         _suggest_sdc,
         "Suggest SDC constraints from a natural-language description.",
-        [ToolParameter(name="description", type="string", description="Plain-English description of constraints.")],
+        [
+            ToolParameter(
+                name="description",
+                type="string",
+                description="Plain-English description of constraints.",
+            )
+        ],
     )
     registry.register(
         "debug_drc",
@@ -430,7 +457,12 @@ def register_builtin_tools(registry: ToolRegistry) -> None:
         "Look up a suggested fix for a DRC rule violation.",
         [
             ToolParameter(name="rule", type="string", description="DRC rule name."),
-            ToolParameter(name="coords", type="array", description="Optional [x,y] violation coords.", required=False),
+            ToolParameter(
+                name="coords",
+                type="array",
+                description="Optional [x,y] violation coords.",
+                required=False,
+            ),
         ],
     )
     registry.register(

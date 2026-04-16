@@ -138,9 +138,7 @@ class FaultCampaign:
         if self._populated:
             return self._signal_inventory
         signals: list[str] = []
-        rx_reg = re.compile(
-            r"\b(?:reg|wire|logic)\s+(?:\[[^\]]+\]\s+)?([a-zA-Z_][a-zA-Z0-9_]*)"
-        )
+        rx_reg = re.compile(r"\b(?:reg|wire|logic)\s+(?:\[[^\]]+\]\s+)?([a-zA-Z_][a-zA-Z0-9_]*)")
         for src in self.sources:
             try:
                 text = src.read_text(encoding="utf-8", errors="ignore")
@@ -213,7 +211,7 @@ class FaultCampaign:
         else:
             return FaultResult(
                 injection=inj,
-                output_diff=b"\xDE\xAD\xBE\xEF",
+                output_diff=b"\xde\xad\xbe\xef",
                 notes="silent data corruption",
             )
 
@@ -273,9 +271,7 @@ class FaultCampaign:
         targets = self._filter_targets(target_modules)
         results: list[FaultResult] = []
         for i in range(n_injections):
-            fault_type = (
-                FaultType.STUCK_AT_0 if i % 2 == 0 else FaultType.STUCK_AT_1
-            )
+            fault_type = FaultType.STUCK_AT_0 if i % 2 == 0 else FaultType.STUCK_AT_1
             inj = self._generate_random_injection(
                 time_window_ns=(0.0, 10000.0),
                 fault_type=fault_type,
@@ -331,17 +327,13 @@ class FaultCampaign:
     def compute_sdc_rate(self, results: list[FaultResult]) -> float:
         return self.compute_stats(results).sdc_rate
 
-    def group_by_fault_type(
-        self, results: list[FaultResult]
-    ) -> dict[FaultType, list[FaultResult]]:
+    def group_by_fault_type(self, results: list[FaultResult]) -> dict[FaultType, list[FaultResult]]:
         groups: dict[FaultType, list[FaultResult]] = {}
         for r in results:
             groups.setdefault(r.injection.fault_type, []).append(r)
         return groups
 
-    def group_by_signal(
-        self, results: list[FaultResult]
-    ) -> dict[str, list[FaultResult]]:
+    def group_by_signal(self, results: list[FaultResult]) -> dict[str, list[FaultResult]]:
         groups: dict[str, list[FaultResult]] = {}
         for r in results:
             groups.setdefault(r.injection.target_signal, []).append(r)
@@ -391,11 +383,7 @@ class FaultCampaign:
         by_sig = self.group_by_signal(results)
         sdc_counts: list[tuple[str, int]] = []
         for sig, rs in by_sig.items():
-            sdc = sum(
-                1
-                for r in rs
-                if not r.detected and not r.masked and not r.crashed
-            )
+            sdc = sum(1 for r in rs if not r.detected and not r.masked and not r.crashed)
             if sdc > 0:
                 sdc_counts.append((sig, sdc))
         sdc_counts.sort(key=lambda kv: -kv[1])

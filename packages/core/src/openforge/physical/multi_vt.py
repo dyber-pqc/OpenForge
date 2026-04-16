@@ -110,9 +110,7 @@ class MultiVtLibrary(BaseModel):
         key = f"{cell.base_name}_{cell.drive}"
         return [self.cells[n] for n in self.families.get(key, []) if n in self.cells]
 
-    def find_swap(
-        self, current: str, slack_change_target: float
-    ) -> str | None:
+    def find_swap(self, current: str, slack_change_target: float) -> str | None:
         """Find a sibling variant that changes the delay by about
         ``slack_change_target`` nanoseconds.
 
@@ -172,9 +170,7 @@ class MultiVtOptimizer:
         except OSError:
             return mapping
         # DEF COMPONENTS rows: "    - inst_name cell_name + ..."
-        for m in re.finditer(
-            r"^\s*-\s+(\S+)\s+(\S+)\b", text, re.MULTILINE
-        ):
+        for m in re.finditer(r"^\s*-\s+(\S+)\s+(\S+)\b", text, re.MULTILINE):
             mapping[m.group(1)] = m.group(2)
         return mapping
 
@@ -242,10 +238,7 @@ class MultiVtOptimizer:
                 )
             )
             touched.add(inst)
-            if (
-                target_leakage_pw is not None
-                and running_savings_pw >= target_leakage_pw
-            ):
+            if target_leakage_pw is not None and running_savings_pw >= target_leakage_pw:
                 break
 
         return EcoScript(
@@ -266,9 +259,7 @@ class MultiVtOptimizer:
         touched: set[str] = set()
         added_leakage_pw = 0.0
 
-        critical = [
-            p for p in self.sta.setup_paths() if p.slack_ns < target_slack_ns
-        ]
+        critical = [p for p in self.sta.setup_paths() if p.slack_ns < target_slack_ns]
         critical.sort(key=lambda p: p.slack_ns)
         for path in critical:
             needed = target_slack_ns - path.slack_ns
@@ -309,7 +300,7 @@ class MultiVtOptimizer:
                         notes=(
                             f"speed: {current_cell} ({current.vt.value}) -> "
                             f"{new_cell} ({variant.vt.value}) "
-                            f"gains {delay_gain_ns*1000:.1f} ps"
+                            f"gains {delay_gain_ns * 1000:.1f} ps"
                         ),
                     )
                 )

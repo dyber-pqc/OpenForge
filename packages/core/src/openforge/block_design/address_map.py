@@ -43,9 +43,7 @@ class AddressRange(BaseModel):
     def overlaps_with(self, other: AddressRange) -> bool:
         if self.master != other.master:
             return False
-        return not (
-            self.end_addr < other.base_addr or other.end_addr < self.base_addr
-        )
+        return not (self.end_addr < other.base_addr or other.end_addr < self.base_addr)
 
 
 class AddressMap(BaseModel):
@@ -80,12 +78,15 @@ class AddressMap(BaseModel):
                 cursor = _round_up(cursor, align)
                 # Skip over any locked ranges in this master
                 while any(
-                    r.master == master and not (cursor + size - 1 < r.base_addr or r.end_addr < cursor)
+                    r.master == master
+                    and not (cursor + size - 1 < r.base_addr or r.end_addr < cursor)
                     for r in locked
                 ):
                     conflict = next(
-                        r for r in locked
-                        if r.master == master and not (cursor + size - 1 < r.base_addr or r.end_addr < cursor)
+                        r
+                        for r in locked
+                        if r.master == master
+                        and not (cursor + size - 1 < r.base_addr or r.end_addr < cursor)
                     )
                     cursor = _round_up(conflict.end_addr + 1, align)
                 ranges.append(
@@ -106,7 +107,7 @@ class AddressMap(BaseModel):
     def overlaps(self) -> list[tuple[AddressRange, AddressRange]]:
         conflicts: list[tuple[AddressRange, AddressRange]] = []
         for i, a in enumerate(self.ranges):
-            for b in self.ranges[i + 1:]:
+            for b in self.ranges[i + 1 :]:
                 if a.overlaps_with(b):
                     conflicts.append((a, b))
         return conflicts
@@ -165,13 +166,9 @@ class AddressMap(BaseModel):
         lines.append("        #size-cells = <1>;")
         for r in self.ranges:
             node = r.slave.lower().replace("_", "-")
-            lines.append(
-                f"        {node}@{r.base_addr:x} {{"
-            )
+            lines.append(f"        {node}@{r.base_addr:x} {{")
             lines.append(f'            compatible = "openforge,{node}";')
-            lines.append(
-                f"            reg = <0x{r.base_addr:08x} 0x{r.range_size:08x}>;"
-            )
+            lines.append(f"            reg = <0x{r.base_addr:08x} 0x{r.range_size:08x}>;")
             lines.append("        };")
         lines.append("    };")
         lines.append("};")
@@ -187,12 +184,8 @@ class AddressMap(BaseModel):
         ]
         for r in self.ranges:
             sym = r.slave.upper()
-            lines.append(
-                f"#define BASE_{sym:<20} {_fmt_hex(r.base_addr, self.address_width)}"
-            )
-            lines.append(
-                f"#define SIZE_{sym:<20} {_fmt_hex(r.range_size, self.address_width)}"
-            )
+            lines.append(f"#define BASE_{sym:<20} {_fmt_hex(r.base_addr, self.address_width)}")
+            lines.append(f"#define SIZE_{sym:<20} {_fmt_hex(r.range_size, self.address_width)}")
         lines.append("")
         lines.append("#endif /* OPENFORGE_ADDRESS_MAP_H */")
         return "\n".join(lines) + "\n"

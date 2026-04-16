@@ -87,10 +87,30 @@ _ZOOM_FACTOR: Final[float] = 1.15
 # ── Default layer colours (Catppuccin-inspired) ─────────────────────────────
 
 _DEFAULT_LAYER_COLORS: Final[list[str]] = [
-    _BLUE, _RED, _GREEN, _MAUVE, _PEACH, _YELLOW, _TEAL, _PINK,
-    _SAPPHIRE, _LAVENDER, _FLAMINGO, _ROSEWATER, _SUBTEXT, _OVERLAY0,
-    "#89dceb", "#94e2d5", "#a6e3a1", "#f9e2af", "#fab387", "#f38ba8",
-    "#eba0ac", "#cba6f7", "#b4befe", "#74c7ec",
+    _BLUE,
+    _RED,
+    _GREEN,
+    _MAUVE,
+    _PEACH,
+    _YELLOW,
+    _TEAL,
+    _PINK,
+    _SAPPHIRE,
+    _LAVENDER,
+    _FLAMINGO,
+    _ROSEWATER,
+    _SUBTEXT,
+    _OVERLAY0,
+    "#89dceb",
+    "#94e2d5",
+    "#a6e3a1",
+    "#f9e2af",
+    "#fab387",
+    "#f38ba8",
+    "#eba0ac",
+    "#cba6f7",
+    "#b4befe",
+    "#74c7ec",
 ]
 
 # ── GDSII record types (subset) ─────────────────────────────────────────────
@@ -126,6 +146,7 @@ _PROPVALUE = 0x2C06
 
 
 # ── GDS data model ──────────────────────────────────────────────────────────
+
 
 @dataclass
 class GDSBoundary:
@@ -196,6 +217,7 @@ class GDSLibrary:
 
 # ── GDS binary parser ───────────────────────────────────────────────────────
 
+
 def _read_record(data: bytes, offset: int) -> tuple[int, int, bytes, int]:
     """Read one GDSII record.  Returns (full_record_code, data_type, payload, new_offset).
 
@@ -204,32 +226,32 @@ def _read_record(data: bytes, offset: int) -> tuple[int, int, bytes, int]:
     """
     if offset + 4 > len(data):
         return (0, 0, b"", len(data))
-    length = struct.unpack(">H", data[offset:offset + 2])[0]
+    length = struct.unpack(">H", data[offset : offset + 2])[0]
     if length < 4:
         # Avoid infinite loop on corrupt records
         return (0, 0, b"", len(data))
-    rec_raw = struct.unpack(">H", data[offset + 2:offset + 4])[0]
+    rec_raw = struct.unpack(">H", data[offset + 2 : offset + 4])[0]
     data_type = rec_raw & 0x00FF
     # Return the full 16-bit code so it matches the constants
-    payload = data[offset + 4:offset + length] if length > 4 else b""
+    payload = data[offset + 4 : offset + length] if length > 4 else b""
     return (rec_raw, data_type, payload, offset + length)
 
 
 def _decode_int16(payload: bytes) -> list[int]:
     count = len(payload) // 2
-    return list(struct.unpack(f">{count}h", payload[:count * 2]))
+    return list(struct.unpack(f">{count}h", payload[: count * 2]))
 
 
 def _decode_int32(payload: bytes) -> list[int]:
     count = len(payload) // 4
-    return list(struct.unpack(f">{count}i", payload[:count * 4]))
+    return list(struct.unpack(f">{count}i", payload[: count * 4]))
 
 
 def _decode_real8(payload: bytes) -> list[float]:
     """Decode GDSII 8-byte real (excess-64 exponent, 56-bit mantissa)."""
     results: list[float] = []
     for i in range(0, len(payload), 8):
-        b = payload[i:i + 8]
+        b = payload[i : i + 8]
         if len(b) < 8:
             break
         sign = (b[0] >> 7) & 1
@@ -237,7 +259,7 @@ def _decode_real8(payload: bytes) -> list[float]:
         mantissa = 0
         for j in range(1, 8):
             mantissa = (mantissa << 8) | b[j]
-        value = mantissa / (2.0 ** 56) * (16.0 ** exp)
+        value = mantissa / (2.0**56) * (16.0**exp)
         if sign:
             value = -value
         results.append(value)
@@ -470,9 +492,7 @@ class _GDSView(QGraphicsView):
                     self._ruler_start = scene_pos
                     pen = QPen(QColor(_YELLOW), 2)
                     pen.setCosmetic(True)
-                    self._ruler_line = self.scene().addLine(
-                        QLineF(scene_pos, scene_pos), pen
-                    )
+                    self._ruler_line = self.scene().addLine(QLineF(scene_pos, scene_pos), pen)
                 else:
                     # Finish ruler measurement
                     self._ruler_start = None
@@ -491,8 +511,7 @@ class _GDSView(QGraphicsView):
         if self._pan_active:
             delta = event.position() - self._pan_start
             self._pan_start = event.position()
-            self.translate(delta.x() / self.transform().m11(),
-                           delta.y() / self.transform().m22())
+            self.translate(delta.x() / self.transform().m11(), delta.y() / self.transform().m22())
             return
         scene_pos = self.mapToScene(event.position().toPoint())
         self.coordinate_moved.emit(scene_pos.x(), scene_pos.y())
@@ -509,6 +528,7 @@ class _GDSView(QGraphicsView):
 
 
 # ── Minimap widget ──────────────────────────────────────────────────────────
+
 
 class _MinimapWidget(QWidget):
     """Small overview widget showing the full layout extent."""
@@ -570,6 +590,7 @@ class _MinimapWidget(QWidget):
 
 # ── Layer panel ─────────────────────────────────────────────────────────────
 
+
 class _LayerPanelWidget(QWidget):
     """Layer list with visibility checkboxes and colour indicators."""
 
@@ -620,7 +641,9 @@ class _LayerPanelWidget(QWidget):
                 f"background-color: {c}; border: 1px solid {_SURFACE1}; border-radius: 2px;"
             )
             color_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
-            color_lbl.mousePressEvent = lambda e, ln=layer_num, lb=color_lbl: self._pick_color(ln, lb)
+            color_lbl.mousePressEvent = lambda e, ln=layer_num, lb=color_lbl: self._pick_color(
+                ln, lb
+            )
             rl.addWidget(color_lbl)
             name_lbl = QLabel(f"Layer {layer_num}")
             name_lbl.setStyleSheet(f"color: {_TEXT}; font-size: 11px;")
@@ -649,6 +672,7 @@ class _LayerPanelWidget(QWidget):
 
 
 # ── Cell hierarchy tree ─────────────────────────────────────────────────────
+
 
 class _CellTreeWidget(QTreeWidget):
     """Tree showing cell hierarchy with instance counts."""
@@ -714,6 +738,7 @@ class _CellTreeWidget(QTreeWidget):
 
 # ── Main GDS Viewer Panel ───────────────────────────────────────────────────
 
+
 class GDSViewerPanel(QDockWidget):
     """Dock widget hosting a native GDSII layout viewer."""
 
@@ -752,7 +777,9 @@ class GDSViewerPanel(QDockWidget):
         self._act_zoom_in = self._toolbar.addAction("Zoom +")
         self._act_zoom_in.triggered.connect(lambda: self._view.scale(_ZOOM_FACTOR, _ZOOM_FACTOR))
         self._act_zoom_out = self._toolbar.addAction("Zoom -")
-        self._act_zoom_out.triggered.connect(lambda: self._view.scale(1 / _ZOOM_FACTOR, 1 / _ZOOM_FACTOR))
+        self._act_zoom_out.triggered.connect(
+            lambda: self._view.scale(1 / _ZOOM_FACTOR, 1 / _ZOOM_FACTOR)
+        )
         self._toolbar.addSeparator()
         self._act_ruler = self._toolbar.addAction("Ruler")
         self._act_ruler.setCheckable(True)
@@ -1178,9 +1205,7 @@ class GDSViewerPanel(QDockWidget):
         if not path:
             return
         rect = self._scene.sceneRect()
-        image = QImage(
-            int(rect.width() * 4), int(rect.height() * 4), QImage.Format.Format_ARGB32
-        )
+        image = QImage(int(rect.width() * 4), int(rect.height() * 4), QImage.Format.Format_ARGB32)
         image.fill(QColor(_BG))
         painter = QPainter(image)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -1193,9 +1218,7 @@ class GDSViewerPanel(QDockWidget):
             from PySide6.QtSvg import QSvgGenerator
         except ImportError:
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export SVG", "layout.svg", "SVG Files (*.svg)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Export SVG", "layout.svg", "SVG Files (*.svg)")
         if not path:
             return
         rect = self._scene.sceneRect()

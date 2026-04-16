@@ -22,10 +22,10 @@ from PySide6.QtWidgets import (
 )
 
 # Catppuccin Mocha palette
-_CLR_PASS: Final[str] = "#a6e3a1"    # green
-_CLR_FAIL: Final[str] = "#f38ba8"    # red
-_CLR_WARN: Final[str] = "#f9e2af"    # yellow
-_CLR_INFO: Final[str] = "#89b4fa"    # blue
+_CLR_PASS: Final[str] = "#a6e3a1"  # green
+_CLR_FAIL: Final[str] = "#f38ba8"  # red
+_CLR_WARN: Final[str] = "#f9e2af"  # yellow
+_CLR_INFO: Final[str] = "#89b4fa"  # blue
 _CLR_TEXT: Final[str] = "#cdd6f4"
 _CLR_DIM: Final[str] = "#a6adc8"
 
@@ -78,14 +78,10 @@ class _SummaryTab(QWidget):
         self._table = QTableWidget(0, 3)
         self._table.setHorizontalHeaderLabels(["Step", "Status", "Duration"])
         self._table.horizontalHeader().setStretchLastSection(True)
-        self._table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
+        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
-        self._table.setStyleSheet(
-            "QTableWidget { alternate-background-color: #1a1a2e; }"
-        )
+        self._table.setStyleSheet("QTableWidget { alternate-background-color: #1a1a2e; }")
         self._table.setShowGrid(False)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self._table)
@@ -111,11 +107,17 @@ class _TimingTab(QWidget):
         # Summary metrics row
         metrics_layout = QHBoxLayout()
         self._wns_label = QLabel("WNS: --")
-        self._wns_label.setStyleSheet(f"color: {_CLR_DIM}; font-size: 13px; font-weight: bold; padding: 4px 8px;")
+        self._wns_label.setStyleSheet(
+            f"color: {_CLR_DIM}; font-size: 13px; font-weight: bold; padding: 4px 8px;"
+        )
         self._tns_label = QLabel("TNS: --")
-        self._tns_label.setStyleSheet(f"color: {_CLR_DIM}; font-size: 13px; font-weight: bold; padding: 4px 8px;")
+        self._tns_label.setStyleSheet(
+            f"color: {_CLR_DIM}; font-size: 13px; font-weight: bold; padding: 4px 8px;"
+        )
         self._fmax_label = QLabel("Fmax: --")
-        self._fmax_label.setStyleSheet(f"color: {_CLR_DIM}; font-size: 13px; font-weight: bold; padding: 4px 8px;")
+        self._fmax_label.setStyleSheet(
+            f"color: {_CLR_DIM}; font-size: 13px; font-weight: bold; padding: 4px 8px;"
+        )
         metrics_layout.addWidget(self._wns_label)
         metrics_layout.addWidget(self._tns_label)
         metrics_layout.addWidget(self._fmax_label)
@@ -140,18 +142,25 @@ class _TimingTab(QWidget):
         layout.addWidget(self._table)
         self._table.setVisible(False)
 
-    def update_timing(self, wns: float, tns: float, fmax: float = 0.0,
-                      paths: list[dict[str, str]] | None = None) -> None:
+    def update_timing(
+        self, wns: float, tns: float, fmax: float = 0.0, paths: list[dict[str, str]] | None = None
+    ) -> None:
         """Update timing results."""
         wns_color = _CLR_PASS if wns >= 0 else _CLR_FAIL
         tns_color = _CLR_PASS if tns >= 0 else _CLR_FAIL
         self._wns_label.setText(f"WNS: {wns:.3f} ns")
-        self._wns_label.setStyleSheet(f"color: {wns_color}; font-size: 13px; font-weight: bold; padding: 4px 8px;")
+        self._wns_label.setStyleSheet(
+            f"color: {wns_color}; font-size: 13px; font-weight: bold; padding: 4px 8px;"
+        )
         self._tns_label.setText(f"TNS: {tns:.3f} ns")
-        self._tns_label.setStyleSheet(f"color: {tns_color}; font-size: 13px; font-weight: bold; padding: 4px 8px;")
+        self._tns_label.setStyleSheet(
+            f"color: {tns_color}; font-size: 13px; font-weight: bold; padding: 4px 8px;"
+        )
         if fmax > 0:
             self._fmax_label.setText(f"Fmax: {fmax:.1f} MHz")
-            self._fmax_label.setStyleSheet(f"color: {_CLR_INFO}; font-size: 13px; font-weight: bold; padding: 4px 8px;")
+            self._fmax_label.setStyleSheet(
+                f"color: {_CLR_INFO}; font-size: 13px; font-weight: bold; padding: 4px 8px;"
+            )
 
         self._label.setVisible(False)
         self._table.setVisible(True)
@@ -225,9 +234,7 @@ class _SecurityTab(QWidget):
         self._table.horizontalHeader().setStretchLastSection(True)
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
-        self._table.setStyleSheet(
-            "QTableWidget { alternate-background-color: #1a1a2e; }"
-        )
+        self._table.setStyleSheet("QTableWidget { alternate-background-color: #1a1a2e; }")
         self._table.setShowGrid(False)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self._table)
@@ -308,8 +315,9 @@ class ReportsPanel(QDockWidget):
         table.setItem(row, 1, _status_item(status))
         table.setItem(row, 2, _text_item(duration))
 
-    def update_timing_results(self, wns: float, tns: float, fmax: float = 0.0,
-                               paths: list[dict[str, str]] | None = None) -> None:
+    def update_timing_results(
+        self, wns: float, tns: float, fmax: float = 0.0, paths: list[dict[str, str]] | None = None
+    ) -> None:
         """Convenience method to update just the timing tab."""
         self._timing.update_timing(wns, tns, fmax, paths)
 

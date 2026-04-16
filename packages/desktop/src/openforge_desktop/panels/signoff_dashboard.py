@@ -235,9 +235,7 @@ class SignoffDashboardPanel(QWidget):
                 cell.setFrameShape(QFrame.Shape.Box)
                 cell.setMinimumWidth(80)
                 cell.setMinimumHeight(22)
-                cell.setStyleSheet(
-                    f"background: {STATUS_COLORS['unknown']}; color: white;"
-                )
+                cell.setStyleSheet(f"background: {STATUS_COLORS['unknown']}; color: white;")
                 cell.mousePressEvent = (  # type: ignore[assignment]
                     lambda _e, c=check, cn=corner: self.jump_to_check.emit(c, cn)
                 )
@@ -252,9 +250,7 @@ class SignoffDashboardPanel(QWidget):
         self.viol_table.setHorizontalHeaderLabels(
             ["Check", "Corner", "Severity", "Location", "Value"]
         )
-        self.viol_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self.viol_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         vlay.addWidget(self.viol_table)
         root.addWidget(viol_box, 1)
 
@@ -379,7 +375,9 @@ class SignoffDashboardPanel(QWidget):
             rows.append("</tr>")
         rows.append("</table>")
         rows.append("<h2>Violations</h2><table>")
-        rows.append("<tr><th>Check</th><th>Corner</th><th>Severity</th><th>Location</th><th>Value</th></tr>")
+        rows.append(
+            "<tr><th>Check</th><th>Corner</th><th>Severity</th><th>Location</th><th>Value</th></tr>"
+        )
         for v in self._violations:
             rows.append(
                 f"<tr><td>{v.check}</td><td>{v.corner}</td>"

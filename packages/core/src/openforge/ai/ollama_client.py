@@ -138,9 +138,7 @@ class OllamaClient:
     # Internal
     # ------------------------------------------------------------------
 
-    def _post_stream(
-        self, path: str, body: dict, stream: bool, key: str
-    ) -> Iterator[str]:
+    def _post_stream(self, path: str, body: dict, stream: bool, key: str) -> Iterator[str]:
         data = json.dumps(body).encode("utf-8")
         req = urllib.request.Request(
             self.host + path,

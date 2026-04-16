@@ -58,6 +58,7 @@ def _run_subprocess_streaming(
             bufsize=1,
         )
         import time as _time
+
         start = _time.monotonic()
         assert proc.stdout is not None
         for line in proc.stdout:
@@ -88,14 +89,14 @@ class SynthesisWorker(QThread):
     """Run a full RTL-to-gate synthesis flow on a background thread."""
 
     output_line = Signal(str)
-    finished = Signal(object)   # SynthesisResult
+    finished = Signal(object)  # SynthesisResult
     error = Signal(str)
-    progress = Signal(str)      # stage description
+    progress = Signal(str)  # stage description
 
     def __init__(
         self,
         project_path: Path,
-        config: Any,                       # OpenForgeConfig | None
+        config: Any,  # OpenForgeConfig | None
         source_files: Sequence[str | PathLike[str]],
         top_module: str = "top",
         pdk: str = "sky130",
@@ -167,14 +168,14 @@ class SimulationWorker(QThread):
     """Compile and then simulate RTL on a background thread."""
 
     output_line = Signal(str)
-    compile_finished = Signal(object)   # CompileResult
-    sim_finished = Signal(object)       # SimResult
+    compile_finished = Signal(object)  # CompileResult
+    sim_finished = Signal(object)  # SimResult
     error = Signal(str)
 
     def __init__(
         self,
         project_path: Path,
-        config: Any,                       # OpenForgeConfig | None
+        config: Any,  # OpenForgeConfig | None
         source_files: Sequence[str | PathLike[str]],
         top_module: str = "top",
         tool: str = "verilator",
@@ -228,9 +229,7 @@ class SimulationWorker(QThread):
             self.compile_finished.emit(compile_result)
 
             if not compile_result.success:
-                self.error.emit(
-                    f"Compilation failed with {compile_result.errors_count} error(s)"
-                )
+                self.error.emit(f"Compilation failed with {compile_result.errors_count} error(s)")
                 return
 
             # Step 2: Simulate (pass the same top module used for compile)
@@ -257,7 +256,7 @@ class FormalWorker(QThread):
     """Run formal verification via SymbiYosys on a background thread."""
 
     output_line = Signal(str)
-    finished = Signal(object)   # FlowResult
+    finished = Signal(object)  # FlowResult
     error = Signal(str)
 
     def __init__(
@@ -315,7 +314,7 @@ class TimingWorker(QThread):
     """Run static timing analysis via OpenSTA on a background thread."""
 
     output_line = Signal(str)
-    finished = Signal(object)   # TimingResult
+    finished = Signal(object)  # TimingResult
     error = Signal(str)
 
     def __init__(
@@ -371,7 +370,7 @@ class LintWorker(QThread):
     """Run Verible linting on a background thread."""
 
     output_line = Signal(str)
-    finished = Signal(object)   # ToolResult
+    finished = Signal(object)  # ToolResult
     error = Signal(str)
 
     def __init__(
@@ -443,9 +442,12 @@ class ToolCheckWorker(QThread):
         docker_images: set[str] = set()
         try:
             import subprocess
+
             result = subprocess.run(
                 ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode == 0:
                 docker_images = set(result.stdout.strip().splitlines())
@@ -472,6 +474,7 @@ class ToolCheckWorker(QThread):
         wsl_tools: dict[str, str] = {}
         try:
             import platform
+
             if platform.system() == "Windows":
                 for wsl_name, wsl_bin in [
                     ("OpenROAD", "openroad"),
@@ -484,13 +487,17 @@ class ToolCheckWorker(QThread):
                     try:
                         r = subprocess.run(
                             ["wsl", "-d", "Ubuntu-24.04", "--", "which", wsl_bin],
-                            capture_output=True, text=True, timeout=5,
+                            capture_output=True,
+                            text=True,
+                            timeout=5,
                         )
                         if r.returncode == 0 and r.stdout.strip():
                             # Get version too
                             vr = subprocess.run(
                                 ["wsl", "-d", "Ubuntu-24.04", "--", wsl_bin, "--version"],
-                                capture_output=True, text=True, timeout=5,
+                                capture_output=True,
+                                text=True,
+                                timeout=5,
                             )
                             v = vr.stdout.strip().splitlines()[0] if vr.returncode == 0 else ""
                             wsl_tools[wsl_name] = "via WSL2" + (f" ({v})" if v else "")
@@ -560,7 +567,9 @@ class PnrWorker(QThread):
     def run(self) -> None:
         self.progress.emit(10)
         returncode, output = _run_subprocess_streaming(
-            self._cmd, self, timeout=600,
+            self._cmd,
+            self,
+            timeout=600,
         )
         self.progress.emit(90)
 
@@ -580,7 +589,9 @@ class PnrWorker(QThread):
             placed_def = self._pnr_dir / f"{self._top}_placed.def"
             summary_parts = ["Place & Route completed successfully!"]
             if routed_def.exists():
-                summary_parts.append(f"Routed DEF: {routed_def} ({routed_def.stat().st_size} bytes)")
+                summary_parts.append(
+                    f"Routed DEF: {routed_def} ({routed_def.stat().st_size} bytes)"
+                )
             if placed_def.exists():
                 summary_parts.append(f"Placed DEF: {placed_def}")
             drc_rpt = self._pnr_dir / "drc_report.rpt"
@@ -628,7 +639,9 @@ class DrcWorker(QThread):
     def run(self) -> None:
         self.progress.emit(10)
         returncode, output = _run_subprocess_streaming(
-            self._cmd, self, timeout=300,
+            self._cmd,
+            self,
+            timeout=300,
         )
         self.progress.emit(90)
 
@@ -645,6 +658,7 @@ class DrcWorker(QThread):
             return
 
         import re as _re
+
         violations = 0
         for line in output.splitlines():
             m = _re.search(r"DRC_VIOLATIONS:\s*(\d+)", line)
@@ -689,7 +703,9 @@ class LvsWorker(QThread):
     def run(self) -> None:
         self.progress.emit(10)
         returncode, output = _run_subprocess_streaming(
-            self._cmd, self, timeout=300,
+            self._cmd,
+            self,
+            timeout=300,
         )
         self.progress.emit(90)
 
@@ -751,7 +767,9 @@ class GdsiiWorker(QThread):
     def run(self) -> None:
         self.progress.emit(10)
         returncode, output = _run_subprocess_streaming(
-            self._cmd, self, timeout=300,
+            self._cmd,
+            self,
+            timeout=300,
         )
         self.progress.emit(90)
 
@@ -912,7 +930,10 @@ class StaWorker(QThread):
     def run(self) -> None:
         self.progress.emit(10)
         returncode, output = _run_subprocess_streaming(
-            self._docker_cmd, self, env=self._env, timeout=120,
+            self._docker_cmd,
+            self,
+            env=self._env,
+            timeout=120,
         )
         self.progress.emit(80)
 
@@ -925,6 +946,7 @@ class StaWorker(QThread):
 
         # Parse WNS/TNS from output
         import re as _re
+
         wns_val: float | None = None
         tns_val: float | None = None
         paths: list[dict] = []
@@ -950,7 +972,9 @@ class StaWorker(QThread):
                 current_path_lines.append(line)
                 if "Endpoint:" in line:
                     current_path["endpoint"] = line.split("Endpoint:")[-1].strip()
-                elif "slack" in line.lower() and ("MET" in line or "VIOLATED" in line or _re.search(r"[-\d.]+", line)):
+                elif "slack" in line.lower() and (
+                    "MET" in line or "VIOLATED" in line or _re.search(r"[-\d.]+", line)
+                ):
                     m_slack = _re.search(r"([-\d.]+)", line)
                     if m_slack:
                         current_path["slack"] = float(m_slack.group(1))
@@ -1000,6 +1024,7 @@ class StaWorker(QThread):
         # Generate histogram from WNS value
         if wns_val is not None:
             import math
+
             lo = min(wns_val - 1.0, -2.0)
             hi = max(wns_val + 3.0, 4.0)
             step_size = (hi - lo) / 10.0
@@ -1045,8 +1070,8 @@ class PowerWorker(QThread):
     """Run OpenSTA power analysis on a background thread."""
 
     output_line = Signal(str)
-    finished_result = Signal(bool, str)   # success, summary
-    power_parsed = Signal(dict)            # structured power data
+    finished_result = Signal(bool, str)  # success, summary
+    power_parsed = Signal(dict)  # structured power data
 
     def __init__(
         self,
@@ -1073,6 +1098,7 @@ class PowerWorker(QThread):
     def run(self) -> None:
         try:
             from openforge.physical.power import _parse_power_report
+
             self.output_line.emit("Starting power analysis (OpenSTA via Docker)...")
 
             # Build TCL script for OpenSTA
@@ -1097,27 +1123,39 @@ class PowerWorker(QThread):
             proj_str = str(proj_path).replace("\\", "/")
             pdk_str = str(lib_dir).replace("\\", "/")
             docker_cmd = [
-                "docker", "run", "--rm",
-                "-v", f"{proj_str}:/work",
-                "-v", f"{pdk_str}:/pdk",
-                "-w", "/work",
-                "--entrypoint", "/OpenSTA/app/sta",
+                "docker",
+                "run",
+                "--rm",
+                "-v",
+                f"{proj_str}:/work",
+                "-v",
+                f"{pdk_str}:/pdk",
+                "-w",
+                "/work",
+                "--entrypoint",
+                "/OpenSTA/app/sta",
                 "openroad/opensta:latest",
-                "-exit", "/work/synth_build/run_power.tcl",
+                "-exit",
+                "/work/synth_build/run_power.tcl",
             ]
 
             env = dict(os.environ)
             env["MSYS_NO_PATHCONV"] = "1"
 
             returncode, output = _run_subprocess_streaming(
-                docker_cmd, self, env=env, timeout=120,
+                docker_cmd,
+                self,
+                env=env,
+                timeout=120,
             )
 
             if self._cancelled:
                 return
 
             if returncode == -1 and output == "COMMAND_NOT_FOUND":
-                self.finished_result.emit(False, "Docker not found. Install Docker to run power analysis.")
+                self.finished_result.emit(
+                    False, "Docker not found. Install Docker to run power analysis."
+                )
                 return
 
             # Parse the report
@@ -1158,7 +1196,7 @@ class ProgramWorker(QThread):
     """Program an FPGA device on a background thread."""
 
     output_line = Signal(str)
-    finished_result = Signal(bool, str)   # success, summary
+    finished_result = Signal(bool, str)  # success, summary
     progress = Signal(int)
 
     def __init__(
@@ -1239,8 +1277,8 @@ class CdcWorker(QThread):
     """Run CDC analysis on a background thread."""
 
     output_line = Signal(str)
-    finished_result = Signal(bool, str)   # success, summary
-    cdc_parsed = Signal(dict)              # structured CDC data
+    finished_result = Signal(bool, str)  # success, summary
+    cdc_parsed = Signal(dict)  # structured CDC data
 
     def __init__(
         self,
@@ -1349,6 +1387,7 @@ class CdcWorker(QThread):
     def _run_via_docker(self):
         """Fallback: run yosys via Docker for CDC analysis."""
         from openforge.verification.cdc import CdcResult
+
         # Build a yosys script that reads sources and dumps the netlist as JSON
         # Then we parse the JSON ourselves for CDC analysis
         if not self._source_files:
@@ -1375,23 +1414,33 @@ class CdcWorker(QThread):
                 rel_sources.append(Path(src).as_posix())
 
         ys_path = proj_path / ".openforge" / "build" / "cdc.ys"
-        ys_content = "\n".join([
-            f"read_verilog {s}" for s in rel_sources
-        ]) + f"\nhierarchy -top {self._top_module}\nproc\nwrite_json /work/.openforge/build/cdc_netlist.json\n"
+        ys_content = (
+            "\n".join([f"read_verilog {s}" for s in rel_sources])
+            + f"\nhierarchy -top {self._top_module}\nproc\nwrite_json /work/.openforge/build/cdc_netlist.json\n"
+        )
         ys_path.write_text(ys_content, encoding="utf-8")
 
         proj_str = str(proj_path).replace("\\", "/")
         docker_cmd = [
-            "docker", "run", "--rm",
-            "-v", f"{proj_str}:/work",
-            "-w", "/work",
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{proj_str}:/work",
+            "-w",
+            "/work",
             "hdlc/yosys:latest",
-            "yosys", "-q", "/work/.openforge/build/cdc.ys",
+            "yosys",
+            "-q",
+            "/work/.openforge/build/cdc.ys",
         ]
         env = dict(os.environ)
         env["MSYS_NO_PATHCONV"] = "1"
         returncode, output = _run_subprocess_streaming(
-            docker_cmd, self, env=env, timeout=120,
+            docker_cmd,
+            self,
+            env=env,
+            timeout=120,
         )
         for line in output.splitlines():
             self.output_line.emit(line)
@@ -1404,6 +1453,7 @@ class CdcWorker(QThread):
             import json as _json
 
             from openforge.verification.cdc import CdcAnalyzer
+
             analyzer = CdcAnalyzer()
             data = _json.loads(json_out.read_text(encoding="utf-8"))
             if hasattr(analyzer, "_analyze_netlist"):
@@ -1422,7 +1472,7 @@ class CryptoWorker(QThread):
     """Run the full crypto security analysis suite on a background thread."""
 
     output_line = Signal(str)
-    finished_result = Signal(bool, str)    # success, summary
+    finished_result = Signal(bool, str)  # success, summary
 
     # Per-analysis signals
     constant_time_done = Signal(dict)
@@ -1444,10 +1494,18 @@ class CryptoWorker(QThread):
         self._source_files = [str(s) for s in source_files]
         self._secret_signals = list(secret_signals)
         # If None, run all analyses
-        self._analyses = list(analyses) if analyses else [
-            "constant_time", "power_sca", "fault_injection",
-            "fips", "ntt", "entropy",
-        ]
+        self._analyses = (
+            list(analyses)
+            if analyses
+            else [
+                "constant_time",
+                "power_sca",
+                "fault_injection",
+                "fips",
+                "ntt",
+                "entropy",
+            ]
+        )
         self._cancelled = False
 
     def cancel(self) -> None:
@@ -1468,16 +1526,20 @@ class CryptoWorker(QThread):
                     self._source_files,
                     secret_signals=self._secret_signals,
                 )
-                self.constant_time_done.emit({
-                    "passed": ct.passed,
-                    "violations": [
-                        {
-                            "file": v.file, "line": v.line,
-                            "signal": v.signal, "description": v.description,
-                        }
-                        for v in ct.violations
-                    ],
-                })
+                self.constant_time_done.emit(
+                    {
+                        "passed": ct.passed,
+                        "violations": [
+                            {
+                                "file": v.file,
+                                "line": v.line,
+                                "signal": v.signal,
+                                "description": v.description,
+                            }
+                            for v in ct.violations
+                        ],
+                    }
+                )
                 status = "PASS" if ct.passed else f"FAIL ({len(ct.violations)} issues)"
                 summary_parts.append(f"  Constant-Time: {status}")
                 if not ct.passed:
@@ -1487,13 +1549,15 @@ class CryptoWorker(QThread):
             if "power_sca" in self._analyses and not self._cancelled:
                 self.output_line.emit("Analyzing power SCA resistance...")
                 sca = analyzer.check_power_sca(self._source_files)
-                self.power_sca_done.emit({
-                    "risk_score": sca.risk_score,
-                    "has_masking": sca.has_masking,
-                    "has_hiding": sca.has_hiding,
-                    "sbox_type": sca.sbox_type,
-                    "recommendations": list(sca.recommendations),
-                })
+                self.power_sca_done.emit(
+                    {
+                        "risk_score": sca.risk_score,
+                        "has_masking": sca.has_masking,
+                        "has_hiding": sca.has_hiding,
+                        "sbox_type": sca.sbox_type,
+                        "recommendations": list(sca.recommendations),
+                    }
+                )
                 summary_parts.append(f"  Power SCA Risk: {sca.risk_score:.0f}/100")
                 if sca.risk_score > 60:
                     all_passed = False
@@ -1502,31 +1566,35 @@ class CryptoWorker(QThread):
             if "fault_injection" in self._analyses and not self._cancelled:
                 self.output_line.emit("Checking fault injection resistance...")
                 fi = analyzer.check_fault_injection(self._source_files)
-                self.fault_injection_done.emit({
-                    "has_tmr": fi.has_tmr,
-                    "has_dual_rail": fi.has_dual_rail,
-                    "has_error_detection": fi.has_error_detection,
-                    "fsm_encoding": fi.fsm_encoding,
-                    "redundancy_score": fi.redundancy_score,
-                    "recommendations": list(fi.recommendations),
-                })
+                self.fault_injection_done.emit(
+                    {
+                        "has_tmr": fi.has_tmr,
+                        "has_dual_rail": fi.has_dual_rail,
+                        "has_error_detection": fi.has_error_detection,
+                        "fsm_encoding": fi.fsm_encoding,
+                        "redundancy_score": fi.redundancy_score,
+                        "recommendations": list(fi.recommendations),
+                    }
+                )
                 summary_parts.append(f"  Fault Resistance: {fi.redundancy_score:.0f}/100")
 
             # 4. FIPS 140-3
             if "fips" in self._analyses and not self._cancelled:
                 self.output_line.emit("Checking FIPS 140-3 compliance...")
                 fips = analyzer.check_fips_compliance(self._source_files)
-                self.fips_done.emit({
-                    "overall_passed": fips.overall_passed,
-                    "checks": [
-                        {
-                            "requirement": c.requirement,
-                            "status": c.status,
-                            "detail": c.detail,
-                        }
-                        for c in fips.checks
-                    ],
-                })
+                self.fips_done.emit(
+                    {
+                        "overall_passed": fips.overall_passed,
+                        "checks": [
+                            {
+                                "requirement": c.requirement,
+                                "status": c.status,
+                                "detail": c.detail,
+                            }
+                            for c in fips.checks
+                        ],
+                    }
+                )
                 status = "PASS" if fips.overall_passed else "FAIL"
                 summary_parts.append(f"  FIPS 140-3: {status}")
                 if not fips.overall_passed:
@@ -1536,13 +1604,15 @@ class CryptoWorker(QThread):
             if "ntt" in self._analyses and not self._cancelled:
                 self.output_line.emit("Validating NTT implementation...")
                 ntt = analyzer.validate_ntt(self._source_files)
-                self.ntt_done.emit({
-                    "has_butterfly": ntt.has_butterfly,
-                    "has_modular_reduction": ntt.has_modular_reduction,
-                    "geometry_type": ntt.geometry_type,
-                    "issues": list(ntt.issues),
-                    "passed": ntt.passed,
-                })
+                self.ntt_done.emit(
+                    {
+                        "has_butterfly": ntt.has_butterfly,
+                        "has_modular_reduction": ntt.has_modular_reduction,
+                        "geometry_type": ntt.geometry_type,
+                        "issues": list(ntt.issues),
+                        "passed": ntt.passed,
+                    }
+                )
                 status = "PASS" if ntt.passed else f"ISSUES ({len(ntt.issues)})"
                 summary_parts.append(f"  NTT Validation: {status}")
                 if not ntt.passed:
@@ -1552,13 +1622,15 @@ class CryptoWorker(QThread):
             if "entropy" in self._analyses and not self._cancelled:
                 self.output_line.emit("Analyzing entropy sources...")
                 ent = analyzer.check_entropy(self._source_files)
-                self.entropy_done.emit({
-                    "has_trng": ent.has_trng,
-                    "has_prng": ent.has_prng,
-                    "has_health_tests": ent.has_health_tests,
-                    "has_proper_seeding": ent.has_proper_seeding,
-                    "recommendations": list(ent.recommendations),
-                })
+                self.entropy_done.emit(
+                    {
+                        "has_trng": ent.has_trng,
+                        "has_prng": ent.has_prng,
+                        "has_health_tests": ent.has_health_tests,
+                        "has_proper_seeding": ent.has_proper_seeding,
+                        "recommendations": list(ent.recommendations),
+                    }
+                )
                 sources = []
                 if ent.has_trng:
                     sources.append("TRNG")
@@ -1587,9 +1659,9 @@ class MultiCornerWorker(QThread):
     """Run multi-corner STA on a background thread."""
 
     output_line = Signal(str)
-    finished_result = Signal(bool, str)   # success, summary
+    finished_result = Signal(bool, str)  # success, summary
     progress = Signal(int)
-    corner_done = Signal(str, dict)        # corner_name, timing_data
+    corner_done = Signal(str, dict)  # corner_name, timing_data
 
     def __init__(
         self,
@@ -1634,9 +1706,7 @@ class MultiCornerWorker(QThread):
                 return
 
             total = len(corners)
-            self.output_line.emit(
-                f"Running multi-corner STA ({total} corners, PDK={self._pdk})..."
-            )
+            self.output_line.emit(f"Running multi-corner STA ({total} corners, PDK={self._pdk})...")
 
             def _on_output(corner_name: str, line: str) -> None:
                 self.output_line.emit(line)
@@ -1658,12 +1728,15 @@ class MultiCornerWorker(QThread):
             for i, cr in enumerate(result.per_corner):
                 pct = int(((i + 1) / total) * 100)
                 self.progress.emit(pct)
-                self.corner_done.emit(cr.corner, {
-                    "wns": cr.wns,
-                    "tns": cr.tns,
-                    "fmax_mhz": cr.fmax_mhz,
-                    "num_violated": cr.num_violated,
-                })
+                self.corner_done.emit(
+                    cr.corner,
+                    {
+                        "wns": cr.wns,
+                        "tns": cr.tns,
+                        "fmax_mhz": cr.fmax_mhz,
+                        "num_violated": cr.num_violated,
+                    },
+                )
 
             summary = (
                 f"=== Multi-Corner STA Summary ===\n"
@@ -1680,7 +1753,8 @@ class MultiCornerWorker(QThread):
         except Exception as exc:
             if not self._cancelled:
                 self.finished_result.emit(
-                    False, f"Multi-corner STA failed: {exc}",
+                    False,
+                    f"Multi-corner STA failed: {exc}",
                 )
 
 
@@ -1731,9 +1805,7 @@ class FullFlowWorker(QThread):
                 self.output_line.emit(f"[{stage_id}] {status}")
 
             if self._resume_from:
-                self.output_line.emit(
-                    f"[OpenForge] Resuming from stage: {self._resume_from}"
-                )
+                self.output_line.emit(f"[OpenForge] Resuming from stage: {self._resume_from}")
                 # Do a full run first, then rerun_from
                 result = self._runner.run(progress_callback=_progress)
                 if self._cancelled:

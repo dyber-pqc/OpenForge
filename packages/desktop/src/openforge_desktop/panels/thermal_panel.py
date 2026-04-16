@@ -280,9 +280,7 @@ class ThermalPanel(QDockWidget):
         self._ambient_slider.setFixedWidth(140)
         tb.addWidget(self._ambient_slider)
         self._ambient_label = QLabel("25 C")
-        self._ambient_slider.valueChanged.connect(
-            lambda v: self._ambient_label.setText(f"{v} C")
-        )
+        self._ambient_slider.valueChanged.connect(lambda v: self._ambient_label.setText(f"{v} C"))
         tb.addWidget(self._ambient_label)
 
         tb.addWidget(QLabel("Scale:"))
@@ -412,9 +410,7 @@ class ThermalPanel(QDockWidget):
 
         self._hotspot_list.clear()
         for h in thermal_map.hotspots[:50]:
-            item = QListWidgetItem(
-                f"({h.x:6.1f},{h.y:6.1f}) {h.temperature_c:6.2f} C"
-            )
+            item = QListWidgetItem(f"({h.x:6.1f},{h.y:6.1f}) {h.temperature_c:6.2f} C")
             self._hotspot_list.addItem(item)
 
         self._status.setText(

@@ -113,16 +113,13 @@ class HoldFixer:
                             "startpoint": path.startpoint,
                             "endpoint": path.endpoint,
                             "slack_ns": path.slack_ns,
-                            "clock": path.endpoint_clock
-                            or path.startpoint_clock,
+                            "clock": path.endpoint_clock or path.startpoint_clock,
                             "levels": path.num_levels,
                         }
                     )
         return out
 
-    def suggest_fixes(
-        self, target_buffer_delay_ps: float = 50.0
-    ) -> list[HoldFixSuggestion]:
+    def suggest_fixes(self, target_buffer_delay_ps: float = 50.0) -> list[HoldFixSuggestion]:
         """Propose a buffer-chain fix for every violating hold path.
 
         The number of buffers required is ``ceil(|slack_ns| / buffer_delay)``.
@@ -133,9 +130,9 @@ class HoldFixer:
         self._suggestions = []
         buf_delay_ns = max(0.001, target_buffer_delay_ps / 1000.0)
         paths: list[TimingPath] = [
-            p for p in self.report.paths if p.slack_ns < 0 and (
-                p.path_type == "min" or p.check_type == "hold"
-            )
+            p
+            for p in self.report.paths
+            if p.slack_ns < 0 and (p.path_type == "min" or p.check_type == "hold")
         ]
         for path in paths:
             delay_needed = -path.slack_ns  # positive ns
@@ -166,8 +163,7 @@ class HoldFixer:
                     insertion_points=insertion[:n_buffers],
                     estimated_area_overhead_um2=n_buffers * self.buffer_area_um2,
                     notes=(
-                        f"Add {n_buffers} × {self.buffer_cell} "
-                        f"(≈{buf_delay_ns*n_buffers:.2f} ns)"
+                        f"Add {n_buffers} × {self.buffer_cell} (≈{buf_delay_ns * n_buffers:.2f} ns)"
                     ),
                 )
             )
@@ -190,8 +186,7 @@ class HoldFixer:
                     clock=path.endpoint_clock or "clk",
                     delta_ns=-delta,  # negative: advance capture
                     notes=(
-                        f"Advance capture clock of {path.endpoint} by "
-                        f"{delta:.3f} ns to clear hold"
+                        f"Advance capture clock of {path.endpoint} by {delta:.3f} ns to clear hold"
                     ),
                 )
             )
@@ -215,10 +210,7 @@ class HoldFixer:
                         buffer_cell=sug.buffer_cell,
                         slack_before_ns=sug.slack_ns,
                         slack_after_ns=sug.slack_ns + sug.delay_needed_ns,
-                        notes=(
-                            f"hold fix {idx + 1}/{sug.buffers_needed} on "
-                            f"{sug.path} near {pin}"
-                        ),
+                        notes=(f"hold fix {idx + 1}/{sug.buffers_needed} on {sug.path} near {pin}"),
                     )
                 )
         return script

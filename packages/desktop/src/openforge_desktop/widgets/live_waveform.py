@@ -164,9 +164,7 @@ class StreamingVcdParser:
         "fs": 1e-6,
     }
 
-    _VAR_RE = re.compile(
-        r"\$var\s+\w+\s+(\d+)\s+(\S+)\s+(\S+)(?:\s+\[[^\]]+\])?\s+\$end"
-    )
+    _VAR_RE = re.compile(r"\$var\s+\w+\s+(\d+)\s+(\S+)\s+(\S+)(?:\s+\[[^\]]+\])?\s+\$end")
 
     def __init__(self) -> None:
         self.signals: dict[str, VcdSignal] = {}
@@ -493,32 +491,32 @@ class LiveWaveformWidget(QWidget):
         self.setStyleSheet(
             f"""
             QWidget#LiveWaveformWidget {{
-                background: {p['base']};
-                color: {p['text']};
+                background: {p["base"]};
+                color: {p["text"]};
             }}
             QToolBar {{
-                background: {p['mantle']};
+                background: {p["mantle"]};
                 border: none;
                 padding: 4px;
                 spacing: 4px;
             }}
             QToolBar QToolButton {{
-                color: {p['text']};
-                background: {p['surface0']};
-                border: 1px solid {p['surface1']};
+                color: {p["text"]};
+                background: {p["surface0"]};
+                border: 1px solid {p["surface1"]};
                 border-radius: 4px;
                 padding: 3px 8px;
             }}
             QToolBar QToolButton:hover {{
-                background: {p['surface1']};
+                background: {p["surface1"]};
             }}
             QToolBar QToolButton:checked {{
-                background: {p['blue']};
-                color: {p['base']};
+                background: {p["blue"]};
+                color: {p["base"]};
             }}
             QLabel {{
-                color: {p['subtext1']};
-                background: {p['mantle']};
+                color: {p["subtext1"]};
+                background: {p["mantle"]};
             }}
             """
         )
@@ -527,10 +525,16 @@ class LiveWaveformWidget(QWidget):
         return max(0, self._draw_area.width() - self.NAME_COL_WIDTH - self.VALUE_COL_WIDTH)
 
     def _wave_x_for_time(self, t_ns: float) -> int:
-        return int(self.NAME_COL_WIDTH + self.VALUE_COL_WIDTH + (t_ns - self._view_start_ns) * self._px_per_ns)
+        return int(
+            self.NAME_COL_WIDTH
+            + self.VALUE_COL_WIDTH
+            + (t_ns - self._view_start_ns) * self._px_per_ns
+        )
 
     def _time_for_x(self, x: int) -> float:
-        return self._view_start_ns + (x - self.NAME_COL_WIDTH - self.VALUE_COL_WIDTH) / self._px_per_ns
+        return (
+            self._view_start_ns + (x - self.NAME_COL_WIDTH - self.VALUE_COL_WIDTH) / self._px_per_ns
+        )
 
     def _zoom(self, factor: float) -> None:
         self._px_per_ns = max(self.MIN_PX_PER_NS, min(self.MAX_PX_PER_NS, self._px_per_ns * factor))
@@ -665,7 +669,9 @@ class LiveWaveformWidget(QWidget):
         p.setPen(QColor(pal["subtext1"]))
         font = QFont("Segoe UI", 8, QFont.Bold)
         p.setFont(font)
-        p.drawText(QRect(8, 0, self.NAME_COL_WIDTH - 8, self.HEADER_HEIGHT), Qt.AlignVCenter, "Signal")
+        p.drawText(
+            QRect(8, 0, self.NAME_COL_WIDTH - 8, self.HEADER_HEIGHT), Qt.AlignVCenter, "Signal"
+        )
         p.drawText(
             QRect(self.NAME_COL_WIDTH + 4, 0, self.VALUE_COL_WIDTH - 8, self.HEADER_HEIGHT),
             Qt.AlignVCenter,
@@ -745,10 +751,14 @@ class LiveWaveformWidget(QWidget):
         # Name
         p.setPen(QColor(pal["text"]))
         p.setFont(QFont("Segoe UI", 9))
-        p.drawText(QRect(8, y, self.NAME_COL_WIDTH - 12, self.ROW_HEIGHT), Qt.AlignVCenter, sig.full_name)
+        p.drawText(
+            QRect(8, y, self.NAME_COL_WIDTH - 12, self.ROW_HEIGHT), Qt.AlignVCenter, sig.full_name
+        )
 
         # Current value
-        cursor_t = self._time_for_x(self._cursor_x) if self._cursor_x > 0 else self.parser.max_time_ns
+        cursor_t = (
+            self._time_for_x(self._cursor_x) if self._cursor_x > 0 else self.parser.max_time_ns
+        )
         cur_val = sig.value_at(cursor_t)
         p.setPen(QColor(pal["yellow"]))
         p.setFont(QFont("Consolas", 9))

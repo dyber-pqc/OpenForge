@@ -54,12 +54,11 @@ def _format_radix(v: int | str, width: int, radix: str) -> str:
         digits = max(1, (width + 2) // 3)
         return f"{iv:0{digits}o}o"
     if radix == "bin":
-        return f"{iv:0{max(1,width)}b}b"
+        return f"{iv:0{max(1, width)}b}b"
     if radix == "ascii":
         try:
             return "".join(
-                chr((iv >> (8 * i)) & 0xFF) or "."
-                for i in range(max(1, width // 8) - 1, -1, -1)
+                chr((iv >> (8 * i)) & 0xFF) or "." for i in range(max(1, width // 8) - 1, -1, -1)
             )
         except Exception:
             return f"{iv:X}"
@@ -114,7 +113,9 @@ class BusDecoder:
         # Protocols are typically multi-signal and handled via their own
         # explicit entry points; decoding a single line here is best effort.
         if k == "uart":
-            return self.decode_uart(transitions, rule.params.get("baud", 115200), rule.params.get("clk_hz", 50_000_000))
+            return self.decode_uart(
+                transitions, rule.params.get("baud", 115200), rule.params.get("clk_hz", 50_000_000)
+            )
         return self._decode_radix(signal, transitions, "hex")
 
     def _match_rule(self, signal: WaveSignal) -> DecodeRule | None:
@@ -274,7 +275,7 @@ class BusDecoder:
                             (
                                 frame_start,
                                 t,
-                                f"SPI {word_mosi:0{(count + 3)//4}X}/{word_miso:0{(count + 3)//4}X}",
+                                f"SPI {word_mosi:0{(count + 3) // 4}X}/{word_miso:0{(count + 3) // 4}X}",
                             )
                         )
                     count = 0
@@ -291,7 +292,7 @@ class BusDecoder:
                             (
                                 frame_start,
                                 t,
-                                f"SPI {word_mosi:0{(bits_per_word + 3)//4}X}/{word_miso:0{(bits_per_word + 3)//4}X}",
+                                f"SPI {word_mosi:0{(bits_per_word + 3) // 4}X}/{word_miso:0{(bits_per_word + 3) // 4}X}",
                             )
                         )
                         word_mosi = word_miso = 0
@@ -385,9 +386,7 @@ class BusDecoder:
 
     # ──────────── helpers ────────────
     @staticmethod
-    def _merge_two(
-        a: list[WaveTransition], b: list[WaveTransition]
-    ) -> list[tuple[int, int, int]]:
+    def _merge_two(a: list[WaveTransition], b: list[WaveTransition]) -> list[tuple[int, int, int]]:
         """Merge two 1-bit streams into (time, a_val, b_val) triples."""
         events: list[tuple[int, int, int]] = []
         ai = bi = 0

@@ -233,19 +233,35 @@ class SimulationRunner:
 
         if tool == SimulationTool.VERILATOR:
             return self._compile_verilator(
-                resolved_sources, top, rel_out_dir, resolved_includes,
-                trace, coverage, timeout, on_output,
-                defines or {}, language_version,
+                resolved_sources,
+                top,
+                rel_out_dir,
+                resolved_includes,
+                trace,
+                coverage,
+                timeout,
+                on_output,
+                defines or {},
+                language_version,
             )
         elif tool == SimulationTool.ICARUS:
             return self._compile_icarus(
-                resolved_sources, top, rel_out_dir, resolved_includes,
-                timeout, on_output,
-                defines or {}, language_version,
+                resolved_sources,
+                top,
+                rel_out_dir,
+                resolved_includes,
+                timeout,
+                on_output,
+                defines or {},
+                language_version,
             )
         elif tool == SimulationTool.GHDL:
             return self._compile_ghdl(
-                resolved_sources, top, rel_out_dir, timeout, on_output,
+                resolved_sources,
+                top,
+                rel_out_dir,
+                timeout,
+                on_output,
             )
         else:
             return CompileResult(
@@ -450,7 +466,11 @@ class SimulationRunner:
             top = self._config.project.top_module
             binary = binary_or_top or str(sim_dir / f"V{top}")
             return self._simulate_verilator(
-                binary, resolved_plusargs, effective_timeout, wave_format, on_output,
+                binary,
+                resolved_plusargs,
+                effective_timeout,
+                wave_format,
+                on_output,
             )
         elif tool == SimulationTool.ICARUS:
             top = self._config.project.top_module
@@ -467,12 +487,18 @@ class SimulationRunner:
             except ValueError:
                 vvp = Path(vvp).as_posix()
             return self._simulate_icarus(
-                vvp, resolved_plusargs, effective_timeout, on_output,
+                vvp,
+                resolved_plusargs,
+                effective_timeout,
+                on_output,
             )
         elif tool == SimulationTool.GHDL:
             top = str(binary_or_top) if binary_or_top else self._config.project.top_module
             return self._simulate_ghdl(
-                top, effective_timeout, wave_format, on_output,
+                top,
+                effective_timeout,
+                wave_format,
+                on_output,
             )
         else:
             return SimResult(
@@ -598,8 +624,7 @@ class SimulationRunner:
         all_paths = [str(Path(s.path).as_posix()) for s in sources]
         all_paths.append(str(Path(testbench.path).as_posix()))
         is_sv = any(
-            Path(s.path).suffix.lower() in (".sv", ".svh")
-            or s.language == "systemverilog"
+            Path(s.path).suffix.lower() in (".sv", ".svh") or s.language == "systemverilog"
             for s in list(sources) + [testbench]
         )
         lang_version = "sv2017" if is_sv else "v2005"

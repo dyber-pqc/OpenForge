@@ -37,8 +37,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.coverage import (
@@ -72,9 +74,7 @@ class MetricCard(QFrame):
         self._value.setStyleSheet("font-size:20px; font-weight:600;")
         self._bar = QFrame()
         self._bar.setFixedHeight(6)
-        self._bar.setStyleSheet(
-            "background:#313244; border-radius:3px;"
-        )
+        self._bar.setStyleSheet("background:#313244; border-radius:3px;")
         lay = QVBoxLayout(self)
         lay.setContentsMargins(10, 8, 10, 8)
         lay.setSpacing(4)
@@ -100,8 +100,8 @@ class MetricCard(QFrame):
         colour = self._colour_for(pct)
         self._bar.setStyleSheet(
             f"background:qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-            f"stop:0 {colour}, stop:{max(0.001, pct/100.0)} {colour},"
-            f"stop:{min(1.0, pct/100.0 + 0.0001)} #313244, stop:1 #313244);"
+            f"stop:0 {colour}, stop:{max(0.001, pct / 100.0)} {colour},"
+            f"stop:{min(1.0, pct / 100.0 + 0.0001)} #313244, stop:1 #313244);"
             f"border-radius:3px;"
         )
 
@@ -190,9 +190,7 @@ class CoverageDashboardPanel(QWidget):
         self._tree = QTreeWidget()
         self._tree.setHeaderLabels(["File", "Covered", "%"])
         self._tree.setRootIsDecorated(True)
-        self._tree.header().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
+        self._tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._tree.itemSelectionChanged.connect(self._on_tree_select)
         split.addWidget(self._tree)
 
@@ -225,15 +223,11 @@ class CoverageDashboardPanel(QWidget):
         _fcov_lay = QVBoxLayout(self._fcov_tab)
         _fcov_lay.setContentsMargins(4, 4, 4, 4)
         self._fcov_table = QTableWidget(0, 4)
-        self._fcov_table.setHorizontalHeaderLabels(
-            ["Covergroup", "Point", "Hit Bins", "Total"]
-        )
+        self._fcov_table.setHorizontalHeaderLabels(["Covergroup", "Point", "Hit Bins", "Total"])
         self._fcov_table.horizontalHeader().setStretchLastSection(True)
         _fcov_lay.addWidget(self._fcov_table, 1)
         self._fcov_cross_table = QTableWidget(0, 3)
-        self._fcov_cross_table.setHorizontalHeaderLabels(
-            ["Point A", "Point B", "Cross Hits"]
-        )
+        self._fcov_cross_table.setHorizontalHeaderLabels(["Point A", "Point B", "Cross Hits"])
         self._fcov_cross_table.horizontalHeader().setStretchLastSection(True)
         _fcov_lay.addWidget(QLabel("Cross coverage"))
         _fcov_lay.addWidget(self._fcov_cross_table, 1)
@@ -250,9 +244,7 @@ class CoverageDashboardPanel(QWidget):
         _gap_bar.addStretch(1)
         _gap_lay.addLayout(_gap_bar)
         self._gap_table = QTableWidget(0, 3)
-        self._gap_table.setHorizontalHeaderLabels(
-            ["Coverpoint", "Expression", "Suggested test"]
-        )
+        self._gap_table.setHorizontalHeaderLabels(["Coverpoint", "Expression", "Suggested test"])
         self._gap_table.horizontalHeader().setStretchLastSection(True)
         _gap_lay.addWidget(self._gap_table, 1)
         self._tabs.addTab(self._gap_tab, "Gap finder")
@@ -264,9 +256,7 @@ class CoverageDashboardPanel(QWidget):
         self._proj_label = QLabel("No trend data loaded.")
         _proj_lay.addWidget(self._proj_label)
         self._proj_table = QTableWidget(0, 3)
-        self._proj_table.setHorizontalHeaderLabels(
-            ["Run", "Coverage %", "Delta"]
-        )
+        self._proj_table.setHorizontalHeaderLabels(["Run", "Coverage %", "Delta"])
         self._proj_table.horizontalHeader().setStretchLastSection(True)
         _proj_lay.addWidget(self._proj_table, 1)
         self._tabs.addTab(self._proj_tab, "Closure")
@@ -286,9 +276,7 @@ class CoverageDashboardPanel(QWidget):
         _merge_lay.addLayout(_merge_bar)
         self._merge_files: list[Path] = []
         self._merge_table = QTableWidget(0, 3)
-        self._merge_table.setHorizontalHeaderLabels(
-            ["Run file", "Groups", "%"]
-        )
+        self._merge_table.setHorizontalHeaderLabels(["Run file", "Groups", "%"])
         self._merge_table.horizontalHeader().setStretchLastSection(True)
         _merge_lay.addWidget(self._merge_table, 1)
         self._merge_summary = QLabel("Merged: 0 groups, 0 bins")
@@ -342,11 +330,13 @@ class CoverageDashboardPanel(QWidget):
                 continue
             if hide_full and fc.percent >= 100.0:
                 continue
-            item = QTreeWidgetItem([
-                path,
-                f"{fc.covered_lines}/{fc.total_lines}",
-                f"{fc.percent:.1f}%",
-            ])
+            item = QTreeWidgetItem(
+                [
+                    path,
+                    f"{fc.covered_lines}/{fc.total_lines}",
+                    f"{fc.percent:.1f}%",
+                ]
+            )
             colour = QColor(self._pct_colour(fc.percent))
             item.setForeground(2, QBrush(colour))
             item.setData(0, Qt.ItemDataRole.UserRole, path)
@@ -356,9 +346,7 @@ class CoverageDashboardPanel(QWidget):
         self._heatmap.setRowCount(0)
         if self._report is None:
             return
-        items = sorted(
-            self._report.files.items(), key=lambda kv: kv[1].total_lines, reverse=True
-        )
+        items = sorted(self._report.files.items(), key=lambda kv: kv[1].total_lines, reverse=True)
         self._heatmap.setRowCount(len(items))
         for row, (path, fc) in enumerate(items):
             self._heatmap.setItem(row, 0, QTableWidgetItem(path))
@@ -400,9 +388,7 @@ class CoverageDashboardPanel(QWidget):
         lines: list[str]
         if src.exists():
             try:
-                lines = src.read_text(
-                    encoding="utf-8", errors="replace"
-                ).splitlines()
+                lines = src.read_text(encoding="utf-8", errors="replace").splitlines()
             except OSError:
                 lines = []
         else:
@@ -483,9 +469,7 @@ class CoverageDashboardPanel(QWidget):
         if self._report is None or self._compare is None:
             return
         lines: list[str] = []
-        lines.append(
-            f"Baseline: {self._compare.test_name}  →  Current: {self._report.test_name}"
-        )
+        lines.append(f"Baseline: {self._compare.test_name}  →  Current: {self._report.test_name}")
         lines.append("-" * 60)
         all_files = set(self._report.files) | set(self._compare.files)
         for f in sorted(all_files):
@@ -495,9 +479,7 @@ class CoverageDashboardPanel(QWidget):
             base_pct = base.percent if base else 0.0
             delta = cur_pct - base_pct
             sign = "+" if delta >= 0 else ""
-            lines.append(
-                f"{f:<60} {base_pct:>6.1f}% -> {cur_pct:>6.1f}%  ({sign}{delta:.1f})"
-            )
+            lines.append(f"{f:<60} {base_pct:>6.1f}% -> {cur_pct:>6.1f}%  ({sign}{delta:.1f})")
         self._diff_view.setPlainText("\n".join(lines))
 
     def _export(self, kind: str) -> None:
@@ -655,9 +637,7 @@ class CoverageDashboardPanel(QWidget):
         last_pct = 0.0
         for i, f in enumerate(self._merge_files):
             merger = FunctionalCoverageMerger()
-            summary = merger.merge_runs(
-                list(self._merge_files[: i + 1])
-            ).get("summary", {})
+            summary = merger.merge_runs(list(self._merge_files[: i + 1])).get("summary", {})
             pct = float(summary.get("percent", 0.0))
             delta = pct - last_pct
             row = self._proj_table.rowCount()
@@ -682,6 +662,5 @@ class CoverageDashboardPanel(QWidget):
                 )
         else:
             self._proj_label.setText(
-                f"Current coverage: {last_pct:.1f}% "
-                f"(need at least 2 runs to project)."
+                f"Current coverage: {last_pct:.1f}% (need at least 2 runs to project)."
             )

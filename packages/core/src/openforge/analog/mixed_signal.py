@@ -173,23 +173,22 @@ class MixedSignalSimulator:
         lines.append("`ifndef OPENFORGE_COSIM_DPI_SV")
         lines.append("`define OPENFORGE_COSIM_DPI_SV")
         lines.append("")
-        lines.append("import \"DPI-C\" function void of_cosim_init(input string work_dir);")
-        lines.append("import \"DPI-C\" function void of_cosim_step(input longint t_ns);")
-        lines.append("import \"DPI-C\" function void of_cosim_finish();")
+        lines.append('import "DPI-C" function void of_cosim_init(input string work_dir);')
+        lines.append('import "DPI-C" function void of_cosim_step(input longint t_ns);')
+        lines.append('import "DPI-C" function void of_cosim_finish();')
         lines.append("")
         for s in sig_objs:
             if s.direction == "d2a":
                 lines.append(
-                    f"import \"DPI-C\" function void of_cosim_set_{s.name}"
+                    f'import "DPI-C" function void of_cosim_set_{s.name}'
                     f"(input bit[{max(s.width - 1, 0)}:0] value);"
                 )
             else:
                 lines.append(
-                    f"import \"DPI-C\" function bit[{max(s.width - 1, 0)}:0] "
-                    f"of_cosim_get_{s.name}();"
+                    f'import "DPI-C" function bit[{max(s.width - 1, 0)}:0] of_cosim_get_{s.name}();'
                 )
         lines.append("")
-        lines.append("module openforge_cosim_bridge #(parameter STRING WORK_DIR = \"./\") (")
+        lines.append('module openforge_cosim_bridge #(parameter STRING WORK_DIR = "./") (')
         lines.append("    input  logic clk")
         lines.append(");")
         lines.append("    longint t_ns;")
@@ -217,9 +216,7 @@ class MixedSignalSimulator:
         srcs: list[str] = []
         for s in sig_objs:
             if s.direction == "d2a":
-                srcs.append(
-                    f"V_{s.name} {s.name} 0 PWL(0 {s.vlow})"
-                )
+                srcs.append(f"V_{s.name} {s.name} 0 PWL(0 {s.vlow})")
 
         ctl: list[str] = []
         ctl.append("* OpenForge mixed-signal control deck")

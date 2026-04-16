@@ -13,6 +13,7 @@ The checker operates on the Schematic dataclass from
 importable (headless), we use duck typing — any object exposing
 ``.components``, ``.wires``, ``.labels`` and ``.power_symbols`` works.
 """
+
 from __future__ import annotations
 
 from typing import Any, Literal
@@ -29,6 +30,7 @@ Severity = Literal["error", "warning", "info"]
 
 class ErcRule(BaseModel):
     """A single named ERC rule."""
+
     id: str
     description: str
     severity: Severity = "error"
@@ -37,6 +39,7 @@ class ErcRule(BaseModel):
 
 class ErcViolation(BaseModel):
     """A reported ERC violation."""
+
     rule: str
     severity: Severity = "error"
     component: str = ""
@@ -50,6 +53,7 @@ class ErcViolation(BaseModel):
 
 class ErcWaiver(BaseModel):
     """User-authored waiver: matches by (rule, component, pin)."""
+
     rule: str
     component: str = ""
     pin: str = ""
@@ -62,42 +66,26 @@ class ErcWaiver(BaseModel):
 
 
 BUILTIN_RULES: list[ErcRule] = [
-    ErcRule(id="E001",
-            description="Two output drivers on the same net",
-            severity="error"),
-    ErcRule(id="E002",
-            description="Power pin connected to non-power signal",
-            severity="error"),
-    ErcRule(id="E003",
-            description="Unconnected input pin",
-            severity="error"),
-    ErcRule(id="E004",
-            description="Unlabeled net with more than one connection",
-            severity="warning"),
-    ErcRule(id="E005",
-            description="Power net missing PWR_FLAG",
-            severity="warning"),
-    ErcRule(id="E006",
-            description="NC (no-connect) pin has a connection",
-            severity="error"),
-    ErcRule(id="E007",
-            description="Open-collector output without pullup",
-            severity="warning"),
-    ErcRule(id="E008",
-            description="Power pin on IC without nearby decoupling cap",
-            severity="warning"),
-    ErcRule(id="E009",
-            description="Unused power input pin",
-            severity="warning"),
-    ErcRule(id="E010",
-            description="Duplicate reference designator",
-            severity="error"),
-    ErcRule(id="E011",
-            description="Label on a dangling wire end",
-            severity="info"),
-    ErcRule(id="E012",
-            description="Hierarchical port without matching net inside sheet",
-            severity="warning"),
+    ErcRule(id="E001", description="Two output drivers on the same net", severity="error"),
+    ErcRule(id="E002", description="Power pin connected to non-power signal", severity="error"),
+    ErcRule(id="E003", description="Unconnected input pin", severity="error"),
+    ErcRule(
+        id="E004", description="Unlabeled net with more than one connection", severity="warning"
+    ),
+    ErcRule(id="E005", description="Power net missing PWR_FLAG", severity="warning"),
+    ErcRule(id="E006", description="NC (no-connect) pin has a connection", severity="error"),
+    ErcRule(id="E007", description="Open-collector output without pullup", severity="warning"),
+    ErcRule(
+        id="E008", description="Power pin on IC without nearby decoupling cap", severity="warning"
+    ),
+    ErcRule(id="E009", description="Unused power input pin", severity="warning"),
+    ErcRule(id="E010", description="Duplicate reference designator", severity="error"),
+    ErcRule(id="E011", description="Label on a dangling wire end", severity="info"),
+    ErcRule(
+        id="E012",
+        description="Hierarchical port without matching net inside sheet",
+        severity="warning",
+    ),
 ]
 
 
@@ -108,8 +96,22 @@ BUILTIN_RULES: list[ErcRule] = [
 
 # Power net names we recognise as "power" for various rules.
 _POWER_NET_PREFIXES = (
-    "VCC", "VDD", "+", "-", "GND", "VSS", "VEE", "AVDD", "DVDD",
-    "VBUS", "V33", "V3V3", "V5V", "V1V8", "V1V2", "VREF",
+    "VCC",
+    "VDD",
+    "+",
+    "-",
+    "GND",
+    "VSS",
+    "VEE",
+    "AVDD",
+    "DVDD",
+    "VBUS",
+    "V33",
+    "V3V3",
+    "V5V",
+    "V1V8",
+    "V1V2",
+    "VREF",
 )
 
 
@@ -130,9 +132,12 @@ class ErcChecker:
             print(v)
     """
 
-    def __init__(self, schematic: Any,
-                 rules: list[ErcRule] | None = None,
-                 waivers: list[ErcWaiver] | None = None) -> None:
+    def __init__(
+        self,
+        schematic: Any,
+        rules: list[ErcRule] | None = None,
+        waivers: list[ErcWaiver] | None = None,
+    ) -> None:
         self.schematic = schematic
         self.rules = {r.id: r for r in (rules or BUILTIN_RULES)}
         self.waivers = waivers or []
@@ -159,15 +164,28 @@ class ErcChecker:
             return True
         return False
 
-    def _emit(self, rule: str, message: str, *,
-              component: str = "", pin: str = "", net: str = "",
-              x: float = 0.0, y: float = 0.0) -> None:
+    def _emit(
+        self,
+        rule: str,
+        message: str,
+        *,
+        component: str = "",
+        pin: str = "",
+        net: str = "",
+        x: float = 0.0,
+        y: float = 0.0,
+    ) -> None:
         if not self._rule_enabled(rule):
             return
         v = ErcViolation(
-            rule=rule, severity=self._sev(rule),
-            component=component, pin=pin, net=net,
-            message=message, x=x, y=y,
+            rule=rule,
+            severity=self._sev(rule),
+            component=component,
+            pin=pin,
+            net=net,
+            message=message,
+            x=x,
+            y=y,
             waived=self._waived(rule, component, pin),
         )
         self.violations.append(v)
@@ -193,17 +211,18 @@ class ErcChecker:
             # naive: if more than one component on net and net name suggests
             # it is output-driven, flag potential multi-driver.
             if len(conns) >= 2 and net_name.upper().startswith("OUT"):
-                self._emit("E001",
-                           f"Net '{net_name}' has {len(conns)} drivers",
-                           net=net_name)
+                self._emit("E001", f"Net '{net_name}' has {len(conns)} drivers", net=net_name)
             # E002 heuristic: signal-named pin on a power net
             if _is_power_net(net_name):
                 for refdes, pin in conns:
                     if pin and pin.lower().startswith("in"):
-                        self._emit("E002",
-                                   f"Signal pin {refdes}.{pin} on power net "
-                                   f"'{net_name}'",
-                                   component=refdes, pin=pin, net=net_name)
+                        self._emit(
+                            "E002",
+                            f"Signal pin {refdes}.{pin} on power net '{net_name}'",
+                            component=refdes,
+                            pin=pin,
+                            net=net_name,
+                        )
 
     def check_power_flags(self) -> None:
         """E005: every power net must have at least one PWR_FLAG / power sym."""
@@ -212,9 +231,7 @@ class ErcChecker:
         nets = self._nets()
         for net_name in nets:
             if _is_power_net(net_name) and net_name not in flagged:
-                self._emit("E005",
-                           f"Power net '{net_name}' has no PWR_FLAG",
-                           net=net_name)
+                self._emit("E005", f"Power net '{net_name}' has no PWR_FLAG", net=net_name)
 
     def check_no_connects(self) -> None:
         """E006: NC pins must have explicit no-connect markers."""
@@ -230,9 +247,12 @@ class ErcChecker:
                 labels = getattr(self.schematic, "labels", []) or []
                 for lbl in labels:
                     if getattr(lbl, "text", "") == pin:
-                        self._emit("E006",
-                                   f"{c.refdes}.{pin} marked NC but wired",
-                                   component=c.refdes, pin=pin)
+                        self._emit(
+                            "E006",
+                            f"{c.refdes}.{pin} marked NC but wired",
+                            component=c.refdes,
+                            pin=pin,
+                        )
 
     def check_unused_power_inputs(self) -> None:
         """E009: power input pins that are unconnected."""
@@ -242,24 +262,25 @@ class ErcChecker:
         for c in comps:
             # Heuristic: a component with value containing 'VDD' unreferenced
             if c.refdes not in connected_refs and "VCC" in str(c.value).upper():
-                self._emit("E009",
-                           f"{c.refdes} ({c.value}) has unconnected power input",
-                           component=c.refdes, pin="VCC")
+                self._emit(
+                    "E009",
+                    f"{c.refdes} ({c.value}) has unconnected power input",
+                    component=c.refdes,
+                    pin="VCC",
+                )
 
     def check_missing_pullups(self) -> None:
         """E007: open-collector / open-drain outputs without pullup."""
         comps = getattr(self.schematic, "components", []) or []
         # Look for components declared as open-drain in their fields
-        od_refs = [c for c in comps
-                   if "open_drain" in (getattr(c, "fields", {}) or {})]
+        od_refs = [c for c in comps if "open_drain" in (getattr(c, "fields", {}) or {})]
         # If there are od outputs but no resistor tied to VCC, flag.
-        has_pullup = any(c.symbol_name == "R" and "k" in str(c.value).lower()
-                         for c in comps)
+        has_pullup = any(c.symbol_name == "R" and "k" in str(c.value).lower() for c in comps)
         for c in od_refs:
             if not has_pullup:
-                self._emit("E007",
-                           f"{c.refdes} open-drain output with no pullup",
-                           component=c.refdes)
+                self._emit(
+                    "E007", f"{c.refdes} open-drain output with no pullup", component=c.refdes
+                )
 
     def check_missing_decoupling(self) -> None:
         """E008: IC power pins without nearby decoupling caps (distance<500mil)."""
@@ -267,12 +288,13 @@ class ErcChecker:
         ics = [c for c in comps if c.refdes.startswith("U")]
         caps = [c for c in comps if c.refdes.startswith("C")]
         for ic in ics:
-            nearby = [c for c in caps
-                      if abs(c.x - ic.x) < 500 and abs(c.y - ic.y) < 500]
+            nearby = [c for c in caps if abs(c.x - ic.x) < 500 and abs(c.y - ic.y) < 500]
             if not nearby:
-                self._emit("E008",
-                           f"IC {ic.refdes} has no decoupling cap within 500mil",
-                           component=ic.refdes)
+                self._emit(
+                    "E008",
+                    f"IC {ic.refdes} has no decoupling cap within 500mil",
+                    component=ic.refdes,
+                )
 
     def check_duplicate_refdes(self) -> None:
         """E010: duplicated refdes across components."""
@@ -282,17 +304,14 @@ class ErcChecker:
             seen[c.refdes] = seen.get(c.refdes, 0) + 1
         for ref, n in seen.items():
             if n > 1:
-                self._emit("E010", f"Refdes '{ref}' used {n} times",
-                           component=ref)
+                self._emit("E010", f"Refdes '{ref}' used {n} times", component=ref)
 
     def check_unlabeled_multi_connect(self) -> None:
         """E004: nets with >1 connection but no label."""
         nets = self._nets()
         for name, conns in nets.items():
             if len(conns) >= 2 and name.startswith("N$"):
-                self._emit("E004",
-                           f"Unlabeled net with {len(conns)} connections",
-                           net=name)
+                self._emit("E004", f"Unlabeled net with {len(conns)} connections", net=name)
 
     def check_dangling_labels(self) -> None:
         """E011: labels that don't sit on any wire endpoint."""
@@ -304,9 +323,9 @@ class ErcChecker:
             wire_points.add((round(w.x2), round(w.y2)))
         for lbl in labels:
             if (round(lbl.x), round(lbl.y)) not in wire_points:
-                self._emit("E011",
-                           f"Label '{lbl.text}' not on any wire",
-                           net=lbl.text, x=lbl.x, y=lbl.y)
+                self._emit(
+                    "E011", f"Label '{lbl.text}' not on any wire", net=lbl.text, x=lbl.x, y=lbl.y
+                )
 
     def check_hierarchical_ports(self) -> None:
         """E012: ports on sub-sheets without matching net inside."""
@@ -316,10 +335,11 @@ class ErcChecker:
             for port in getattr(sh, "ports", []) or []:
                 pname = getattr(port, "net_name", "") or getattr(port, "name", "")
                 if pname and pname not in nets:
-                    self._emit("E012",
-                               f"Sheet '{sh.name}' port '{pname}' has no "
-                               f"matching net inside",
-                               net=pname)
+                    self._emit(
+                        "E012",
+                        f"Sheet '{sh.name}' port '{pname}' has no matching net inside",
+                        net=pname,
+                    )
 
     # ------------------------------------------------------------------
     # Driver
@@ -368,8 +388,7 @@ class ErcChecker:
     def export_html(self) -> str:
         rows = []
         for v in self.violations:
-            color = {"error": "#f38ba8", "warning": "#f9e2af",
-                     "info": "#89b4fa"}[v.severity]
+            color = {"error": "#f38ba8", "warning": "#f9e2af", "info": "#89b4fa"}[v.severity]
             rows.append(
                 f"<tr><td style='color:{color}'>{v.severity.upper()}</td>"
                 f"<td>{v.rule}</td><td>{v.component}</td>"
@@ -386,5 +405,6 @@ class ErcChecker:
             "<table><thead><tr><th>Severity</th><th>Rule</th>"
             "<th>Component</th><th>Pin</th><th>Net</th>"
             "<th>Message</th></tr></thead><tbody>"
-            + "".join(rows) + "</tbody></table></body></html>"
+            + "".join(rows)
+            + "</tbody></table></body></html>"
         )

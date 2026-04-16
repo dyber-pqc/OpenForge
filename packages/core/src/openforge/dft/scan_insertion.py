@@ -3,6 +3,7 @@
 Tessent equivalent. Replaces functional FFs with scan FFs and
 stitches them into a shift register accessible via test ports.
 """
+
 from __future__ import annotations
 
 import re
@@ -167,18 +168,15 @@ class ScanInserter:
         lines.append("memory -nomap")
         lines.append("techmap")
         lines.append("opt")
-        lines.append(
-            "dfflibmap -liberty $::env(LIB_TYPICAL) "
-            f"-scan {config.scan_cell_n}"
-        )
+        lines.append(f"dfflibmap -liberty $::env(LIB_TYPICAL) -scan {config.scan_cell_n}")
         lines.append("opt_clean")
         lines.append(f"# Stitch into {len(chains)} chain(s)")
         for i, group in enumerate(chains):
             lines.append(f"# chain_{i} length={len(group)}")
         lines.append(
-            f'scan_chain -clock {config.test_clock} '
-            f'-scan_enable {config.scan_enable} '
-            f'-chain_count {max(1, config.num_chains)}'
+            f"scan_chain -clock {config.test_clock} "
+            f"-scan_enable {config.scan_enable} "
+            f"-chain_count {max(1, config.num_chains)}"
         )
         lines.append("clean")
         lines.append("check")
@@ -188,9 +186,7 @@ class ScanInserter:
 
     # ---------------- helpers ----------------
 
-    def _discover_flip_flops(
-        self, sources: list[Path], top_module: str
-    ) -> list[str]:
+    def _discover_flip_flops(self, sources: list[Path], top_module: str) -> list[str]:
         """Heuristic: scan source files for always_ff or always @(posedge ...)."""
         ffs: list[str] = []
         ff_pattern = re.compile(
@@ -214,9 +210,7 @@ class ScanInserter:
             ffs = [f"{top_module}_ff{i}" for i in range(8)]
         return ffs
 
-    def balance_chains(
-        self, ffs: list[str], num_chains: int
-    ) -> list[list[str]]:
+    def balance_chains(self, ffs: list[str], num_chains: int) -> list[list[str]]:
         """Distribute FFs evenly across N chains using round-robin."""
         num_chains = max(1, num_chains)
         chains: list[list[str]] = [[] for _ in range(num_chains)]
@@ -237,7 +231,6 @@ class ScanInserter:
         lines = [result.summary(), "=" * 60]
         for c in result.chains:
             lines.append(
-                f"  {c.name:<10s} length={c.length:<5d} "
-                f"in={c.scan_in_port} out={c.scan_out_port}"
+                f"  {c.name:<10s} length={c.length:<5d} in={c.scan_in_port} out={c.scan_out_port}"
             )
         return "\n".join(lines)

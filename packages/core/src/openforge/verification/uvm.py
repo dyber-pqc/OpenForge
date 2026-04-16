@@ -195,9 +195,7 @@ class UvmGenerator:
         lines.append("    }")
         lines.append("")
         lines.append("    function string convert2string();")
-        parts = " ".join(
-            f"{p.name}=0x%0h" for p in self.ports if p.name not in ("clk", "clock")
-        )
+        parts = " ".join(f"{p.name}=0x%0h" for p in self.ports if p.name not in ("clk", "clock"))
         names = ", ".join(p.name for p in self.ports if p.name not in ("clk", "clock"))
         lines.append(f'        return $sformatf("{parts}", {names});')
         lines.append("    endfunction")
@@ -232,11 +230,15 @@ class UvmGenerator:
         lines.append("")
         lines.append("    virtual task body();")
         lines.append(f"        {item} tr;")
-        lines.append('        `uvm_info(get_type_name(), $sformatf("Starting %0d transactions", num_items), UVM_LOW)')
+        lines.append(
+            '        `uvm_info(get_type_name(), $sformatf("Starting %0d transactions", num_items), UVM_LOW)'
+        )
         lines.append("        repeat (num_items) begin")
         lines.append(f'            tr = {item}::type_id::create("tr");')
         lines.append("            start_item(tr);")
-        lines.append('            if (!tr.randomize()) `uvm_error(get_type_name(), "Randomize failed")')
+        lines.append(
+            '            if (!tr.randomize()) `uvm_error(get_type_name(), "Randomize failed")'
+        )
         lines.append("            finish_item(tr);")
         lines.append("        end")
         lines.append("    endtask")
@@ -341,7 +343,9 @@ class UvmGenerator:
                 continue
             lines.append(f"            tr.{p.name} = vif.mon_cb.{p.name};")
         lines.append("            ap.write(tr);")
-        lines.append('            `uvm_info(get_type_name(), {"MON ", tr.convert2string()}, UVM_HIGH)')
+        lines.append(
+            '            `uvm_info(get_type_name(), {"MON ", tr.convert2string()}, UVM_HIGH)'
+        )
         lines.append("        end")
         lines.append("    endtask")
         lines.append(f"endclass : {cls}")
@@ -386,7 +390,9 @@ class UvmGenerator:
         lines.append("")
         lines.append("    function void report_phase(uvm_phase phase);")
         lines.append("        `uvm_info(get_type_name(),")
-        lines.append('            $sformatf("Scoreboard: checked=%0d errors=%0d", num_checked, num_errors),')
+        lines.append(
+            '            $sformatf("Scoreboard: checked=%0d errors=%0d", num_checked, num_errors),'
+        )
         lines.append("            UVM_LOW)")
         lines.append("    endfunction")
         lines.append(f"endclass : {cls}")
@@ -428,7 +434,9 @@ class UvmGenerator:
         lines.append(f'        monitor = {mon}::type_id::create("monitor", this);')
         lines.append("        if (get_is_active() == UVM_ACTIVE) begin")
         lines.append(f'            driver = {drv}::type_id::create("driver", this);')
-        lines.append(f'            sequencer = uvm_sequencer#({item})::type_id::create("sequencer", this);')
+        lines.append(
+            f'            sequencer = uvm_sequencer#({item})::type_id::create("sequencer", this);'
+        )
         lines.append("        end")
         lines.append("    endfunction")
         lines.append("")

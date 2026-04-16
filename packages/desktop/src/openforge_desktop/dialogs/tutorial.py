@@ -139,11 +139,14 @@ def _first_project_steps() -> list[TutorialStep]:
 
 def _rtl_to_gds_steps() -> list[TutorialStep]:
     return [
-        TutorialStep("Open the simple-counter example",
-                     "From the welcome page, click the **Simple Counter** card to "
-                     "load the example project."),
+        TutorialStep(
+            "Open the simple-counter example",
+            "From the welcome page, click the **Simple Counter** card to load the example project.",
+        ),
         TutorialStep("Inspect the RTL", "Open `src/counter.v` to see the 8-bit counter."),
-        TutorialStep("Run synthesis", "Press **F7** to run Yosys.", target_widget="ToolbarSynthesisButton"),
+        TutorialStep(
+            "Run synthesis", "Press **F7** to run Yosys.", target_widget="ToolbarSynthesisButton"
+        ),
         TutorialStep("Open the floorplan", "Switch to the **Floorplan** tab."),
         TutorialStep("Run place & route", "Press **F8** to run OpenROAD."),
         TutorialStep("Inspect congestion", "Use the heatmap toggle in the toolbar."),
@@ -343,9 +346,7 @@ class TutorialOverlay(QWidget):
             pen.setWidth(3)
             painter.setPen(pen)
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawRoundedRect(
-                self._target_rect.adjusted(-6, -6, 6, 6), 8, 8
-            )
+            painter.drawRoundedRect(self._target_rect.adjusted(-6, -6, 6, 6), 8, 8)
 
 
 # ---------------------------------------------------------------------------
@@ -603,6 +604,7 @@ from PySide6.QtWidgets import (
 def _progress_file() -> _Path:
     import os as _os
     import sys as _sys
+
     if _sys.platform.startswith("win") and _os.environ.get("APPDATA"):
         return _Path(_os.environ["APPDATA"]) / "OpenForge" / "tutorial_progress.json"
     return _Path.home() / ".openforge" / "tutorial_progress.json"

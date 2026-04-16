@@ -6,6 +6,7 @@ including net mismatches (missing/extra/topology), device mismatches
 (wrong type or parameters), and commonly swapped pin patterns
 (e.g. NMOS source/drain).
 """
+
 from __future__ import annotations
 
 import re
@@ -46,9 +47,7 @@ class DeviceMismatch:
     parameter_diffs: dict[str, tuple[str, str]] = field(default_factory=dict)
 
     def short(self) -> str:
-        diffs = ", ".join(
-            f"{k}={lv}/{sv}" for k, (lv, sv) in self.parameter_diffs.items()
-        )
+        diffs = ", ".join(f"{k}={lv}/{sv}" for k, (lv, sv) in self.parameter_diffs.items())
         return (
             f"DEV {self.instance}: layout={self.layout_type} "
             f"schematic={self.schematic_type} {diffs}"
@@ -70,11 +69,7 @@ class LvsResult:
 
     @property
     def total_mismatches(self) -> int:
-        return (
-            len(self.net_mismatches)
-            + len(self.device_mismatches)
-            + len(self.swapped_pins)
-        )
+        return len(self.net_mismatches) + len(self.device_mismatches) + len(self.swapped_pins)
 
     def summary(self) -> str:
         return (
@@ -118,9 +113,7 @@ class SignoffLvsRunner:
         ]
         start = time.time()
         try:
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=3600, check=False
-            )
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=3600, check=False)
             log = proc.stdout + "\n" + proc.stderr
         except FileNotFoundError:
             log = "netgen not found in PATH"
@@ -274,9 +267,7 @@ class SignoffLvsRunner:
         )
         result.device_mismatches.append(dm)
 
-    def find_swapped_pins(
-        self, device_mismatches: list[DeviceMismatch]
-    ) -> list[tuple[str, str]]:
+    def find_swapped_pins(self, device_mismatches: list[DeviceMismatch]) -> list[tuple[str, str]]:
         """Detect commonly swapped pins (e.g. NMOS source/drain)."""
         swapped: list[tuple[str, str]] = []
         for dm in device_mismatches:

@@ -41,8 +41,7 @@ _HEADERS = ["URL", "Name", "Capabilities", "Load", "Status", "Last Seen"]
 class WorkerStatusPanel(QWidget):
     """Table of registered remote workers."""
 
-    def __init__(self, pool: WorkerPool | None = None,
-                 parent: QWidget | None = None) -> None:
+    def __init__(self, pool: WorkerPool | None = None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("WorkerStatusPanel")
         self.setStyleSheet(
@@ -113,7 +112,9 @@ class WorkerStatusPanel(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem(", ".join(w.capabilities)))
             self.table.setItem(row, 3, QTableWidgetItem(str(w.current_load)))
             self.table.setItem(row, 4, QTableWidgetItem(w.status))
-            self.table.setItem(row, 5, QTableWidgetItem(f"{w.last_seen:.0f}" if w.last_seen else ""))
+            self.table.setItem(
+                row, 5, QTableWidgetItem(f"{w.last_seen:.0f}" if w.last_seen else "")
+            )
 
     def _selected_worker(self):  # type: ignore[no-untyped-def]
         rows = self.table.selectionModel().selectedRows() if self.table.selectionModel() else []
@@ -153,7 +154,9 @@ class WorkerStatusPanel(QWidget):
             return
         name, _ok = QInputDialog.getText(self, "Add Worker", "Name:", text=url)
         self.pool.workers.append(
-            WorkerNode(url=url, name=(name or url), capabilities=[], status="unknown", current_load=0)
+            WorkerNode(
+                url=url, name=(name or url), capabilities=[], status="unknown", current_load=0
+            )
         )
         self._refresh_table()
 

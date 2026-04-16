@@ -16,6 +16,7 @@ router = APIRouter()
 # Models
 # ---------------------------------------------------------------------------
 
+
 class VerificationEngine(StrEnum):
     sim = "sim"
     formal = "formal"
@@ -84,6 +85,7 @@ _jobs: dict[UUID, VerifyJobResults] = {}
 # Routes
 # ---------------------------------------------------------------------------
 
+
 @router.post("/", response_model=VerifyJobSummary, status_code=status.HTTP_202_ACCEPTED)
 async def start_verification(body: VerifyRequest) -> VerifyJobSummary:
     """Submit a verification job.
@@ -94,10 +96,7 @@ async def start_verification(body: VerifyRequest) -> VerifyJobSummary:
     now = datetime.utcnow()
 
     # Build placeholder results per engine
-    engine_results = [
-        EngineResult(engine=eng, status=JobStatus.queued)
-        for eng in body.engines
-    ]
+    engine_results = [EngineResult(engine=eng, status=JobStatus.queued) for eng in body.engines]
 
     job = VerifyJobResults(
         job_id=job_id,

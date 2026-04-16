@@ -90,9 +90,7 @@ class EcoScript(BaseModel):
             if cmd.notes:
                 lines.append(f"# [{idx}] {cmd.notes}")
             if cmd.kind is EcoCommandKind.CHANGE_CELL:
-                lines.append(
-                    f"replace_cell {{{cmd.target_inst}}} {cmd.new_cell}"
-                )
+                lines.append(f"replace_cell {{{cmd.target_inst}}} {cmd.new_cell}")
             elif cmd.kind is EcoCommandKind.ADD_BUFFER:
                 loc = cmd.location or (0.0, 0.0)
                 buf = cmd.buffer_cell or cmd.new_cell or "BUF_X2"
@@ -106,26 +104,16 @@ class EcoScript(BaseModel):
                     f"repair_design -max_utilization 100 "
                     f"-buffer_gain 8 ;# repeater on net {cmd.net}"
                 )
-                lines.append(
-                    f"insert_buffer -net {{{cmd.net}}} -master {buf}"
-                )
+                lines.append(f"insert_buffer -net {{{cmd.net}}} -master {buf}")
             elif cmd.kind is EcoCommandKind.DELETE_INSTANCE:
                 lines.append(f"delete_instance {{{cmd.target_inst}}}")
             elif cmd.kind is EcoCommandKind.CONNECT:
-                lines.append(
-                    f"connect_pin -inst {{{cmd.target_inst}}} -net {{{cmd.net}}}"
-                )
+                lines.append(f"connect_pin -inst {{{cmd.target_inst}}} -net {{{cmd.net}}}")
             elif cmd.kind is EcoCommandKind.DISCONNECT:
-                lines.append(
-                    f"disconnect_pin -inst {{{cmd.target_inst}}} -net {{{cmd.net}}}"
-                )
+                lines.append(f"disconnect_pin -inst {{{cmd.target_inst}}} -net {{{cmd.net}}}")
             elif cmd.kind is EcoCommandKind.REASSIGN:
-                lines.append(
-                    f"disconnect_pin -inst {{{cmd.target_inst}}}"
-                )
-                lines.append(
-                    f"connect_pin -inst {{{cmd.target_inst}}} -net {{{cmd.net}}}"
-                )
+                lines.append(f"disconnect_pin -inst {{{cmd.target_inst}}}")
+                lines.append(f"connect_pin -inst {{{cmd.target_inst}}} -net {{{cmd.net}}}")
             elif cmd.kind is EcoCommandKind.FREEZE_NET:
                 lines.append(f"set_dont_touch {{{cmd.net}}}")
             elif cmd.kind is EcoCommandKind.UNFREEZE_NET:
@@ -148,38 +136,25 @@ class EcoScript(BaseModel):
             if cmd.notes:
                 lines.append(f"# [{idx}] {cmd.notes}")
             if cmd.kind is EcoCommandKind.CHANGE_CELL:
-                lines.append(
-                    f"ecoChangeCell -inst {cmd.target_inst} -cell {cmd.new_cell}"
-                )
+                lines.append(f"ecoChangeCell -inst {cmd.target_inst} -cell {cmd.new_cell}")
             elif cmd.kind is EcoCommandKind.ADD_BUFFER:
                 loc = cmd.location or (0.0, 0.0)
                 buf = cmd.buffer_cell or cmd.new_cell or "BUFX2"
                 lines.append(
-                    f"ecoAddRepeater -net {cmd.net} -cell {buf} "
-                    f"-loc {{{loc[0]:.3f} {loc[1]:.3f}}}"
+                    f"ecoAddRepeater -net {cmd.net} -cell {buf} -loc {{{loc[0]:.3f} {loc[1]:.3f}}}"
                 )
             elif cmd.kind is EcoCommandKind.ADD_REPEATER:
                 buf = cmd.buffer_cell or cmd.new_cell or "BUFX4"
-                lines.append(
-                    f"ecoAddRepeater -net {cmd.net} -cell {buf} -stages 2"
-                )
+                lines.append(f"ecoAddRepeater -net {cmd.net} -cell {buf} -stages 2")
             elif cmd.kind is EcoCommandKind.DELETE_INSTANCE:
                 lines.append(f"ecoDeleteRepeater -inst {cmd.target_inst}")
             elif cmd.kind is EcoCommandKind.CONNECT:
-                lines.append(
-                    f"attachTerm {cmd.target_inst} {cmd.net}"
-                )
+                lines.append(f"attachTerm {cmd.target_inst} {cmd.net}")
             elif cmd.kind is EcoCommandKind.DISCONNECT:
-                lines.append(
-                    f"detachTerm {cmd.target_inst} {cmd.net}"
-                )
+                lines.append(f"detachTerm {cmd.target_inst} {cmd.net}")
             elif cmd.kind is EcoCommandKind.REASSIGN:
-                lines.append(
-                    f"detachTerm {cmd.target_inst} ;# reassign"
-                )
-                lines.append(
-                    f"attachTerm {cmd.target_inst} {cmd.net}"
-                )
+                lines.append(f"detachTerm {cmd.target_inst} ;# reassign")
+                lines.append(f"attachTerm {cmd.target_inst} {cmd.net}")
             elif cmd.kind is EcoCommandKind.FREEZE_NET:
                 lines.append(f"setDontTouch {cmd.net} true")
             elif cmd.kind is EcoCommandKind.UNFREEZE_NET:
@@ -263,9 +238,7 @@ class EcoEngine:
         commands: list[EcoCommand] = []
         touched_insts: set[str] = set()
 
-        paths = [
-            p for p in sta_report.setup_paths() if p.slack_ns < slack_threshold
-        ]
+        paths = [p for p in sta_report.setup_paths() if p.slack_ns < slack_threshold]
         paths.sort(key=lambda p: p.slack_ns)
 
         for path in paths:
@@ -300,10 +273,7 @@ class EcoEngine:
                 touched_insts.add(inst)
 
             # If we still need more help, insert a buffer on the worst net
-            if (
-                path.slack_ns < slack_threshold * 2
-                and len(commands) < max_changes
-            ):
+            if path.slack_ns < slack_threshold * 2 and len(commands) < max_changes:
                 pivot = worst[0] if worst else None
                 if pivot and pivot.cell_instance:
                     commands.append(
@@ -313,10 +283,7 @@ class EcoEngine:
                             buffer_cell=self.default_buffer,
                             location=None,
                             slack_before_ns=path.slack_ns,
-                            notes=(
-                                f"setup fix: insert buffer after "
-                                f"{pivot.cell_instance}"
-                            ),
+                            notes=(f"setup fix: insert buffer after {pivot.cell_instance}"),
                         )
                     )
         return EcoScript(
@@ -339,9 +306,7 @@ class EcoEngine:
     ) -> EcoScript:
         """Insert buffers on violating hold paths to add data delay."""
         commands: list[EcoCommand] = []
-        paths = [
-            p for p in sta_report.hold_paths() if p.slack_ns < slack_threshold
-        ]
+        paths = [p for p in sta_report.hold_paths() if p.slack_ns < slack_threshold]
         paths.sort(key=lambda p: p.slack_ns)
 
         for path in paths:
@@ -364,10 +329,7 @@ class EcoEngine:
                         net=anchor,
                         buffer_cell=self.default_buffer,
                         slack_before_ns=path.slack_ns,
-                        notes=(
-                            f"hold fix: delay buffer on {anchor} "
-                            f"({violation_ns:.3f} ns)"
-                        ),
+                        notes=(f"hold fix: delay buffer on {anchor} ({violation_ns:.3f} ns)"),
                     )
                 )
         return EcoScript(
@@ -431,9 +393,7 @@ class EcoEngine:
                 if cmd.net:
                     nets_rerouted.add(cmd.net)
         # Rough runtime model: 0.5s baseline + 0.2s per change
-        estimated_runtime = 0.5 + 0.2 * (
-            cells_changed + added_cells + deleted + len(nets_rerouted)
-        )
+        estimated_runtime = 0.5 + 0.2 * (cells_changed + added_cells + deleted + len(nets_rerouted))
         return {
             "cells_changed": cells_changed,
             "cells_added": added_cells,
@@ -448,9 +408,7 @@ class EcoEngine:
 
     def _worst_data_stages(self, path: TimingPath, k: int = 3) -> list:
         stages = [
-            s
-            for s in path.data_path
-            if s.cell_type and not s.is_register and not s.is_clock_edge
+            s for s in path.data_path if s.cell_type and not s.is_register and not s.is_clock_edge
         ]
         stages.sort(key=lambda s: s.delay_ns, reverse=True)
         return stages[:k]
@@ -527,7 +485,7 @@ class SpareCellAllocator:
         total = max(total, 0)
 
         spare_lines: list[str] = []
-        grid = max(1, int(total ** 0.5) or 1)
+        grid = max(1, int(total**0.5) or 1)
         step_x = max(1.0, width_um / (grid + 1))
         step_y = max(1.0, height_um / (grid + 1))
         idx = 0
@@ -538,9 +496,7 @@ class SpareCellAllocator:
                 cell = self.families[idx % len(self.families)]
                 x_dbu = int((gx + 1) * step_x * units)
                 y_dbu = int((gy + 1) * step_y * units)
-                spare_lines.append(
-                    f"    - SPARE_{idx} {cell} + PLACED ( {x_dbu} {y_dbu} ) N ;"
-                )
+                spare_lines.append(f"    - SPARE_{idx} {cell} + PLACED ( {x_dbu} {y_dbu} ) N ;")
                 idx += 1
 
         # Inject spares into the COMPONENTS section. If there is none,
@@ -551,15 +507,11 @@ class SpareCellAllocator:
         if mcomp:
             existing = int(mcomp.group(2))
             new_count = existing + idx
-            text = comp_re.sub(
-                f"\\g<1>{new_count}\\g<3>", text, count=1
-            )
+            text = comp_re.sub(f"\\g<1>{new_count}\\g<3>", text, count=1)
             end_re = re.compile(r"(END\s+COMPONENTS)")
             text = end_re.sub(injection + "\n\\1", text, count=1)
         else:
-            insertion = (
-                f"\nCOMPONENTS {idx} ;\n{injection}\nEND COMPONENTS\n"
-            )
+            insertion = f"\nCOMPONENTS {idx} ;\n{injection}\nEND COMPONENTS\n"
             text = text.replace("END DESIGN", insertion + "END DESIGN")
 
         Path(output).parent.mkdir(parents=True, exist_ok=True)

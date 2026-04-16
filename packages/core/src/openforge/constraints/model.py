@@ -129,24 +129,16 @@ class ConstraintSet(BaseModel):
             elif c.kind == ConstraintKind.PIN_LOCATION:
                 # set_property PACKAGE_PIN H16 [get_ports clk]
                 port = c.target or c.name
-                lines.append(
-                    f"set_property PACKAGE_PIN {c.value} [get_ports {{{port}}}]"
-                )
+                lines.append(f"set_property PACKAGE_PIN {c.value} [get_ports {{{port}}}]")
             elif c.kind == ConstraintKind.IO_STANDARD:
                 port = c.target or c.name
-                lines.append(
-                    f"set_property IOSTANDARD {c.value} [get_ports {{{port}}}]"
-                )
+                lines.append(f"set_property IOSTANDARD {c.value} [get_ports {{{port}}}]")
             elif c.kind == ConstraintKind.DRIVE_STRENGTH:
                 port = c.target or c.name
-                lines.append(
-                    f"set_property DRIVE {c.value} [get_ports {{{port}}}]"
-                )
+                lines.append(f"set_property DRIVE {c.value} [get_ports {{{port}}}]")
             elif c.kind == ConstraintKind.SLEW_RATE:
                 port = c.target or c.name
-                lines.append(
-                    f"set_property SLEW {c.value} [get_ports {{{port}}}]"
-                )
+                lines.append(f"set_property SLEW {c.value} [get_ports {{{port}}}]")
             elif c.kind == ConstraintKind.PULL:
                 port = c.target or c.name
                 # Vivado: PULLUP / PULLDOWN / PULLNONE / KEEPER -> via set_property
@@ -160,9 +152,7 @@ class ConstraintSet(BaseModel):
                 else:
                     prop = "PULLUP FALSE"
                 key, val = prop.split(" ", 1)
-                lines.append(
-                    f"set_property {key} {val} [get_ports {{{port}}}]"
-                )
+                lines.append(f"set_property {key} {val} [get_ports {{{port}}}]")
         return "\n".join(lines) + "\n"
 
     @classmethod
@@ -189,9 +179,7 @@ class ConstraintSet(BaseModel):
                             val = "KEEPER"
                         else:
                             continue
-                    cs.constraints.append(
-                        Constraint(kind=kind, target=port, value=val)
-                    )
+                    cs.constraints.append(Constraint(kind=kind, target=port, value=val))
                     continue
             # Fallback to SDC
             c = _parse_sdc_line(raw)
@@ -242,9 +230,7 @@ class ConstraintSet(BaseModel):
                     tgt = c.attrs.get("port") or c.target or c.name
                     # Strip [get_ports ...] if present
                     tgt = _strip_get_ports(tgt)
-                    lines.append(
-                        f'FREQUENCY PORT "{tgt}" {freq:.6f} MHz;'
-                    )
+                    lines.append(f'FREQUENCY PORT "{tgt}" {freq:.6f} MHz;')
         for port, props in iobuf.items():
             parts = " ".join(f"{k}={v}" for k, v in props.items())
             lines.append(f'IOBUF PORT "{port}" {parts};')
@@ -257,9 +243,7 @@ class ConstraintSet(BaseModel):
             r'^\s*LOCATE\s+COMP\s+"([^"]+)"\s+SITE\s+"([^"]+)"\s*;',
             re.IGNORECASE,
         )
-        iobuf_re = re.compile(
-            r'^\s*IOBUF\s+PORT\s+"([^"]+)"\s+(.*?);', re.IGNORECASE
-        )
+        iobuf_re = re.compile(r'^\s*IOBUF\s+PORT\s+"([^"]+)"\s+(.*?);', re.IGNORECASE)
         freq_re = re.compile(
             r'^\s*FREQUENCY\s+PORT\s+"([^"]+)"\s+([\d.]+)\s*MHz\s*;',
             re.IGNORECASE,
@@ -459,12 +443,8 @@ class ConstraintSet(BaseModel):
     @classmethod
     def from_cst(cls, text: str, name: str = "default") -> ConstraintSet:
         cs = cls(name=name)
-        io_loc_re = re.compile(
-            r'^\s*IO_LOC\s+"([^"]+)"\s+([A-Za-z0-9_/]+)\s*;', re.IGNORECASE
-        )
-        io_port_re = re.compile(
-            r'^\s*IO_PORT\s+"([^"]+)"\s+(.*?);', re.IGNORECASE
-        )
+        io_loc_re = re.compile(r'^\s*IO_LOC\s+"([^"]+)"\s+([A-Za-z0-9_/]+)\s*;', re.IGNORECASE)
+        io_port_re = re.compile(r'^\s*IO_PORT\s+"([^"]+)"\s+(.*?);', re.IGNORECASE)
         for raw in text.splitlines():
             line = raw.strip()
             if not line or line.startswith("//") or line.startswith("#"):
@@ -620,9 +600,7 @@ def _sdc_line(c: Constraint) -> str:
             flag = " -max"
         elif c.attrs.get("min"):
             flag = " -min"
-        return (
-            f"set_input_delay -clock {clk}{flag} {delay:g} {c.target}"
-        )
+        return f"set_input_delay -clock {clk}{flag} {delay:g} {c.target}"
     if k == ConstraintKind.OUTPUT_DELAY:
         clk = c.attrs.get("clock", "clk")
         delay = _as_float(c.value) or 0.0
@@ -631,9 +609,7 @@ def _sdc_line(c: Constraint) -> str:
             flag = " -max"
         elif c.attrs.get("min"):
             flag = " -min"
-        return (
-            f"set_output_delay -clock {clk}{flag} {delay:g} {c.target}"
-        )
+        return f"set_output_delay -clock {clk}{flag} {delay:g} {c.target}"
     if k == ConstraintKind.FALSE_PATH:
         parts = ["set_false_path"]
         if "from" in c.attrs:
@@ -688,9 +664,7 @@ def _sdc_line(c: Constraint) -> str:
     return ""
 
 
-_CLOCK_RE = re.compile(
-    r"^create_clock\s+(.*)$", re.IGNORECASE
-)
+_CLOCK_RE = re.compile(r"^create_clock\s+(.*)$", re.IGNORECASE)
 _GEN_CLOCK_RE = re.compile(r"^create_generated_clock\s+(.*)$", re.IGNORECASE)
 _INPUT_DELAY_RE = re.compile(r"^set_input_delay\s+(.*)$", re.IGNORECASE)
 _OUTPUT_DELAY_RE = re.compile(r"^set_output_delay\s+(.*)$", re.IGNORECASE)
@@ -877,9 +851,7 @@ def _parse_sdc_line(line: str) -> Constraint | None:
             attrs["setup"] = True
         if _has_flag("-hold"):
             attrs["hold"] = True
-        return Constraint(
-            kind=ConstraintKind.MULTICYCLE_PATH, value=val, attrs=attrs
-        )
+        return Constraint(kind=ConstraintKind.MULTICYCLE_PATH, value=val, attrs=attrs)
     if head == "set_max_delay":
         pos = _positional()
         val = pos[0] if pos else "0"
@@ -901,15 +873,11 @@ def _parse_sdc_line(line: str) -> Constraint | None:
     if head == "set_load":
         pos = _positional()
         if len(pos) >= 2:
-            return Constraint(
-                kind=ConstraintKind.SET_LOAD, value=pos[0], target=pos[1]
-            )
+            return Constraint(kind=ConstraintKind.SET_LOAD, value=pos[0], target=pos[1])
     if head == "set_drive":
         pos = _positional()
         if len(pos) >= 2:
-            return Constraint(
-                kind=ConstraintKind.SET_DRIVE, value=pos[0], target=pos[1]
-            )
+            return Constraint(kind=ConstraintKind.SET_DRIVE, value=pos[0], target=pos[1])
     if head == "group_path":
         name = _get_opt("-name") or ""
         attrs = {}
@@ -921,7 +889,5 @@ def _parse_sdc_line(line: str) -> Constraint | None:
     if head == "set_case_analysis":
         pos = _positional()
         if len(pos) >= 2:
-            return Constraint(
-                kind=ConstraintKind.CASE_ANALYSIS, value=pos[0], target=pos[1]
-            )
+            return Constraint(kind=ConstraintKind.CASE_ANALYSIS, value=pos[0], target=pos[1])
     return None

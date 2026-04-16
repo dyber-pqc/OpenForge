@@ -29,11 +29,7 @@ def test_two_stage_dag_executes_in_order(tmp_path: Path) -> None:
     eng = RunEngine(tmp_path, max_parallel=2)
     g = RunGraph()
     g.add_stage(RunStage(id="a", name="A", tool="py", command=_echo("hello")))
-    g.add_stage(
-        RunStage(
-            id="b", name="B", tool="py", command=_echo("world"), depends_on=["a"]
-        )
-    )
+    g.add_stage(RunStage(id="b", name="B", tool="py", command=_echo("world"), depends_on=["a"]))
     rid = eng.submit(g)
     res = eng.wait(rid, timeout=30)
     assert res["found"]
@@ -50,9 +46,7 @@ def test_failing_stage_skips_downstream(tmp_path: Path) -> None:
     eng = RunEngine(tmp_path)
     g = RunGraph()
     g.add_stage(RunStage(id="a", name="A", tool="py", command=_fail()))
-    g.add_stage(
-        RunStage(id="b", name="B", tool="py", command=_echo("hi"), depends_on=["a"])
-    )
+    g.add_stage(RunStage(id="b", name="B", tool="py", command=_echo("hi"), depends_on=["a"]))
     rid = eng.submit(g)
     res = eng.wait(rid, timeout=30)
     st = {s["id"]: s["status"] for s in res["stages"]}
@@ -78,12 +72,8 @@ def test_rerun_from(tmp_path: Path) -> None:
     eng = RunEngine(tmp_path, max_parallel=2)
     g = RunGraph()
     g.add_stage(RunStage(id="a", name="A", tool="py", command=_echo("aa")))
-    g.add_stage(
-        RunStage(id="b", name="B", tool="py", command=_echo("bb"), depends_on=["a"])
-    )
-    g.add_stage(
-        RunStage(id="c", name="C", tool="py", command=_echo("cc"), depends_on=["b"])
-    )
+    g.add_stage(RunStage(id="b", name="B", tool="py", command=_echo("bb"), depends_on=["a"]))
+    g.add_stage(RunStage(id="c", name="C", tool="py", command=_echo("cc"), depends_on=["b"]))
     rid = eng.submit(g)
     eng.wait(rid, timeout=30)
     new_rid = eng.rerun_from(rid, "b")

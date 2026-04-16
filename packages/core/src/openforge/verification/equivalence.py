@@ -68,9 +68,7 @@ class EqyRunner:
         self.generate_eqy_file()
         eqy = shutil.which("eqy")
         if not eqy:
-            return EqyResult(
-                status="error", log="eqy binary not found in PATH"
-            )
+            return EqyResult(status="error", log="eqy binary not found in PATH")
         cmd = [eqy, "-f", str(self.eqy_path.name)]
         try:
             cp = subprocess.run(
@@ -93,9 +91,7 @@ class EqyRunner:
             proven = int(m2.group(1))
         status = "error"
         cex: str | None = None
-        if "Successfully proved designs equivalent" in log or re.search(
-            r"DONE \(PASS", log
-        ):
+        if "Successfully proved designs equivalent" in log or re.search(r"DONE \(PASS", log):
             status = "equivalent"
         elif "Failed to prove" in log or re.search(r"DONE \(FAIL", log):
             status = "not_equivalent"

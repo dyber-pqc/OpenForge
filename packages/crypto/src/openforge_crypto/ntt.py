@@ -12,11 +12,12 @@ from enum import Enum, auto
 
 # ── NTT standards ─────────────────────────────────────────────────────
 
+
 class NTTStandard(Enum):
     """Supported NTT parameter sets."""
 
-    KYBER = auto()       # ML-KEM: q=3329, n=256
-    DILITHIUM = auto()   # ML-DSA: q=8380417, n=256
+    KYBER = auto()  # ML-KEM: q=3329, n=256
+    DILITHIUM = auto()  # ML-DSA: q=8380417, n=256
     CUSTOM = auto()
 
 
@@ -35,10 +36,15 @@ KYBER_ZETAS: list[int] = [
     # Layer 0 (one butterfly): zeta^64
     1729,
     # Layer 1 (two butterflies): zeta^32, zeta^96
-    2580, 3289,
+    2580,
+    3289,
     # Layer 2: zeta^16, zeta^80, zeta^48, zeta^112
-    926, 1950, 1512, 2580 - 1,  # computed below; replaced with actual values
+    926,
+    1950,
+    1512,
+    2580 - 1,  # computed below; replaced with actual values
 ]
+
 
 # Full zeta table: compute zeta^{BitRev_7(i)} mod q for i in 0..127
 def _compute_kyber_zetas() -> list[int]:
@@ -76,6 +82,7 @@ KYBER_ZETAS = _compute_kyber_zetas()
 DILITHIUM_Q: int = 8380417
 DILITHIUM_N: int = 256
 
+
 # Primitive 256th root of unity mod 8380417: zeta = 1753
 def _compute_dilithium_zetas() -> list[int]:
     """Compute the 256 zeta values for ML-DSA NTT (FIPS 204)."""
@@ -105,6 +112,7 @@ DILITHIUM_ZETAS: list[int] = _compute_dilithium_zetas()
 
 # ── Data classes ──────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True, slots=True)
 class TwiddleResult:
     """Result of twiddle factor validation."""
@@ -115,10 +123,7 @@ class TwiddleResult:
     def __str__(self) -> str:
         if self.passed:
             return "Twiddle factor validation: PASS"
-        return (
-            f"Twiddle factor validation: FAIL "
-            f"({len(self.mismatches)} mismatches)"
-        )
+        return f"Twiddle factor validation: FAIL ({len(self.mismatches)} mismatches)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,13 +139,11 @@ class NTTResult:
     def __str__(self) -> str:
         if self.passed:
             return "NTT validation: PASS"
-        return (
-            f"NTT validation: FAIL "
-            f"({len(self.mismatches)} coefficient mismatches)"
-        )
+        return f"NTT validation: FAIL ({len(self.mismatches)} coefficient mismatches)"
 
 
 # ── NTT Validator ─────────────────────────────────────────────────────
+
 
 class NTTValidator:
     """Validate NTT hardware implementations against reference.
@@ -173,11 +176,13 @@ class NTTValidator:
         else:
             return TwiddleResult(
                 passed=False,
-                mismatches=[{
-                    "index": 0,
-                    "expected": 0,
-                    "actual": 0,
-                }],
+                mismatches=[
+                    {
+                        "index": 0,
+                        "expected": 0,
+                        "actual": 0,
+                    }
+                ],
             )
 
         mismatches: list[dict[str, int]] = []
@@ -185,19 +190,23 @@ class NTTValidator:
 
         for i in range(check_len):
             if rom_values[i] != ref[i]:
-                mismatches.append({
-                    "index": i,
-                    "expected": ref[i],
-                    "actual": rom_values[i],
-                })
+                mismatches.append(
+                    {
+                        "index": i,
+                        "expected": ref[i],
+                        "actual": rom_values[i],
+                    }
+                )
 
         # Length mismatch
         if len(rom_values) != len(ref):
-            mismatches.append({
-                "index": -1,
-                "expected": len(ref),
-                "actual": len(rom_values),
-            })
+            mismatches.append(
+                {
+                    "index": -1,
+                    "expected": len(ref),
+                    "actual": len(rom_values),
+                }
+            )
 
         return TwiddleResult(
             passed=len(mismatches) == 0,
@@ -427,18 +436,22 @@ class NTTValidator:
         mismatches: list[dict[str, int]] = []
         for i in range(min(len(expected), len(output_polynomial))):
             if expected[i] != (output_polynomial[i] % q):
-                mismatches.append({
-                    "index": i,
-                    "expected": expected[i],
-                    "actual": output_polynomial[i] % q,
-                })
+                mismatches.append(
+                    {
+                        "index": i,
+                        "expected": expected[i],
+                        "actual": output_polynomial[i] % q,
+                    }
+                )
 
         if len(expected) != len(output_polynomial):
-            mismatches.append({
-                "index": -1,
-                "expected": len(expected),
-                "actual": len(output_polynomial),
-            })
+            mismatches.append(
+                {
+                    "index": -1,
+                    "expected": len(expected),
+                    "actual": len(output_polynomial),
+                }
+            )
 
         return NTTResult(
             passed=len(mismatches) == 0,
@@ -583,7 +596,9 @@ class NTTValidator:
         """Convenience: compute ML-KEM NTT on a 256-coefficient polynomial."""
         v = NTTValidator()
         return v.reference_ntt(
-            [c % KYBER_Q for c in polynomial], KYBER_Q, KYBER_ZETAS,
+            [c % KYBER_Q for c in polynomial],
+            KYBER_Q,
+            KYBER_ZETAS,
         )
 
     @staticmethod

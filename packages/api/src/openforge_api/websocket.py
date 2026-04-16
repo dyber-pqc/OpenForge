@@ -158,15 +158,11 @@ async def websocket_jobs(ws: WebSocket) -> None:
             elif kind == "cancel":
                 job_id = msg.get("job_id", "")
                 ok = await queue.cancel(job_id)
-                await manager.send_to(
-                    ws, {"type": "cancel_ack", "job_id": job_id, "ok": ok}
-                )
+                await manager.send_to(ws, {"type": "cancel_ack", "job_id": job_id, "ok": ok})
             elif kind == "stats":
                 await manager.send_to(ws, {"type": "stats", "stats": queue.stats()})
             else:
-                await manager.send_to(
-                    ws, {"type": "error", "detail": f"unknown message: {kind}"}
-                )
+                await manager.send_to(ws, {"type": "error", "detail": f"unknown message: {kind}"})
     except WebSocketDisconnect:
         pass
     except Exception as exc:  # pragma: no cover - defensive

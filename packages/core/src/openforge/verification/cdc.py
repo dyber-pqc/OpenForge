@@ -26,8 +26,8 @@ class ClockDomain:
     """A single clock domain in the design."""
 
     name: str
-    frequency: float = 0.0   # MHz, 0 if unknown
-    source: str = ""          # SDC clock name or net name
+    frequency: float = 0.0  # MHz, 0 if unknown
+    source: str = ""  # SDC clock name or net name
     num_ffs: int = 0
 
 
@@ -39,7 +39,7 @@ class CdcCrossing:
     to_domain: str
     signal: str
     synchronized: bool = False
-    sync_type: str = ""       # "2ff", "3ff", "fifo", "pulse", "none"
+    sync_type: str = ""  # "2ff", "3ff", "fifo", "pulse", "none"
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,7 +49,7 @@ class CdcViolation:
     signal: str
     from_clk: str
     to_clk: str
-    severity: str = "error"   # "error", "warning", "info"
+    severity: str = "error"  # "error", "warning", "info"
     recommendation: str = ""
 
 
@@ -146,7 +146,10 @@ class CdcAnalyzer:
         """
         # Step 1: Synthesise to JSON netlist via Yosys
         netlist_json = self._synthesize_to_json(
-            sources, top_module, cwd=cwd, timeout=timeout,
+            sources,
+            top_module,
+            cwd=cwd,
+            timeout=timeout,
         )
         if netlist_json is None:
             return CdcResult()
@@ -178,10 +181,7 @@ class CdcAnalyzer:
 
         read_cmds = " ".join(f"read_verilog {s}" for s in sources)
         yosys_script = (
-            f"{read_cmds}; "
-            f"hierarchy -top {top_module}; "
-            f"proc; opt; flatten; "
-            f"write_json {json_path}"
+            f"{read_cmds}; hierarchy -top {top_module}; proc; opt; flatten; write_json {json_path}"
         )
 
         result = self._yosys.run(
@@ -228,9 +228,18 @@ class CdcAnalyzer:
 
         # Identify all flip-flops and their clock connections
         ff_types = {
-            "$dff", "$sdff", "$adff", "$dffe", "$sdffe", "$adffe",
-            "$_DFF_P_", "$_DFF_N_", "$_DFFE_PP_", "$_DFFE_PN_",
-            "$_SDFF_PP0_", "$_SDFF_PP1_",
+            "$dff",
+            "$sdff",
+            "$adff",
+            "$dffe",
+            "$sdffe",
+            "$adffe",
+            "$_DFF_P_",
+            "$_DFF_N_",
+            "$_DFFE_PP_",
+            "$_DFFE_PN_",
+            "$_SDFF_PP0_",
+            "$_SDFF_PP1_",
         }
 
         @dataclass
@@ -287,12 +296,14 @@ class CdcAnalyzer:
         clock_domains: list[ClockDomain] = []
         for dom_name, ffs in domain_ffs.items():
             cdef = clk_def_map.get(dom_name)
-            clock_domains.append(ClockDomain(
-                name=dom_name,
-                frequency=cdef.frequency_mhz if cdef else 0.0,
-                source=cdef.port_or_net if cdef else "",
-                num_ffs=len(ffs),
-            ))
+            clock_domains.append(
+                ClockDomain(
+                    name=dom_name,
+                    frequency=cdef.frequency_mhz if cdef else 0.0,
+                    source=cdef.port_or_net if cdef else "",
+                    num_ffs=len(ffs),
+                )
+            )
 
         # Build Q-bit -> (FF, domain) map for tracing
         q_to_domain: dict[int, tuple[FFInfo, str]] = {}
@@ -318,7 +329,9 @@ class CdcAnalyzer:
                         # followed by another FF in the same domain with
                         # matching D/Q chain?
                         sync_type, is_synced = self._check_synchronizer(
-                            ff, flip_flops, q_to_domain,
+                            ff,
+                            flip_flops,
+                            q_to_domain,
                         )
 
                         crossing = CdcCrossing(
@@ -331,17 +344,19 @@ class CdcAnalyzer:
                         crossings.append(crossing)
 
                         if not is_synced:
-                            violations.append(CdcViolation(
-                                signal=signal_name,
-                                from_clk=src_domain,
-                                to_clk=ff.clock_domain,
-                                severity="error",
-                                recommendation=(
-                                    f"Add a 2-FF synchroniser for signal "
-                                    f"'{signal_name}' crossing from "
-                                    f"'{src_domain}' to '{ff.clock_domain}'."
-                                ),
-                            ))
+                            violations.append(
+                                CdcViolation(
+                                    signal=signal_name,
+                                    from_clk=src_domain,
+                                    to_clk=ff.clock_domain,
+                                    severity="error",
+                                    recommendation=(
+                                        f"Add a 2-FF synchroniser for signal "
+                                        f"'{signal_name}' crossing from "
+                                        f"'{src_domain}' to '{ff.clock_domain}'."
+                                    ),
+                                )
+                            )
 
         return CdcResult(
             crossings=crossings,
@@ -504,15 +519,11 @@ class CdcChecker:
             except OSError:
                 sdc_text = ""
             for line in sdc_text.splitlines():
-                m = re.search(
-                    r"create_clock.*?-period\s+([\d.]+).*?-name\s+(\w+)", line
-                )
+                m = re.search(r"create_clock.*?-period\s+([\d.]+).*?-name\s+(\w+)", line)
                 if m:
                     periods[m.group(2)] = float(m.group(1))
                 else:
-                    m = re.search(
-                        r"create_clock.*?-name\s+(\w+).*?-period\s+([\d.]+)", line
-                    )
+                    m = re.search(r"create_clock.*?-name\s+(\w+).*?-period\s+([\d.]+)", line)
                     if m:
                         periods[m.group(1)] = float(m.group(2))
 

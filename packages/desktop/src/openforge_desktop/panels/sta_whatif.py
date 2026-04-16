@@ -75,9 +75,7 @@ class StaWhatIfPanel(QDockWidget):
 
         # --- Toolbar ----------------------------------------------------
         tb = QToolBar()
-        tb.setStyleSheet(
-            f"QToolBar {{ background:{_PANEL.name()}; border:1px solid #313244; }}"
-        )
+        tb.setStyleSheet(f"QToolBar {{ background:{_PANEL.name()}; border:1px solid #313244; }}")
         load_btn = QPushButton("Load STA Report")
         load_btn.clicked.connect(self._on_load)
         tb.addWidget(load_btn)
@@ -116,9 +114,7 @@ class StaWhatIfPanel(QDockWidget):
         self._period_slider = QSlider(Qt.Orientation.Horizontal)
         self._period_slider.setRange(1, 10000)
         self._period_slider.setValue(100)
-        self._period_slider.valueChanged.connect(
-            lambda v: self._period_spin.setValue(v / 10.0)
-        )
+        self._period_slider.valueChanged.connect(lambda v: self._period_spin.setValue(v / 10.0))
         form.addRow("Clock period (ns)", self._period_spin)
         form.addRow("", self._period_slider)
 
@@ -172,9 +168,7 @@ class StaWhatIfPanel(QDockWidget):
 
         header_row = QHBoxLayout()
         self._wns_label = QLabel("WNS: -")
-        self._wns_label.setStyleSheet(
-            f"color:{_TEXT.name()}; font-size:22px; font-weight:700;"
-        )
+        self._wns_label.setStyleSheet(f"color:{_TEXT.name()}; font-size:22px; font-weight:700;")
         header_row.addWidget(self._wns_label)
         self._delta_label = QLabel("")
         self._delta_label.setStyleSheet("font-size:14px; font-weight:600;")
@@ -192,12 +186,8 @@ class StaWhatIfPanel(QDockWidget):
             f"QHeaderView::section {{ background:{_SURFACE.name()}; color:{_TEXT.name()}; "
             f"padding:4px; border:0; }}"
         )
-        self._paths_table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        self._paths_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
+        self._paths_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._paths_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         rl.addWidget(self._paths_table, 1)
 
         splitter.addWidget(right)
@@ -319,17 +309,12 @@ class StaWhatIfPanel(QDockWidget):
 
         # Top 10 by new slack
         paths = sorted(new_report.paths, key=lambda p: p.slack_ns)[:10]
-        orig_map = {
-            (p.startpoint, p.endpoint): p.slack_ns
-            for p in self._whatif.original.paths
-        }
+        orig_map = {(p.startpoint, p.endpoint): p.slack_ns for p in self._whatif.original.paths}
         self._paths_table.setRowCount(len(paths))
         for r, p in enumerate(paths):
             original = orig_map.get((p.startpoint, p.endpoint), p.slack_ns)
             pdelta = p.slack_ns - original
-            self._paths_table.setItem(
-                r, 0, QTableWidgetItem(f"{p.startpoint} -> {p.endpoint}")
-            )
+            self._paths_table.setItem(r, 0, QTableWidgetItem(f"{p.startpoint} -> {p.endpoint}"))
             self._paths_table.setItem(r, 1, QTableWidgetItem(f"{original:+.3f}"))
             self._paths_table.setItem(r, 2, QTableWidgetItem(f"{p.slack_ns:+.3f}"))
             delta_item = QTableWidgetItem(f"{pdelta:+.3f}")
@@ -361,10 +346,7 @@ class StaWhatIfPanel(QDockWidget):
                     f"# set_driving_cell -lib_cell <{ch.target}>  scale={ch.new_value:.2f}"
                 )
             elif ch.kind == "wire_load":
-                lines.append(
-                    f"set_wire_load_model -name wlm_x{ch.new_value:.2f} "
-                    f"[current_design]"
-                )
+                lines.append(f"set_wire_load_model -name wlm_x{ch.new_value:.2f} [current_design]")
             elif ch.kind == "derate":
                 lines.append(
                     f"set_timing_derate -late {ch.new_value:.3f} "
@@ -372,7 +354,6 @@ class StaWhatIfPanel(QDockWidget):
                 )
             elif ch.kind == "fanout":
                 lines.append(
-                    f"set_max_fanout {ch.new_value:.1f} [current_design] "
-                    f"# pattern={ch.target}"
+                    f"set_max_fanout {ch.new_value:.1f} [current_design] # pattern={ch.target}"
                 )
         Path(path).write_text("\n".join(lines) + "\n")

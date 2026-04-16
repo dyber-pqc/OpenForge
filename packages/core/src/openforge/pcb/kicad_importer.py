@@ -123,12 +123,8 @@ class KicadLibraryImporter:
                 candidates_fp.append(p)
 
         # macOS
-        mac_sym = Path(
-            "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"
-        )
-        mac_fp = Path(
-            "/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints"
-        )
+        mac_sym = Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols")
+        mac_fp = Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints")
         if mac_sym.exists():
             candidates_sym.append(mac_sym)
         if mac_fp.exists():
@@ -254,9 +250,7 @@ class KicadLibraryImporter:
             "symbol_lib_counts": self.symbol_lib_counts,
             "footprint_lib_counts": self.footprint_lib_counts,
             "symbols": {k: self._serialize(v) for k, v in self.symbols.items()},
-            "footprints": {
-                k: self._serialize(v) for k, v in self.footprints.items()
-            },
+            "footprints": {k: self._serialize(v) for k, v in self.footprints.items()},
         }
         cache_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         log.info("wrote KiCad cache: %s", cache_path)

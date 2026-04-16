@@ -75,11 +75,7 @@ def scan_properties(rtl_files: list[str]) -> list[FormalProperty]:
             kind = m.group(1)
             expr = m.group(2).strip()
             name = f"{p.stem}_{kind}_{lineno}"
-            out.append(
-                FormalProperty(
-                    kind=kind, expr=expr, file=str(p), line=lineno, name=name
-                )
-            )
+            out.append(FormalProperty(kind=kind, expr=expr, file=str(p), line=lineno, name=name))
     return out
 
 
@@ -135,10 +131,7 @@ class SbyRunner:
         sby = shutil.which("sby")
         if not sby:
             # Produce UNKNOWN results for every discovered property.
-            return [
-                FormalResult(property=p, status="UNKNOWN", runtime_s=0.0)
-                for p in props
-            ]
+            return [FormalResult(property=p, status="UNKNOWN", runtime_s=0.0) for p in props]
         cmd = [sby, "-f", "--yosys", "yosys", str(self.sby_path.name)]
         try:
             cp = subprocess.run(

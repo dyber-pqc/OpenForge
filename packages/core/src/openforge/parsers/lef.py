@@ -286,8 +286,14 @@ class LEFParser:
                     idx = self._parse_macro(tokens, idx + 1, total, macro)
                     data.macros.append(macro)
 
-            elif tok in ("END", "PROPERTYDEFINITIONS", "SPACING",
-                         "MAXVIASTACK", "NONDEFAULTRULE", "MANUFACTURINGGRID"):
+            elif tok in (
+                "END",
+                "PROPERTYDEFINITIONS",
+                "SPACING",
+                "MAXVIASTACK",
+                "NONDEFAULTRULE",
+                "MANUFACTURINGGRID",
+            ):
                 idx = self._skip_to_end(tokens, idx, total, tok)
 
             else:
@@ -313,7 +319,10 @@ class LEFParser:
 
     @staticmethod
     def _parse_units(
-        tokens: list[str], idx: int, total: int, data: LEFData,
+        tokens: list[str],
+        idx: int,
+        total: int,
+        data: LEFData,
     ) -> int:
         while idx < total:
             tok = tokens[idx].upper()
@@ -324,15 +333,16 @@ class LEFParser:
                 if idx < total and tokens[idx].upper() == "MICRONS":
                     idx += 1
                     if idx < total:
-                        data.database_microns = int(
-                            tokens[idx].rstrip(";")
-                        )
+                        data.database_microns = int(tokens[idx].rstrip(";"))
             idx += 1
         return idx
 
     @staticmethod
     def _parse_layer(
-        tokens: list[str], idx: int, total: int, layer: LEFLayer,
+        tokens: list[str],
+        idx: int,
+        total: int,
+        layer: LEFLayer,
     ) -> int:
         while idx < total:
             tok = tokens[idx].upper()
@@ -375,7 +385,10 @@ class LEFParser:
 
     @staticmethod
     def _parse_via(
-        tokens: list[str], idx: int, total: int, via: LEFVia,
+        tokens: list[str],
+        idx: int,
+        total: int,
+        via: LEFVia,
     ) -> int:
         current_layer: LEFViaLayer | None = None
         while idx < total:
@@ -387,9 +400,7 @@ class LEFParser:
             if tok == "LAYER" and idx + 1 < total:
                 if current_layer:
                     via.layers.append(current_layer)
-                current_layer = LEFViaLayer(
-                    layer_name=tokens[idx + 1].rstrip(";")
-                )
+                current_layer = LEFViaLayer(layer_name=tokens[idx + 1].rstrip(";"))
                 idx += 2
             elif tok == "RECT" and idx + 4 < total and current_layer is not None:
                 x0 = _sf(tokens[idx + 1])
@@ -406,7 +417,10 @@ class LEFParser:
 
     @staticmethod
     def _parse_site(
-        tokens: list[str], idx: int, total: int, site: LEFSite,
+        tokens: list[str],
+        idx: int,
+        total: int,
+        site: LEFSite,
     ) -> int:
         while idx < total:
             tok = tokens[idx].upper()
@@ -424,7 +438,10 @@ class LEFParser:
                 parts: list[str] = []
                 idx += 1
                 while idx < total and tokens[idx].rstrip(";").upper() not in (
-                    "END", "CLASS", "SIZE", "SYMMETRY",
+                    "END",
+                    "CLASS",
+                    "SIZE",
+                    "SYMMETRY",
                 ):
                     val = tokens[idx].rstrip(";")
                     if val:
@@ -458,7 +475,13 @@ class LEFParser:
                 while idx < total:
                     val = tokens[idx].rstrip(";")
                     if not val or val.upper() in (
-                        "SIZE", "ORIGIN", "SYMMETRY", "SITE", "PIN", "OBS", "END",
+                        "SIZE",
+                        "ORIGIN",
+                        "SYMMETRY",
+                        "SITE",
+                        "PIN",
+                        "OBS",
+                        "END",
                     ):
                         break
                     cls_parts.append(val)
@@ -484,8 +507,14 @@ class LEFParser:
                 while idx < total:
                     val = tokens[idx].rstrip(";")
                     if not val or val.upper() in (
-                        "SIZE", "ORIGIN", "SYMMETRY", "SITE", "PIN", "OBS",
-                        "END", "CLASS",
+                        "SIZE",
+                        "ORIGIN",
+                        "SYMMETRY",
+                        "SITE",
+                        "PIN",
+                        "OBS",
+                        "END",
+                        "CLASS",
                     ):
                         break
                     parts.append(val)
@@ -567,7 +596,10 @@ class LEFParser:
 
     @staticmethod
     def _parse_obs(
-        tokens: list[str], idx: int, total: int, macro: LEFMacro,
+        tokens: list[str],
+        idx: int,
+        total: int,
+        macro: LEFMacro,
     ) -> int:
         current_obs: LEFObs | None = None
 
@@ -599,7 +631,10 @@ class LEFParser:
 
     @staticmethod
     def _skip_to_end(
-        tokens: list[str], idx: int, total: int, keyword: str,
+        tokens: list[str],
+        idx: int,
+        total: int,
+        keyword: str,
     ) -> int:
         """Skip forward until we find END <keyword> or just END."""
         idx += 1

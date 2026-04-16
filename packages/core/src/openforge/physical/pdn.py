@@ -23,11 +23,11 @@ class _PDNLayerConfig:
     """Configuration for a single power strap layer."""
 
     layer: str
-    direction: str      # "horizontal" or "vertical"
-    width: float        # strap width in um
-    pitch: float        # strap pitch in um
-    offset: float       # offset from origin in um
-    followpins: bool    # whether this layer follows standard cell rails
+    direction: str  # "horizontal" or "vertical"
+    width: float  # strap width in um
+    pitch: float  # strap pitch in um
+    offset: float  # offset from origin in um
+    followpins: bool  # whether this layer follows standard cell rails
 
 
 _SKY130_PDN_LAYERS: list[_PDNLayerConfig] = [
@@ -37,7 +37,7 @@ _SKY130_PDN_LAYERS: list[_PDNLayerConfig] = [
         width=0.48,
         pitch=5.44,
         offset=0.0,
-        followpins=True,     # Standard cell VDD/VSS rails on met1
+        followpins=True,  # Standard cell VDD/VSS rails on met1
     ),
     _PDNLayerConfig(
         layer="met4",
@@ -156,42 +156,38 @@ class PDNGenerator:
         # VDD connections
         for pattern in self._power_pins["vdd_patterns"]:
             if pattern == self._power_pins["vdd_patterns"][0]:
-                lines.append(
-                    f"add_global_connection -net VDD -pin_pattern {{{pattern}}} -power"
-                )
+                lines.append(f"add_global_connection -net VDD -pin_pattern {{{pattern}}} -power")
             else:
-                lines.append(
-                    f"add_global_connection -net VDD -pin_pattern {{{pattern}}}"
-                )
+                lines.append(f"add_global_connection -net VDD -pin_pattern {{{pattern}}}")
 
         # VSS connections
         for pattern in self._power_pins["vss_patterns"]:
             if pattern == self._power_pins["vss_patterns"][0]:
-                lines.append(
-                    f"add_global_connection -net VSS -pin_pattern {{{pattern}}} -ground"
-                )
+                lines.append(f"add_global_connection -net VSS -pin_pattern {{{pattern}}} -ground")
             else:
-                lines.append(
-                    f"add_global_connection -net VSS -pin_pattern {{{pattern}}}"
-                )
+                lines.append(f"add_global_connection -net VSS -pin_pattern {{{pattern}}}")
 
-        lines.extend([
-            "global_connect",
-            "",
-            "# ---- Voltage domain ----",
-            "set_voltage_domain -power VDD -ground VSS",
-            "",
-        ])
+        lines.extend(
+            [
+                "global_connect",
+                "",
+                "# ---- Voltage domain ----",
+                "set_voltage_domain -power VDD -ground VSS",
+                "",
+            ]
+        )
 
         # Determine pin layer (topmost strap layer)
         strap_layers = [l for l in layers if not l.followpins]
         pin_layer = strap_layers[-1].layer if strap_layers else layers[-1].layer
 
-        lines.extend([
-            "# ---- Power grid definition ----",
-            f"define_pdn_grid -name main_grid -pins {{{pin_layer}}}",
-            "",
-        ])
+        lines.extend(
+            [
+                "# ---- Power grid definition ----",
+                f"define_pdn_grid -name main_grid -pins {{{pin_layer}}}",
+                "",
+            ]
+        )
 
         # Add straps for each layer
         for layer_cfg in layers:
@@ -213,9 +209,7 @@ class PDNGenerator:
         for i in range(len(layers) - 1):
             l1 = layers[i].layer
             l2 = layers[i + 1].layer
-            lines.append(
-                f"add_pdn_connect -grid main_grid -layers {{{l1} {l2}}}"
-            )
+            lines.append(f"add_pdn_connect -grid main_grid -layers {{{l1} {l2}}}")
 
         lines.append("")
         return "\n".join(lines)

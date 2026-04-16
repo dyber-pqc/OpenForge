@@ -60,8 +60,8 @@ class EmViolation:
     def __str__(self) -> str:
         return (
             f"EM violation on {self.wire.net} ({self.wire.layer}): "
-            f"{self.current_density_a_per_um2*1e3:.2f} mA/um "
-            f"vs limit {self.limit_a_per_um2*1e3:.2f} mA/um "
+            f"{self.current_density_a_per_um2 * 1e3:.2f} mA/um "
+            f"vs limit {self.limit_a_per_um2 * 1e3:.2f} mA/um "
             f"[{self.severity}, margin {self.margin_pct:+.1f}%]"
         )
 
@@ -325,7 +325,7 @@ class ElectromigrationAnalyzer:
         ratio = limit / density
         # Black: MTTF ~ A / J^n * exp(Ea/kT) ; we model normalized form
         n = 2.0
-        years = self.mttf_years * (ratio ** n)
+        years = self.mttf_years * (ratio**n)
         return max(min(years, 1e6), 0.0)
 
     # ------------------------------------------------------------------
@@ -360,7 +360,7 @@ class ElectromigrationAnalyzer:
         lines.append(f"Wires checked:  {result.wires_checked}")
         lines.append(f"Critical:       {result.critical_count}")
         lines.append(f"Warnings:       {result.warning_count}")
-        lines.append(f"Avg density:    {result.avg_density*1e3:.3f} mA/um")
+        lines.append(f"Avg density:    {result.avg_density * 1e3:.3f} mA/um")
         lines.append(f"Runtime:        {result.runtime_s:.2f} s")
         lines.append("")
 
@@ -370,8 +370,8 @@ class ElectromigrationAnalyzer:
             lines.append("-" * 70)
             lines.append(f"  Net:     {w.wire.net}")
             lines.append(f"  Layer:   {w.wire.layer}")
-            lines.append(f"  Density: {w.current_density_a_per_um2*1e3:.3f} mA/um")
-            lines.append(f"  Limit:   {w.limit_a_per_um2*1e3:.3f} mA/um")
+            lines.append(f"  Density: {w.current_density_a_per_um2 * 1e3:.3f} mA/um")
+            lines.append(f"  Limit:   {w.limit_a_per_um2 * 1e3:.3f} mA/um")
             lines.append(f"  Margin:  {w.margin_pct:+.1f}%")
             lines.append("")
 
@@ -381,8 +381,8 @@ class ElectromigrationAnalyzer:
             lines.append(
                 f"  {layer:6s}  violations={info['violations']:4d}  "
                 f"critical={info['critical']:4d}  "
-                f"max={info['max_density']*1e3:6.3f} mA/um  "
-                f"limit={info['limit']*1e3:.2f}"
+                f"max={info['max_density'] * 1e3:6.3f} mA/um  "
+                f"limit={info['limit'] * 1e3:.2f}"
             )
         lines.append("")
         lines.append("Top 20 violations")
@@ -397,7 +397,7 @@ class ElectromigrationAnalyzer:
         ):
             lines.append(
                 f"  {i:2d}. {v.wire.net:20s} {v.wire.layer:5s} "
-                f"{v.current_density_a_per_um2*1e3:6.3f} mA/um  "
+                f"{v.current_density_a_per_um2 * 1e3:6.3f} mA/um  "
                 f"({v.severity})"
             )
         lines.append("")

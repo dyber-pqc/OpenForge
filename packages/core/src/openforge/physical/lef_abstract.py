@@ -61,18 +61,14 @@ class LefAbstract(BaseModel):
     def to_lef(self) -> str:
         lines: list[str] = []
         lines.append("VERSION 5.8 ;")
-        lines.append("BUSBITCHARS \"[]\" ;")
-        lines.append("DIVIDERCHAR \"/\" ;")
+        lines.append('BUSBITCHARS "[]" ;')
+        lines.append('DIVIDERCHAR "/" ;')
         lines.append("")
         lines.append(f"MACRO {self.macro_name}")
         lines.append("  CLASS BLOCK ;")
-        lines.append(
-            f"  ORIGIN {self.origin[0]:.3f} {self.origin[1]:.3f} ;"
-        )
+        lines.append(f"  ORIGIN {self.origin[0]:.3f} {self.origin[1]:.3f} ;")
         lines.append(f"  FOREIGN {self.macro_name} {self.origin[0]:.3f} {self.origin[1]:.3f} ;")
-        lines.append(
-            f"  SIZE {self.width_um:.3f} BY {self.height_um:.3f} ;"
-        )
+        lines.append(f"  SIZE {self.width_um:.3f} BY {self.height_um:.3f} ;")
         lines.append(f"  SITE {self.site} ;")
         lines.append("  SYMMETRY X Y R90 ;")
         for pin in self.pins:
@@ -82,9 +78,7 @@ class LefAbstract(BaseModel):
             lines.append("    PORT")
             lines.append(f"      LAYER {pin.layer} ;")
             for r in pin.rects:
-                lines.append(
-                    "      RECT {:.3f} {:.3f} {:.3f} {:.3f} ;".format(*r)
-                )
+                lines.append("      RECT {:.3f} {:.3f} {:.3f} {:.3f} ;".format(*r))
             lines.append("    END")
             lines.append(f"  END {pin.name}")
         if self.obs:
@@ -92,9 +86,7 @@ class LefAbstract(BaseModel):
             for ob in self.obs:
                 lines.append(f"    LAYER {ob.layer} ;")
                 for r in ob.rects:
-                    lines.append(
-                        "    RECT {:.3f} {:.3f} {:.3f} {:.3f} ;".format(*r)
-                    )
+                    lines.append("    RECT {:.3f} {:.3f} {:.3f} {:.3f} ;".format(*r))
             lines.append("  END")
         lines.append(f"END {self.macro_name}")
         lines.append("")
@@ -109,9 +101,7 @@ class LefAbstract(BaseModel):
 
 _DESIGN_RE = re.compile(r"^\s*DESIGN\s+(\S+)\s*;")
 _UNITS_RE = re.compile(r"^\s*UNITS\s+DISTANCE\s+MICRONS\s+(\d+)\s*;")
-_DIEAREA_RE = re.compile(
-    r"DIEAREA\s*\(\s*(-?\d+)\s+(-?\d+)\s*\)\s*\(\s*(-?\d+)\s+(-?\d+)\s*\)"
-)
+_DIEAREA_RE = re.compile(r"DIEAREA\s*\(\s*(-?\d+)\s+(-?\d+)\s*\)\s*\(\s*(-?\d+)\s+(-?\d+)\s*\)")
 _PINS_BEGIN_RE = re.compile(r"^\s*PINS\s+(\d+)\s*;")
 _PINS_END_RE = re.compile(r"^\s*END\s+PINS")
 _PIN_LINE_RE = re.compile(r"^\s*-\s*(\S+)\s*\+\s*NET\s+(\S+)")
@@ -236,9 +226,7 @@ def _dbu_to_um(value: int, units: int) -> float:
 # ---------------------------------------------------------------------------
 
 
-def generate_abstract_lef(
-    def_path: Path, lef_path: Path, output: Path
-) -> LefAbstract:
+def generate_abstract_lef(def_path: Path, lef_path: Path, output: Path) -> LefAbstract:
     """Build a LEF abstract for a finished block DEF.
 
     ``lef_path`` is the cell LEF the block was placed against; we don't
@@ -284,11 +272,15 @@ def generate_abstract_lef(
     # actually used. This is a conservative abstraction that guarantees
     # the top-level router will not reroute over internal nets.
     obs: list[LefObs] = []
-    layers = sorted(def_data.routing_layers) if def_data.routing_layers else [
-        "met1",
-        "met2",
-        "met3",
-    ]
+    layers = (
+        sorted(def_data.routing_layers)
+        if def_data.routing_layers
+        else [
+            "met1",
+            "met2",
+            "met3",
+        ]
+    )
     for layer in layers:
         obs.append(
             LefObs(
@@ -319,9 +311,7 @@ _PIN_RE = re.compile(r"^\s*PIN\s+(\S+)")
 _DIRECTION2_RE = re.compile(r"^\s*DIRECTION\s+(\w+)")
 _USE2_RE = re.compile(r"^\s*USE\s+(\w+)")
 _LAYER2_RE = re.compile(r"^\s*LAYER\s+(\S+)\s*;")
-_RECT_RE = re.compile(
-    r"^\s*RECT\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)"
-)
+_RECT_RE = re.compile(r"^\s*RECT\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)")
 _END_PIN_RE = re.compile(r"^\s*END\s+(\S+)\s*$")
 _OBS_BEGIN_RE = re.compile(r"^\s*OBS\s*$")
 _OBS_END_RE = re.compile(r"^\s*END\s*$")
@@ -440,9 +430,7 @@ def read_abstract_lef(path: Path) -> LefAbstract:
 # ---- composition ----------------------------------------------------------
 
 
-def merge_blocks_to_top(
-    top_def: Path, blocks: dict[str, LefAbstract], output: Path
-) -> None:
+def merge_blocks_to_top(top_def: Path, blocks: dict[str, LefAbstract], output: Path) -> None:
     """Compose block abstracts into a top-level placement DEF.
 
     Places blocks in a simple shelf layout: left-to-right, wrapping to
@@ -487,8 +475,8 @@ def merge_blocks_to_top(
     design = Path(top_def).stem.replace(".top", "") or "top"
     lines = [
         "VERSION 5.8 ;",
-        "DIVIDERCHAR \"/\" ;",
-        "BUSBITCHARS \"[]\" ;",
+        'DIVIDERCHAR "/" ;',
+        'BUSBITCHARS "[]" ;',
         f"DESIGN {design} ;",
         f"UNITS DISTANCE MICRONS {units} ;",
         f"DIEAREA ( {llx} {lly} ) ( {urx} {ury} ) ;",

@@ -111,11 +111,7 @@ class TimingPath:
     def num_levels(self) -> int:
         """Number of logic levels (gates that aren't flip-flops) in data path."""
         return len(
-            [
-                s
-                for s in self.data_path
-                if s.cell_type and not s.is_register and not s.is_clock_edge
-            ]
+            [s for s in self.data_path if s.cell_type and not s.is_register and not s.is_clock_edge]
         )
 
     @property
@@ -492,9 +488,7 @@ def parse_sta_report(report_text: str) -> StaReport:
         # Section transitions: first non-clock-edge stage with a real cell
         # type promotes us to the data section.
         if section == "launch_clock" and (
-            stage.cell_type
-            and not stage.is_clock_edge
-            and not stage.is_clock_network
+            stage.cell_type and not stage.is_clock_edge and not stage.is_clock_network
         ):
             section = "data"
 

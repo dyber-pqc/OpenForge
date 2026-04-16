@@ -48,7 +48,7 @@ SKY130_LAYER_PROPS: dict[str, dict[str, float]] = {
     "li1": {
         "sheet_res": 12.8,
         "cap_per_area": 8.70e-5 * 1e-12,  # F/um^2  (~0.087 fF/um^2)
-        "fringe": 3.80e-4 * 1e-12,        # F/um    (~0.38 fF/um)
+        "fringe": 3.80e-4 * 1e-12,  # F/um    (~0.38 fF/um)
         "cap_lat": 4.00e-4 * 1e-12,
         "width_min": 0.17,
         "pitch": 0.34,
@@ -98,7 +98,7 @@ SKY130_LAYER_PROPS: dict[str, dict[str, float]] = {
 # Via resistance table (Ohm, approximate)
 SKY130_VIA_RES: dict[str, float] = {
     "mcon": 9.3,
-    "via":  4.5,
+    "via": 4.5,
     "via2": 3.4,
     "via3": 3.0,
     "via4": 2.0,
@@ -169,7 +169,7 @@ def _segment_boxes(
             bx2 = ux1 + half
             by1 = min(uy1, uy2)
             by2 = max(uy1, uy2)
-        else:            # horizontal (or diagonal - treat as bbox)
+        else:  # horizontal (or diagonal - treat as bbox)
             by1 = uy1 - half
             by2 = uy1 + half
             bx1 = min(ux1, ux2)
@@ -242,9 +242,7 @@ class ParasiticExtractor:
     ) -> None:
         self.def_path = Path(def_path)
         self.lef_path = Path(lef_path) if lef_path else None
-        self.layer_props: dict[str, dict[str, float]] = dict(
-            tech_layer_props or SKY130_LAYER_PROPS
-        )
+        self.layer_props: dict[str, dict[str, float]] = dict(tech_layer_props or SKY130_LAYER_PROPS)
         self.coupling_distance_um = coupling_distance_um
         self.design: DefDesign = parse_def(self.def_path)
         self.units_per_um: float = float(self.design.units_per_micron or 1000)
@@ -331,10 +329,7 @@ class ParasiticExtractor:
             # C_ground = area * cap_per_area + perimeter * fringe
             area = length_um * width_um
             perimeter = 2.0 * (length_um + width_um)
-            c_ground_f = (
-                area * props["cap_per_area"]
-                + perimeter * props["fringe"]
-            )
+            c_ground_f = area * props["cap_per_area"] + perimeter * props["fringe"]
             c_ground_ff = c_ground_f * 1e15
 
             # Via resistance at segment end
@@ -453,44 +448,44 @@ class ParasiticExtractor:
         lines.append('*PROGRAM "openforge.physical.extractor"')
         lines.append('*VERSION "1.0"')
         lines.append('*DESIGN_FLOW "PIN_CAP NONE"')
-        lines.append('*DIVIDER /')
-        lines.append('*DELIMITER :')
-        lines.append('*BUS_DELIMITER [ ]')
-        lines.append('*T_UNIT 1 PS')
-        lines.append('*C_UNIT 1 FF')
-        lines.append('*R_UNIT 1 OHM')
-        lines.append('*L_UNIT 1 PH')
-        lines.append('')
+        lines.append("*DIVIDER /")
+        lines.append("*DELIMITER :")
+        lines.append("*BUS_DELIMITER [ ]")
+        lines.append("*T_UNIT 1 PS")
+        lines.append("*C_UNIT 1 FF")
+        lines.append("*R_UNIT 1 OHM")
+        lines.append("*L_UNIT 1 PH")
+        lines.append("")
 
         cap_id = 1
         res_id = 1
         for name, res in results.items():
-            lines.append(f'*D_NET {name} {res.total_cap_ff:.6f}')
-            lines.append('*CONN')
+            lines.append(f"*D_NET {name} {res.total_cap_ff:.6f}")
+            lines.append("*CONN")
             # Emit *I for each component pin on the net (best-effort)
             net = self.design.nets.get(name)
             if net is not None:
                 for inst, pin in net.connections:
                     if inst == "PIN":
-                        lines.append(f'*P {pin} I')
+                        lines.append(f"*P {pin} I")
                     else:
-                        lines.append(f'*I {inst}:{pin} B')
-            lines.append('*CAP')
+                        lines.append(f"*I {inst}:{pin} B")
+            lines.append("*CAP")
             # Ground caps lumped at a synthetic node
             ground_ff = res.ground_cap_ff
             if ground_ff > 0:
-                lines.append(f'{cap_id} {name}:1 {ground_ff:.6f}')
+                lines.append(f"{cap_id} {name}:1 {ground_ff:.6f}")
                 cap_id += 1
             # Coupling caps
             for nb, cff in res.coupling_caps.items():
-                lines.append(f'{cap_id} {name}:1 {nb}:1 {cff:.6f}')
+                lines.append(f"{cap_id} {name}:1 {nb}:1 {cff:.6f}")
                 cap_id += 1
-            lines.append('*RES')
+            lines.append("*RES")
             if res.total_res_ohm > 0:
-                lines.append(f'{res_id} {name}:1 {name}:2 {res.total_res_ohm:.6f}')
+                lines.append(f"{res_id} {name}:1 {name}:2 {res.total_res_ohm:.6f}")
                 res_id += 1
-            lines.append('*END')
-            lines.append('')
+            lines.append("*END")
+            lines.append("")
 
         out_path.write_text("\n".join(lines), encoding="utf-8")
         return out_path
@@ -538,9 +533,7 @@ class ParasiticExtractor:
                 else:
                     new_net.caps.append(c)
             if lumped > 0:
-                new_net.caps.append(
-                    SpefCap(node=f"{n.name}:RED", cap_pf=lumped)
-                )
+                new_net.caps.append(SpefCap(node=f"{n.name}:RED", cap_pf=lumped))
             # Drop short R (they become shorts). Represent as a single lumped R.
             lumped_r = 0.0
             kept_r: list[SpefRes] = []
@@ -572,34 +565,34 @@ class ParasiticExtractor:
         lines.append('*PROGRAM "openforge.physical.extractor.reduce"')
         lines.append('*VERSION "1.0"')
         lines.append('*DESIGN_FLOW "PIN_CAP NONE"')
-        lines.append(f'*DIVIDER {reduced.divider}')
-        lines.append(f'*DELIMITER {reduced.delimiter}')
-        lines.append('*BUS_DELIMITER [ ]')
-        lines.append('*T_UNIT 1 PS')
-        lines.append('*C_UNIT 1 PF')
-        lines.append('*R_UNIT 1 OHM')
-        lines.append('*L_UNIT 1 PH')
-        lines.append('')
+        lines.append(f"*DIVIDER {reduced.divider}")
+        lines.append(f"*DELIMITER {reduced.delimiter}")
+        lines.append("*BUS_DELIMITER [ ]")
+        lines.append("*T_UNIT 1 PS")
+        lines.append("*C_UNIT 1 PF")
+        lines.append("*R_UNIT 1 OHM")
+        lines.append("*L_UNIT 1 PH")
+        lines.append("")
         cid = 1
         rid = 1
         for n in reduced.nets:
-            lines.append(f'*D_NET {n.name} {n.total_cap_pf:.6f}')
-            lines.append('*CONN')
+            lines.append(f"*D_NET {n.name} {n.total_cap_pf:.6f}")
+            lines.append("*CONN")
             for p in n.ports:
-                lines.append(f'*P {p.name} {p.direction or "I"}')
-            lines.append('*CAP')
+                lines.append(f"*P {p.name} {p.direction or 'I'}")
+            lines.append("*CAP")
             for c in n.caps:
                 if c.coupled_to:
-                    lines.append(f'{cid} {c.node} {c.coupled_to} {c.cap_pf:.6f}')
+                    lines.append(f"{cid} {c.node} {c.coupled_to} {c.cap_pf:.6f}")
                 else:
-                    lines.append(f'{cid} {c.node} {c.cap_pf:.6f}')
+                    lines.append(f"{cid} {c.node} {c.cap_pf:.6f}")
                 cid += 1
-            lines.append('*RES')
+            lines.append("*RES")
             for r in n.resistances:
-                lines.append(f'{rid} {r.node1} {r.node2} {r.res_ohm:.6f}')
+                lines.append(f"{rid} {r.node1} {r.node2} {r.res_ohm:.6f}")
                 rid += 1
-            lines.append('*END')
-            lines.append('')
+            lines.append("*END")
+            lines.append("")
         out.write_text("\n".join(lines), encoding="utf-8")
         return out
 

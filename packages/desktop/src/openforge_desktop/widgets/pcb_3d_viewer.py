@@ -5,6 +5,7 @@ isometric 2D projection via QGraphicsView as a last resort. The
 exposed API (`set_board`, `toggle_layer`, `reset_view`, `explode`,
 `export_png`) is identical across backends.
 """
+
 from __future__ import annotations
 
 import math
@@ -38,6 +39,7 @@ _HAS_QT3D = False
 try:  # pragma: no cover - optional
     from PySide6.Qt3DCore import Qt3DCore  # noqa: F401
     from PySide6.Qt3DExtras import Qt3DExtras  # noqa: F401
+
     _HAS_QT3D = True
 except Exception:  # pragma: no cover
     _HAS_QT3D = False
@@ -45,6 +47,7 @@ except Exception:  # pragma: no cover
 _HAS_GL = False
 try:  # pragma: no cover - optional
     from PySide6.QtOpenGLWidgets import QOpenGLWidget  # noqa: F401
+
     _HAS_GL = True
 except Exception:  # pragma: no cover
     _HAS_GL = False
@@ -141,9 +144,7 @@ class Pcb3dViewer(QWidget):
         ):
             cb = QCheckBox(name)
             cb.setChecked(True)
-            cb.toggled.connect(
-                lambda checked, n=name: self.toggle_layer(n, checked)
-            )
+            cb.toggled.connect(lambda checked, n=name: self.toggle_layer(n, checked))
             layers_row.addWidget(cb)
             self._layer_checks[name] = cb
         layers_row.addStretch(1)
@@ -191,9 +192,7 @@ class Pcb3dViewer(QWidget):
         self._elev_slider.setValue(0)
         self._render()
         if self._scene.itemsBoundingRect().isValid():
-            self._view.fitInView(
-                self._scene.itemsBoundingRect(), Qt.KeepAspectRatio
-            )
+            self._view.fitInView(self._scene.itemsBoundingRect(), Qt.KeepAspectRatio)
 
     def explode(self, enabled: bool) -> None:
         self._exploded = enabled
@@ -205,9 +204,7 @@ class Pcb3dViewer(QWidget):
         self.explode(checked)
 
     def _on_export_clicked(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export 3D View", "pcb_3d.png", "PNG (*.png)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Export 3D View", "pcb_3d.png", "PNG (*.png)")
         if path:
             self.export_png(path)
 
@@ -244,9 +241,7 @@ class Pcb3dViewer(QWidget):
         s = 3.0 * self._zoom
         return QPointF(x1 * s + self._pan.x(), -y2 * s + self._pan.y())
 
-    def _polygon_from_rect(
-        self, x0: float, y0: float, x1: float, y1: float, z: float
-    ) -> QPolygonF:
+    def _polygon_from_rect(self, x0: float, y0: float, x1: float, y1: float, z: float) -> QPolygonF:
         return QPolygonF(
             [
                 self._project(x0, y0, z),
@@ -261,9 +256,7 @@ class Pcb3dViewer(QWidget):
         board = self._board
         if board is None:
             # Show placeholder
-            self._scene.addText("No board loaded").setDefaultTextColor(
-                QColor(200, 200, 200)
-            )
+            self._scene.addText("No board loaded").setDefaultTextColor(QColor(200, 200, 200))
             return
 
         outline = list(getattr(board, "outline", []) or [])
@@ -308,7 +301,10 @@ class Pcb3dViewer(QWidget):
                 p = self._project(v.x_mm, v.y_mm, 0.0)
                 r = v.diameter_mm * 3.0 * self._zoom / 2.0
                 self._scene.addEllipse(
-                    p.x() - r, p.y() - r, r * 2, r * 2,
+                    p.x() - r,
+                    p.y() - r,
+                    r * 2,
+                    r * 2,
                     QPen(QColor(40, 20, 0)),
                     QBrush(color),
                 )

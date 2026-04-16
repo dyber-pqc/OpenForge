@@ -30,8 +30,10 @@ from PySide6.QtWidgets import (
 try:
     from ._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore
         return ""
+
 
 try:
     from openforge.verification.equivalence import EqyConfig, EqyResult, EqyRunner
@@ -190,12 +192,8 @@ class EquivalencePanel(QWidget):
             "error": "ERROR",
         }.get(result.status, result.status.upper())
         self._status_lbl.setText(label_text)
-        self._status_lbl.setStyleSheet(
-            f"color:{colour}; font-size:16px; font-weight:600;"
-        )
-        self._summary.setText(
-            f"Matched: {result.matched_pairs}   Proven: {result.proven_pairs}"
-        )
+        self._status_lbl.setStyleSheet(f"color:{colour}; font-size:16px; font-weight:600;")
+        self._summary.setText(f"Matched: {result.matched_pairs}   Proven: {result.proven_pairs}")
         self._witness.setPlainText(result.log[-4000:])
         self._witness_btn.setEnabled(bool(result.counterexample))
 

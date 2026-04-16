@@ -3,6 +3,7 @@
 Provides detection, configuration, step running, log tail, metrics
 dashboard and Caravel project bootstrap from the OpenForge desktop app.
 """
+
 from __future__ import annotations
 
 import re
@@ -100,9 +101,7 @@ class _RunWorker(QObject):
                     self._single, self._run_dir, log_callback=self.line.emit
                 )
             else:
-                result = self._runner.run_flow(
-                    steps=self._steps, log_callback=self.line.emit
-                )
+                result = self._runner.run_flow(steps=self._steps, log_callback=self.line.emit)
         except Exception as exc:  # pragma: no cover
             result = {"ok": False, "error": str(exc)}
         self.finished.emit(result)
@@ -159,9 +158,7 @@ class OpenLanePanel(QWidget):
         self._ed_density.setSingleStep(0.05)
         self._ed_density.setValue(0.55)
         self._ed_strategy = QComboBox()
-        self._ed_strategy.addItems(
-            ["AREA 0", "AREA 1", "AREA 2", "DELAY 0", "DELAY 1", "DELAY 2"]
-        )
+        self._ed_strategy.addItems(["AREA 0", "AREA 1", "AREA 2", "DELAY 0", "DELAY 1", "DELAY 2"])
         self._ed_pdk = QComboBox()
         self._ed_pdk.addItems(["sky130A", "sky130B", "gf180mcuC"])
         self._ed_stdcell = QLineEdit("sky130_fd_sc_hd")
@@ -197,12 +194,8 @@ class OpenLanePanel(QWidget):
         self._tbl_steps.setHorizontalHeaderLabels(["#", "Step", "Status"])
         self._tbl_steps.verticalHeader().setVisible(False)
         self._tbl_steps.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self._tbl_steps.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        self._tbl_steps.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
+        self._tbl_steps.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self._tbl_steps.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         steps_layout.addWidget(self._tbl_steps)
 
         run_row = QHBoxLayout()
@@ -379,11 +372,7 @@ class OpenLanePanel(QWidget):
         if OpenLane2Config is None:
             QMessageBox.warning(self, "OpenLane", "OpenLane2 core module not available")
             return None
-        files = [
-            f.strip()
-            for f in self._ed_verilog.text().split(",")
-            if f.strip()
-        ]
+        files = [f.strip() for f in self._ed_verilog.text().split(",") if f.strip()]
         if not files:
             QMessageBox.warning(self, "OpenLane", "At least one Verilog file is required")
             return None
@@ -428,9 +417,7 @@ class OpenLanePanel(QWidget):
         if OpenLane2Stage is None:
             return
         items = [s.name for s in OpenLane2Stage]
-        name, ok = QInputDialog.getItem(
-            self, "Run From", "Start at step:", items, 0, False
-        )
+        name, ok = QInputDialog.getItem(self, "Run From", "Start at step:", items, 0, False)
         if not ok:
             return
         runner = self._make_runner()
@@ -444,9 +431,7 @@ class OpenLanePanel(QWidget):
         if OpenLane2Stage is None:
             return
         items = [s.name for s in OpenLane2Stage]
-        name, ok = QInputDialog.getItem(
-            self, "Run Single", "Step:", items, 0, False
-        )
+        name, ok = QInputDialog.getItem(self, "Run Single", "Step:", items, 0, False)
         if not ok:
             return
         runner = self._make_runner()
@@ -593,6 +578,4 @@ class OpenLanePanel(QWidget):
         self._ed_verilog.setText(
             str((root / "verilog" / "rtl" / f"{cfg.user_module_name}.v").as_posix())
         )
-        QMessageBox.information(
-            self, "Caravel", f"Created Caravel project at:\n{root}"
-        )
+        QMessageBox.information(self, "Caravel", f"Created Caravel project at:\n{root}")

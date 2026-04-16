@@ -18,11 +18,11 @@ from PySide6.QtWidgets import (
 )
 
 # Severity colours (Catppuccin Mocha palette)
-_CLR_INFO: Final[str] = "#89b4fa"     # blue
+_CLR_INFO: Final[str] = "#89b4fa"  # blue
 _CLR_WARNING: Final[str] = "#f9e2af"  # yellow
-_CLR_ERROR: Final[str] = "#f38ba8"    # red
+_CLR_ERROR: Final[str] = "#f38ba8"  # red
 _CLR_SUCCESS: Final[str] = "#a6e3a1"  # green
-_CLR_DEBUG: Final[str] = "#a6adc8"    # subtext0
+_CLR_DEBUG: Final[str] = "#a6adc8"  # subtext0
 _CLR_DEFAULT: Final[str] = "#cdd6f4"  # text
 _CLR_TIMESTAMP: Final[str] = "#585b70"  # overlay0
 
@@ -123,9 +123,7 @@ class ConsolePanel(QDockWidget):
 
     # ── Internal ───────────────────────────────────────────────────
 
-    def _append_styled(
-        self, tag: str, message: str, color: str, *, bold: bool = False
-    ) -> None:
+    def _append_styled(self, tag: str, message: str, color: str, *, bold: bool = False) -> None:
         timestamp = datetime.now(tz=UTC).strftime("%H:%M:%S")
         cursor = self._output.textCursor()
         cursor.movePosition(cursor.MoveOperation.End)
@@ -171,9 +169,10 @@ class ConsolePanel(QDockWidget):
 
         # Save log
         menu.addAction("Save Log to File...", self._save_log)
-        menu.addAction("Copy All to Clipboard", lambda: QApplication.clipboard().setText(
-            self._output.toPlainText()
-        ))
+        menu.addAction(
+            "Copy All to Clipboard",
+            lambda: QApplication.clipboard().setText(self._output.toPlainText()),
+        )
 
         menu.exec(self._output.mapToGlobal(position))
 
@@ -185,12 +184,13 @@ class ConsolePanel(QDockWidget):
     def _save_log(self) -> None:
         """Save console log to a file."""
         from PySide6.QtWidgets import QFileDialog
+
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Console Log", "console.log",
-            "Log Files (*.log *.txt);;All Files (*)"
+            self, "Save Console Log", "console.log", "Log Files (*.log *.txt);;All Files (*)"
         )
         if path:
             from pathlib import Path
+
             Path(path).write_text(self._output.toPlainText(), encoding="utf-8")
             self.append_info(f"Log saved to: {path}")
 
@@ -204,12 +204,8 @@ class ConsolePanel(QDockWidget):
             bg = "#ffffff"
             text = "#212529"
             input_bg = "#f8f9fa"
-        self._output.setStyleSheet(
-            f"QPlainTextEdit {{ background-color: {bg}; color: {text}; }}"
-        )
-        self._input.setStyleSheet(
-            f"QLineEdit {{ background-color: {input_bg}; color: {text}; }}"
-        )
+        self._output.setStyleSheet(f"QPlainTextEdit {{ background-color: {bg}; color: {text}; }}")
+        self._input.setStyleSheet(f"QLineEdit {{ background-color: {input_bg}; color: {text}; }}")
 
     def _on_command_entered(self) -> None:
         text = self._input.text().strip()

@@ -369,9 +369,7 @@ class SynthStrategyDialog(QDialog):
         splitter.setSizes([260, 580])
 
         # ------- Bottom: buttons -------
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accept)
         button_box.rejected.connect(self.reject)
         outer.addWidget(button_box)
@@ -405,9 +403,7 @@ class SynthStrategyDialog(QDialog):
     # ------------------------------------------------------------------ #
     # Slots
     # ------------------------------------------------------------------ #
-    def _on_selection_changed(
-        self, current: QListWidgetItem, previous: QListWidgetItem
-    ) -> None:
+    def _on_selection_changed(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
         if current is None:
             return
         key = current.data(Qt.UserRole)
@@ -429,11 +425,7 @@ class SynthStrategyDialog(QDialog):
             self.tradeoff_label.setText("")
         self.description_browser.setPlainText(strat.description)
 
-        flags = (
-            strat.yosys_flag_summary()
-            if hasattr(strat, "yosys_flag_summary")
-            else []
-        )
+        flags = strat.yosys_flag_summary() if hasattr(strat, "yosys_flag_summary") else []
         if flags:
             self.flags_label.setText(" - " + "\n - ".join(flags))
         else:

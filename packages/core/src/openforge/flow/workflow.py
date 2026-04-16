@@ -76,7 +76,9 @@ class FlowEngine:
 
             if not deps_ok:
                 step.status = StepStatus.SKIPPED
-                step.result = FlowResult(status=StepStatus.SKIPPED, output="Skipped: dependency failed")
+                step.result = FlowResult(
+                    status=StepStatus.SKIPPED, output="Skipped: dependency failed"
+                )
                 results[step_name] = step.result
                 continue
 

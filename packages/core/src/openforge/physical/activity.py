@@ -146,7 +146,7 @@ def parse_vcd_for_activity(vcd_path: Path) -> ActivityFile:
                 continue
             if line.startswith("$timescale"):
                 # Could be on same line or following line
-                rest = line[len("$timescale"):].strip()
+                rest = line[len("$timescale") :].strip()
                 if not rest or rest == "$end":
                     rest = next(f).strip()
                 timescale_ns = _parse_timescale(rest)
@@ -363,7 +363,7 @@ def _walk_saif_instances(
         net_m = re.search(r"\(NET\b", body)
         if net_m:
             net_end = _find_matching_paren(body, net_m.start())
-            net_body = body[net_m.end():net_end] if net_end > 0 else body[net_m.end():]
+            net_body = body[net_m.end() : net_end] if net_end > 0 else body[net_m.end() :]
             for sig_m in re.finditer(
                 r"\(\s*(\S+)\s*\(T0\s+([\d.]+)\)\s*\(T1\s+([\d.]+)\)"
                 r"(?:\s*\(TX\s+([\d.]+)\))?\s*\(TC\s+(\d+)\)",
@@ -480,13 +480,9 @@ class ActivityDrivenPowerAnalyzer:
         lines.append(f"link_design {top_module}")
         lines.append(f"read_sdc {{{_p(self.sdc)}}}")
         if vcd_path is not None:
-            lines.append(
-                f"read_power_activities -scope {top_module} -vcd {{{_p(vcd_path)}}}"
-            )
+            lines.append(f"read_power_activities -scope {top_module} -vcd {{{_p(vcd_path)}}}")
         elif saif_path is not None:
-            lines.append(
-                f"read_power_activities -scope {top_module} -saif {{{_p(saif_path)}}}"
-            )
+            lines.append(f"read_power_activities -scope {top_module} -saif {{{_p(saif_path)}}}")
         else:
             # Set average activity for the design
             avg = activity.get_average_activity()
@@ -632,9 +628,7 @@ def summarize_activity(activity: ActivityFile, top_n: int = 20) -> dict:
     clk_candidates.sort(key=lambda d: -d["toggle_rate"])
 
     total_toggles = sum(s.toggle_count for s in sigs)
-    avg_rate = (
-        sum(s.toggle_rate for s in sigs) / len(sigs) if sigs else 0.0
-    )
+    avg_rate = sum(s.toggle_rate for s in sigs) / len(sigs) if sigs else 0.0
 
     return {
         "format": activity.format,
@@ -715,8 +709,7 @@ def write_saif(activity: ActivityFile, output: Path) -> None:
         t1 = int(sig.static_prob_high * activity.duration_ns)
         t0 = int(prob_low * activity.duration_ns)
         lines.append(
-            f"      ({sig.name} (T0 {t0}) (T1 {t1}) (TX 0) "
-            f"(TC {sig.toggle_count}) (IG 0))"
+            f"      ({sig.name} (T0 {t0}) (T1 {t1}) (TX 0) (TC {sig.toggle_count}) (IG 0))"
         )
     lines.append("    )")
     lines.append("  )")

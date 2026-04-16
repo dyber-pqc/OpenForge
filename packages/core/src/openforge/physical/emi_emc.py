@@ -168,9 +168,7 @@ class EmiEmcAnalyzer:
         )
 
     # ------------------------------------------------------------------
-    def compute_spectrum(
-        self, clock_mhz: float, harmonics: int = 10
-    ) -> list[tuple[float, float]]:
+    def compute_spectrum(self, clock_mhz: float, harmonics: int = 10) -> list[tuple[float, float]]:
         """Compute the harmonic spectrum of a square-wave clock signal.
 
         For a 50% duty cycle square wave, only odd harmonics exist with
@@ -250,12 +248,8 @@ class EmiEmcAnalyzer:
         lines.append("")
         lines.append("Compliance")
         lines.append("-" * 70)
-        lines.append(
-            f"FCC Part 15 Class B: {'PASS' if result.fcc_class_b_compliant else 'FAIL'}"
-        )
-        lines.append(
-            f"CISPR 22 Class B:    {'PASS' if result.ce_compliant else 'FAIL'}"
-        )
+        lines.append(f"FCC Part 15 Class B: {'PASS' if result.fcc_class_b_compliant else 'FAIL'}")
+        lines.append(f"CISPR 22 Class B:    {'PASS' if result.ce_compliant else 'FAIL'}")
         lines.append(f"Worst margin:        {self.margin_db(result):+.2f} dB")
         lines.append("")
         lines.append("Top 15 spectral lines")
@@ -265,10 +259,7 @@ class EmiEmcAnalyzer:
         ):
             limit = self._lookup_limit(f, self.fcc_limits_dbuv)
             mark = "FAIL" if db > limit else "ok"
-            lines.append(
-                f"  {i:2d}. {f:8.2f} MHz  {db:6.1f} dBuV/m  "
-                f"(limit {limit:5.1f}) [{mark}]"
-            )
+            lines.append(f"  {i:2d}. {f:8.2f} MHz  {db:6.1f} dBuV/m  (limit {limit:5.1f}) [{mark}]")
         lines.append("")
         lines.append(f"Runtime: {result.runtime_s:.3f} s")
         lines.append(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}")

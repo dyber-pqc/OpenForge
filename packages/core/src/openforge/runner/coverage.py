@@ -65,9 +65,7 @@ class CoverageData:
 #   C '<file>' <line> <column> <name> <count>
 # or the annotated form from ``verilator_coverage --annotate``.
 
-_VERILATOR_LINE_RE = re.compile(
-    r"^C\s+'([^']+)'\s+(\d+)\s+\d+\s+(\S+)\s+(\d+)"
-)
+_VERILATOR_LINE_RE = re.compile(r"^C\s+'([^']+)'\s+(\d+)\s+\d+\s+(\S+)\s+(\d+)")
 
 # Toggle entries:
 #   T '<file>' <line> <column> <hier> <signal> <bit> <0->1> <1->0>
@@ -76,9 +74,7 @@ _VERILATOR_TOGGLE_RE = re.compile(
 )
 
 # FSM entries (from verilator --coverage-line --coverage-toggle):
-_VERILATOR_FSM_RE = re.compile(
-    r"^F\s+'([^']+)'\s+\d+\s+\d+\s+(\S+)"
-)
+_VERILATOR_FSM_RE = re.compile(r"^F\s+'([^']+)'\s+\d+\s+\d+\s+(\S+)")
 
 
 class CoverageCollector:
@@ -282,9 +278,9 @@ class CoverageCollector:
             "th, td { border: 1px solid #313244; padding: 6px 12px; text-align: left; }",
             "th { background: #181825; color: #89b4fa; }",
             "tr:hover { background: #313244; }",
-            ".covered { background: #1a3a1a; color: #a6e3a1; }",      # green
-            ".uncovered { background: #3a1a1a; color: #f38ba8; }",    # red
-            ".partial { background: #3a3a1a; color: #f9e2af; }",      # yellow
+            ".covered { background: #1a3a1a; color: #a6e3a1; }",  # green
+            ".uncovered { background: #3a1a1a; color: #f38ba8; }",  # red
+            ".partial { background: #3a3a1a; color: #f9e2af; }",  # yellow
             ".line-no { color: #585b70; text-align: right; width: 50px; user-select: none; }",
             ".hit-count { text-align: right; width: 60px; }",
             "pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; }",
@@ -301,15 +297,23 @@ class CoverageCollector:
 
         # Summary
         pct = coverage_data.line_percentage
-        pct_class = "summary-good" if pct >= 80 else ("summary-warn" if pct >= 50 else "summary-bad")
+        pct_class = (
+            "summary-good" if pct >= 80 else ("summary-warn" if pct >= 50 else "summary-bad")
+        )
         pct_color = "#a6e3a1" if pct >= 80 else ("#f9e2af" if pct >= 50 else "#f38ba8")
-        lines.append(f"<p>Line coverage: <span class='{pct_class}'>{pct:.1f}%</span> "
-                      f"({coverage_data.line_hit_count}/{coverage_data.line_total_count} lines)</p>")
-        lines.append(f"<div class='pct-bar'><div class='pct-fill' style='width:{pct:.0f}%; background:{pct_color};'></div></div>")
+        lines.append(
+            f"<p>Line coverage: <span class='{pct_class}'>{pct:.1f}%</span> "
+            f"({coverage_data.line_hit_count}/{coverage_data.line_total_count} lines)</p>"
+        )
+        lines.append(
+            f"<div class='pct-bar'><div class='pct-fill' style='width:{pct:.0f}%; background:{pct_color};'></div></div>"
+        )
 
         # Per-file summary table
         lines.append("<h2>File Summary</h2>")
-        lines.append("<table><tr><th>File</th><th>Lines Hit</th><th>Total</th><th>Coverage</th></tr>")
+        lines.append(
+            "<table><tr><th>File</th><th>Lines Hit</th><th>Total</th><th>Coverage</th></tr>"
+        )
         for fname in sorted(files):
             line_data = files[fname]
             total = len(line_data)
@@ -357,8 +361,12 @@ class CoverageCollector:
                 line_data = files[fname]
                 lines.append(f"<h2>{html.escape(fname)}</h2>")
                 lines.append("<table>")
-                lines.append("<tr><th class='line-no'>#</th><th class='hit-count'>Hits</th><th>Source</th></tr>")
-                for i, src_line in enumerate(src_path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+                lines.append(
+                    "<tr><th class='line-no'>#</th><th class='hit-count'>Hits</th><th>Source</th></tr>"
+                )
+                for i, src_line in enumerate(
+                    src_path.read_text(encoding="utf-8", errors="replace").splitlines(), 1
+                ):
                     if i in line_data:
                         count = line_data[i]
                         cls = "covered" if count > 0 else "uncovered"

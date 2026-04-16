@@ -305,22 +305,22 @@ class EsdAnalyzer:
         lines.append("=" * 70)
         lines.append(f"HBM target:         {result.hbm_voltage_kv:.1f} kV")
         lines.append(f"CDM target:         {result.cdm_voltage_v:.0f} V")
-        lines.append(f"HBM peak current:   {self.hbm_peak_current()*1e3:.2f} mA")
+        lines.append(f"HBM peak current:   {self.hbm_peak_current() * 1e3:.2f} mA")
         lines.append(f"Pins checked:       {result.pins_checked}")
         lines.append(f"Paths analyzed:     {len(result.paths)}")
-        lines.append(f"Violations:         {len(result.violations)} "
-                     f"({result.critical_count} critical, "
-                     f"{result.warning_count} warning)")
+        lines.append(
+            f"Violations:         {len(result.violations)} "
+            f"({result.critical_count} critical, "
+            f"{result.warning_count} warning)"
+        )
         lines.append("")
         lines.append("Compliance")
         lines.append("-" * 70)
         lines.append(
-            f"HBM ({result.hbm_voltage_kv:.1f} kV): "
-            f"{'PASS' if result.hbm_compliant else 'FAIL'}"
+            f"HBM ({result.hbm_voltage_kv:.1f} kV): {'PASS' if result.hbm_compliant else 'FAIL'}"
         )
         lines.append(
-            f"CDM ({result.cdm_voltage_v:.0f} V):    "
-            f"{'PASS' if result.cdm_compliant else 'FAIL'}"
+            f"CDM ({result.cdm_voltage_v:.0f} V):    {'PASS' if result.cdm_compliant else 'FAIL'}"
         )
         lines.append("")
         if result.violations:

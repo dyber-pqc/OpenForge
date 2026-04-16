@@ -121,9 +121,19 @@ class _WelcomePage(QWizardPage):
 
 class _ToolDetectPage(QWizardPage):
     TOOLS = [
-        "yosys", "nextpnr-ice40", "nextpnr-ecp5", "openroad",
-        "magic", "netgen", "ngspice", "verilator", "iverilog",
-        "klayout", "openfpgaloader", "icestorm", "prjtrellis",
+        "yosys",
+        "nextpnr-ice40",
+        "nextpnr-ecp5",
+        "openroad",
+        "magic",
+        "netgen",
+        "ngspice",
+        "verilator",
+        "iverilog",
+        "klayout",
+        "openfpgaloader",
+        "icestorm",
+        "prjtrellis",
     ]
 
     def __init__(self) -> None:
@@ -164,6 +174,7 @@ class _ToolDetectPage(QWizardPage):
         self._rescan()
         if sys.platform.startswith("win"):
             import shutil
+
             if shutil.which("wsl.exe"):
                 self.wsl_label.setText("WSL2 detected - Linux EDA tools can run through it.")
             else:
@@ -425,8 +436,13 @@ class FirstRunWizard(QWizard):
         self._done = _DonePage()
 
         for p in (
-            self._welcome, self._detect, self._pdks, self._install,
-            self._bundler, self._workspace, self._done,
+            self._welcome,
+            self._detect,
+            self._pdks,
+            self._install,
+            self._bundler,
+            self._workspace,
+            self._done,
         ):
             self.addPage(p)
 
@@ -474,6 +490,7 @@ class FirstRunWizard(QWizard):
         # Configure telemetry now that user has chosen.
         try:
             from openforge.telemetry import get_client
+
             get_client().set_enabled(settings["telemetry_enabled"])
         except Exception:  # noqa: BLE001
             pass

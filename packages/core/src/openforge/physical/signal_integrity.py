@@ -3,6 +3,7 @@
 Extracts coupling capacitance from a DEF, computes Miller-effect crosstalk
 delay, and detects combinational glitches.
 """
+
 from __future__ import annotations
 
 import json
@@ -116,9 +117,7 @@ class SignalIntegrityAnalyzer:
             for j in range(i + 1, len(nets)):
                 a = nets[i]
                 b = nets[j]
-                cap = self._pair_coupling(
-                    net_segments[a], net_segments[b], layer_info
-                )
+                cap = self._pair_coupling(net_segments[a], net_segments[b], layer_info)
                 if cap > 0:
                     coupling[(a, b)] = cap
         return coupling
@@ -134,9 +133,7 @@ class SignalIntegrityAnalyzer:
             for lb, bx1, by1, bx2, by2 in seg_b:
                 if la != lb:
                     continue
-                info = layer_info.get(
-                    la, {"pitch": 0.34, "thickness": 0.13, "spacing_min": 0.14}
-                )
+                info = layer_info.get(la, {"pitch": 0.34, "thickness": 0.13, "spacing_min": 0.14})
                 pitch = info["pitch"]
                 thickness = info["thickness"]
                 # both horizontal?
@@ -145,8 +142,7 @@ class SignalIntegrityAnalyzer:
                         continue
                     overlap = max(
                         0.0,
-                        min(max(ax1, ax2), max(bx1, bx2))
-                        - max(min(ax1, ax2), min(bx1, bx2)),
+                        min(max(ax1, ax2), max(bx1, bx2)) - max(min(ax1, ax2), min(bx1, bx2)),
                     )
                     spacing = max(abs(ay1 - by1), info["spacing_min"])
                 # both vertical?
@@ -155,8 +151,7 @@ class SignalIntegrityAnalyzer:
                         continue
                     overlap = max(
                         0.0,
-                        min(max(ay1, ay2), max(by1, by2))
-                        - max(min(ay1, ay2), min(by1, by2)),
+                        min(max(ay1, ay2), max(by1, by2)) - max(min(ay1, ay2), min(by1, by2)),
                     )
                     spacing = max(abs(ax1 - bx1), info["spacing_min"])
                 else:
@@ -164,12 +159,7 @@ class SignalIntegrityAnalyzer:
                 if overlap <= 0.0:
                     continue
                 # cap (F) = eps0 * k * (length * thickness) / spacing  - convert um to m
-                cap = (
-                    self.EPS0
-                    * self.k
-                    * (overlap * 1e-6 * thickness * 1e-6)
-                    / (spacing * 1e-6)
-                )
+                cap = self.EPS0 * self.k * (overlap * 1e-6 * thickness * 1e-6) / (spacing * 1e-6)
                 total += cap
         return total * 1e15  # to fF
 
@@ -260,9 +250,7 @@ class SignalIntegrityAnalyzer:
                                 "cell": cell_name,
                                 "type": ctype,
                                 "input_skew_ns": spread,
-                                "severity": "high"
-                                if spread > 2 * tpd_default
-                                else "medium",
+                                "severity": "high" if spread > 2 * tpd_default else "medium",
                             }
                         )
         return warnings
@@ -295,8 +283,6 @@ class SignalIntegrityAnalyzer:
             lines.append("")
             lines.append("Glitch warnings:")
             for w in result.glitch_warnings[:20]:
-                lines.append(
-                    f"  {w['cell']} ({w['type']}) skew={w['input_skew_ns']:.3f}ns"
-                )
+                lines.append(f"  {w['cell']} ({w['type']}) skew={w['input_skew_ns']:.3f}ns")
         lines.append("=" * 72)
         return "\n".join(lines)

@@ -105,17 +105,9 @@ class CoverageReport:
 
     @property
     def overall_pct(self) -> float:
-        total = (
-            self.line_total
-            + self.toggle_total
-            + self.branch_total
-            + self.functional_total
-        )
+        total = self.line_total + self.toggle_total + self.branch_total + self.functional_total
         covered = (
-            self.line_covered
-            + self.toggle_covered
-            + self.branch_covered
-            + self.functional_covered
+            self.line_covered + self.toggle_covered + self.branch_covered + self.functional_covered
         )
         return self._pct(covered, total)
 
@@ -226,9 +218,7 @@ class CoverageParser:
                     cg = attrs.get("group", attrs.get("hier", "user"))
                     cp = attrs.get("point", "cp")
                     bn = attrs.get("bin", "default")
-                    report.functional_details.append(
-                        FunctionalCoverage(cg, cp, bn, count)
-                    )
+                    report.functional_details.append(FunctionalCoverage(cg, cp, bn, count))
 
         report.line_details = list(line_seen.values())
         report.line_total = len(report.line_details)
@@ -237,14 +227,11 @@ class CoverageParser:
         report.toggle_details = list(toggle_seen.values())
         report.toggle_total = len(report.toggle_details) * 2
         report.toggle_covered = sum(
-            (1 if t.rises > 0 else 0) + (1 if t.falls > 0 else 0)
-            for t in report.toggle_details
+            (1 if t.rises > 0 else 0) + (1 if t.falls > 0 else 0) for t in report.toggle_details
         )
 
         report.functional_total = len(report.functional_details)
-        report.functional_covered = sum(
-            1 for f in report.functional_details if f.hits > 0
-        )
+        report.functional_covered = sum(1 for f in report.functional_details if f.hits > 0)
 
         return report
 
@@ -299,15 +286,12 @@ class CoverageParser:
         merged.toggle_details = list(tog_acc.values())
         merged.toggle_total = len(merged.toggle_details) * 2
         merged.toggle_covered = sum(
-            (1 if t.rises > 0 else 0) + (1 if t.falls > 0 else 0)
-            for t in merged.toggle_details
+            (1 if t.rises > 0 else 0) + (1 if t.falls > 0 else 0) for t in merged.toggle_details
         )
 
         merged.functional_details = list(func_acc.values())
         merged.functional_total = len(merged.functional_details)
-        merged.functional_covered = sum(
-            1 for f in merged.functional_details if f.hits > 0
-        )
+        merged.functional_covered = sum(1 for f in merged.functional_details if f.hits > 0)
 
         merged.branch_total = branch_total
         merged.branch_covered = min(branch_covered, branch_total)
@@ -381,7 +365,7 @@ class CoverageParser:
   <table class='files'>
     <thead><tr><th>File</th><th>Lines</th><th>&nbsp;</th><th>%</th></tr></thead>
     <tbody>
-    {''.join(rows) or '<tr><td colspan=4 class="muted">No line coverage data</td></tr>'}
+    {"".join(rows) or '<tr><td colspan=4 class="muted">No line coverage data</td></tr>'}
     </tbody>
   </table>
 </section>
@@ -412,7 +396,7 @@ class CoverageParser:
 <a href="../index.html">&larr; back</a></header>
 <table class='source'>
 <thead><tr><th>Line</th><th>Hits</th><th>Source</th></tr></thead>
-<tbody>{''.join(file_rows)}</tbody></table>
+<tbody>{"".join(file_rows)}</tbody></table>
 </body></html>
 """
             (files_dir / f"{slug}.html").write_text(html_doc, encoding="utf-8")
@@ -566,11 +550,7 @@ class FileCoverage(BaseModel):
     def recompute(self) -> None:
         self.total_lines = len(self.line_hits)
         self.covered_lines = sum(1 for h in self.line_hits.values() if h > 0)
-        self.percent = (
-            (self.covered_lines / self.total_lines * 100.0)
-            if self.total_lines
-            else 0.0
-        )
+        self.percent = (self.covered_lines / self.total_lines * 100.0) if self.total_lines else 0.0
 
 
 class ModuleCoverage(BaseModel):
@@ -591,9 +571,7 @@ class ModuleCoverage(BaseModel):
 class CoverageReportV2(BaseModel):
     """Pydantic v2 coverage report."""
 
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     test_name: str = ""
     files: dict[str, FileCoverage] = Field(default_factory=dict)
     modules: list[ModuleCoverage] = Field(default_factory=list)

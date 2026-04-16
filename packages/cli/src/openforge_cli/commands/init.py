@@ -181,6 +181,7 @@ def _write(path: Path, content: str) -> None:
 # Command
 # ---------------------------------------------------------------------------
 
+
 def init(
     name: str = typer.Argument(..., help="Project name (used as top-level directory)."),
     template: Template = typer.Option(
@@ -212,7 +213,11 @@ def init(
     )
 
     # openforge.yaml -- pick template-appropriate config
-    yaml_template = _CRYPTO_YAML_TEMPLATE if template == Template.crypto_accelerator else _OPENFORGE_YAML_TEMPLATE
+    yaml_template = (
+        _CRYPTO_YAML_TEMPLATE
+        if template == Template.crypto_accelerator
+        else _OPENFORGE_YAML_TEMPLATE
+    )
     _write(
         project_dir / "openforge.yaml",
         yaml_template.format(name=name),

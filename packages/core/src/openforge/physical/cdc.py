@@ -118,9 +118,18 @@ class CdcReport(BaseModel):
     # ------------------------------------------------------------------
 
     _FF_TYPES = {
-        "$dff", "$dffe", "$dffsr", "$dffsre",
-        "$adff", "$adffe", "$sdff", "$sdffe",
-        "FDRE", "FDCE", "FDPE", "FDSE",
+        "$dff",
+        "$dffe",
+        "$dffsr",
+        "$dffsre",
+        "$adff",
+        "$adffe",
+        "$sdff",
+        "$sdffe",
+        "FDRE",
+        "FDCE",
+        "FDPE",
+        "FDSE",
     }
 
     @classmethod
@@ -176,9 +185,7 @@ class CdcReport(BaseModel):
                     continue
                 # Crossing!
                 # Check whether source FF drives only this one net (single-bit sync).
-                same_driver_bits = [
-                    b for b, (n, _) in bit_driver.items() if n == src_name
-                ]
+                same_driver_bits = [b for b, (n, _) in bit_driver.items() if n == src_name]
                 kind = "unsynchronized"
                 severity = "error"
                 suggestion = (
@@ -195,10 +202,7 @@ class CdcReport(BaseModel):
                 elif len(same_driver_bits) == 1:
                     # Check if destination FF forwards only to another FF in
                     # the same clock domain (2-FF sync pattern).
-                    downstream = [
-                        d for d, c, _ in ff_inputs
-                        if c == dst_clk and d != fname
-                    ]
+                    downstream = [d for d, c, _ in ff_inputs if c == dst_clk and d != fname]
                     if downstream:
                         kind = "partial_sync"
                         severity = "warning"

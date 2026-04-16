@@ -155,8 +155,7 @@ class OpenROADEngine(ToolEngine):
             da = " ".join(str(v) for v in die_area)
             ca = " ".join(str(v) for v in core_area)
             tcl_lines.append(
-                f"initialize_floorplan -die_area {{{da}}} "
-                f"-core_area {{{ca}}} -site {site_name}"
+                f"initialize_floorplan -die_area {{{da}}} -core_area {{{ca}}} -site {site_name}"
             )
 
         tcl_lines.extend(extra_tcl)

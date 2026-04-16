@@ -179,11 +179,13 @@ class VeribleEngine(ToolEngine):
         )
         for line in result.stdout.splitlines():
             if m := pattern.match(line.strip()):
-                findings.append({
-                    "file": m.group("file"),
-                    "line": int(m.group("line")),
-                    "column": int(m.group("col")),
-                    "rule": m.group("rule"),
-                    "message": m.group("msg"),
-                })
+                findings.append(
+                    {
+                        "file": m.group("file"),
+                        "line": int(m.group("line")),
+                        "column": int(m.group("col")),
+                        "rule": m.group("rule"),
+                        "message": m.group("msg"),
+                    }
+                )
         return findings

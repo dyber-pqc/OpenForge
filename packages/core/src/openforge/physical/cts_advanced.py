@@ -19,6 +19,7 @@ The optimizer solves a small LP:
 Where no SciPy/solver is available, the module falls back to a simple
 greedy relaxation that produces similar results for small designs.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -106,9 +107,7 @@ class AdvancedClockTreeSynth:
         docker_image: str = "openforge/openroad:latest",
         timeout: int = 3600,
     ) -> None:
-        self.openroad_executable = (
-            openroad_executable or shutil.which("openroad")
-        )
+        self.openroad_executable = openroad_executable or shutil.which("openroad")
         self.docker_image = docker_image
         self.timeout = timeout
 
@@ -202,12 +201,8 @@ class AdvancedClockTreeSynth:
         skew: dict[str, float] = {}
         # Greedy: push skew proportional to how much the sink is out of
         # balance relative to the median slack.
-        setup_slacks = [
-            slack_data.get(s.full_name, s.setup_slack) for s in sinks
-        ]
-        hold_slacks = [
-            slack_data.get(s.full_name + ":hold", s.hold_slack) for s in sinks
-        ]
+        setup_slacks = [slack_data.get(s.full_name, s.setup_slack) for s in sinks]
+        hold_slacks = [slack_data.get(s.full_name + ":hold", s.hold_slack) for s in sinks]
         median_setup = sorted(setup_slacks)[len(setup_slacks) // 2]
 
         for sink, setup, hold in zip(sinks, setup_slacks, hold_slacks, strict=False):
@@ -246,9 +241,7 @@ class AdvancedClockTreeSynth:
         lines.append(f"read_verilog {self._q(netlist)}")
         lines.append("link_design [current_design]")
         lines.append(
-            "create_clock -name "
-            f"{clock_name} -period {clock_period_ns} "
-            f"[get_ports {clock_name}]"
+            f"create_clock -name {clock_name} -period {clock_period_ns} [get_ports {clock_name}]"
         )
         lines.append("")
         lines.append("set_propagated_clock [all_clocks]")
@@ -259,9 +252,7 @@ class AdvancedClockTreeSynth:
         lines.append(f"    -root_buf {root_buf} \\")
         lines.append("    -sink_clustering_enable \\")
         lines.append("    -sink_clustering_size 20 \\")
-        lines.append(
-            f"    -sink_clustering_max_diameter {target_skew_ps * 2}"
-        )
+        lines.append(f"    -sink_clustering_max_diameter {target_skew_ps * 2}")
         lines.append("")
         lines.append("repair_clock_inverters")
         lines.append("repair_clock_nets")
@@ -271,7 +262,7 @@ class AdvancedClockTreeSynth:
             lines.append(f"set_clock_uncertainty -setup {uncert} [all_clocks]")
             lines.append(f"set_clock_uncertainty -hold {uncert / 2} [all_clocks]")
             lines.append("# Useful-skew optimization")
-            lines.append("if {[info commands optimize_clock_skew] ne \"\"} {")
+            lines.append('if {[info commands optimize_clock_skew] ne ""} {')
             lines.append("    optimize_clock_skew")
             lines.append("}")
         lines.append("")
@@ -324,9 +315,7 @@ class AdvancedClockTreeSynth:
         return stats
 
     @staticmethod
-    def _estimate_useful_skew_savings(
-        target_skew_ps: float, clock_period_ns: float
-    ) -> float:
+    def _estimate_useful_skew_savings(target_skew_ps: float, clock_period_ns: float) -> float:
         """Rough estimate of WNS improvement from useful skew.
 
         Empirically, useful skew recovers ~20-30% of the allowed skew
@@ -339,9 +328,7 @@ class AdvancedClockTreeSynth:
     # OpenROAD execution
     # ------------------------------------------------------------------
 
-    def _run_openroad(
-        self, script_path: Path, cwd: Path
-    ) -> subprocess.CompletedProcess:
+    def _run_openroad(self, script_path: Path, cwd: Path) -> subprocess.CompletedProcess:
         if self.openroad_executable:
             return subprocess.run(
                 [
@@ -358,9 +345,7 @@ class AdvancedClockTreeSynth:
             )
         docker = shutil.which("docker")
         if docker is None:
-            raise FileNotFoundError(
-                "Neither 'openroad' nor 'docker' on PATH."
-            )
+            raise FileNotFoundError("Neither 'openroad' nor 'docker' on PATH.")
         return subprocess.run(
             [
                 docker,

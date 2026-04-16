@@ -79,7 +79,9 @@ VIVADO_SCHEME = KeyScheme(
         KeyBinding(action="redo", keys=["Ctrl+Y"], description="Redo"),
         KeyBinding(action="run_synthesis", keys=["F11"], description="Run synthesis"),
         KeyBinding(action="run_simulation", keys=["F5"], description="Run behavioral simulation"),
-        KeyBinding(action="run_implementation", keys=["Shift+F7"], description="Run implementation"),
+        KeyBinding(
+            action="run_implementation", keys=["Shift+F7"], description="Run implementation"
+        ),
         KeyBinding(action="run_bitstream", keys=["Ctrl+B"], description="Generate bitstream"),
         KeyBinding(action="build_all", keys=["Ctrl+Shift+B"], description="Build all"),
         KeyBinding(action="run_timing", keys=["Ctrl+Shift+T"], description="Report timing"),
@@ -131,8 +133,7 @@ KICAD_SCHEME = KeyScheme(
 
 
 ALL_SCHEMES: dict[str, KeyScheme] = {
-    s.name: s
-    for s in (DEFAULT_SCHEME, VIVADO_SCHEME, INNOVUS_SCHEME, KICAD_SCHEME)
+    s.name: s for s in (DEFAULT_SCHEME, VIVADO_SCHEME, INNOVUS_SCHEME, KICAD_SCHEME)
 }
 
 

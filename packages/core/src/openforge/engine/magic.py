@@ -92,7 +92,7 @@ class MagicEngine(ToolEngine):
             "drc catchup",
             *extra_tcl,
             "set drc_count [drc listall why]",
-            "puts \"DRC errors: $drc_count\"",
+            'puts "DRC errors: $drc_count"',
             "quit -noprompt",
         ]
 
@@ -141,19 +141,23 @@ class MagicEngine(ToolEngine):
         ]
 
         if parasitic:
-            tcl_lines.extend([
-                "ext2sim labels on",
-                "ext2sim",
-                "extresist tolerance 10",
-                "extresist all",
-            ])
+            tcl_lines.extend(
+                [
+                    "ext2sim labels on",
+                    "ext2sim",
+                    "extresist tolerance 10",
+                    "extresist all",
+                ]
+            )
 
-        tcl_lines.extend([
-            "ext2spice lvs",
-            f"ext2spice -o {spice_out}",
-            *extra_tcl,
-            "quit -noprompt",
-        ])
+        tcl_lines.extend(
+            [
+                "ext2spice lvs",
+                f"ext2spice -o {spice_out}",
+                *extra_tcl,
+                "quit -noprompt",
+            ]
+        )
 
         return self._run_magic_tcl(
             tcl_lines,

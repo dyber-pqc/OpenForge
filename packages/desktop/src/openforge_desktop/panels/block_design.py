@@ -88,6 +88,7 @@ try:
     from openforge.block_design.generator import (
         validate as _bd_validate,
     )
+
     _BD_GENERATOR_AVAILABLE = True
 except Exception:  # pragma: no cover - keep panel importable without core
     _BD_GENERATOR_AVAILABLE = False
@@ -95,6 +96,7 @@ except Exception:  # pragma: no cover - keep panel importable without core
 
 try:
     from openforge.block_design.auto_connect import AutoConnector as _BDAutoConnector
+
     _BD_AUTO_OK = True
 except Exception:  # pragma: no cover
     _BD_AUTO_OK = False
@@ -106,6 +108,7 @@ try:
     from openforge.block_design.address_map import (
         AddressRange as _BDAddressRange,
     )
+
     _BD_ADDRMAP_OK = True
 except Exception:  # pragma: no cover
     _BD_ADDRMAP_OK = False
@@ -120,12 +123,14 @@ try:
     from openforge.verification.axi_monitors import (
         generate_axis_monitor as _bd_gen_axis_mon,
     )
+
     _BD_AXI_MON_OK = True
 except Exception:  # pragma: no cover
     _BD_AXI_MON_OK = False
 
 try:
     from openforge.ip.generators import IP_CATALOG as _BD_IP_CATALOG
+
     _BD_IP_CATALOG_OK = True
 except Exception:  # pragma: no cover
     _BD_IP_CATALOG = {}  # type: ignore[assignment]
@@ -234,6 +239,7 @@ class ParamDef:
 @dataclass
 class IPBlockDef:
     """Definition of an IP block (template)."""
+
     name: str
     category: str = "default"
     description: str = ""
@@ -253,6 +259,7 @@ class IPBlockDef:
 @dataclass
 class BlockInstance:
     """An instance of an IP block placed on the canvas."""
+
     instance_id: str
     block_def: IPBlockDef
     x: float = 0.0
@@ -263,6 +270,7 @@ class BlockInstance:
 @dataclass
 class WireConnection:
     """A connection between two ports."""
+
     wire_id: str
     src_block: str  # instance_id
     src_port: str
@@ -377,6 +385,7 @@ def _load_ip_catalog(share_ip_dir: Path) -> list[IPBlockDef]:
     if catalog_path.exists():
         try:
             import yaml
+
             with open(catalog_path) as f:
                 raw = yaml.safe_load(f)
             catalog_data = raw.get("catalog", [])
@@ -409,6 +418,7 @@ def _load_ip_catalog(share_ip_dir: Path) -> list[IPBlockDef]:
 
 # ── Undo commands ────────────────────────────────────────────────────────────
 
+
 class _AddBlockCommand(QUndoCommand):
     def __init__(self, editor: _BlockDesignCanvas, instance: BlockInstance) -> None:
         super().__init__(f"Add {instance.block_def.name}")
@@ -433,7 +443,8 @@ class _RemoveBlockCommand(QUndoCommand):
     def redo(self) -> None:
         self._instance = self._editor._blocks.get(self._instance_id)
         self._removed_wires = [
-            w for w in self._editor._wires
+            w
+            for w in self._editor._wires
             if w.src_block == self._instance_id or w.dst_block == self._instance_id
         ]
         for w in self._removed_wires:
@@ -449,7 +460,9 @@ class _RemoveBlockCommand(QUndoCommand):
 
 class _AddWireCommand(QUndoCommand):
     def __init__(self, editor: _BlockDesignCanvas, wire: WireConnection) -> None:
-        super().__init__(f"Connect {wire.src_block}.{wire.src_port} -> {wire.dst_block}.{wire.dst_port}")
+        super().__init__(
+            f"Connect {wire.src_block}.{wire.src_port} -> {wire.dst_block}.{wire.dst_port}"
+        )
         self._editor = editor
         self._wire = wire
 
@@ -477,8 +490,13 @@ class _RemoveWireCommand(QUndoCommand):
 
 
 class _MoveBlockCommand(QUndoCommand):
-    def __init__(self, editor: _BlockDesignCanvas, instance_id: str,
-                 old_pos: tuple[float, float], new_pos: tuple[float, float]) -> None:
+    def __init__(
+        self,
+        editor: _BlockDesignCanvas,
+        instance_id: str,
+        old_pos: tuple[float, float],
+        new_pos: tuple[float, float],
+    ) -> None:
         super().__init__(f"Move {instance_id}")
         self._editor = editor
         self._id = instance_id
@@ -493,6 +511,7 @@ class _MoveBlockCommand(QUndoCommand):
 
 
 # ── Block graphics item ─────────────────────────────────────────────────────
+
 
 class _PortItem(QGraphicsEllipseItem):
     """Larger, brighter circle with hover glow representing a port on a block."""
@@ -517,8 +536,7 @@ class _PortItem(QGraphicsEllipseItem):
         pen.setCosmetic(True)
         self.setPen(pen)
         self.setToolTip(
-            f"{port_def.name} ({port_def.direction}) {port_def.width}\n"
-            f"Type: {port_def.signal_type}"
+            f"{port_def.name} ({port_def.direction}) {port_def.width}\nType: {port_def.signal_type}"
         )
         self.setZValue(10)
         self.setCursor(Qt.CursorShape.CrossCursor)
@@ -635,16 +653,20 @@ class _BlockItem(QGraphicsRectItem):
             pi.setPos(0, y)
             self.port_items[p.name] = pi
             # Direction triangle (right-pointing for input)
-            tri = QPolygonF([
-                QPointF(_PORT_RADIUS + 2, y - 4),
-                QPointF(_PORT_RADIUS + 8, y),
-                QPointF(_PORT_RADIUS + 2, y + 4),
-            ])
+            tri = QPolygonF(
+                [
+                    QPointF(_PORT_RADIUS + 2, y - 4),
+                    QPointF(_PORT_RADIUS + 8, y),
+                    QPointF(_PORT_RADIUS + 2, y + 4),
+                ]
+            )
             tri_item = QGraphicsPathItem(self)
             path = QPainterPath()
             path.addPolygon(tri)
             tri_item.setPath(path)
-            tri_item.setBrush(QBrush(QColor(_WIRE_COLORS.get(p.signal_type, _WIRE_COLORS["default"]))))
+            tri_item.setBrush(
+                QBrush(QColor(_WIRE_COLORS.get(p.signal_type, _WIRE_COLORS["default"])))
+            )
             tri_item.setPen(QPen(Qt.PenStyle.NoPen))
             # Label (inside block)
             lbl = QGraphicsSimpleTextItem(p.name, self)
@@ -663,16 +685,20 @@ class _BlockItem(QGraphicsRectItem):
             pi.setPos(w, y)
             self.port_items[p.name] = pi
             # Direction triangle (right-pointing exit, drawn pointing right just inside)
-            tri = QPolygonF([
-                QPointF(w - _PORT_RADIUS - 8, y - 4),
-                QPointF(w - _PORT_RADIUS - 2, y),
-                QPointF(w - _PORT_RADIUS - 8, y + 4),
-            ])
+            tri = QPolygonF(
+                [
+                    QPointF(w - _PORT_RADIUS - 8, y - 4),
+                    QPointF(w - _PORT_RADIUS - 2, y),
+                    QPointF(w - _PORT_RADIUS - 8, y + 4),
+                ]
+            )
             tri_item = QGraphicsPathItem(self)
             path = QPainterPath()
             path.addPolygon(tri)
             tri_item.setPath(path)
-            tri_item.setBrush(QBrush(QColor(_WIRE_COLORS.get(p.signal_type, _WIRE_COLORS["default"]))))
+            tri_item.setBrush(
+                QBrush(QColor(_WIRE_COLORS.get(p.signal_type, _WIRE_COLORS["default"])))
+            )
             tri_item.setPen(QPen(Qt.PenStyle.NoPen))
             # Label (right-aligned, inside)
             lbl = QGraphicsSimpleTextItem(p.name, self)
@@ -768,7 +794,9 @@ class _BlockItem(QGraphicsRectItem):
         super().hoverLeaveEvent(event)
 
     def itemChange(self, change, value):  # type: ignore[override]
-        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and isinstance(value, QPointF):
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and isinstance(
+            value, QPointF
+        ):
             # Snap to grid
             snapped = QPointF(
                 round(value.x() / _GRID_SNAP) * _GRID_SNAP,
@@ -791,6 +819,7 @@ class _BlockItem(QGraphicsRectItem):
 
 
 # ── Wire graphics item (Manhattan routing) ───────────────────────────────────
+
 
 class _WireItem(QGraphicsPathItem):
     """Manhattan-routed wire between two ports."""
@@ -835,6 +864,7 @@ class _WireItem(QGraphicsPathItem):
 
 # ── Canvas scene ─────────────────────────────────────────────────────────────
 
+
 class _BlockDesignScene(QGraphicsScene):
     """Scene with snap-to-grid background."""
 
@@ -868,6 +898,7 @@ class _BlockDesignScene(QGraphicsScene):
 
 
 # ── Canvas view ──────────────────────────────────────────────────────────────
+
 
 class _BlockDesignCanvas(QGraphicsView):
     """Main canvas for block design editing."""
@@ -962,13 +993,17 @@ class _BlockDesignCanvas(QGraphicsView):
             sb = self._block_items.get(wire.src_block)
             db = self._block_items.get(wire.dst_block)
             still_src = any(
-                w.src_block == wire.src_block and w.src_port == wire.src_port
-                or w.dst_block == wire.src_block and w.dst_port == wire.src_port
+                w.src_block == wire.src_block
+                and w.src_port == wire.src_port
+                or w.dst_block == wire.src_block
+                and w.dst_port == wire.src_port
                 for w in self._wires
             )
             still_dst = any(
-                w.src_block == wire.dst_block and w.src_port == wire.dst_port
-                or w.dst_block == wire.dst_block and w.dst_port == wire.dst_port
+                w.src_block == wire.dst_block
+                and w.src_port == wire.dst_port
+                or w.dst_block == wire.dst_block
+                and w.dst_port == wire.dst_port
                 for w in self._wires
             )
             if sb:
@@ -1038,13 +1073,15 @@ class _BlockDesignCanvas(QGraphicsView):
         for inst_id, inst in self._blocks.items():
             for p in inst.block_def.ports:
                 if (inst_id, p.name) not in connected_ports:
-                    issues.append({
-                        "type": "unconnected",
-                        "severity": "warning",
-                        "block": inst_id,
-                        "port": p.name,
-                        "message": f"Unconnected port: {inst_id}.{p.name}",
-                    })
+                    issues.append(
+                        {
+                            "type": "unconnected",
+                            "severity": "warning",
+                            "block": inst_id,
+                            "port": p.name,
+                            "message": f"Unconnected port: {inst_id}.{p.name}",
+                        }
+                    )
         # Width mismatches
         for w in self._wires:
             src_inst = self._blocks.get(w.src_block)
@@ -1054,17 +1091,19 @@ class _BlockDesignCanvas(QGraphicsView):
             src_port = next((p for p in src_inst.block_def.ports if p.name == w.src_port), None)
             dst_port = next((p for p in dst_inst.block_def.ports if p.name == w.dst_port), None)
             if src_port and dst_port and src_port.bit_width != dst_port.bit_width:
-                issues.append({
-                    "type": "width_mismatch",
-                    "severity": "error",
-                    "block": w.src_block,
-                    "port": w.src_port,
-                    "message": (
-                        f"Width mismatch: {w.src_block}.{w.src_port} "
-                        f"({src_port.bit_width}b) -> {w.dst_block}.{w.dst_port} "
-                        f"({dst_port.bit_width}b)"
-                    ),
-                })
+                issues.append(
+                    {
+                        "type": "width_mismatch",
+                        "severity": "error",
+                        "block": w.src_block,
+                        "port": w.src_port,
+                        "message": (
+                            f"Width mismatch: {w.src_block}.{w.src_port} "
+                            f"({src_port.bit_width}b) -> {w.dst_block}.{w.dst_port} "
+                            f"({dst_port.bit_width}b)"
+                        ),
+                    }
+                )
 
         # Clock domain crossing detection
         clock_domains: dict[str, str] = {}
@@ -1179,7 +1218,9 @@ class _BlockDesignCanvas(QGraphicsView):
                         wire = w
                         break
                 if wire:
-                    wire_name = f"w_{wire.src_block}_{wire.src_port}_to_{wire.dst_block}_{wire.dst_port}"
+                    wire_name = (
+                        f"w_{wire.src_block}_{wire.src_port}_to_{wire.dst_block}_{wire.dst_port}"
+                    )
                     port_conns.append(f"    .{p.name}({wire_name})")
                 else:
                     # External port
@@ -1204,7 +1245,10 @@ class _BlockDesignCanvas(QGraphicsView):
 
     def mousePressEvent(self, event):  # noqa: N802
         # Middle button OR Space+LeftClick OR Right button = pan
-        if event.button() == Qt.MouseButton.MiddleButton or event.button() == Qt.MouseButton.RightButton:
+        if (
+            event.button() == Qt.MouseButton.MiddleButton
+            or event.button() == Qt.MouseButton.RightButton
+        ):
             self._pan_active = True
             self._pan_start = event.position()
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
@@ -1260,8 +1304,7 @@ class _BlockDesignCanvas(QGraphicsView):
         if self._pan_active:
             delta = event.position() - self._pan_start
             self._pan_start = event.position()
-            self.translate(delta.x() / self.transform().m11(),
-                           delta.y() / self.transform().m22())
+            self.translate(delta.x() / self.transform().m11(), delta.y() / self.transform().m22())
             return
         if self._wire_preview and self._wire_src_port:
             scene_pos = self.mapToScene(event.position().toPoint())
@@ -1294,8 +1337,10 @@ class _BlockDesignCanvas(QGraphicsView):
                 item.instance.x = new_x
                 item.instance.y = new_y
                 cmd = _MoveBlockCommand(
-                    self, item.instance.instance_id,
-                    self._drag_start_pos, (new_x, new_y),
+                    self,
+                    item.instance.instance_id,
+                    self._drag_start_pos,
+                    (new_x, new_y),
                 )
                 self._undo_stack.push(cmd)
                 self._refresh_all_wires()
@@ -1380,6 +1425,7 @@ class _BlockDesignCanvas(QGraphicsView):
 
 # ── IP Palette widget ────────────────────────────────────────────────────────
 
+
 class _IPPaletteWidget(QWidget):
     """Left sidebar listing available IP blocks for drag onto canvas."""
 
@@ -1451,12 +1497,13 @@ class _IPPaletteWidget(QWidget):
             item.setToolTip(
                 0,
                 f"{block.description or block.name}\n"
-                f"Ports: {len(block.ports)}  Params: {len(block.parameters)}"
+                f"Ports: {len(block.ports)}  Params: {len(block.parameters)}",
             )
             item.setData(0, Qt.ItemDataRole.UserRole, block)
             # Color swatch icon
             try:
                 from PySide6.QtGui import QIcon, QPixmap
+
                 cat_color = _CAT_COLORS.get(cat, _CAT_COLORS["default"])
                 pix = QPixmap(20, 20)
                 pix.fill(Qt.GlobalColor.transparent)
@@ -1496,6 +1543,7 @@ class _IPPaletteWidget(QWidget):
 
 # ── Validation panel ─────────────────────────────────────────────────────────
 
+
 class _ValidationWidget(QWidget):
     """Shows validation results."""
 
@@ -1534,6 +1582,7 @@ class _ValidationWidget(QWidget):
 
 # ── Parameter edit dialog ────────────────────────────────────────────────────
 
+
 class _ParamEditDialog(QDialog):
     """Dialog for editing block instance parameters."""
 
@@ -1567,6 +1616,7 @@ class _ParamEditDialog(QDialog):
 
 
 # ── Main Block Design Panel ─────────────────────────────────────────────────
+
 
 class BlockDesignPanel(QDockWidget):
     """Dock widget hosting the block design editor."""
@@ -1713,21 +1763,27 @@ class BlockDesignPanel(QDockWidget):
             if not bdef:
                 continue
             inst = BlockInstance(
-                bd["instance_id"], bdef,
-                bd.get("x", 0), bd.get("y", 0),
+                bd["instance_id"],
+                bdef,
+                bd.get("x", 0),
+                bd.get("y", 0),
                 bd.get("param_overrides", {}),
             )
             self._canvas._do_add_block(inst)
             self._canvas._instance_counter = max(
                 self._canvas._instance_counter,
                 int(re.search(r"_(\d+)$", bd["instance_id"]).group(1))
-                if re.search(r"_(\d+)$", bd["instance_id"]) else 0
+                if re.search(r"_(\d+)$", bd["instance_id"])
+                else 0,
             )
 
         for wd in data.get("wires", []):
             wire = WireConnection(
-                wd["wire_id"], wd["src_block"], wd["src_port"],
-                wd["dst_block"], wd["dst_port"],
+                wd["wire_id"],
+                wd["src_block"],
+                wd["src_port"],
+                wd["dst_block"],
+                wd["dst_port"],
             )
             self._canvas._do_add_wire(wire)
 
@@ -1785,16 +1841,27 @@ class BlockDesignPanel(QDockWidget):
             design = self._build_block_design()
             if design is not None:
                 for msg in _bd_validate(design):
-                    sev = "error" if ("mismatch" in msg or "direction" in msg
-                                      or "cycle" in msg or "unknown" in msg
-                                      or "slice" in msg or "duplicate" in msg) else "warning"
-                    issues.append({
-                        "type": "lint",
-                        "severity": sev,
-                        "block": "",
-                        "port": "",
-                        "message": msg,
-                    })
+                    sev = (
+                        "error"
+                        if (
+                            "mismatch" in msg
+                            or "direction" in msg
+                            or "cycle" in msg
+                            or "unknown" in msg
+                            or "slice" in msg
+                            or "duplicate" in msg
+                        )
+                        else "warning"
+                    )
+                    issues.append(
+                        {
+                            "type": "lint",
+                            "severity": sev,
+                            "block": "",
+                            "port": "",
+                            "message": msg,
+                        }
+                    )
         self._validation_widget.set_issues(issues)
 
     def _build_block_design(self):  # type: ignore[no-untyped-def]
@@ -1826,8 +1893,10 @@ class BlockDesignPanel(QDockWidget):
 
         connections = [
             _BDConnection(
-                from_inst=w.src_block, from_port=w.src_port,
-                to_inst=w.dst_block, to_port=w.dst_port,
+                from_inst=w.src_block,
+                from_port=w.src_port,
+                to_inst=w.dst_block,
+                to_port=w.dst_port,
             )
             for w in self._canvas._wires
         ]
@@ -1851,7 +1920,7 @@ class BlockDesignPanel(QDockWidget):
                 seen_top.add(top_name)
                 top_ports.append(_BDPort(top_name, p.direction, max(1, p.bit_width)))
 
-        design_name = (self._design_path.stem if self._design_path else "block_design")
+        design_name = self._design_path.stem if self._design_path else "block_design"
         return _BDDesign(
             name=re.sub(r"[^A-Za-z0-9_]", "_", design_name) or "block_design",
             instances=instances,
@@ -1875,13 +1944,16 @@ class BlockDesignPanel(QDockWidget):
             f" border: 1px solid {_SURFACE1}; }}"
         )
         lay.addWidget(editor, stretch=1)
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Save
-                                | QDialogButtonBox.StandardButton.Close)
+        btns = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Close
+        )
         lay.addWidget(btns)
 
         def _save() -> None:
             path, _ = QFileDialog.getSaveFileName(
-                dlg, "Save Generated Verilog", "block_design.v",
+                dlg,
+                "Save Generated Verilog",
+                "block_design.v",
                 "Verilog Files (*.v);;All Files (*)",
             )
             if path:
@@ -1913,8 +1985,10 @@ class BlockDesignPanel(QDockWidget):
         factory = _BD_IP_LIBRARY[factory_key]
         inst = factory()
         # Convert BlockInstance -> IPBlockDef + place on canvas
-        ports = [PortDef(p.name, p.direction, f"[{p.width - 1}:0]" if p.width > 1 else "")
-                 for p in inst.ports]
+        ports = [
+            PortDef(p.name, p.direction, f"[{p.width - 1}:0]" if p.width > 1 else "")
+            for p in inst.ports
+        ]
         params = [ParamDef(k, str(v)) for k, v in inst.params.items()]
         bdef = IPBlockDef(
             name=factory_key,
@@ -1942,7 +2016,9 @@ class BlockDesignPanel(QDockWidget):
 
     def _open_design(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open Block Design", "",
+            self,
+            "Open Block Design",
+            "",
             "JSON Files (*.json);;All Files (*)",
         )
         if path:
@@ -1956,7 +2032,9 @@ class BlockDesignPanel(QDockWidget):
 
     def _save_design_as(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Block Design", "block_design.json",
+            self,
+            "Save Block Design",
+            "block_design.json",
             "JSON Files (*.json);;All Files (*)",
         )
         if path:
@@ -2121,8 +2199,10 @@ class BlockDesignPanel(QDockWidget):
             wire_id = f"auto_{added}_{w.from_inst}_{w.from_port}_{w.to_inst}_{w.to_port}"
             wc = WireConnection(
                 wire_id,
-                w.from_inst, w.from_port,
-                w.to_inst, w.to_port,
+                w.from_inst,
+                w.from_port,
+                w.to_inst,
+                w.to_port,
             )
             try:
                 self._canvas._do_add_wire(wc)
@@ -2180,16 +2260,14 @@ class BlockDesignPanel(QDockWidget):
             inst = info["instance"]
             # Save verilog to a file next to the design
             try:
-                target_dir = (self._design_path.parent if self._design_path
-                              else Path.cwd())
+                target_dir = self._design_path.parent if self._design_path else Path.cwd()
                 out = target_dir / f"{inst.module}.v"
                 out.write_text(verilog, encoding="utf-8")
             except Exception:
                 pass
             # Convert to an IPBlockDef and drop on canvas
             ports = [
-                PortDef(p.name, p.direction,
-                        f"[{p.width - 1}:0]" if p.width > 1 else "")
+                PortDef(p.name, p.direction, f"[{p.width - 1}:0]" if p.width > 1 else "")
                 for p in inst.ports
             ]
             params = [ParamDef(k, str(v)) for k, v in inst.params.items()]
@@ -2210,11 +2288,15 @@ class BlockDesignPanel(QDockWidget):
             self._show_info("Export Decoder", "no address map")
             return
         if not getattr(self._address_map, "ranges", None):
-            self._show_info("Export Decoder", "address map has no ranges; open Address Editor first")
+            self._show_info(
+                "Export Decoder", "address map has no ranges; open Address Editor first"
+            )
             return
         verilog = self._address_map.to_verilog_decoder("bd_addr_decoder")
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Address Decoder", "bd_addr_decoder.v",
+            self,
+            "Save Address Decoder",
+            "bd_addr_decoder.v",
             "Verilog Files (*.v);;All Files (*)",
         )
         if path:
@@ -2229,7 +2311,9 @@ class BlockDesignPanel(QDockWidget):
             return
         dts = self._address_map.to_device_tree()
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Device Tree Fragment", "bd.dtsi",
+            self,
+            "Save Device Tree Fragment",
+            "bd.dtsi",
             "Device Tree (*.dtsi *.dts);;All Files (*)",
         )
         if path:
@@ -2250,6 +2334,7 @@ class BlockDesignPanel(QDockWidget):
 
 
 # ── Phase 8: Address Map Dialog ─────────────────────────────────────────
+
 
 class _AddressMapDialog(QDialog):
     """Editor for an :class:`AddressMap` with overlap detection."""
@@ -2314,9 +2399,12 @@ class _AddressMapDialog(QDialog):
         if not _BD_ADDRMAP_OK:
             return
         new = _BDAddressRange(
-            master="M_AXI", slave=f"slave{self._table.rowCount()}",
-            interface="S_AXI", base_addr=0x4000_0000 + self._table.rowCount() * 0x1000,
-            range_size=0x1000, locked=False,
+            master="M_AXI",
+            slave=f"slave{self._table.rowCount()}",
+            interface="S_AXI",
+            base_addr=0x4000_0000 + self._table.rowCount() * 0x1000,
+            range_size=0x1000,
+            locked=False,
             name=f"slave{self._table.rowCount()}_reg",
         )
         self._append_row(new)
@@ -2335,11 +2423,13 @@ class _AddressMapDialog(QDialog):
         masters: list[str] = []
         for r in range(self._table.rowCount()):
             masters.append(self._table.item(r, 0).text())
-            slaves.append({
-                "name": self._table.item(r, 1).text(),
-                "interface": self._table.item(r, 2).text(),
-                "size": _parse_hex(self._table.item(r, 4).text(), 0x1000),
-            })
+            slaves.append(
+                {
+                    "name": self._table.item(r, 1).text(),
+                    "interface": self._table.item(r, 2).text(),
+                    "size": _parse_hex(self._table.item(r, 4).text(), 0x1000),
+                }
+            )
         uniq_masters = list(dict.fromkeys(masters)) or ["M_AXI"]
         m = _BDAddressMap()
         m.auto_assign(uniq_masters, slaves)
@@ -2355,15 +2445,17 @@ class _AddressMapDialog(QDialog):
         m = _BDAddressMap()
         ranges = []
         for r in range(self._table.rowCount()):
-            ranges.append(_BDAddressRange(
-                master=self._table.item(r, 0).text(),
-                slave=self._table.item(r, 1).text(),
-                interface=self._table.item(r, 2).text(),
-                base_addr=_parse_hex(self._table.item(r, 3).text(), 0),
-                range_size=_parse_hex(self._table.item(r, 4).text(), 0x1000),
-                locked=(self._table.item(r, 5).text().lower() in ("yes", "true", "1")),
-                name=self._table.item(r, 6).text(),
-            ))
+            ranges.append(
+                _BDAddressRange(
+                    master=self._table.item(r, 0).text(),
+                    slave=self._table.item(r, 1).text(),
+                    interface=self._table.item(r, 2).text(),
+                    base_addr=_parse_hex(self._table.item(r, 3).text(), 0),
+                    range_size=_parse_hex(self._table.item(r, 4).text(), 0x1000),
+                    locked=(self._table.item(r, 5).text().lower() in ("yes", "true", "1")),
+                    name=self._table.item(r, 6).text(),
+                )
+            )
         m.ranges = ranges
         return m
 
@@ -2469,7 +2561,11 @@ class _IPCatalogDialog(QDialog):
         self._desc.setText(f"<b>{key}</b> ({info.get('category', '')})")
         self._clear_form()
         for pname, pdefault in info["params"].items():
-            edit = QLineEdit(str(pdefault) if not isinstance(pdefault, list) else ",".join(str(x) for x in pdefault))
+            edit = QLineEdit(
+                str(pdefault)
+                if not isinstance(pdefault, list)
+                else ",".join(str(x) for x in pdefault)
+            )
             self._param_widgets[pname] = edit
             self._form.addRow(pname, edit)
 
@@ -2477,18 +2573,25 @@ class _IPCatalogDialog(QDialog):
         if isinstance(default, bool):
             return text.strip().lower() in ("1", "true", "yes", "on")
         if isinstance(default, int):
-            try: return int(text, 0)
-            except Exception: return default
+            try:
+                return int(text, 0)
+            except Exception:
+                return default
         if isinstance(default, float):
-            try: return float(text)
-            except Exception: return default
+            try:
+                return float(text)
+            except Exception:
+                return default
         if isinstance(default, list):
             out = []
             for part in text.split(","):
                 p = part.strip()
-                if not p: continue
-                try: out.append(float(p))
-                except Exception: out.append(p)
+                if not p:
+                    continue
+                try:
+                    out.append(float(p))
+                except Exception:
+                    out.append(p)
             return out
         return text
 

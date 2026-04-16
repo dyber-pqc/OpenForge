@@ -24,9 +24,7 @@ def _load_config(project_dir: Path):
     try:
         return load_config(search_dir=project_dir)
     except (FileNotFoundError, ConfigNotFoundError):
-        console.print(
-            f"[red]Error:[/] no openforge.yaml found in [cyan]{project_dir}[/]."
-        )
+        console.print(f"[red]Error:[/] no openforge.yaml found in [cyan]{project_dir}[/].")
         raise typer.Exit(code=1)
 
 
@@ -45,7 +43,13 @@ def _locate_def(project_dir: Path, def_arg: str | None) -> Path:
             return p
     # Search pnr_build
     pnr_build = project_dir / "pnr_build"
-    for candidate_name in ["counter_routed.def", "routed.def", "final.def", "counter_placed.def", "placed.def"]:
+    for candidate_name in [
+        "counter_routed.def",
+        "routed.def",
+        "final.def",
+        "counter_placed.def",
+        "placed.def",
+    ]:
         candidate = pnr_build / candidate_name
         if candidate.exists():
             return candidate
@@ -57,6 +61,7 @@ def _locate_def(project_dir: Path, def_arg: str | None) -> Path:
 # STA
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def sta(
     path: str = typer.Argument(".", help="Path to the design directory."),
@@ -64,7 +69,9 @@ def sta(
     corner: str = typer.Option("tt", "--corner", help="PVT corner: tt, ss, ff."),
     spef: str | None = typer.Option(None, "--spef", help="SPEF parasitics file."),
     report: bool = typer.Option(False, "--report", help="Show timing report."),
-    whatif: str | None = typer.Option(None, "--whatif", help="What-if timing change (e.g. 'clock_period clk 8.0')."),
+    whatif: str | None = typer.Option(
+        None, "--whatif", help="What-if timing change (e.g. 'clock_period clk 8.0')."
+    ),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output."),
     json_output: bool = typer.Option(False, "--json", help="Output JSON."),
 ) -> None:
@@ -125,7 +132,9 @@ def sta(
             cwd=str(project_dir),
         )
         if json_output:
-            console.print(json_mod.dumps({"whatif": whatif, "wns": wi_result.wns, "tns": wi_result.tns}))
+            console.print(
+                json_mod.dumps({"whatif": whatif, "wns": wi_result.wns, "tns": wi_result.tns})
+            )
         else:
             wns_s = "[red]" if wi_result.wns < 0 else "[green]"
             console.print(f"  WNS: {wns_s}{wi_result.wns:.4f} ns[/]")
@@ -149,13 +158,17 @@ def sta(
         raise typer.Exit(code=1)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "wns": result.wns,
-            "tns": result.tns,
-            "num_endpoints": result.num_endpoints,
-            "num_violated": result.num_violated,
-            "clocks": result.clocks,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "wns": result.wns,
+                    "tns": result.tns,
+                    "num_endpoints": result.num_endpoints,
+                    "num_violated": result.num_violated,
+                    "clocks": result.clocks,
+                }
+            )
+        )
         return
 
     # Display
@@ -200,7 +213,13 @@ def sta(
             path_table.add_column("Slack (ns)", justify="right")
             for p in critical:
                 s = "[red]" if p.slack_ns < 0 else "[green]"
-                path_table.add_row(p.start_point, p.end_point, p.path_type, f"{p.delay_ns:.4f}", f"{s}{p.slack_ns:.4f}[/]")
+                path_table.add_row(
+                    p.start_point,
+                    p.end_point,
+                    p.path_type,
+                    f"{p.delay_ns:.4f}",
+                    f"{s}{p.slack_ns:.4f}[/]",
+                )
             console.print(path_table)
 
     if result.num_violated > 0:
@@ -210,6 +229,7 @@ def sta(
 # ---------------------------------------------------------------------------
 # DRC
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def drc(
@@ -254,11 +274,15 @@ def drc(
         )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "passed": result.passed,
-            "total_violations": result.total_count,
-            "by_category": result.by_category,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "passed": result.passed,
+                    "total_violations": result.total_count,
+                    "by_category": result.by_category,
+                }
+            )
+        )
         if not result.passed:
             raise typer.Exit(code=2)
         return
@@ -284,6 +308,7 @@ def drc(
 # ---------------------------------------------------------------------------
 # LVS
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def lvs(
@@ -335,12 +360,16 @@ def lvs(
         )
 
     if json_output:
-        console.print(json_mod.dumps({
-            "match": result.match,
-            "mismatches": result.mismatches,
-            "device_count_layout": result.device_count_layout,
-            "device_count_schematic": result.device_count_schematic,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "match": result.match,
+                    "mismatches": result.mismatches,
+                    "device_count_layout": result.device_count_layout,
+                    "device_count_schematic": result.device_count_schematic,
+                }
+            )
+        )
         if not result.match:
             raise typer.Exit(code=2)
         return
@@ -359,6 +388,7 @@ def lvs(
 # ---------------------------------------------------------------------------
 # IR Drop
 # ---------------------------------------------------------------------------
+
 
 @app.command(name="ir-drop")
 def ir_drop(
@@ -384,12 +414,16 @@ def ir_drop(
         result = analyzer.analyze(def_file=str(def_path), vdd=vdd)
 
     if json_output:
-        console.print(json_mod.dumps({
-            "max_drop_mv": result.max_drop_mv,
-            "avg_drop_mv": result.avg_drop_mv,
-            "vdd": result.vdd,
-            "hotspot_count": len(result.hotspots),
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "max_drop_mv": result.max_drop_mv,
+                    "avg_drop_mv": result.avg_drop_mv,
+                    "vdd": result.vdd,
+                    "hotspot_count": len(result.hotspots),
+                }
+            )
+        )
         return
 
     table = Table(title="IR Drop Results", show_header=True, header_style="bold cyan")
@@ -415,6 +449,7 @@ def ir_drop(
 # Electromigration
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def em(
     path: str = typer.Argument(".", help="Path to the design directory."),
@@ -438,10 +473,14 @@ def em(
         result = analyzer.analyze(def_file=str(def_path))
 
     if json_output:
-        console.print(json_mod.dumps({
-            "passed": result.passed,
-            "violations": len(result.violations),
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "passed": result.passed,
+                    "violations": len(result.violations),
+                }
+            )
+        )
         if not result.passed:
             raise typer.Exit(code=2)
         return
@@ -458,7 +497,8 @@ def em(
         table.add_column("Severity")
         for v in result.violations[:20]:
             table.add_row(
-                v.wire.net, v.wire.layer,
+                v.wire.net,
+                v.wire.layer,
                 f"{v.current_density_a_per_um2 * 1e3:.2f}",
                 f"{v.limit_a_per_um2 * 1e3:.2f}",
                 v.severity,
@@ -470,6 +510,7 @@ def em(
 # ---------------------------------------------------------------------------
 # Thermal
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def thermal(
@@ -494,13 +535,17 @@ def thermal(
         result = analyzer.analyze(def_file=str(def_path))
 
     if json_output:
-        console.print(json_mod.dumps({
-            "max_temp_c": result.max_temp_c,
-            "min_temp_c": result.min_temp_c,
-            "avg_temp_c": result.avg_temp_c,
-            "hotspot_count": len(result.hotspots),
-            "converged": result.converged,
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "max_temp_c": result.max_temp_c,
+                    "min_temp_c": result.min_temp_c,
+                    "avg_temp_c": result.avg_temp_c,
+                    "hotspot_count": len(result.hotspots),
+                    "converged": result.converged,
+                }
+            )
+        )
         return
 
     table = Table(title="Thermal Results", show_header=True, header_style="bold cyan")
@@ -518,6 +563,7 @@ def thermal(
 # ---------------------------------------------------------------------------
 # Antenna
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def antenna(
@@ -542,10 +588,14 @@ def antenna(
         result = checker.check(def_file=str(def_path))
 
     if json_output:
-        console.print(json_mod.dumps({
-            "passed": result.passed,
-            "violations": len(result.violations),
-        }))
+        console.print(
+            json_mod.dumps(
+                {
+                    "passed": result.passed,
+                    "violations": len(result.violations),
+                }
+            )
+        )
         if not result.passed:
             raise typer.Exit(code=2)
         return
@@ -568,6 +618,7 @@ def antenna(
 # ---------------------------------------------------------------------------
 # Combined signoff
 # ---------------------------------------------------------------------------
+
 
 @app.command(name="all")
 def signoff_all(
@@ -639,7 +690,9 @@ def signoff_all(
         if gds_path:
             drc_result = run_drc(gds_file=gds_path, pdk=pdk, tool="magic", cwd=str(project_dir))
             status = "PASS" if drc_result.passed else "FAIL"
-            checks_run.append({"check": "DRC", "status": status, "detail": f"{drc_result.total_count} violations"})
+            checks_run.append(
+                {"check": "DRC", "status": status, "detail": f"{drc_result.total_count} violations"}
+            )
             if not drc_result.passed:
                 any_fail = True
         else:
@@ -661,7 +714,13 @@ def signoff_all(
                 cwd=str(project_dir),
             )
             status = "PASS" if lvs_result.match else "FAIL"
-            checks_run.append({"check": "LVS", "status": status, "detail": f"{len(lvs_result.mismatches)} mismatches"})
+            checks_run.append(
+                {
+                    "check": "LVS",
+                    "status": status,
+                    "detail": f"{len(lvs_result.mismatches)} mismatches",
+                }
+            )
             if not lvs_result.match:
                 any_fail = True
         else:

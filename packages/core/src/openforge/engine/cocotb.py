@@ -198,7 +198,5 @@ class CocotbEngine(ToolEngine):
         if not test_path.is_dir():
             return []
 
-        modules: list[str] = sorted(
-            p.stem for p in test_path.glob(pattern) if p.is_file()
-        )
+        modules: list[str] = sorted(p.stem for p in test_path.glob(pattern) if p.is_file())
         return modules

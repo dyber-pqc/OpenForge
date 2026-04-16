@@ -149,7 +149,12 @@ class LintEngine:
         out: list[LintViolation] = []
         try:
             proc = subprocess.run(
-                [binary, "--lint_fatal=false", "--parse_fatal=false", *[str(f) for f in self._files]],
+                [
+                    binary,
+                    "--lint_fatal=false",
+                    "--parse_fatal=false",
+                    *[str(f) for f in self._files],
+                ],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -158,7 +163,10 @@ class LintEngine:
             return []
         for line in (proc.stdout + proc.stderr).splitlines():
             # Format: file:line:col: msg [rule]
-            m = re.match(r"(?P<file>.+?):(?P<line>\d+):(?P<col>\d+):\s*(?P<msg>.*?)\s*\[(?P<rule>[^\]]+)\]\s*$", line)
+            m = re.match(
+                r"(?P<file>.+?):(?P<line>\d+):(?P<col>\d+):\s*(?P<msg>.*?)\s*\[(?P<rule>[^\]]+)\]\s*$",
+                line,
+            )
             if not m:
                 continue
             rule = m.group("rule")

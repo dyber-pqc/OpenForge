@@ -46,23 +46,60 @@ class ConnectionRule(BaseModel):
 
 
 _AXIL_SIGNALS: Final[set[str]] = {
-    "awaddr", "awprot", "awvalid", "awready",
-    "wdata", "wstrb", "wvalid", "wready",
-    "bresp", "bvalid", "bready",
-    "araddr", "arprot", "arvalid", "arready",
-    "rdata", "rresp", "rvalid", "rready",
+    "awaddr",
+    "awprot",
+    "awvalid",
+    "awready",
+    "wdata",
+    "wstrb",
+    "wvalid",
+    "wready",
+    "bresp",
+    "bvalid",
+    "bready",
+    "araddr",
+    "arprot",
+    "arvalid",
+    "arready",
+    "rdata",
+    "rresp",
+    "rvalid",
+    "rready",
 }
 
 _AXI4_EXTRA: Final[set[str]] = {
-    "awid", "awlen", "awsize", "awburst", "awlock", "awcache", "awqos", "awregion",
+    "awid",
+    "awlen",
+    "awsize",
+    "awburst",
+    "awlock",
+    "awcache",
+    "awqos",
+    "awregion",
     "wlast",
     "bid",
-    "arid", "arlen", "arsize", "arburst", "arlock", "arcache", "arqos", "arregion",
-    "rid", "rlast",
+    "arid",
+    "arlen",
+    "arsize",
+    "arburst",
+    "arlock",
+    "arcache",
+    "arqos",
+    "arregion",
+    "rid",
+    "rlast",
 }
 
 _AXIS_SIGNALS: Final[set[str]] = {
-    "tdata", "tvalid", "tready", "tlast", "tkeep", "tstrb", "tuser", "tid", "tdest",
+    "tdata",
+    "tvalid",
+    "tready",
+    "tlast",
+    "tkeep",
+    "tstrb",
+    "tuser",
+    "tid",
+    "tdest",
 }
 
 _CLK_RE: Final[re.Pattern[str]] = re.compile(
@@ -146,28 +183,36 @@ class AutoConnector:
             for prefix, ports in groups.items():
                 signames = {self._sig(p.name, prefix) for p in ports}
                 direction = (
-                    "master" if prefix.startswith("m") else
-                    "slave" if prefix.startswith("s") else "unknown"
+                    "master"
+                    if prefix.startswith("m")
+                    else "slave"
+                    if prefix.startswith("s")
+                    else "unknown"
                 )
                 kind = self._classify_iface(signames)
                 if kind is None:
                     continue
-                ifaces.append({
-                    "prefix": prefix,
-                    "direction": direction,
-                    "kind": kind,
-                    "ports": ports,
-                    "signals": signames,
-                    "data_width": self._infer_data_width(ports, kind),
-                })
+                ifaces.append(
+                    {
+                        "prefix": prefix,
+                        "direction": direction,
+                        "kind": kind,
+                        "ports": ports,
+                        "signals": signames,
+                        "data_width": self._infer_data_width(ports, kind),
+                    }
+                )
             if ifaces:
                 result[inst.name] = ifaces
         return result
 
     @staticmethod
     def _sig(port_name: str, prefix: str) -> str:
-        rest = port_name[len(prefix) + 1:] if port_name.lower().startswith(prefix + "_") \
+        rest = (
+            port_name[len(prefix) + 1 :]
+            if port_name.lower().startswith(prefix + "_")
             else port_name
+        )
         return rest.lower()
 
     @staticmethod
@@ -207,10 +252,14 @@ class AutoConnector:
             for pin in pins:
                 if (inst_name, pin) in self._already_sunk:
                     continue
-                wires.append(BlockConnection(
-                    from_inst=src_inst, from_port=src_port,
-                    to_inst=inst_name, to_port=pin,
-                ))
+                wires.append(
+                    BlockConnection(
+                        from_inst=src_inst,
+                        from_port=src_port,
+                        to_inst=inst_name,
+                        to_port=pin,
+                    )
+                )
                 self._already_sunk.add((inst_name, pin))
         return wires
 
@@ -223,10 +272,14 @@ class AutoConnector:
             for pin in pins:
                 if (inst_name, pin) in self._already_sunk:
                     continue
-                wires.append(BlockConnection(
-                    from_inst=src_inst, from_port=src_port,
-                    to_inst=inst_name, to_port=pin,
-                ))
+                wires.append(
+                    BlockConnection(
+                        from_inst=src_inst,
+                        from_port=src_port,
+                        to_inst=inst_name,
+                        to_port=pin,
+                    )
+                )
                 self._already_sunk.add((inst_name, pin))
         return wires
 
@@ -280,9 +333,7 @@ class AutoConnector:
                 break
         return wires
 
-    def suggest_interconnect(
-        self, masters: list[dict], slaves: list[dict]
-    ) -> list[dict]:
+    def suggest_interconnect(self, masters: list[dict], slaves: list[dict]) -> list[dict]:
         """Return a list of crossbar IPs that should be inserted.
 
         Any configuration with more than one master or more than one slave
@@ -316,9 +367,7 @@ class AutoConnector:
     # Helpers
     # ------------------------------------------------------------------
 
-    def _find_or_create_source(
-        self, net_name: str, kind: str
-    ) -> tuple[str, str]:
+    def _find_or_create_source(self, net_name: str, kind: str) -> tuple[str, str]:
         """Locate an instance port that should drive the shared clock/reset.
 
         Strategy: find the first instance that has a matching output port
@@ -364,8 +413,10 @@ class AutoConnector:
 
     def _wire_axi_pair(
         self,
-        m_inst: str, m_ifc: dict,
-        s_inst: str, s_ifc: dict,
+        m_inst: str,
+        m_ifc: dict,
+        s_inst: str,
+        s_ifc: dict,
     ) -> list[BlockConnection]:
         m_prefix = m_ifc["prefix"]
         s_prefix = s_ifc["prefix"]
@@ -374,39 +425,75 @@ class AutoConnector:
 
         # Address/data/control travel master->slave; responses travel back.
         m_to_s = [
-            "awaddr", "awprot", "awvalid", "awid", "awlen", "awsize",
-            "awburst", "awlock", "awcache", "awqos",
-            "wdata", "wstrb", "wvalid", "wlast",
+            "awaddr",
+            "awprot",
+            "awvalid",
+            "awid",
+            "awlen",
+            "awsize",
+            "awburst",
+            "awlock",
+            "awcache",
+            "awqos",
+            "wdata",
+            "wstrb",
+            "wvalid",
+            "wlast",
             "bready",
-            "araddr", "arprot", "arvalid", "arid", "arlen", "arsize",
-            "arburst", "arlock", "arcache", "arqos",
+            "araddr",
+            "arprot",
+            "arvalid",
+            "arid",
+            "arlen",
+            "arsize",
+            "arburst",
+            "arlock",
+            "arcache",
+            "arqos",
             "rready",
         ]
         s_to_m = [
-            "awready", "wready",
-            "bresp", "bid", "bvalid",
+            "awready",
+            "wready",
+            "bresp",
+            "bid",
+            "bvalid",
             "arready",
-            "rdata", "rresp", "rid", "rlast", "rvalid",
+            "rdata",
+            "rresp",
+            "rid",
+            "rlast",
+            "rvalid",
         ]
         wires: list[BlockConnection] = []
         for sig in m_to_s:
             if sig in m_sigs and sig in s_sigs:
-                wires.append(BlockConnection(
-                    from_inst=m_inst, from_port=m_sigs[sig].name,
-                    to_inst=s_inst, to_port=s_sigs[sig].name,
-                ))
+                wires.append(
+                    BlockConnection(
+                        from_inst=m_inst,
+                        from_port=m_sigs[sig].name,
+                        to_inst=s_inst,
+                        to_port=s_sigs[sig].name,
+                    )
+                )
         for sig in s_to_m:
             if sig in s_sigs and sig in m_sigs:
-                wires.append(BlockConnection(
-                    from_inst=s_inst, from_port=s_sigs[sig].name,
-                    to_inst=m_inst, to_port=m_sigs[sig].name,
-                ))
+                wires.append(
+                    BlockConnection(
+                        from_inst=s_inst,
+                        from_port=s_sigs[sig].name,
+                        to_inst=m_inst,
+                        to_port=m_sigs[sig].name,
+                    )
+                )
         return wires
 
     def _wire_stream_pair(
         self,
-        m_inst: str, m_ifc: dict,
-        s_inst: str, s_ifc: dict,
+        m_inst: str,
+        m_ifc: dict,
+        s_inst: str,
+        s_ifc: dict,
     ) -> list[BlockConnection]:
         m_prefix = m_ifc["prefix"]
         s_prefix = s_ifc["prefix"]
@@ -415,15 +502,23 @@ class AutoConnector:
         wires: list[BlockConnection] = []
         for sig in ("tdata", "tvalid", "tlast", "tkeep", "tstrb", "tuser", "tid", "tdest"):
             if sig in m_sigs and sig in s_sigs:
-                wires.append(BlockConnection(
-                    from_inst=m_inst, from_port=m_sigs[sig].name,
-                    to_inst=s_inst, to_port=s_sigs[sig].name,
-                ))
+                wires.append(
+                    BlockConnection(
+                        from_inst=m_inst,
+                        from_port=m_sigs[sig].name,
+                        to_inst=s_inst,
+                        to_port=s_sigs[sig].name,
+                    )
+                )
         if "tready" in s_sigs and "tready" in m_sigs:
-            wires.append(BlockConnection(
-                from_inst=s_inst, from_port=s_sigs["tready"].name,
-                to_inst=m_inst, to_port=m_sigs["tready"].name,
-            ))
+            wires.append(
+                BlockConnection(
+                    from_inst=s_inst,
+                    from_port=s_sigs["tready"].name,
+                    to_inst=m_inst,
+                    to_port=m_sigs["tready"].name,
+                )
+            )
         return wires
 
 

@@ -4,6 +4,7 @@ Iterative synthesis that incorporates rough placement and wire-delay
 estimates back into the timing constraints. Approximates the
 DC-Topographical / Genus iSpatial flow.
 """
+
 from __future__ import annotations
 
 import json
@@ -92,9 +93,7 @@ class PhysicalAwareSynthesizer:
             if on_progress:
                 on_progress(f"iteration {it + 1}", it + 1)
 
-            netlist_json = self._run_yosys(
-                sources, top_module, liberty, constraints, iteration=it
-            )
+            netlist_json = self._run_yosys(sources, top_module, liberty, constraints, iteration=it)
             placements = self._estimate_placement(netlist_json, floorplan)
             wire_delays = self.estimate_wire_delays(netlist_json, placements)
             sdc_extra = self.generate_physical_constraints_sdc(wire_delays)
@@ -115,9 +114,11 @@ class PhysicalAwareSynthesizer:
             result.netlist = netlist_json.with_suffix(".v")
             result.sdc_constraints = constraints
 
-            if it > 0 and abs(
-                result.wns_history[-1] - result.wns_history[-2]
-            ) < self.convergence_threshold_ns:
+            if (
+                it > 0
+                and abs(result.wns_history[-1] - result.wns_history[-2])
+                < self.convergence_threshold_ns
+            ):
                 result.converged = True
                 break
 
@@ -150,15 +151,11 @@ class PhysicalAwareSynthesizer:
             c_wire = hpwl * self.C_PER_UM
             c_load = self.LOAD_C_DEFAULT * max(len(conns) - 1, 1)
             # Elmore: t = R_drv * (C_wire + C_load) + R_wire * (C_wire/2 + C_load)
-            t = self.DRIVE_R_DEFAULT * (c_wire + c_load) + r_wire * (
-                c_wire / 2.0 + c_load
-            )
+            t = self.DRIVE_R_DEFAULT * (c_wire + c_load) + r_wire * (c_wire / 2.0 + c_load)
             delays[net_name] = t * 1e9  # to ns
         return delays
 
-    def generate_physical_constraints_sdc(
-        self, wire_delays: dict[str, float]
-    ) -> str:
+    def generate_physical_constraints_sdc(self, wire_delays: dict[str, float]) -> str:
         """Convert estimated wire delays into SDC max_delay constraints."""
         out: list[str] = ["# physical-aware constraints"]
         # Threshold the worst nets for explicit constraints
@@ -166,9 +163,7 @@ class PhysicalAwareSynthesizer:
         for net, delay in items:
             if delay <= 0.0:
                 continue
-            out.append(
-                f"set_max_delay {delay * 1.1:.4f} -through [get_nets {net}]"
-            )
+            out.append(f"set_max_delay {delay * 1.1:.4f} -through [get_nets {net}]")
         out.append("set_max_fanout 16 [current_design]")
         out.append("set_max_transition 0.5 [current_design]")
         return "\n".join(out) + "\n"
@@ -206,9 +201,7 @@ class PhysicalAwareSynthesizer:
                 encoding="utf-8",
             )
         # also stage the SDC
-        (out_dir / "constraints.sdc").write_text(
-            "\n".join(constraints), encoding="utf-8"
-        )
+        (out_dir / "constraints.sdc").write_text("\n".join(constraints), encoding="utf-8")
         return netlist_json
 
     def _estimate_placement(
@@ -251,9 +244,7 @@ class PhysicalAwareSynthesizer:
                             nets.setdefault(net_name, []).append(cell_name)
         return nets
 
-    def _estimate_wns(
-        self, wire_delays: dict[str, float], period_ns: float
-    ) -> float:
+    def _estimate_wns(self, wire_delays: dict[str, float], period_ns: float) -> float:
         if not wire_delays:
             return 0.0
         worst = max(wire_delays.values())

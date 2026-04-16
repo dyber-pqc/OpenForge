@@ -38,8 +38,7 @@ class OpenXC7Paths:
     @property
     def ok(self) -> bool:
         return all(
-            p is not None
-            for p in (self.yosys, self.nextpnr, self.fasm2frames, self.frames2bit)
+            p is not None for p in (self.yosys, self.nextpnr, self.fasm2frames, self.frames2bit)
         )
 
 

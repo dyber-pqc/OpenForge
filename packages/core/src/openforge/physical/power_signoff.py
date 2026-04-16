@@ -9,6 +9,7 @@ throwing - each step is wrapped and degrades to ``0.0`` / ``n/a`` rather
 than aborting the whole run. This is the same contract used by the
 Wave 1 sign-off dashboard.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -240,9 +241,7 @@ class PowerSignoffOrchestrator:
             try:
                 t_a = ThermalAnalyzer(self.def_path)  # type: ignore[call-arg]
                 t_res = t_a.analyze() if hasattr(t_a, "analyze") else t_a.run()
-                tmax = _safe_float(
-                    _safe_getattr(t_res, "max_temp_c", profile["temp_c"])
-                )
+                tmax = _safe_float(_safe_getattr(t_res, "max_temp_c", profile["temp_c"]))
                 if tmax > 0:
                     thermal_c = tmax
             except Exception:

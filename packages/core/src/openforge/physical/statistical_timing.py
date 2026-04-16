@@ -25,7 +25,7 @@ class ProcessVariation(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     sigma_global: float = 0.05  # 5% global variation
-    sigma_local: float = 0.03   # 3% local per-stage variation
+    sigma_local: float = 0.03  # 3% local per-stage variation
     rng_seed: int | None = 42
 
 
@@ -75,9 +75,7 @@ class MonteCarloTiming:
         # Global factor per sample (same for every stage on that sample)
         global_factor = self._rng.normal(1.0, sig_g, size=n)
         # Local factor per stage per sample (independent)
-        local_factor = self._rng.normal(
-            1.0, sig_l, size=(n, delays.size)
-        )
+        local_factor = self._rng.normal(1.0, sig_l, size=(n, delays.size))
         # Perturbed delays: delays * local_factor (row-wise) * global_factor
         perturbed = delays[np.newaxis, :] * local_factor
         perturbed *= global_factor[:, np.newaxis]
@@ -132,9 +130,7 @@ class MonteCarloTiming:
         all_met = (arr >= 0).all(axis=0)
         return float(all_met.mean() * 100.0)
 
-    def sigma_corner_report(
-        self, sigmas: list[float] | None = None
-    ) -> dict[str, float]:
+    def sigma_corner_report(self, sigmas: list[float] | None = None) -> dict[str, float]:
         """Return per-sigma worst slack across all paths."""
         if sigmas is None:
             sigmas = [1.0, 2.0, 3.0, 4.5, 6.0]
@@ -145,6 +141,7 @@ class MonteCarloTiming:
             # Translate sigma to percentile (one-sided tail)
             # N-sigma ~ (0.5 - 0.5*erf(s/sqrt(2))) percentile
             from math import erf, sqrt
+
             p = 100.0 * (0.5 - 0.5 * erf(s / sqrt(2.0)))
             worst = min(
                 (float(np.percentile(r.samples, p)) for r in self._results),

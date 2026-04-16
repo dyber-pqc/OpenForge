@@ -56,9 +56,9 @@ _SUBTEXT: Final[str] = "#a6adc8"
 _OVERLAY0: Final[str] = "#6c7086"
 
 # Vivado timing colors
-_CLR_VIOLATED: Final[str] = "#f38ba8"   # red -- negative slack
+_CLR_VIOLATED: Final[str] = "#f38ba8"  # red -- negative slack
 _CLR_NEAR_CRIT: Final[str] = "#f9e2af"  # yellow -- <10% margin
-_CLR_MET: Final[str] = "#a6e3a1"        # green -- met
+_CLR_MET: Final[str] = "#a6e3a1"  # green -- met
 _CLR_BLUE: Final[str] = "#89b4fa"
 _CLR_MAUVE: Final[str] = "#cba6f7"
 _CLR_PEACH: Final[str] = "#fab387"
@@ -205,7 +205,9 @@ class _SlackHistogram(QWidget):
             y = h - margin_b - bar_h
 
             mid = (bin_start + bin_end) / 2
-            color = QColor(_CLR_VIOLATED if mid < 0 else (_CLR_NEAR_CRIT if mid < 0.5 else _CLR_MET))
+            color = QColor(
+                _CLR_VIOLATED if mid < 0 else (_CLR_NEAR_CRIT if mid < 0.5 else _CLR_MET)
+            )
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(color)
             painter.drawRect(QRectF(x + 1, y, bar_w, bar_h))
@@ -213,25 +215,33 @@ class _SlackHistogram(QWidget):
             # X-axis label (every few bins)
             if i % max(1, n // 8) == 0 or i == n - 1:
                 painter.setPen(QColor(_SUBTEXT))
-                painter.drawText(QRectF(x - 10, h - margin_b + 2, 40, 16),
-                                 Qt.AlignmentFlag.AlignCenter, f"{bin_start:.1f}")
+                painter.drawText(
+                    QRectF(x - 10, h - margin_b + 2, 40, 16),
+                    Qt.AlignmentFlag.AlignCenter,
+                    f"{bin_start:.1f}",
+                )
 
         # Y-axis labels
         painter.setPen(QColor(_SUBTEXT))
         for frac in (0, 0.5, 1.0):
             yy = h - margin_b - int(frac * plot_h)
             val = int(frac * max_count)
-            painter.drawText(QRectF(0, yy - 8, margin_l - 4, 16),
-                             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                             str(val))
+            painter.drawText(
+                QRectF(0, yy - 8, margin_l - 4, 16),
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                str(val),
+            )
 
         # Title
         painter.setPen(QColor(_SUBTEXT))
         font.setPointSize(8)
         font.setBold(True)
         painter.setFont(font)
-        painter.drawText(QRectF(margin_l, margin_t - 2, plot_w, 14),
-                         Qt.AlignmentFlag.AlignCenter, "Slack Distribution (ns)")
+        painter.drawText(
+            QRectF(margin_l, margin_t - 2, plot_w, 14),
+            Qt.AlignmentFlag.AlignCenter,
+            "Slack Distribution (ns)",
+        )
 
 
 # ── Summary Tab ─────────────────────────────────────────────────────────────
@@ -259,9 +269,16 @@ class _SummaryTab(QWidget):
         # Clock domain table
         root.addWidget(_header_label("Clock Domains"))
         self._clock_table = QTableWidget(0, 6)
-        self._clock_table.setHorizontalHeaderLabels([
-            "Clock", "Period (ns)", "Frequency (MHz)", "WNS (ns)", "TNS (ns)", "Endpoints",
-        ])
+        self._clock_table.setHorizontalHeaderLabels(
+            [
+                "Clock",
+                "Period (ns)",
+                "Frequency (MHz)",
+                "WNS (ns)",
+                "TNS (ns)",
+                "Endpoints",
+            ]
+        )
         _configure_table(self._clock_table)
         self._clock_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._clock_table.setMaximumHeight(160)
@@ -295,7 +312,9 @@ class _SummaryTab(QWidget):
             self._clock_table.setItem(row, 1, _numeric_item(period, "{:.2f}"))
             self._clock_table.setItem(row, 2, _numeric_item(c.get("frequency", 0.0), "{:.1f}"))
             wns = c.get("wns", 0.0)
-            self._clock_table.setItem(row, 3, _numeric_item(wns, "{:.3f}", _slack_color(wns, period)))
+            self._clock_table.setItem(
+                row, 3, _numeric_item(wns, "{:.3f}", _slack_color(wns, period))
+            )
             tns = c.get("tns", 0.0)
             tns_color = _CLR_VIOLATED if tns < 0 else _CLR_MET
             self._clock_table.setItem(row, 4, _numeric_item(tns, "{:.3f}", tns_color))
@@ -353,8 +372,9 @@ class _PathsTab(QWidget):
 
         # Path tree
         self._tree = QTreeWidget()
-        self._tree.setHeaderLabels(["#", "Slack (ns)", "Start Point", "End Point",
-                                     "Path Delay (ns)", "Levels", "Clock"])
+        self._tree.setHeaderLabels(
+            ["#", "Slack (ns)", "Start Point", "End Point", "Path Delay (ns)", "Levels", "Clock"]
+        )
         self._tree.setColumnCount(7)
         self._tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self._tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
@@ -395,9 +415,12 @@ class _PathsTab(QWidget):
         if clock_filter != "All Clocks":
             filtered = [p for p in filtered if p.get("clock", "") == clock_filter]
         if search_text:
-            filtered = [p for p in filtered if
-                        search_text in p.get("start", "").lower() or
-                        search_text in p.get("end", "").lower()]
+            filtered = [
+                p
+                for p in filtered
+                if search_text in p.get("start", "").lower()
+                or search_text in p.get("end", "").lower()
+            ]
         filtered = filtered[:top_n]
 
         for i, path in enumerate(filtered):
@@ -468,7 +491,9 @@ class _PathDetailTab(QWidget):
         tc_layout.addWidget(_header_label("Path Breakdown"))
 
         self._table = QTableWidget(0, 5)
-        self._table.setHorizontalHeaderLabels(["Cell", "Type", "Delay (ns)", "Arrival (ns)", "Transition"])
+        self._table.setHorizontalHeaderLabels(
+            ["Cell", "Type", "Delay (ns)", "Arrival (ns)", "Transition"]
+        )
         _configure_table(self._table)
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         tc_layout.addWidget(self._table)
@@ -635,8 +660,7 @@ class _PathDiagram(QWidget):
             # Label (truncated)
             painter.setPen(QColor(_TEXT))
             short = name if len(name) <= 10 else name[:8] + ".."
-            painter.drawText(QRectF(x, y, cell_w, cell_h),
-                             Qt.AlignmentFlag.AlignCenter, short)
+            painter.drawText(QRectF(x, y, cell_w, cell_h), Qt.AlignmentFlag.AlignCenter, short)
 
             # Arrow to next
             if i < n - 1:
@@ -678,7 +702,9 @@ class _ConstraintsTab(QWidget):
         # Clock definitions
         root.addWidget(_header_label("Clock Definitions"))
         self._clock_table = QTableWidget(0, 4)
-        self._clock_table.setHorizontalHeaderLabels(["Clock Name", "Source", "Period (ns)", "Waveform"])
+        self._clock_table.setHorizontalHeaderLabels(
+            ["Clock Name", "Source", "Period (ns)", "Waveform"]
+        )
         _configure_table(self._clock_table)
         self._clock_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._clock_table.setMaximumHeight(120)
@@ -698,7 +724,9 @@ class _ConstraintsTab(QWidget):
         self._exc_table = QTableWidget(0, 3)
         self._exc_table.setHorizontalHeaderLabels(["Type", "From", "To"])
         _configure_table(self._exc_table)
-        self._exc_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self._exc_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.ResizeToContents
+        )
         self._exc_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self._exc_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         root.addWidget(self._exc_table)
@@ -872,6 +900,7 @@ class TimingPanel(QDockWidget):
 
         # Wrap each tab in a scroll area so content scrolls when dock is short
         from PySide6.QtWidgets import QScrollArea
+
         def _scrollable(widget: QWidget) -> QScrollArea:
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)
@@ -900,6 +929,7 @@ class TimingPanel(QDockWidget):
     def set_theme(self, dark: bool) -> None:
         """Switch panel QSS between dark and light themes."""
         from openforge_desktop.panels._theme import panel_tab_qss
+
         self._tabs.setStyleSheet(panel_tab_qss(dark))
 
     @property
@@ -987,15 +1017,17 @@ class TimingPanel(QDockWidget):
                 }
                 for s in p.stages
             ]
-            paths.append({
-                "slack": p.slack_ns,
-                "start": p.start_point,
-                "end": p.end_point,
-                "delay": p.delay_ns,
-                "levels": len(p.stages),
-                "clock": "",
-                "stages": stages,
-            })
+            paths.append(
+                {
+                    "slack": p.slack_ns,
+                    "start": p.start_point,
+                    "end": p.end_point,
+                    "delay": p.delay_ns,
+                    "levels": len(p.stages),
+                    "clock": "",
+                    "stages": stages,
+                }
+            )
 
         # Build clock domain list from clocks dict
         clocks = []
@@ -1004,14 +1036,16 @@ class TimingPanel(QDockWidget):
             clock_names.append(clk_name)
             period = clk_info.get("period", 0.0)
             freq = 1000.0 / period if period > 0 else 0.0
-            clocks.append({
-                "name": clk_name,
-                "period": period,
-                "frequency": freq,
-                "wns": clk_info.get("wns", 0.0),
-                "tns": clk_info.get("tns", 0.0),
-                "endpoints": int(clk_info.get("endpoints", 0)),
-            })
+            clocks.append(
+                {
+                    "name": clk_name,
+                    "period": period,
+                    "frequency": freq,
+                    "wns": clk_info.get("wns", 0.0),
+                    "tns": clk_info.get("tns", 0.0),
+                    "endpoints": int(clk_info.get("endpoints", 0)),
+                }
+            )
 
         # Build histogram from path slacks
         if paths:
@@ -1151,78 +1185,259 @@ class TimingPanel(QDockWidget):
 
     def show_demo_data(self) -> None:
         """Load placeholder data for development/demo purposes."""
-        self.update_results({
-            "wns_setup": 0.342,
-            "tns_setup": 0.0,
-            "wns_hold": 0.085,
-            "tns_hold": 0.0,
-            "clocks": [
-                {"name": "sys_clk", "period": 5.0, "frequency": 200.0, "wns": 0.342, "tns": 0.0, "endpoints": 4256},
-                {"name": "pci_clk", "period": 8.0, "frequency": 125.0, "wns": 1.204, "tns": 0.0, "endpoints": 512},
-                {"name": "ddr_clk", "period": 2.5, "frequency": 400.0, "wns": -0.112, "tns": -3.45, "endpoints": 1024},
-            ],
-            "histogram": [
-                (-2.0, -1.5, 2), (-1.5, -1.0, 5), (-1.0, -0.5, 12), (-0.5, 0.0, 28),
-                (0.0, 0.5, 156), (0.5, 1.0, 342), (1.0, 1.5, 512), (1.5, 2.0, 420),
-                (2.0, 2.5, 280), (2.5, 3.0, 180), (3.0, 3.5, 90), (3.5, 4.0, 45),
-            ],
-            "clock_names": ["sys_clk", "pci_clk", "ddr_clk"],
-            "paths": [
-                {
-                    "slack": -0.112, "start": "ddr_ctrl/addr_reg[0]/Q",
-                    "end": "ddr_phy/data_out_reg[7]/D", "delay": 2.612, "levels": 8,
-                    "clock": "ddr_clk",
-                    "stages": [
-                        {"cell": "addr_reg[0]", "type": "DFF (CK->Q)", "delay": 0.180, "arrival": 0.180, "transition": "rise"},
-                        {"cell": "addr_decode", "type": "Cell", "delay": 0.245, "arrival": 0.425, "transition": "fall"},
-                        {"cell": "net_42", "type": "Wire", "delay": 0.082, "arrival": 0.507, "transition": ""},
-                        {"cell": "mux_bank", "type": "Cell", "delay": 0.312, "arrival": 0.819, "transition": "rise"},
-                        {"cell": "net_89", "type": "Wire", "delay": 0.145, "arrival": 0.964, "transition": ""},
-                        {"cell": "data_align", "type": "Cell", "delay": 0.398, "arrival": 1.362, "transition": "fall"},
-                        {"cell": "net_112", "type": "Wire", "delay": 0.095, "arrival": 1.457, "transition": ""},
-                        {"cell": "data_out_reg[7]", "type": "DFF (D)", "delay": 0.043, "arrival": 1.500, "transition": "rise"},
-                    ],
-                },
-                {
-                    "slack": 0.342, "start": "cpu/alu/op_reg[3]/Q",
-                    "end": "cpu/wb/result_reg[31]/D", "delay": 4.658, "levels": 12,
-                    "clock": "sys_clk",
-                    "stages": [
-                        {"cell": "op_reg[3]", "type": "DFF (CK->Q)", "delay": 0.195, "arrival": 0.195, "transition": "rise"},
-                        {"cell": "adder_0", "type": "Cell", "delay": 0.520, "arrival": 0.715, "transition": "rise"},
-                        {"cell": "net_201", "type": "Wire", "delay": 0.110, "arrival": 0.825, "transition": ""},
-                        {"cell": "shifter", "type": "Cell", "delay": 0.685, "arrival": 1.510, "transition": "fall"},
-                        {"cell": "result_mux", "type": "Cell", "delay": 0.340, "arrival": 1.850, "transition": "rise"},
-                        {"cell": "result_reg[31]", "type": "DFF (D)", "delay": 0.045, "arrival": 1.895, "transition": "rise"},
-                    ],
-                },
-                {
-                    "slack": 1.204, "start": "pci/cfg_reg[0]/Q",
-                    "end": "pci/bar_reg[31]/D", "delay": 6.796, "levels": 6,
-                    "clock": "pci_clk",
-                    "stages": [
-                        {"cell": "cfg_reg[0]", "type": "DFF (CK->Q)", "delay": 0.210, "arrival": 0.210, "transition": "rise"},
-                        {"cell": "cfg_decode", "type": "Cell", "delay": 0.380, "arrival": 0.590, "transition": "fall"},
-                        {"cell": "bar_reg[31]", "type": "DFF (D)", "delay": 0.050, "arrival": 0.640, "transition": "rise"},
-                    ],
-                },
-            ],
-            "coverage": {"covered": 5280, "total": 5792},
-            "sdc_clocks": [
-                {"name": "sys_clk", "source": "get_ports clk", "period": 5.0, "waveform": "{0 2.5}"},
-                {"name": "pci_clk", "source": "get_ports pci_clk", "period": 8.0, "waveform": "{0 4.0}"},
-                {"name": "ddr_clk", "source": "get_pins pll/clk_out", "period": 2.5, "waveform": "{0 1.25}"},
-            ],
-            "io_delays": [
-                {"port": "data_in[7:0]", "direction": "Input", "delay": 1.5, "clock": "sys_clk"},
-                {"port": "data_out[7:0]", "direction": "Output", "delay": 2.0, "clock": "sys_clk"},
-                {"port": "addr[15:0]", "direction": "Input", "delay": 1.2, "clock": "sys_clk"},
-                {"port": "pci_ad[31:0]", "direction": "Inout", "delay": 3.0, "clock": "pci_clk"},
-            ],
-            "exceptions": [
-                {"type": "False Path", "from": "cpu/debug_reg[*]", "to": "pci/cfg_reg[*]"},
-                {"type": "Multicycle Path (2)", "from": "cpu/mul/result[*]", "to": "cpu/wb/result_reg[*]"},
-                {"type": "False Path", "from": "reset_sync/q_reg", "to": "*"},
-                {"type": "Max Delay (3.0 ns)", "from": "ddr_ctrl/addr_reg[*]", "to": "ddr_phy/data_out_reg[*]"},
-            ],
-        })
+        self.update_results(
+            {
+                "wns_setup": 0.342,
+                "tns_setup": 0.0,
+                "wns_hold": 0.085,
+                "tns_hold": 0.0,
+                "clocks": [
+                    {
+                        "name": "sys_clk",
+                        "period": 5.0,
+                        "frequency": 200.0,
+                        "wns": 0.342,
+                        "tns": 0.0,
+                        "endpoints": 4256,
+                    },
+                    {
+                        "name": "pci_clk",
+                        "period": 8.0,
+                        "frequency": 125.0,
+                        "wns": 1.204,
+                        "tns": 0.0,
+                        "endpoints": 512,
+                    },
+                    {
+                        "name": "ddr_clk",
+                        "period": 2.5,
+                        "frequency": 400.0,
+                        "wns": -0.112,
+                        "tns": -3.45,
+                        "endpoints": 1024,
+                    },
+                ],
+                "histogram": [
+                    (-2.0, -1.5, 2),
+                    (-1.5, -1.0, 5),
+                    (-1.0, -0.5, 12),
+                    (-0.5, 0.0, 28),
+                    (0.0, 0.5, 156),
+                    (0.5, 1.0, 342),
+                    (1.0, 1.5, 512),
+                    (1.5, 2.0, 420),
+                    (2.0, 2.5, 280),
+                    (2.5, 3.0, 180),
+                    (3.0, 3.5, 90),
+                    (3.5, 4.0, 45),
+                ],
+                "clock_names": ["sys_clk", "pci_clk", "ddr_clk"],
+                "paths": [
+                    {
+                        "slack": -0.112,
+                        "start": "ddr_ctrl/addr_reg[0]/Q",
+                        "end": "ddr_phy/data_out_reg[7]/D",
+                        "delay": 2.612,
+                        "levels": 8,
+                        "clock": "ddr_clk",
+                        "stages": [
+                            {
+                                "cell": "addr_reg[0]",
+                                "type": "DFF (CK->Q)",
+                                "delay": 0.180,
+                                "arrival": 0.180,
+                                "transition": "rise",
+                            },
+                            {
+                                "cell": "addr_decode",
+                                "type": "Cell",
+                                "delay": 0.245,
+                                "arrival": 0.425,
+                                "transition": "fall",
+                            },
+                            {
+                                "cell": "net_42",
+                                "type": "Wire",
+                                "delay": 0.082,
+                                "arrival": 0.507,
+                                "transition": "",
+                            },
+                            {
+                                "cell": "mux_bank",
+                                "type": "Cell",
+                                "delay": 0.312,
+                                "arrival": 0.819,
+                                "transition": "rise",
+                            },
+                            {
+                                "cell": "net_89",
+                                "type": "Wire",
+                                "delay": 0.145,
+                                "arrival": 0.964,
+                                "transition": "",
+                            },
+                            {
+                                "cell": "data_align",
+                                "type": "Cell",
+                                "delay": 0.398,
+                                "arrival": 1.362,
+                                "transition": "fall",
+                            },
+                            {
+                                "cell": "net_112",
+                                "type": "Wire",
+                                "delay": 0.095,
+                                "arrival": 1.457,
+                                "transition": "",
+                            },
+                            {
+                                "cell": "data_out_reg[7]",
+                                "type": "DFF (D)",
+                                "delay": 0.043,
+                                "arrival": 1.500,
+                                "transition": "rise",
+                            },
+                        ],
+                    },
+                    {
+                        "slack": 0.342,
+                        "start": "cpu/alu/op_reg[3]/Q",
+                        "end": "cpu/wb/result_reg[31]/D",
+                        "delay": 4.658,
+                        "levels": 12,
+                        "clock": "sys_clk",
+                        "stages": [
+                            {
+                                "cell": "op_reg[3]",
+                                "type": "DFF (CK->Q)",
+                                "delay": 0.195,
+                                "arrival": 0.195,
+                                "transition": "rise",
+                            },
+                            {
+                                "cell": "adder_0",
+                                "type": "Cell",
+                                "delay": 0.520,
+                                "arrival": 0.715,
+                                "transition": "rise",
+                            },
+                            {
+                                "cell": "net_201",
+                                "type": "Wire",
+                                "delay": 0.110,
+                                "arrival": 0.825,
+                                "transition": "",
+                            },
+                            {
+                                "cell": "shifter",
+                                "type": "Cell",
+                                "delay": 0.685,
+                                "arrival": 1.510,
+                                "transition": "fall",
+                            },
+                            {
+                                "cell": "result_mux",
+                                "type": "Cell",
+                                "delay": 0.340,
+                                "arrival": 1.850,
+                                "transition": "rise",
+                            },
+                            {
+                                "cell": "result_reg[31]",
+                                "type": "DFF (D)",
+                                "delay": 0.045,
+                                "arrival": 1.895,
+                                "transition": "rise",
+                            },
+                        ],
+                    },
+                    {
+                        "slack": 1.204,
+                        "start": "pci/cfg_reg[0]/Q",
+                        "end": "pci/bar_reg[31]/D",
+                        "delay": 6.796,
+                        "levels": 6,
+                        "clock": "pci_clk",
+                        "stages": [
+                            {
+                                "cell": "cfg_reg[0]",
+                                "type": "DFF (CK->Q)",
+                                "delay": 0.210,
+                                "arrival": 0.210,
+                                "transition": "rise",
+                            },
+                            {
+                                "cell": "cfg_decode",
+                                "type": "Cell",
+                                "delay": 0.380,
+                                "arrival": 0.590,
+                                "transition": "fall",
+                            },
+                            {
+                                "cell": "bar_reg[31]",
+                                "type": "DFF (D)",
+                                "delay": 0.050,
+                                "arrival": 0.640,
+                                "transition": "rise",
+                            },
+                        ],
+                    },
+                ],
+                "coverage": {"covered": 5280, "total": 5792},
+                "sdc_clocks": [
+                    {
+                        "name": "sys_clk",
+                        "source": "get_ports clk",
+                        "period": 5.0,
+                        "waveform": "{0 2.5}",
+                    },
+                    {
+                        "name": "pci_clk",
+                        "source": "get_ports pci_clk",
+                        "period": 8.0,
+                        "waveform": "{0 4.0}",
+                    },
+                    {
+                        "name": "ddr_clk",
+                        "source": "get_pins pll/clk_out",
+                        "period": 2.5,
+                        "waveform": "{0 1.25}",
+                    },
+                ],
+                "io_delays": [
+                    {
+                        "port": "data_in[7:0]",
+                        "direction": "Input",
+                        "delay": 1.5,
+                        "clock": "sys_clk",
+                    },
+                    {
+                        "port": "data_out[7:0]",
+                        "direction": "Output",
+                        "delay": 2.0,
+                        "clock": "sys_clk",
+                    },
+                    {"port": "addr[15:0]", "direction": "Input", "delay": 1.2, "clock": "sys_clk"},
+                    {
+                        "port": "pci_ad[31:0]",
+                        "direction": "Inout",
+                        "delay": 3.0,
+                        "clock": "pci_clk",
+                    },
+                ],
+                "exceptions": [
+                    {"type": "False Path", "from": "cpu/debug_reg[*]", "to": "pci/cfg_reg[*]"},
+                    {
+                        "type": "Multicycle Path (2)",
+                        "from": "cpu/mul/result[*]",
+                        "to": "cpu/wb/result_reg[*]",
+                    },
+                    {"type": "False Path", "from": "reset_sync/q_reg", "to": "*"},
+                    {
+                        "type": "Max Delay (3.0 ns)",
+                        "from": "ddr_ctrl/addr_reg[*]",
+                        "to": "ddr_phy/data_out_reg[*]",
+                    },
+                ],
+            }
+        )

@@ -23,9 +23,9 @@ class DetectedDevice:
     """An FPGA board discovered on the system."""
 
     name: str
-    usb_id: str = ""       # vid:pid
-    device_type: str = ""   # e.g. "ice40", "ecp5", "gowin"
-    programmer: str = ""    # tool that can program it
+    usb_id: str = ""  # vid:pid
+    device_type: str = ""  # e.g. "ice40", "ecp5", "gowin"
+    programmer: str = ""  # tool that can program it
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,8 +47,15 @@ _TOOL_DEVICE_MAP: dict[str, list[str]] = {
     "iceprog": ["ice40"],
     "ujprog": ["ecp5"],
     "openFPGALoader": [
-        "ice40", "ecp5", "gowin", "xilinx", "altera", "lattice",
-        "efinix", "anlogic", "colognechip",
+        "ice40",
+        "ecp5",
+        "gowin",
+        "xilinx",
+        "altera",
+        "lattice",
+        "efinix",
+        "anlogic",
+        "colognechip",
     ],
 }
 
@@ -125,7 +132,8 @@ class FpgaProgrammer:
         # openFPGALoader --detect is the most comprehensive
         if "openFPGALoader" in self._available_tools:
             rc, stdout, stderr = _run_tool(
-                ["openFPGALoader", "--detect"], timeout=15.0,
+                ["openFPGALoader", "--detect"],
+                timeout=15.0,
             )
             combined = stdout + stderr
             # Parse lines like: "index 0: ... (IDCODE 0x12345678, ...)"
@@ -145,11 +153,13 @@ class FpgaProgrammer:
                     elif "gowin" in lower:
                         dev_type = "gowin"
 
-                    devices.append(DetectedDevice(
-                        name=dev_name,
-                        device_type=dev_type,
-                        programmer="openFPGALoader",
-                    ))
+                    devices.append(
+                        DetectedDevice(
+                            name=dev_name,
+                            device_type=dev_type,
+                            programmer="openFPGALoader",
+                        )
+                    )
 
         # Also try USB device enumeration for known FPGA programmers
         try:
@@ -167,11 +177,13 @@ class FpgaProgrammer:
                         if usb_id in line:
                             # Avoid duplicates
                             if not any(d.usb_id == usb_id for d in devices):
-                                devices.append(DetectedDevice(
-                                    name=name,
-                                    usb_id=usb_id,
-                                    device_type=dev_type,
-                                ))
+                                devices.append(
+                                    DetectedDevice(
+                                        name=name,
+                                        usb_id=usb_id,
+                                        device_type=dev_type,
+                                    )
+                                )
         except Exception:
             pass
 
@@ -214,7 +226,7 @@ class FpgaProgrammer:
             return ProgramResult(
                 success=False,
                 message="No suitable programming tool found. Install iceprog, "
-                        "ujprog, or openFPGALoader.",
+                "ujprog, or openFPGALoader.",
             )
 
         rc, stdout, stderr = _run_tool(cmd, timeout=120.0)
@@ -328,8 +340,9 @@ class FpgaProgrammer:
             success=success,
             device_name=device or "unknown",
             time_seconds=elapsed,
-            message=f"Read {out.stat().st_size} bytes to {out}" if success
-                    else (stdout + stderr).strip(),
+            message=f"Read {out.stat().st_size} bytes to {out}"
+            if success
+            else (stdout + stderr).strip(),
         )
 
     # ------------------------------------------------------------------

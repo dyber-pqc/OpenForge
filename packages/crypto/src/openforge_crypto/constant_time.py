@@ -21,10 +21,10 @@ class TaintLevel(Enum):
 class ViolationKind(Enum):
     """Types of constant-time violations."""
 
-    SECRET_BRANCH = auto()           # Branch condition depends on secret
-    SECRET_INDEX = auto()            # Array index depends on secret
-    VARIABLE_LATENCY_OP = auto()     # Variable-latency op on secret data
-    SECRET_LOOP_BOUND = auto()       # Loop iteration count depends on secret
+    SECRET_BRANCH = auto()  # Branch condition depends on secret
+    SECRET_INDEX = auto()  # Array index depends on secret
+    VARIABLE_LATENCY_OP = auto()  # Variable-latency op on secret data
+    SECRET_LOOP_BOUND = auto()  # Loop iteration count depends on secret
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,43 +184,51 @@ class ConstantTimeVerifier:
                 branches_analyzed += 1
                 if is_tainted:
                     path = self._trace_taint_path(node)
-                    violations.append(Violation(
-                        kind=ViolationKind.SECRET_BRANCH,
-                        signal_name=node.name,
-                        location=node.location,
-                        message="Branch condition depends on secret data",
-                        taint_path=path,
-                    ))
+                    violations.append(
+                        Violation(
+                            kind=ViolationKind.SECRET_BRANCH,
+                            signal_name=node.name,
+                            location=node.location,
+                            message="Branch condition depends on secret data",
+                            taint_path=path,
+                        )
+                    )
 
             if node.is_array_index and is_tainted:
                 path = self._trace_taint_path(node)
-                violations.append(Violation(
-                    kind=ViolationKind.SECRET_INDEX,
-                    signal_name=node.name,
-                    location=node.location,
-                    message="Array index depends on secret data (cache timing)",
-                    taint_path=path,
-                ))
+                violations.append(
+                    Violation(
+                        kind=ViolationKind.SECRET_INDEX,
+                        signal_name=node.name,
+                        location=node.location,
+                        message="Array index depends on secret data (cache timing)",
+                        taint_path=path,
+                    )
+                )
 
             if node.is_variable_latency and is_tainted:
                 path = self._trace_taint_path(node)
-                violations.append(Violation(
-                    kind=ViolationKind.VARIABLE_LATENCY_OP,
-                    signal_name=node.name,
-                    location=node.location,
-                    message="Variable-latency operation on secret data",
-                    taint_path=path,
-                ))
+                violations.append(
+                    Violation(
+                        kind=ViolationKind.VARIABLE_LATENCY_OP,
+                        signal_name=node.name,
+                        location=node.location,
+                        message="Variable-latency operation on secret data",
+                        taint_path=path,
+                    )
+                )
 
             if node.is_loop_bound and is_tainted:
                 path = self._trace_taint_path(node)
-                violations.append(Violation(
-                    kind=ViolationKind.SECRET_LOOP_BOUND,
-                    signal_name=node.name,
-                    location=node.location,
-                    message="Loop bound depends on secret data",
-                    taint_path=path,
-                ))
+                violations.append(
+                    Violation(
+                        kind=ViolationKind.SECRET_LOOP_BOUND,
+                        signal_name=node.name,
+                        location=node.location,
+                        message="Loop bound depends on secret data",
+                        taint_path=path,
+                    )
+                )
 
         report.violations = violations
         report.branches_analyzed = branches_analyzed

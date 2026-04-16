@@ -115,12 +115,8 @@ def force_directed_placement(
         pos += force / norm * step
 
         # Hard clamp inside core
-        pos[:, 0] = np.clip(
-            pos[:, 0], core.x1 + size[:, 0] / 2.0, core.x2 - size[:, 0] / 2.0
-        )
-        pos[:, 1] = np.clip(
-            pos[:, 1], core.y1 + size[:, 1] / 2.0, core.y2 - size[:, 1] / 2.0
-        )
+        pos[:, 0] = np.clip(pos[:, 0], core.x1 + size[:, 0] / 2.0, core.x2 - size[:, 0] / 2.0)
+        pos[:, 1] = np.clip(pos[:, 1], core.y1 + size[:, 1] / 2.0, core.y2 - size[:, 1] / 2.0)
 
     result: list[MacroPlacement] = []
     for i, m in enumerate(macros):
@@ -174,10 +170,7 @@ def estimate_wirelength(
     connectivity: dict[tuple[str, str], int],
 ) -> float:
     """Return total Manhattan wirelength (um) across weighted macro pairs."""
-    centers = {
-        m.name: (m.x_um + m.width_um / 2.0, m.y_um + m.height_um / 2.0)
-        for m in macros
-    }
+    centers = {m.name: (m.x_um + m.width_um / 2.0, m.y_um + m.height_um / 2.0) for m in macros}
     total = 0.0
     for (a, b), w in connectivity.items():
         if a not in centers or b not in centers:

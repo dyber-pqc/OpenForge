@@ -120,9 +120,7 @@ def _safe(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", name)
 
 
-def _run_verilator(
-    spec: TestSpec, seed: int, work: Path, cov_path: Path
-) -> tuple[str, str]:
+def _run_verilator(spec: TestSpec, seed: int, work: Path, cov_path: Path) -> tuple[str, str]:
     verilator = shutil.which("verilator")
     if not verilator:
         return "error", "verilator not found in PATH"
@@ -143,9 +141,7 @@ def _run_verilator(
         cmd.append(rtl)
     if tb and tb not in spec.rtl_files:
         cmd.append(tb)
-    cp = subprocess.run(
-        cmd, capture_output=True, text=True, timeout=spec.timeout_s
-    )
+    cp = subprocess.run(cmd, capture_output=True, text=True, timeout=spec.timeout_s)
     log = "$ " + " ".join(cmd) + "\n" + cp.stdout + cp.stderr
     if cp.returncode != 0:
         return "error", log
@@ -191,9 +187,7 @@ def _run_icarus(spec: TestSpec, seed: int, work: Path) -> tuple[str, str]:
         cmd_c.append(rtl)
     if tb and tb not in spec.rtl_files:
         cmd_c.append(tb)
-    cp = subprocess.run(
-        cmd_c, capture_output=True, text=True, timeout=spec.timeout_s
-    )
+    cp = subprocess.run(cmd_c, capture_output=True, text=True, timeout=spec.timeout_s)
     log = "$ " + " ".join(cmd_c) + "\n" + cp.stdout + cp.stderr
     if cp.returncode != 0:
         return "error", log
@@ -289,9 +283,7 @@ class RegressionRunner:
         return results
 
     def run_one(self, spec: TestSpec, seed: int) -> TestResult:
-        data = _run_one_worker(
-            spec.model_dump_json(), seed, str(self.output_dir), self.sim
-        )
+        data = _run_one_worker(spec.model_dump_json(), seed, str(self.output_dir), self.sim)
         return TestResult.model_validate(data)
 
     def detect_flake(self, test_name: str, runs: int = 5) -> float:

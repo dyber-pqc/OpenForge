@@ -4,6 +4,7 @@ Physical board representation: copper layers, footprints, tracks,
 vias, copper zones, and board outline. Units are millimeters
 throughout unless noted otherwise.
 """
+
 from __future__ import annotations
 
 import json
@@ -100,12 +101,8 @@ class Footprint:
     def bounding_box(self) -> tuple[float, float, float, float]:
         if not self.pads:
             return (0.0, 0.0, 0.0, 0.0)
-        xs = [p["x"] - p["w"] / 2 for p in self.pads] + [
-            p["x"] + p["w"] / 2 for p in self.pads
-        ]
-        ys = [p["y"] - p["h"] / 2 for p in self.pads] + [
-            p["y"] + p["h"] / 2 for p in self.pads
-        ]
+        xs = [p["x"] - p["w"] / 2 for p in self.pads] + [p["x"] + p["w"] / 2 for p in self.pads]
+        ys = [p["y"] - p["h"] / 2 for p in self.pads] + [p["y"] + p["h"] / 2 for p in self.pads]
         return (min(xs), min(ys), max(xs), max(ys))
 
     def to_dict(self) -> dict:

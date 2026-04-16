@@ -264,6 +264,7 @@ class ToolInstaller:
 
     def _load_user_paths(self) -> dict[str, str]:
         import json
+
         f = self._paths_file()
         if not f.exists():
             return {}
@@ -274,6 +275,7 @@ class ToolInstaller:
 
     def set_user_path(self, name: str, path: str) -> None:
         import json
+
         self._user_paths[name] = path
         f = self._paths_file()
         f.parent.mkdir(parents=True, exist_ok=True)
@@ -381,7 +383,13 @@ class ToolInstaller:
     def install_via_wsl(self, packages: list[str]) -> bool:
         if not shutil.which("wsl"):
             return False
-        cmd = ["wsl", "-e", "bash", "-c", f"sudo apt-get update && sudo apt-get install -y {' '.join(packages)}"]
+        cmd = [
+            "wsl",
+            "-e",
+            "bash",
+            "-c",
+            f"sudo apt-get update && sudo apt-get install -y {' '.join(packages)}",
+        ]
         return subprocess.call(cmd) == 0
 
     # ------------------------------------------------------------------

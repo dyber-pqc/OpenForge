@@ -135,9 +135,7 @@ class ConstraintDebugger:
             if path.clock:
                 out.append(
                     ProposedFix(
-                        sdc_change=(
-                            f"set_clock_uncertainty -setup 0.05 [get_clocks {path.clock}]"
-                        ),
+                        sdc_change=(f"set_clock_uncertainty -setup 0.05 [get_clocks {path.clock}]"),
                         rationale="Tighten uncertainty budget to reclaim margin.",
                         confidence=0.4,
                     )
@@ -152,13 +150,10 @@ class ConstraintDebugger:
             "objects with keys sdc_change, rationale, confidence (0..1). "
             "Do not include prose outside the JSON.\n\n"
             f"Path: {path.model_dump_json()}\n"
-            "Existing SDC files: "
-            + ", ".join(str(p) for p in self.sdc_files)
+            "Existing SDC files: " + ", ".join(str(p) for p in self.sdc_files)
         )
         try:
-            chunks = list(
-                self.client.generate(self.model, prompt, stream=False)
-            )
+            chunks = list(self.client.generate(self.model, prompt, stream=False))
         except Exception:
             return []
         text = "".join(chunks)

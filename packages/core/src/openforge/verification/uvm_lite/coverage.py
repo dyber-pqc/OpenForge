@@ -159,9 +159,7 @@ def parse_covergroups_from_sv(file: Path) -> list[CoverGroup]:
                 bins.append(
                     CoverBin(name=bm.group(1), values=[0])  # values unused here
                 )
-            points.append(
-                CoverPoint(name=pname, expression=expr, bins=bins)
-            )
+            points.append(CoverPoint(name=pname, expression=expr, bins=bins))
         groups.append(CoverGroup(name=name, sample_event=event, points=points))
     return groups
 

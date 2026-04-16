@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 try:
     from openforge.physical.hold_fix import HoldFixer, HoldFixSuggestion
     from openforge.physical.sta_parser import StaReport, parse_sta_report_file
+
     _HAS_CORE = True
 except Exception:  # pragma: no cover
     HoldFixer = None  # type: ignore[assignment]
@@ -41,6 +42,7 @@ except Exception:  # pragma: no cover
 try:
     from openforge_desktop.panels._theme import panel_tab_qss
 except Exception:  # pragma: no cover
+
     def panel_tab_qss(dark: bool, *, extra: str = "") -> str:  # type: ignore[misc]
         return ""
 
@@ -96,17 +98,13 @@ class HoldFixPanel(QWidget):
         )
         self._table.horizontalHeader().setStretchLastSection(True)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self._table.setSelectionBehavior(
-            QTableWidget.SelectionBehavior.SelectRows
-        )
+        self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         root.addWidget(self._table, 1)
 
         # ── diff view ─────────────────────────────────────────────────
         self._diff = QTextEdit(self)
         self._diff.setReadOnly(True)
-        self._diff.setPlaceholderText(
-            "Slack before/after and ECO script preview will appear here."
-        )
+        self._diff.setPlaceholderText("Slack before/after and ECO script preview will appear here.")
         self._diff.setMaximumHeight(180)
         root.addWidget(self._diff)
 
@@ -141,9 +139,7 @@ class HoldFixPanel(QWidget):
         if self._fixer is None:
             self._diff.setPlainText("No STA report loaded.")
             return
-        suggestions = self._fixer.suggest_fixes(
-            target_buffer_delay_ps=self._target_ps.value()
-        )
+        suggestions = self._fixer.suggest_fixes(target_buffer_delay_ps=self._target_ps.value())
         self._suggestions = suggestions
         self._table.setRowCount(len(suggestions))
         for r, s in enumerate(suggestions):
@@ -168,10 +164,7 @@ class HoldFixPanel(QWidget):
             skews = self._fixer.useful_skew_for_hold()
             self._diff.setPlainText(
                 "Useful-skew suggestions:\n"
-                + "\n".join(
-                    f"  {s.endpoint}: Δ={s.delta_ns:+.3f} ns ({s.notes})"
-                    for s in skews
-                )
+                + "\n".join(f"  {s.endpoint}: Δ={s.delta_ns:+.3f} ns ({s.notes})" for s in skews)
             )
             return
         script = self._fixer.to_eco_script()

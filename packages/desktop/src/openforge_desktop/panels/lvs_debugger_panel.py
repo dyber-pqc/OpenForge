@@ -1,4 +1,5 @@
 """LVS Debugger dock panel for OpenForge desktop."""
+
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
@@ -22,15 +23,15 @@ from PySide6.QtWidgets import (
 
 # Catppuccin Mocha palette
 _DARK = {
-    "base":  "#1e1e2e",
+    "base": "#1e1e2e",
     "mantle": "#181825",
     "surface": "#313244",
     "overlay": "#45475a",
-    "text":  "#cdd6f4",
+    "text": "#cdd6f4",
     "subtext": "#a6adc8",
-    "blue":  "#89b4fa",
+    "blue": "#89b4fa",
     "green": "#a6e3a1",
-    "red":   "#f38ba8",
+    "red": "#f38ba8",
     "yellow": "#f9e2af",
 }
 
@@ -117,28 +118,22 @@ class LvsDebuggerPanel(QDockWidget):
         stats.addWidget(QLabel("<b>Layout</b>"), 0, 1)
         stats.addWidget(QLabel("<b>Schematic</b>"), 0, 2)
         stats.addWidget(QLabel("Devices:"), 1, 0)
-        stats.addWidget(QLabel("Nets:"),    2, 0)
+        stats.addWidget(QLabel("Nets:"), 2, 0)
         self.layDev = QLabel("-")
         self.layNet = QLabel("-")
-        self.scDev  = QLabel("-")
-        self.scNet  = QLabel("-")
+        self.scDev = QLabel("-")
+        self.scNet = QLabel("-")
         stats.addWidget(self.layDev, 1, 1)
         stats.addWidget(self.layNet, 2, 1)
-        stats.addWidget(self.scDev,  1, 2)
-        stats.addWidget(self.scNet,  2, 2)
+        stats.addWidget(self.scDev, 1, 2)
+        stats.addWidget(self.scNet, 2, 2)
         layout.addLayout(stats)
 
         # ----- Tabs -----
         self.tabs = QTabWidget()
-        self.mismatchTbl = self._make_table(
-            ["Type", "Layout", "Schematic", "Description"]
-        )
-        self.netDiffTbl = self._make_table(
-            ["Layout net", "Schematic net", "Matched"]
-        )
-        self.devDiffTbl = self._make_table(
-            ["Instance", "Type", "Parameters", "Matched"]
-        )
+        self.mismatchTbl = self._make_table(["Type", "Layout", "Schematic", "Description"])
+        self.netDiffTbl = self._make_table(["Layout net", "Schematic net", "Matched"])
+        self.devDiffTbl = self._make_table(["Instance", "Type", "Parameters", "Matched"])
         self.suggestList = QPlainTextEdit()
         self.suggestList.setReadOnly(True)
         self.logView = QPlainTextEdit()
@@ -168,16 +163,16 @@ class LvsDebuggerPanel(QDockWidget):
         t = QTableWidget(0, len(headers))
         t.setHorizontalHeaderLabels(headers)
         t.horizontalHeader().setStretchLastSection(True)
-        t.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Interactive
-        )
+        t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         t.setAlternatingRowColors(True)
         t.verticalHeader().setVisible(False)
         return t
 
     def _pick_layout(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select layout netlist", "",
+            self,
+            "Select layout netlist",
+            "",
             "Netlists (*.spice *.cdl *.sp *.v);;All files (*)",
         )
         if path:
@@ -185,7 +180,9 @@ class LvsDebuggerPanel(QDockWidget):
 
     def _pick_schem(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select schematic netlist", "",
+            self,
+            "Select schematic netlist",
+            "",
             "Netlists (*.v *.spice *.sp *.cdl);;All files (*)",
         )
         if path:
@@ -216,8 +213,7 @@ class LvsDebuggerPanel(QDockWidget):
             self.statusLabel.setText("MISMATCH")
             color = _DARK["red"] if self._dark else _LIGHT["red"]
         self.statusLabel.setStyleSheet(
-            f"color: {color}; padding: 6px; border: 2px solid {color};"
-            f" border-radius: 6px;"
+            f"color: {color}; padding: 6px; border: 2px solid {color}; border-radius: 6px;"
         )
 
         self.layDev.setText(str(getattr(result, "layout_devices", 0)))
@@ -253,13 +249,12 @@ class LvsDebuggerPanel(QDockWidget):
             self.devDiffTbl.setItem(i, 1, QTableWidgetItem(d.type))
             params = ", ".join(f"{k}={v}" for k, v in d.parameters.items())
             self.devDiffTbl.setItem(i, 2, QTableWidgetItem(params))
-            self.devDiffTbl.setItem(
-                i, 3, QTableWidgetItem("YES" if d.matched else "NO")
-            )
+            self.devDiffTbl.setItem(i, 3, QTableWidgetItem("YES" if d.matched else "NO"))
 
         # Suggestions
         try:
             from openforge.physical.lvs_debugger import LvsDebugger
+
             dbg = LvsDebugger()
             text = "ROOT CAUSE\n  " + dbg.find_root_cause(result) + "\n\n"
             text += "SUGGESTED FIXES\n"
@@ -281,47 +276,47 @@ class LvsDebuggerPanel(QDockWidget):
         p = _DARK if self._dark else _LIGHT
         qss = f"""
         QDockWidget {{
-            color: {p['text']};
+            color: {p["text"]};
         }}
         QWidget {{
-            background-color: {p['base']};
-            color: {p['text']};
+            background-color: {p["base"]};
+            color: {p["text"]};
             font-size: 10pt;
         }}
         QLineEdit, QPlainTextEdit, QTableWidget {{
-            background-color: {p['mantle']};
-            color: {p['text']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["mantle"]};
+            color: {p["text"]};
+            border: 1px solid {p["overlay"]};
             border-radius: 4px;
             padding: 4px;
         }}
         QPushButton {{
-            background-color: {p['surface']};
-            color: {p['text']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["surface"]};
+            color: {p["text"]};
+            border: 1px solid {p["overlay"]};
             padding: 5px 12px;
             border-radius: 4px;
         }}
-        QPushButton:hover {{ background-color: {p['overlay']}; }}
+        QPushButton:hover {{ background-color: {p["overlay"]}; }}
         QPushButton#LvsRunBtn {{
-            background-color: {p['blue']};
-            color: {p['base']};
+            background-color: {p["blue"]};
+            color: {p["base"]};
             font-weight: bold;
         }}
-        QTabWidget::pane {{ border: 1px solid {p['overlay']}; }}
+        QTabWidget::pane {{ border: 1px solid {p["overlay"]}; }}
         QTabBar::tab {{
-            background: {p['surface']};
-            color: {p['subtext']};
+            background: {p["surface"]};
+            color: {p["subtext"]};
             padding: 6px 12px;
         }}
         QTabBar::tab:selected {{
-            background: {p['mantle']};
-            color: {p['text']};
+            background: {p["mantle"]};
+            color: {p["text"]};
         }}
         QHeaderView::section {{
-            background-color: {p['surface']};
-            color: {p['text']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["surface"]};
+            color: {p["text"]};
+            border: 1px solid {p["overlay"]};
             padding: 4px;
         }}
         """

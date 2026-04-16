@@ -1,4 +1,5 @@
 """DFT (Scan + ATPG + BIST) dock panel for OpenForge desktop."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -25,33 +26,33 @@ from PySide6.QtWidgets import (
 )
 
 _DARK = {
-    "base":    "#1e1e2e",
-    "mantle":  "#181825",
+    "base": "#1e1e2e",
+    "mantle": "#181825",
     "surface": "#313244",
     "overlay": "#45475a",
-    "text":    "#cdd6f4",
+    "text": "#cdd6f4",
     "subtext": "#a6adc8",
-    "blue":    "#89b4fa",
-    "mauve":   "#cba6f7",
-    "green":   "#a6e3a1",
-    "red":     "#f38ba8",
-    "yellow":  "#f9e2af",
-    "peach":   "#fab387",
+    "blue": "#89b4fa",
+    "mauve": "#cba6f7",
+    "green": "#a6e3a1",
+    "red": "#f38ba8",
+    "yellow": "#f9e2af",
+    "peach": "#fab387",
 }
 
 _LIGHT = {
-    "base":    "#eff1f5",
-    "mantle":  "#e6e9ef",
+    "base": "#eff1f5",
+    "mantle": "#e6e9ef",
     "surface": "#dce0e8",
     "overlay": "#bcc0cc",
-    "text":    "#4c4f69",
+    "text": "#4c4f69",
     "subtext": "#6c6f85",
-    "blue":    "#1e66f5",
-    "mauve":   "#8839ef",
-    "green":   "#40a02b",
-    "red":     "#d20f39",
-    "yellow":  "#df8e1d",
-    "peach":   "#fe640b",
+    "blue": "#1e66f5",
+    "mauve": "#8839ef",
+    "green": "#40a02b",
+    "red": "#d20f39",
+    "yellow": "#df8e1d",
+    "peach": "#fe640b",
 }
 
 
@@ -81,7 +82,8 @@ class _ScanChainWidget(QWidget):
         if not self._chains:
             painter.setPen(QPen(QColor(p["subtext"])))
             painter.drawText(
-                self.rect(), Qt.AlignmentFlag.AlignCenter,
+                self.rect(),
+                Qt.AlignmentFlag.AlignCenter,
                 "(no scan chains - run insertion)",
             )
             return
@@ -105,13 +107,16 @@ class _ScanChainWidget(QWidget):
                     pen = QPen(QColor(p["mauve"]), 1.5)
                     painter.setPen(pen)
                     painter.drawLine(
-                        rx, ry + box_h // 2,
-                        rx - gap, ry + box_h // 2,
+                        rx,
+                        ry + box_h // 2,
+                        rx - gap,
+                        ry + box_h // 2,
                     )
             if len(chain.flops) > 60:
                 painter.setPen(QPen(QColor(p["subtext"])))
                 painter.drawText(
-                    x + 60 * (box_w + gap), y + box_h,
+                    x + 60 * (box_w + gap),
+                    y + box_h,
                     f"... +{len(chain.flops) - 60} more",
                 )
         painter.end()
@@ -191,18 +196,18 @@ class DftPanel(QDockWidget):
         lay.addWidget(self.insertScanBtn)
 
         results = QGridLayout()
-        self.totalFlopsLbl   = QLabel("-")
+        self.totalFlopsLbl = QLabel("-")
         self.scannedFlopsLbl = QLabel("-")
-        self.coverageLbl     = QLabel("-")
-        self.coverageBar     = QProgressBar()
+        self.coverageLbl = QLabel("-")
+        self.coverageBar = QProgressBar()
         self.coverageBar.setRange(0, 100)
-        results.addWidget(QLabel("Total flops:"),   0, 0)
-        results.addWidget(self.totalFlopsLbl,       0, 1)
+        results.addWidget(QLabel("Total flops:"), 0, 0)
+        results.addWidget(self.totalFlopsLbl, 0, 1)
         results.addWidget(QLabel("Scanned flops:"), 0, 2)
-        results.addWidget(self.scannedFlopsLbl,     0, 3)
-        results.addWidget(QLabel("Coverage:"),      1, 0)
-        results.addWidget(self.coverageLbl,         1, 1)
-        results.addWidget(self.coverageBar,         1, 2, 1, 2)
+        results.addWidget(self.scannedFlopsLbl, 0, 3)
+        results.addWidget(QLabel("Coverage:"), 1, 0)
+        results.addWidget(self.coverageLbl, 1, 1)
+        results.addWidget(self.coverageBar, 1, 2, 1, 2)
         lay.addLayout(results)
 
         self.chainViz = _ScanChainWidget()
@@ -216,9 +221,15 @@ class DftPanel(QDockWidget):
 
         settings = QGridLayout()
         self.faultModelCombo = QComboBox()
-        self.faultModelCombo.addItems([
-            "stuck_at", "transition", "path_delay", "iddq", "bridging",
-        ])
+        self.faultModelCombo.addItems(
+            [
+                "stuck_at",
+                "transition",
+                "path_delay",
+                "iddq",
+                "bridging",
+            ]
+        )
         settings.addWidget(QLabel("Fault model:"), 0, 0)
         settings.addWidget(self.faultModelCombo, 0, 1)
         lay.addLayout(settings)
@@ -230,20 +241,18 @@ class DftPanel(QDockWidget):
 
         results = QGridLayout()
         self.patternCountLbl = QLabel("-")
-        self.faultCovLbl     = QLabel("-")
-        self.faultCovBar     = QProgressBar()
+        self.faultCovLbl = QLabel("-")
+        self.faultCovBar = QProgressBar()
         self.faultCovBar.setRange(0, 100)
         results.addWidget(QLabel("Pattern count:"), 0, 0)
-        results.addWidget(self.patternCountLbl,    0, 1)
+        results.addWidget(self.patternCountLbl, 0, 1)
         results.addWidget(QLabel("Fault coverage:"), 0, 2)
-        results.addWidget(self.faultCovLbl,        0, 3)
-        results.addWidget(self.faultCovBar,        1, 0, 1, 4)
+        results.addWidget(self.faultCovLbl, 0, 3)
+        results.addWidget(self.faultCovBar, 1, 0, 1, 4)
         lay.addLayout(results)
 
         self.uncoveredTbl = QTableWidget(0, 3)
-        self.uncoveredTbl.setHorizontalHeaderLabels(
-            ["Fault site", "Type", "Severity"]
-        )
+        self.uncoveredTbl.setHorizontalHeaderLabels(["Fault site", "Type", "Severity"])
         self.uncoveredTbl.horizontalHeader().setStretchLastSection(True)
         self.uncoveredTbl.verticalHeader().setVisible(False)
         lay.addWidget(QLabel("Top uncovered faults:"))
@@ -259,9 +268,14 @@ class DftPanel(QDockWidget):
         self.detectMemBtn = QPushButton("Detect Memories")
         self.detectMemBtn.clicked.connect(self._on_detect_memories)
         self.algoCombo = QComboBox()
-        self.algoCombo.addItems([
-            "MARCH-C-", "MATS+", "Checkerboard", "Walking-1",
-        ])
+        self.algoCombo.addItems(
+            [
+                "MARCH-C-",
+                "MATS+",
+                "Checkerboard",
+                "Walking-1",
+            ]
+        )
         self.insertBistBtn = QPushButton("Insert BIST")
         self.insertBistBtn.setObjectName("DftPrimaryBtn")
         self.insertBistBtn.clicked.connect(self._on_insert_bist)
@@ -272,9 +286,7 @@ class DftPanel(QDockWidget):
         lay.addLayout(head)
 
         self.memTbl = QTableWidget(0, 5)
-        self.memTbl.setHorizontalHeaderLabels(
-            ["Instance", "Type", "Width", "Depth", "Ports"]
-        )
+        self.memTbl.setHorizontalHeaderLabels(["Instance", "Type", "Width", "Depth", "Ports"])
         self.memTbl.horizontalHeader().setStretchLastSection(True)
         self.memTbl.verticalHeader().setVisible(False)
         lay.addWidget(self.memTbl, 1)
@@ -294,7 +306,9 @@ class DftPanel(QDockWidget):
 
     def _pick_netlist(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select netlist", "",
+            self,
+            "Select netlist",
+            "",
             "Verilog (*.v *.sv);;All files (*)",
         )
         if path:
@@ -318,6 +332,7 @@ class DftPanel(QDockWidget):
     def _on_detect_memories(self) -> None:
         try:
             from openforge.verification.bist import BistInserter
+
             mems = BistInserter().detect_memories(Path(self.netlistEdit.text()))
             self.show_memories(mems)
         except Exception as e:
@@ -331,9 +346,9 @@ class DftPanel(QDockWidget):
         )
         try:
             from openforge.verification.bist import BistInserter, MemoryInfo
+
             ins = BistInserter()
-            mem = MemoryInfo(name="preview", instance="u_mem",
-                             width=32, depth=256)
+            mem = MemoryInfo(name="preview", instance="u_mem", width=32, depth=256)
             self.bistPreview.setPlainText(
                 ins.generate_bist_controller(mem, self.algoCombo.currentText())
             )
@@ -383,55 +398,55 @@ class DftPanel(QDockWidget):
         self.chainViz.set_theme(self._dark)
         qss = f"""
         QWidget {{
-            background-color: {p['base']};
-            color: {p['text']};
+            background-color: {p["base"]};
+            color: {p["text"]};
             font-size: 10pt;
         }}
         QLineEdit, QPlainTextEdit, QTableWidget, QSpinBox, QComboBox {{
-            background-color: {p['mantle']};
-            color: {p['text']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["mantle"]};
+            color: {p["text"]};
+            border: 1px solid {p["overlay"]};
             border-radius: 4px;
             padding: 4px;
         }}
         QPushButton {{
-            background-color: {p['surface']};
-            color: {p['text']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["surface"]};
+            color: {p["text"]};
+            border: 1px solid {p["overlay"]};
             padding: 5px 12px;
             border-radius: 4px;
         }}
-        QPushButton:hover {{ background-color: {p['overlay']}; }}
+        QPushButton:hover {{ background-color: {p["overlay"]}; }}
         QPushButton#DftPrimaryBtn {{
-            background-color: {p['mauve']};
-            color: {p['base']};
+            background-color: {p["mauve"]};
+            color: {p["base"]};
             font-weight: bold;
         }}
-        QTabWidget::pane {{ border: 1px solid {p['overlay']}; }}
+        QTabWidget::pane {{ border: 1px solid {p["overlay"]}; }}
         QTabBar::tab {{
-            background: {p['surface']};
-            color: {p['subtext']};
+            background: {p["surface"]};
+            color: {p["subtext"]};
             padding: 6px 12px;
         }}
         QTabBar::tab:selected {{
-            background: {p['mantle']};
-            color: {p['text']};
+            background: {p["mantle"]};
+            color: {p["text"]};
         }}
         QHeaderView::section {{
-            background-color: {p['surface']};
-            color: {p['text']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["surface"]};
+            color: {p["text"]};
+            border: 1px solid {p["overlay"]};
             padding: 4px;
         }}
         QProgressBar {{
-            background-color: {p['mantle']};
-            border: 1px solid {p['overlay']};
+            background-color: {p["mantle"]};
+            border: 1px solid {p["overlay"]};
             border-radius: 4px;
             text-align: center;
-            color: {p['text']};
+            color: {p["text"]};
         }}
         QProgressBar::chunk {{
-            background-color: {p['green']};
+            background-color: {p["green"]};
             border-radius: 3px;
         }}
         """

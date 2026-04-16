@@ -5,6 +5,7 @@ JLCPCB or Eurocircuits to accept the upload. This is a pragmatic
 implementation - not a full ODB++ v8 writer - but produces the
 directory structure and feature files needed for common use.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -53,8 +54,7 @@ class OdbppExporter:
         step_dir = root / "steps" / self.board.name
         step_dir.mkdir(parents=True)
         (step_dir / "stephdr").write_text(
-            "UNITS=MM\n"
-            "X_DATUM=0\nY_DATUM=0\nX_ORIGIN=0\nY_ORIGIN=0\n"
+            "UNITS=MM\nX_DATUM=0\nY_DATUM=0\nX_ORIGIN=0\nY_ORIGIN=0\n"
         )
 
         # Board outline as "profile"

@@ -201,8 +201,12 @@ class HierarchyPanel(QDockWidget):
                 module_name = raw_name.split(" [")[0]
 
             menu.addAction("Go to Source", lambda: self.go_to_source_requested.emit(module_name))
-            menu.addAction("Set as Top Module", lambda: self.set_top_module_requested.emit(module_name))
-            menu.addAction("Show in Editor", lambda: self.show_in_editor_requested.emit(module_name))
+            menu.addAction(
+                "Set as Top Module", lambda: self.set_top_module_requested.emit(module_name)
+            )
+            menu.addAction(
+                "Show in Editor", lambda: self.show_in_editor_requested.emit(module_name)
+            )
             menu.addSeparator()
             menu.addAction("Copy Name", lambda: QApplication.clipboard().setText(module_name))
             menu.addAction("Copy Full Path", lambda: self._copy_hierarchy_path(index))
@@ -229,12 +233,33 @@ class HierarchyPanel(QDockWidget):
 
     # ── Real data loading ─────────────────────────────────────────
 
-    _VERILOG_KEYWORDS: frozenset[str] = frozenset({
-        "module", "endmodule", "input", "output", "inout", "wire",
-        "reg", "assign", "always", "initial", "parameter",
-        "localparam", "generate", "genvar", "begin", "end", "if",
-        "else", "case", "for", "while", "function", "task",
-    })
+    _VERILOG_KEYWORDS: frozenset[str] = frozenset(
+        {
+            "module",
+            "endmodule",
+            "input",
+            "output",
+            "inout",
+            "wire",
+            "reg",
+            "assign",
+            "always",
+            "initial",
+            "parameter",
+            "localparam",
+            "generate",
+            "genvar",
+            "begin",
+            "end",
+            "if",
+            "else",
+            "case",
+            "for",
+            "while",
+            "function",
+            "task",
+        }
+    )
 
     def load_from_sources(self, source_files: list[Path]) -> None:
         """Build the hierarchy tree from Verilog/SystemVerilog source files.
@@ -266,9 +291,7 @@ class HierarchyPanel(QDockWidget):
                 # Find instantiations: <type> <name> (
                 insts = re.findall(r"(\w+)\s+(\w+)\s*\(", block)
                 filtered = [
-                    (itype, iname)
-                    for itype, iname in insts
-                    if itype not in self._VERILOG_KEYWORDS
+                    (itype, iname) for itype, iname in insts if itype not in self._VERILOG_KEYWORDS
                 ]
                 module_instances.setdefault(mod_name, []).extend(filtered)
                 for itype, _ in filtered:
