@@ -310,7 +310,7 @@ jobs:
 
       - name: Install Python packages
         run: |
-          pip install pydantic pyyaml numpy typer rich networkx scipy matplotlib
+          pip install pydantic pyyaml numpy typer rich networkx scipy matplotlib pytest
           pip install -e packages/core -e packages/cli 2>/dev/null || true
 
       - name: Verify Python imports
