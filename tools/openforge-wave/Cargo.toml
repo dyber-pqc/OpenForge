@@ -16,6 +16,9 @@ anyhow = { workspace = true }
 memmap2 = "0.9"
 byteorder = "1"
 
+[dev-dependencies]
+tempfile = "3"
+
 [lib]
 name = "openforge_wave"
 path = "src/lib.rs"
