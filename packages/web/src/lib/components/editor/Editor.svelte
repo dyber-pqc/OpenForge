@@ -31,7 +31,7 @@
 					{#if file.modified}
 						<span class="modified-dot"></span>
 					{/if}
-					<button class="tab-close" onclick={(e) => closeTab(i, e)}>x</button>
+					<span class="tab-close" role="button" tabindex="-1" onclick={(e) => closeTab(i, e)}>x</span>
 				</button>
 			{/each}
 		</div>

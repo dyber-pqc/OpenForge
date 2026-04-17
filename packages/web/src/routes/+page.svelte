@@ -274,7 +274,7 @@
 								<span>Run verification to generate reports</span>
 							</div>
 						{:else if $bottomPanelTab === 'timing'}
-							<TimingDashboard />
+							<TimingDashboard wns={null} tns={null} paths={[]} clocks={[]} histogram={[]} numEndpoints={0} numViolated={0} />
 						{/if}
 					</div>
 				</div>
@@ -334,7 +334,7 @@
 							</div>
 						</div>
 					{:else}
-						<SecurityDashboard />
+						<SecurityDashboard scores={[]} overallScore={null} />
 					{/if}
 				</div>
 			</aside>

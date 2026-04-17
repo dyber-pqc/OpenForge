@@ -237,10 +237,10 @@
 			</div>
 
 		{:else if activeTab === 'coverage'}
-			<CoverageView />
+			<CoverageView lineCoverage={[]} toggleCoverage={[]} fsmCoverage={[]} summaryPct={null} />
 
 		{:else if activeTab === 'security'}
-			<SecurityDashboard />
+			<SecurityDashboard scores={[]} overallScore={null} />
 		{/if}
 	</div>
 </div>

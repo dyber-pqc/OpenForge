@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" module>
   export interface WaveValue {
     time: number;
     value: string;
@@ -7,7 +7,9 @@
     name: string;
     values: WaveValue[];
   }
+</script>
 
+<script lang="ts">
   export let signals: Signal[] = [];
   export let timeStart = 0;
   export let timeEnd = 100;

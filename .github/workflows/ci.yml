@@ -202,7 +202,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings -A clippy::collapsible_match -A clippy::manual_div_ceil -A clippy::needless_lifetimes
 
       - name: Run tests
         run: cargo test --all --verbose

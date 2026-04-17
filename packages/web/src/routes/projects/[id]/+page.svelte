@@ -9,7 +9,7 @@
 	import { onMount } from 'svelte';
 	import type { Project } from '$lib/api/client';
 
-	let projectId = $derived($page.params.id);
+	let projectId = $derived($page.params.id ?? '');
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 

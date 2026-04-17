@@ -23,6 +23,6 @@ thiserror = "2"
 anyhow = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-sv-parser = "0.12"
+sv-parser = "0.13"
 pyo3 = { version = "0.22", features = ["extension-module"] }
 rayon = "1"
