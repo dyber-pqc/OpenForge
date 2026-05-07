@@ -1,7 +1,10 @@
 //! `openforge-lvs` CLI.
 
 use clap::{Parser, Subcommand};
-use openforge_lvs::{error::LvsError, run_lvs, run_lvs_def_spice, run_lvs_def_verilog};
+use openforge_lvs::layout_extract::PhysicalFilter;
+use openforge_lvs::{
+    error::LvsError, run_lvs, run_lvs_def_spice_filtered, run_lvs_def_verilog_filtered,
+};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -46,6 +49,15 @@ enum Cmd {
         /// JSON report path (default: lvs.json).
         #[arg(long, default_value = "lvs.json")]
         report: PathBuf,
+        /// Regex matching layout cells to drop as physical-only (tap,
+        /// decap, fill, antenna diodes). Defaults to the sky130 standard
+        /// cell library pattern.
+        #[arg(long = "physical-only-filter", conflicts_with = "no_physical_filter")]
+        physical_only_filter: Option<String>,
+        /// Disable the physical-only cell filter entirely (keep every DEF
+        /// component, including tap / decap / fill).
+        #[arg(long = "no-physical-filter", default_value_t = false)]
+        no_physical_filter: bool,
     },
 }
 
@@ -59,19 +71,36 @@ fn main() -> ExitCode {
             schematic,
             top,
             report,
-        } => match cmd_check(layout, layout_def, layout_lef, &schematic, &top, &report) {
-            Ok(matched) => {
-                if matched {
-                    ExitCode::SUCCESS
-                } else {
-                    ExitCode::from(1)
+            physical_only_filter,
+            no_physical_filter,
+        } => {
+            let filter = if no_physical_filter {
+                PhysicalFilter::disabled()
+            } else {
+                match PhysicalFilter::new(physical_only_filter.as_deref()) {
+                    Ok(f) => f,
+                    Err(e) => {
+                        eprintln!("error: {e}");
+                        return ExitCode::from(2);
+                    }
+                }
+            };
+            match cmd_check(
+                layout, layout_def, layout_lef, &schematic, &top, &report, &filter,
+            ) {
+                Ok(matched) => {
+                    if matched {
+                        ExitCode::SUCCESS
+                    } else {
+                        ExitCode::from(1)
+                    }
+                }
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    ExitCode::from(2)
                 }
             }
-            Err(e) => {
-                eprintln!("error: {e}");
-                ExitCode::from(2)
-            }
-        },
+        }
     }
 }
 
@@ -99,6 +128,7 @@ fn cmd_check(
     schematic: &std::path::Path,
     top: &str,
     report: &std::path::Path,
+    filter: &PhysicalFilter,
 ) -> Result<bool, LvsError> {
     let sch_kind = detect_schematic_kind(schematic);
     println!(
@@ -125,8 +155,12 @@ fn cmd_check(
         println!("[3/4] Building connectivity graphs...");
         println!("[4/4] Running graph isomorphism (VF2)...");
         match sch_kind {
-            SchKind::Verilog => run_lvs_def_verilog(&def_src, &lef_src, &sch_src, top)?,
-            SchKind::Spice => run_lvs_def_spice(&def_src, &lef_src, &sch_src, top)?,
+            SchKind::Verilog => {
+                run_lvs_def_verilog_filtered(&def_src, &lef_src, &sch_src, top, filter)?
+            }
+            SchKind::Spice => {
+                run_lvs_def_spice_filtered(&def_src, &lef_src, &sch_src, top, filter)?
+            }
         }
     } else if let Some(lay_path) = layout_spice {
         println!("[2/4] Reading layout SPICE: {}", lay_path.display());

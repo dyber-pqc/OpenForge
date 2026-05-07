@@ -28,6 +28,14 @@ pub struct LvsReport {
     pub mismatched_devices: Vec<DeviceMismatch>,
     pub matched_pairs: Vec<(String, String)>,
     pub reason: Option<String>,
+    /// Number of physical-only cells (tap, decap, fill, antenna diode)
+    /// dropped from the layout DEF before LVS comparison. Always 0 for
+    /// SPICE-only paths and for LVS runs with the filter disabled.
+    #[serde(default)]
+    pub filtered_physical_cells: usize,
+    /// Human-readable summary of which physical-only macros were filtered.
+    #[serde(default)]
+    pub filtered_physical_summary: String,
 }
 
 impl LvsReport {
@@ -45,6 +53,9 @@ impl LvsReport {
             "  Layout:    {} devices, {} nets\n",
             self.device_count_layout, self.net_count_layout
         ));
+        if self.filtered_physical_cells > 0 {
+            s.push_str(&format!("  {}\n", self.filtered_physical_summary));
+        }
         if self.matched {
             s.push_str(&format!(
                 "  Matched:   {} device pairs\n",

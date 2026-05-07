@@ -15,6 +15,7 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 nom = "8"
 petgraph = "0.7"
+regex = "1"
 
 [lib]
 name = "openforge_lvs"

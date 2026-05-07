@@ -14,7 +14,7 @@ use crate::error::{LvsError, Result};
 use crate::graph::hierarchical::{run_hierarchical, HierResult};
 use crate::graph::normalize::normalize_subckt;
 use crate::graph::{build_graph, ConnGraph, Node};
-use crate::layout_extract::{parse_def_str, parse_lef_str, LefLibrary};
+use crate::layout_extract::{parse_def_str, parse_lef_str, LefLibrary, PhysicalFilter};
 use crate::matcher::{run_isomorphism, MatchOutcome};
 use crate::report::LvsReport;
 use crate::spice::{parse_netlist, Subckt};
@@ -92,9 +92,27 @@ pub fn run_lvs_def_verilog(
     verilog_src: &str,
     top: &str,
 ) -> Result<LvsReport> {
+    run_lvs_def_verilog_filtered(
+        def_src,
+        lef_src,
+        verilog_src,
+        top,
+        &PhysicalFilter::default(),
+    )
+}
+
+/// Variant of [`run_lvs_def_verilog`] that takes an explicit physical-only
+/// filter (e.g. for non-sky130 PDKs or to disable filtering).
+pub fn run_lvs_def_verilog_filtered(
+    def_src: &str,
+    lef_src: &str,
+    verilog_src: &str,
+    top: &str,
+    filter: &PhysicalFilter,
+) -> Result<LvsReport> {
     let def = parse_def_str(def_src)?;
     let lef = parse_lef_str(lef_src)?;
-    let lay = layout_extract::extract_subckt(&def, &lef, top)?;
+    let (lay, filtered) = layout_extract::extract_subckt_with_filter(&def, &lef, top, filter)?;
 
     let v = parse_verilog_str(verilog_src)?;
     if v.name != top {
@@ -110,7 +128,10 @@ pub fn run_lvs_def_verilog(
 
     let lay_g = build_graph(&lay)?;
     let sch_g = build_graph(&sch)?;
-    Ok(build_report(&lay_g, &sch_g, top))
+    let mut rpt = build_report(&lay_g, &sch_g, top);
+    rpt.filtered_physical_cells = filtered.total;
+    rpt.filtered_physical_summary = filtered.render_summary();
+    Ok(rpt)
 }
 
 /// Run LVS where the layout is DEF + LEF and the schematic is SPICE
@@ -121,16 +142,30 @@ pub fn run_lvs_def_spice(
     spice_src: &str,
     top: &str,
 ) -> Result<LvsReport> {
+    run_lvs_def_spice_filtered(def_src, lef_src, spice_src, top, &PhysicalFilter::default())
+}
+
+/// Variant of [`run_lvs_def_spice`] with an explicit physical-only filter.
+pub fn run_lvs_def_spice_filtered(
+    def_src: &str,
+    lef_src: &str,
+    spice_src: &str,
+    top: &str,
+    filter: &PhysicalFilter,
+) -> Result<LvsReport> {
     let def = parse_def_str(def_src)?;
     let lef = parse_lef_str(lef_src)?;
-    let mut lay = layout_extract::extract_subckt(&def, &lef, top)?;
+    let (mut lay, filtered) = layout_extract::extract_subckt_with_filter(&def, &lef, top, filter)?;
     let mut sch = load_subckt(spice_src, top)?;
     normalize_subckt(&mut lay);
     normalize_subckt(&mut sch);
 
     let lay_g = build_graph(&lay)?;
     let sch_g = build_graph(&sch)?;
-    Ok(build_report(&lay_g, &sch_g, top))
+    let mut rpt = build_report(&lay_g, &sch_g, top);
+    rpt.filtered_physical_cells = filtered.total;
+    rpt.filtered_physical_summary = filtered.render_summary();
+    Ok(rpt)
 }
 
 /// Read the supplied LEF sources (one or many) and combine them.
@@ -179,6 +214,8 @@ fn build_report_for_outcome(
         mismatched_devices: Vec::new(),
         matched_pairs,
         reason,
+        filtered_physical_cells: 0,
+        filtered_physical_summary: String::new(),
     }
 }
 
@@ -215,6 +252,8 @@ fn build_report(layout: &ConnGraph, schem: &ConnGraph, top: &str) -> LvsReport {
         mismatched_devices: Vec::new(),
         matched_pairs,
         reason,
+        filtered_physical_cells: 0,
+        filtered_physical_summary: String::new(),
     }
 }
 
