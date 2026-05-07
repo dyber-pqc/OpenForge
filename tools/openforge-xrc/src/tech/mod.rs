@@ -6,7 +6,7 @@ pub mod sky130;
 use crate::error::{Result, XrcError};
 use std::path::Path;
 
-pub use ast::{LayerProps, TechFile, ViaProps};
+pub use ast::{Corner, CornerSetting, LayerProps, TechFile, ViaProps};
 
 /// Load a tech file. Recognised values:
 ///   * "sky130A" → built-in constants

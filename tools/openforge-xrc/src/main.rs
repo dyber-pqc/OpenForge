@@ -1,9 +1,18 @@
 //! openforge-xrc CLI.
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+use openforge_xrc::tech::Corner;
 use openforge_xrc::{def, extract, lef, spef, tech};
 use std::path::PathBuf;
+
+#[derive(Copy, Clone, Debug, ValueEnum)]
+enum CornerArg {
+    Min,
+    Typ,
+    Max,
+    All,
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -28,6 +37,9 @@ enum Cmd {
         tech: String,
         #[arg(long, short = 'o')]
         output: PathBuf,
+        /// Process corner: `min`, `typ`, `max`, or `all` (writes 3 SPEFs).
+        #[arg(long, value_enum, default_value_t = CornerArg::Typ)]
+        corner: CornerArg,
     },
 }
 
@@ -39,8 +51,19 @@ fn main() -> Result<()> {
             lef: lef_path,
             tech: tech_name,
             output,
-        } => run_extract(def_path, lef_path, tech_name, output),
+            corner,
+        } => run_extract(def_path, lef_path, tech_name, output, corner),
     }
+}
+
+fn corner_output_path(base: &std::path::Path, c: Corner) -> PathBuf {
+    let stem = base
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("output");
+    let ext = base.extension().and_then(|s| s.to_str()).unwrap_or("spef");
+    let new_name = format!("{stem}.{}.{}", c.label(), ext);
+    base.with_file_name(new_name)
 }
 
 fn run_extract(
@@ -48,6 +71,7 @@ fn run_extract(
     lef_path: PathBuf,
     tech_name: String,
     output: PathBuf,
+    corner_arg: CornerArg,
 ) -> Result<()> {
     println!(
         "[1/5] Parsing tech: {tech_name}{}",
@@ -83,12 +107,32 @@ fn run_extract(
     );
 
     println!("[4/5] Extracting parasitics...");
-    let result = extract::extract(&def_ast, &lef_lib, &tech_file);
-    println!("      → {} nets processed, 0 errors", result.nets.len());
-
-    println!("[5/5] Writing SPEF: {}", output.display());
-    let spef_text = spef::write_spef(&result);
-    std::fs::write(&output, &spef_text).context("writing SPEF")?;
+    let corners: Vec<Corner> = match corner_arg {
+        CornerArg::Min => vec![Corner::Min],
+        CornerArg::Typ => vec![Corner::Typ],
+        CornerArg::Max => vec![Corner::Max],
+        CornerArg::All => vec![Corner::Min, Corner::Typ, Corner::Max],
+    };
+    let mut last_result: Option<extract::ExtractionResult> = None;
+    for c in &corners {
+        let tech_c = tech_file.clone().with_corner(*c);
+        let result = extract::extract(&def_ast, &lef_lib, &tech_c);
+        let out_path = if corners.len() > 1 {
+            corner_output_path(&output, *c)
+        } else {
+            output.clone()
+        };
+        println!(
+            "      → corner={}, {} nets processed",
+            c.label(),
+            result.nets.len()
+        );
+        println!("[5/5] Writing SPEF: {}", out_path.display());
+        let spef_text = spef::write_spef(&result);
+        std::fs::write(&out_path, &spef_text).context("writing SPEF")?;
+        last_result = Some(result);
+    }
+    let result = last_result.unwrap_or_default();
 
     println!();
     println!("Summary:");

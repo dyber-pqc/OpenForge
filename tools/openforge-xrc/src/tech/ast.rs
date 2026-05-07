@@ -44,14 +44,73 @@ fn default_cut_count() -> u32 {
     1
 }
 
+/// Process corner. Affects the effective dielectric permittivity (and
+/// hence all capacitances) by ±10% as a stand-in for a per-foundry
+/// corner deck.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Corner {
+    /// Best-case: low-k corner (k_eff scaled down).
+    Min,
+    /// Typical (default).
+    #[default]
+    Typ,
+    /// Worst-case: high-k corner (k_eff scaled up).
+    Max,
+}
+
+impl Corner {
+    /// Multiplier applied to capacitance values for this corner.
+    pub fn cap_scale(self) -> f64 {
+        match self {
+            Corner::Min => 0.90,
+            Corner::Typ => 1.00,
+            Corner::Max => 1.10,
+        }
+    }
+
+    /// Short string label, suitable for SPEF filename suffixes.
+    pub fn label(self) -> &'static str {
+        match self {
+            Corner::Min => "min",
+            Corner::Typ => "typ",
+            Corner::Max => "max",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TechFile {
     pub name: String,
     pub layers: Vec<LayerProps>,
     pub vias: Vec<ViaProps>,
+    /// Active corner. Not serialized (always loads as Typ); set via CLI.
+    #[serde(skip, default)]
+    pub corner: CornerSetting,
+}
+
+/// Newtype around `Corner` that participates in the `Default` derive on
+/// `TechFile`. Serde skips the field; defaults to `Corner::Typ`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CornerSetting(pub Corner);
+
+impl Default for CornerSetting {
+    fn default() -> Self {
+        CornerSetting(Corner::Typ)
+    }
 }
 
 impl TechFile {
+    /// Currently-active corner (defaults to Typ).
+    pub fn current_corner(&self) -> Corner {
+        self.corner.0
+    }
+
+    /// Set active corner (consuming).
+    pub fn with_corner(mut self, c: Corner) -> Self {
+        self.corner = CornerSetting(c);
+        self
+    }
+
     pub fn layer(&self, name: &str) -> Option<&LayerProps> {
         self.layers.iter().find(|l| l.name == name)
     }

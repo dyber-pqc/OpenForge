@@ -1,4 +1,4 @@
-use super::ast::{LayerProps, TechFile, ViaProps};
+use super::ast::{CornerSetting, LayerProps, TechFile, ViaProps};
 
 /// Built-in sky130A tech constants. Values approximate the OpenROAD process file.
 ///
@@ -118,5 +118,6 @@ pub fn sky130a_tech() -> TechFile {
                 cut_count: 1,
             },
         ],
+        corner: CornerSetting::default(),
     }
 }

@@ -3,6 +3,8 @@
 pub mod capacitance;
 pub mod coupling;
 pub mod cross_layer;
+pub mod pattern_match;
+pub mod patterns;
 pub mod resistance;
 
 use crate::def::{Def, RouteSeg};
@@ -84,9 +86,12 @@ impl ExtractionResult {
 /// Run the extraction pipeline.
 pub fn extract(def: &Def, _lef: &LefLibrary, tech: &TechFile) -> ExtractionResult {
     let upm = def.units_per_micron.max(1.0);
+    let cap_scale = tech.current_corner().cap_scale();
     let mut net_paras: Vec<NetParasitics> = Vec::with_capacity(def.nets.len());
     let mut all_geoms: Vec<(usize, SegmentGeom)> = Vec::new();
     let mut net_names: Vec<String> = Vec::with_capacity(def.nets.len());
+    // Track each segment's location so pattern-match can revise c_ff.
+    let mut seg_locs: Vec<(usize, usize)> = Vec::new(); // (net_idx, seg_idx_in_np)
 
     for (idx, net) in def.nets.iter().enumerate() {
         net_names.push(net.name.clone());
@@ -118,10 +123,27 @@ pub fn extract(def: &Def, _lef: &LefLibrary, tech: &TechFile) -> ExtractionResul
                 &mut all_geoms,
                 idx,
                 &mut alloc_node,
+                &mut seg_locs,
             );
         }
 
         net_paras.push(np);
+    }
+
+    // Pattern-matched per-segment cap. Overwrites the Sakurai-Tamaru
+    // baseline computed inline during route walking when a more specific
+    // pattern matches the local geometry.
+    let class = pattern_match::classify_all(tech, &all_geoms);
+    debug_assert_eq!(class.len(), seg_locs.len());
+    for (cls, (net_idx, seg_idx)) in class.iter().zip(seg_locs.iter()) {
+        let np = &mut net_paras[*net_idx];
+        if let Some(seg) = np.segments.get_mut(*seg_idx) {
+            // Subtract the old baseline from the running total before
+            // installing the pattern-matched value.
+            np.total_cap_ff -= seg.c_ff;
+            seg.c_ff = cls.c_ff;
+            np.total_cap_ff += seg.c_ff;
+        }
     }
 
     // Same-layer coupling pass.
@@ -150,6 +172,21 @@ pub fn extract(def: &Def, _lef: &LefLibrary, tech: &TechFile) -> ExtractionResul
         }
     }
 
+    // Apply process-corner cap scaling uniformly across self + coupling
+    // capacitances. Resistances are left untouched (corner R is dominated
+    // by metal sheet variation and would need its own deck).
+    if (cap_scale - 1.0).abs() > f64::EPSILON {
+        for np in &mut net_paras {
+            np.total_cap_ff *= cap_scale;
+            for s in &mut np.segments {
+                s.c_ff *= cap_scale;
+            }
+            for cc in &mut np.coupling {
+                cc.c_ff *= cap_scale;
+            }
+        }
+    }
+
     ExtractionResult {
         design: def.design.clone(),
         nets: net_paras,
@@ -167,6 +204,7 @@ fn extract_route(
     geoms: &mut Vec<(usize, SegmentGeom)>,
     net_idx: usize,
     _alloc: &mut dyn FnMut(&NetParasitics) -> String,
+    seg_locs: &mut Vec<(usize, usize)>,
 ) {
     let layer = r.layer.clone();
     let width_um = tech.layer(&layer).map(|l| l.min_width_um).unwrap_or(0.14);
@@ -199,6 +237,7 @@ fn extract_route(
             let c_ff = capacitance::wire_capacitance(tech, &layer, length_um, width_um);
             let from = format!("{}:{}", np.net_name, np.segments.len() + 1);
             let to = format!("{}:{}", np.net_name, np.segments.len() + 2);
+            let seg_idx_in_np = np.segments.len();
             np.segments.push(Segment {
                 layer: layer.clone(),
                 from_node: from,
@@ -208,6 +247,7 @@ fn extract_route(
                 r_ohm,
                 c_ff,
             });
+            seg_locs.push((net_idx, seg_idx_in_np));
             np.total_res_ohm += r_ohm;
             np.total_cap_ff += c_ff;
             np.wirelength_um += length_um;
