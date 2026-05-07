@@ -6094,20 +6094,47 @@ exit
         summary = "\n".join(lines)
         self._console.append_info(summary)
 
-        if overall == "success":
+        # Classify failures: optional/advisory stages (lint, drc, lvs)
+        # vs core chip-producing stages (synth, floorplan, ...gds_export).
+        OPTIONAL = {"lint", "drc", "lvs"}
+        CORE = {"synth", "floorplan", "placement", "cts", "routing", "fill", "gds_export", "sta"}
+        failed_core = [s for s in stages
+                       if getattr(s, "status", "") == "failed"
+                       and getattr(s, "stage", "") in CORE]
+        failed_optional = [s for s in stages
+                           if getattr(s, "status", "") == "failed"
+                           and getattr(s, "stage", "") in OPTIONAL]
+
+        if overall == "success" and not failed_core:
             self.statusBar().showMessage("Full flow completed successfully!")
             QMessageBox.information(
                 self,
                 "Full Flow Complete",
-                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\nGDS: {gds or 'N/A'}",
+                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\n"
+                f"GDS: {gds or 'N/A'}",
+            )
+        elif gds and not failed_core:
+            # Core flow succeeded, only advisory checks failed.
+            self.statusBar().showMessage("Chip GDS produced — advisory checks failed.")
+            opt_names = ", ".join(getattr(s, "stage", "?") for s in failed_optional)
+            QMessageBox.information(
+                self,
+                "Chip Built — Advisory Checks Failed",
+                f"Your chip GDS was produced successfully in {total_s:.1f}s.\n\n"
+                f"GDS: {gds}\n\n"
+                f"Advisory checks that did not pass: {opt_names}\n"
+                f"These are sign-off checks that don't affect the chip itself. "
+                f"To enable them, install:\n"
+                f"  • verible-verilog-lint (for lint)\n"
+                f"  • magic with a matching tech file (for DRC)\n"
+                f"  • netgen (for LVS)\n",
             )
         else:
             self.statusBar().showMessage("Full flow completed with errors.")
-            # Collect errors
             errs: list[str] = []
-            for s in stages:
+            for s in failed_core:
                 for e in getattr(s, "errors", []):
-                    errs.append(e[:200])
+                    errs.append(f"[{s.stage}] {e[:200]}")
             err_text = "\n".join(errs[:5]) if errs else "Check console for details."
             QMessageBox.warning(
                 self,
