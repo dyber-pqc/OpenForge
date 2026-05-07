@@ -11,6 +11,8 @@ pub mod spice;
 pub mod verilog;
 
 use crate::error::{LvsError, Result};
+use crate::graph::hierarchical::{run_hierarchical, HierResult};
+use crate::graph::normalize::normalize_subckt;
 use crate::graph::{build_graph, ConnGraph, Node};
 use crate::layout_extract::{parse_def_str, parse_lef_str, LefLibrary};
 use crate::matcher::{run_isomorphism, MatchOutcome};
@@ -29,13 +31,55 @@ pub fn load_subckt(src: &str, top: &str) -> Result<Subckt> {
 
 /// High-level: run LVS on two SPICE source strings.
 pub fn run_lvs(layout_src: &str, schem_src: &str, top: &str) -> Result<LvsReport> {
-    let lay = load_subckt(layout_src, top)?;
-    let sch = load_subckt(schem_src, top)?;
+    let mut lay = load_subckt(layout_src, top)?;
+    let mut sch = load_subckt(schem_src, top)?;
+
+    let orig_lay_devs = lay.devices.len();
+    let orig_sch_devs = sch.devices.len();
+
+    normalize_subckt(&mut lay);
+    normalize_subckt(&mut sch);
 
     let lay_g = build_graph(&lay)?;
     let sch_g = build_graph(&sch)?;
 
-    Ok(build_report(&lay_g, &sch_g, top))
+    let mut rpt = build_report(&lay_g, &sch_g, top);
+    rpt.device_count_layout = orig_lay_devs;
+    rpt.device_count_schem = orig_sch_devs;
+    Ok(rpt)
+}
+
+/// Hierarchical LVS over two SPICE sources. Each common subckt definition
+/// is matched independently, then the top-level shell is matched with
+/// subckt instances treated as opaque primitives. Falls back to a flat
+/// match (via [`run_lvs`]) only if the hierarchical pass cannot be
+/// performed (e.g. one side is missing all common subckts).
+pub fn run_lvs_hierarchical(
+    layout_src: &str,
+    schem_src: &str,
+    top: &str,
+) -> Result<(LvsReport, HierResult)> {
+    let lay = parse_netlist(layout_src)?;
+    let sch = parse_netlist(schem_src)?;
+    if !lay.library.contains_key(top) || !sch.library.contains_key(top) {
+        return Err(LvsError::UnknownTop(top.to_string()));
+    }
+    let hr = run_hierarchical(&lay, &sch, top)?;
+
+    // Build top-level graphs (post-normalization) for the report.
+    let mut lay_top = lay.library[top].clone();
+    let mut sch_top = sch.library[top].clone();
+    normalize_subckt(&mut lay_top);
+    normalize_subckt(&mut sch_top);
+    let lay_g = build_graph(&lay_top)?;
+    let sch_g = build_graph(&sch_top)?;
+
+    let mut report = build_report_for_outcome(&lay_g, &sch_g, top, hr.top_outcome.clone());
+    if let Some((name, reason)) = &hr.failed_subckt {
+        report.matched = false;
+        report.reason = Some(format!("subckt '{name}' mismatch: {reason}"));
+    }
+    Ok((report, hr))
 }
 
 /// Run LVS where the layout is supplied as DEF + LEF and the schematic is
@@ -59,7 +103,10 @@ pub fn run_lvs_def_verilog(
             v.name, top
         )));
     }
-    let sch = verilog::to_subckt(&v, &lef)?;
+    let mut sch = verilog::to_subckt(&v, &lef)?;
+    let mut lay = lay;
+    normalize_subckt(&mut lay);
+    normalize_subckt(&mut sch);
 
     let lay_g = build_graph(&lay)?;
     let sch_g = build_graph(&sch)?;
@@ -76,8 +123,10 @@ pub fn run_lvs_def_spice(
 ) -> Result<LvsReport> {
     let def = parse_def_str(def_src)?;
     let lef = parse_lef_str(lef_src)?;
-    let lay = layout_extract::extract_subckt(&def, &lef, top)?;
-    let sch = load_subckt(spice_src, top)?;
+    let mut lay = layout_extract::extract_subckt(&def, &lef, top)?;
+    let mut sch = load_subckt(spice_src, top)?;
+    normalize_subckt(&mut lay);
+    normalize_subckt(&mut sch);
 
     let lay_g = build_graph(&lay)?;
     let sch_g = build_graph(&sch)?;
@@ -93,6 +142,44 @@ pub fn load_lef_files<P: AsRef<std::path::Path>>(paths: &[P]) -> Result<LefLibra
         lib.merge(other);
     }
     Ok(lib)
+}
+
+fn build_report_for_outcome(
+    layout: &ConnGraph,
+    schem: &ConnGraph,
+    top: &str,
+    outcome: MatchOutcome,
+) -> LvsReport {
+    let net_count_layout = layout.graph.node_weights().filter(|n| n.is_net()).count();
+    let net_count_schem = schem.graph.node_weights().filter(|n| n.is_net()).count();
+    let device_count_layout = layout
+        .graph
+        .node_weights()
+        .filter(|n| n.is_device())
+        .count();
+    let device_count_schem = schem.graph.node_weights().filter(|n| n.is_device()).count();
+
+    let (matched, reason) = match outcome {
+        MatchOutcome::Match => (true, None),
+        MatchOutcome::Mismatch { reason } => (false, Some(reason)),
+    };
+    let matched_pairs = if matched {
+        pair_devices_by_model_order(layout, schem)
+    } else {
+        Vec::new()
+    };
+    LvsReport {
+        matched,
+        top: top.to_string(),
+        net_count_layout,
+        net_count_schem,
+        device_count_layout,
+        device_count_schem,
+        mismatched_nets: Vec::new(),
+        mismatched_devices: Vec::new(),
+        matched_pairs,
+        reason,
+    }
 }
 
 fn build_report(layout: &ConnGraph, schem: &ConnGraph, top: &str) -> LvsReport {

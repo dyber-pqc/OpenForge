@@ -1,6 +1,7 @@
 //! Connectivity graph for LVS comparison.
 
 pub mod builder;
+pub mod hierarchical;
 pub mod normalize;
 
 use petgraph::graph::{Graph, NodeIndex};
