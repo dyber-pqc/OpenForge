@@ -55,7 +55,7 @@ fn collect_identifiers(tree: &SyntaxTree, node: &RefNode) -> Vec<String> {
 fn collect_identifiers_inner(tree: &SyntaxTree, node: &RefNode, out: &mut Vec<String>) {
     match node {
         RefNode::SimpleIdentifier(id) => {
-            if let Some(text) = tree.get_str(id) {
+            if let Some(text) = tree.get_str(*id) {
                 let name = text.trim().to_string();
                 if !name.is_empty() {
                     out.push(name);
@@ -64,7 +64,8 @@ fn collect_identifiers_inner(tree: &SyntaxTree, node: &RefNode, out: &mut Vec<St
         }
         _ => {
             // Recurse into children
-            for child in node {
+            // sv-parser 0.13: IntoIterator is on owned RefNode, not &RefNode
+            for child in node.clone() {
                 collect_identifiers_inner(tree, &child, out);
             }
         }
@@ -106,20 +107,20 @@ fn parse_file(path: &str) -> anyhow::Result<DesignInfo> {
     let mut info = DesignInfo::default();
 
     for node in &tree {
-        match node {
+        match &node {
             // ── Continuous assignment: `assign lhs = rhs;` ───────────
-            RefNode::ContinuousAssign(ca) => {
-                process_continuous_assign(&tree, &RefNode::ContinuousAssign(ca), path, &mut info);
+            RefNode::ContinuousAssign(_) => {
+                process_continuous_assign(&tree, &node, path, &mut info);
             }
 
             // ── Procedural blocks: `always`, `always_comb`, `always_ff` ─
-            RefNode::AlwaysConstruct(ac) => {
-                process_always_block(&tree, &RefNode::AlwaysConstruct(ac), path, &mut info);
+            RefNode::AlwaysConstruct(_) => {
+                process_always_block(&tree, &node, path, &mut info);
             }
 
             // ── Module instantiation for port mapping ────────────────
-            RefNode::ModuleInstantiation(mi) => {
-                process_module_instantiation(&tree, &RefNode::ModuleInstantiation(mi), &mut info);
+            RefNode::ModuleInstantiation(_) => {
+                process_module_instantiation(&tree, &node, &mut info);
             }
 
             _ => {}
@@ -142,7 +143,7 @@ fn process_continuous_assign(tree: &SyntaxTree, node: &RefNode, file: &str, info
     let mut collecting_rhs = false;
     let mut rhs_ids: Vec<String> = Vec::new();
 
-    for child in node {
+    for child in node.clone() {
         match &child {
             RefNode::NetLvalue(_) => {
                 // Flush previous assignment if any
@@ -160,7 +161,7 @@ fn process_continuous_assign(tree: &SyntaxTree, node: &RefNode, file: &str, info
                 collecting_rhs = false;
             }
             RefNode::Symbol(s) => {
-                if let Some(text) = tree.get_str(s) {
+                if let Some(text) = tree.get_str(*s) {
                     if text.trim() == "=" {
                         collecting_rhs = true;
                     }
@@ -198,7 +199,7 @@ fn process_continuous_assign(tree: &SyntaxTree, node: &RefNode, file: &str, info
 /// Inside always blocks we look for `BlockingAssignment` and
 /// `NonblockingAssignment` nodes to build dataflow edges.
 fn process_always_block(tree: &SyntaxTree, node: &RefNode, file: &str, info: &mut DesignInfo) {
-    for child in node {
+    for child in node.clone() {
         match &child {
             RefNode::BlockingAssignment(_) | RefNode::NonblockingAssignment(_) => {
                 extract_procedural_assignment(tree, &child, file, info);
@@ -222,13 +223,13 @@ fn extract_procedural_assignment(
     let mut past_eq = false;
     let mut rhs_ids: Vec<String> = Vec::new();
 
-    for child in node {
+    for child in node.clone() {
         match &child {
             RefNode::VariableLvalue(_) => {
                 lhs_name = extract_lhs_name(tree, &child);
             }
             RefNode::Symbol(s) => {
-                if let Some(text) = tree.get_str(s) {
+                if let Some(text) = tree.get_str(*s) {
                     let t = text.trim();
                     if t == "=" || t == "<=" {
                         past_eq = true;
@@ -265,7 +266,7 @@ fn extract_procedural_assignment(
 fn process_module_instantiation(tree: &SyntaxTree, node: &RefNode, info: &mut DesignInfo) {
     let mut module_name: Option<String> = None;
 
-    for child in node {
+    for child in node.clone() {
         match &child {
             RefNode::ModuleIdentifier(_) => {
                 let ids = collect_identifiers(tree, &child);

@@ -25,7 +25,7 @@ fn collect_identifiers(tree: &SyntaxTree, node: &RefNode) -> Vec<String> {
 fn collect_identifiers_inner(tree: &SyntaxTree, node: &RefNode, out: &mut Vec<String>) {
     match node {
         RefNode::SimpleIdentifier(id) => {
-            if let Some(text) = tree.get_str(id) {
+            if let Some(text) = tree.get_str(*id) {
                 let name = text.trim().to_string();
                 if !name.is_empty() {
                     out.push(name);
@@ -33,7 +33,8 @@ fn collect_identifiers_inner(tree: &SyntaxTree, node: &RefNode, out: &mut Vec<St
             }
         }
         _ => {
-            for child in node {
+            // sv-parser 0.13: IntoIterator is on owned RefNode, not &RefNode
+            for child in node.clone() {
                 collect_identifiers_inner(tree, &child, out);
             }
         }
@@ -44,7 +45,7 @@ fn collect_identifiers_inner(tree: &SyntaxTree, node: &RefNode, out: &mut Vec<St
 /// looking for the first `Locate` with position info.
 fn extract_location(tree: &SyntaxTree, node: &RefNode, file: &str) -> SourceLocation {
     // Walk for the first identifier to get approximate location
-    for child in node {
+    for child in node.clone() {
         if let RefNode::Locate(loc) = &child {
             // sv_parser::Locate has line/column
             return SourceLocation {
@@ -126,7 +127,7 @@ fn collect_conditions(tree: &SyntaxTree, file: &str) -> Vec<ConditionInfo> {
     for node in tree {
         match &node {
             // ── if conditions ────────────────────────────────────
-            RefNode::ConditionalStatement(cs) => {
+            RefNode::ConditionalStatement(_) => {
                 // The condition expression is the first child expression
                 // after the `if` keyword.  We collect all identifiers in
                 // the ConditionalStatement's condition predicate.
@@ -134,7 +135,7 @@ fn collect_conditions(tree: &SyntaxTree, file: &str) -> Vec<ConditionInfo> {
             }
 
             // ── case statements ──────────────────────────────────
-            RefNode::CaseStatement(cs) => {
+            RefNode::CaseStatement(_) => {
                 process_case_selector(tree, &node, file, &mut conditions);
             }
 
@@ -152,7 +153,7 @@ fn collect_conditions(tree: &SyntaxTree, file: &str) -> Vec<ConditionInfo> {
 
             // ── detect division and modulo operators ─────────────
             RefNode::BinaryOperator(op) => {
-                if let Some(text) = tree.get_str(op) {
+                if let Some(text) = tree.get_str(*op) {
                     let t = text.trim();
                     if t == "/" || t == "%" {
                         // The operands are siblings; collect all identifiers
@@ -205,7 +206,7 @@ fn process_if_condition(
     // In sv-parser, a ConditionalStatement contains a CondPredicate
     // as the condition.  We look for the first CondPredicate child.
     let mut found_cond = false;
-    for child in node {
+    for child in node.clone() {
         if let RefNode::CondPredicate(_) = &child {
             let signals = collect_identifiers(tree, &child);
             if !signals.is_empty() {
@@ -243,7 +244,7 @@ fn process_case_selector(
     conditions: &mut Vec<ConditionInfo>,
 ) {
     // The case selector is the expression immediately after `case (`
-    for child in node {
+    for child in node.clone() {
         if let RefNode::Expression(_) = &child {
             let signals = collect_identifiers(tree, &child);
             if !signals.is_empty() {
@@ -291,14 +292,14 @@ fn collect_variable_latency_ops(
     conditions: &mut Vec<ConditionInfo>,
 ) {
     for node in tree {
-        if let RefNode::BinaryExpression(_) = &node {
-            // Check if this binary expression uses / or %
+        if let RefNode::Expression(_) = &node {
+            // Check if this expression uses / or %
             let mut has_div = false;
             let mut has_mod = false;
 
-            for child in &node {
+            for child in node.clone() {
                 if let RefNode::BinaryOperator(op) = &child {
-                    if let Some(text) = tree.get_str(op) {
+                    if let Some(text) = tree.get_str(*op) {
                         let t = text.trim();
                         if t == "/" {
                             has_div = true;

@@ -61,3 +61,10 @@ htmlcov/
 .env
 .env.local
 .env.production
+
+# OpenForge build outputs
+build_test/
+runs/
+**/build/
+**/build_test/
+**/runs/

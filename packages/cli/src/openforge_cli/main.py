@@ -22,6 +22,7 @@ from openforge_cli.commands.pnr import app as pnr_app
 # ---------------------------------------------------------------------------
 from openforge_cli.commands.project import app as project_app
 from openforge_cli.commands.serve import serve
+from openforge_cli.commands.setup import app as setup_app
 from openforge_cli.commands.signoff import app as signoff_app
 
 # Standalone commands (registered directly)
@@ -101,6 +102,9 @@ app.add_typer(tools_app, name="tools", help="EDA tool management.")
 
 # PDK: openforge pdk {list,install,info}
 app.add_typer(pdk_app, name="pdk", help="PDK management.")
+
+# Setup: openforge setup {doctor, pdk, all}
+app.add_typer(setup_app, name="setup", help="One-shot environment bootstrapping.")
 
 # Serve: openforge serve [OPTIONS]
 app.command(name="serve")(serve)

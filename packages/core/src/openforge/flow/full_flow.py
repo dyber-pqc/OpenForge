@@ -7,6 +7,9 @@ Chains Yosys synthesis -> OpenROAD (floorplan, placement, CTS, routing, fill)
 
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -14,6 +17,177 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from openforge.runner.engine import RunEngine, RunGraph, RunStage, RunStatus
+
+# ---------------------------------------------------------------------------
+# Tool resolution layer
+# ---------------------------------------------------------------------------
+#
+# OpenForge tries tools in this order:
+#   1. Native binary on PATH (fastest, preferred)
+#   2. Docker (if available + image tag set)
+#   3. WSL (if on Windows + WSL detected, last resort)
+# The chosen mechanism is recorded so failed flows can report "yosys not
+# found anywhere" with actionable next steps.
+#
+# Set OPENFORGE_DOCKER_IMAGE to use a specific image (default: openforge-eda).
+# Set OPENFORGE_PREFER_DOCKER=1 to skip native PATH and go straight to Docker.
+
+_NATIVE_TOOL_NAMES = {
+    "yosys", "verible-verilog-lint", "openroad", "magic", "netgen",
+    "ngspice", "verilator", "iverilog", "klayout", "openfpgaloader",
+    "icepack", "iceprog", "nextpnr-ice40", "nextpnr-ecp5", "sta",
+}
+
+# Per-platform Windows binary fallbacks (e.g. yosys.exe)
+_WIN_EXTS = (".exe", ".bat", ".cmd")
+
+
+def _has_native(tool: str) -> bool:
+    """Check whether *tool* is on the system PATH."""
+    if shutil.which(tool):
+        return True
+    # On Windows also try .exe suffix etc.
+    if os.name == "nt":
+        for ext in _WIN_EXTS:
+            if shutil.which(tool + ext):
+                return True
+    return False
+
+
+def _has_docker(image: str | None = None) -> bool:
+    """Check whether docker is available and the OpenForge image is built."""
+    if shutil.which("docker") is None:
+        return False
+    img = image or os.environ.get("OPENFORGE_DOCKER_IMAGE", "openforge-eda")
+    try:
+        out = subprocess.run(
+            ["docker", "images", "-q", img],
+            capture_output=True, text=True, timeout=10,
+        )
+        return bool(out.stdout.strip())
+    except Exception:
+        return False
+
+
+def _has_wsl() -> bool:
+    """Check whether WSL is available (Windows only)."""
+    if os.name != "nt":
+        return False
+    return shutil.which("wsl") is not None
+
+
+def _to_wsl_path(p: str) -> str:
+    """Convert a Windows path like ``H:\\openforge\\foo`` to ``/mnt/h/openforge/foo``."""
+    s = str(p)
+    if os.name == "nt" and len(s) > 1 and s[1] == ":":
+        s = "/mnt/" + s[0].lower() + s[2:].replace("\\", "/")
+    return s.replace("\\", "/")
+
+
+_WIN_PATH_RE = None  # lazy compile
+
+
+def _translate_args_for_wsl(args: list[str]) -> list[str]:
+    """Rewrite each argument so Windows paths (anywhere in the string)
+    become /mnt/<drive>/... paths.
+
+    This handles three cases:
+      - standalone path arg: ``H:\\foo\\bar`` -> ``/mnt/h/foo/bar``
+      - path embedded in a script string: ``yosys -p "write_json H:\\foo"``
+        -> ``yosys -p "write_json /mnt/h/foo"``
+      - already-Linux paths: passed through unchanged
+    """
+    if os.name != "nt":
+        return list(args)
+    import re
+
+    global _WIN_PATH_RE
+    if _WIN_PATH_RE is None:
+        # Match a Windows path: drive letter, colon, then path chars (no spaces)
+        _WIN_PATH_RE = re.compile(r"([A-Za-z]):([\\/][^\s'\"]+)")
+
+    def _replace(m: "re.Match[str]") -> str:
+        drive = m.group(1).lower()
+        rest = m.group(2).replace("\\", "/")
+        return f"/mnt/{drive}{rest}"
+
+    return [_WIN_PATH_RE.sub(_replace, a) for a in args]
+
+
+def resolve_command(
+    cmd: list[str],
+    *,
+    cwd: str | None = None,
+    project_dir: Path | None = None,
+) -> tuple[list[str], str]:
+    """Wrap a tool command for the best available execution backend.
+
+    Returns ``(wrapped_command, mechanism)`` where mechanism is one of
+    ``native``, ``docker``, ``wsl``, or ``missing``. ``missing`` means no
+    backend can run this tool — the caller should mark the stage failed
+    with a clear "tool not found anywhere" error.
+    """
+    if not cmd:
+        return cmd, "missing"
+    tool = Path(cmd[0]).name.lower()
+
+    prefer_docker = os.environ.get("OPENFORGE_PREFER_DOCKER", "").lower() in ("1", "true", "yes")
+
+    # 1. Native (unless overridden)
+    if not prefer_docker and _has_native(cmd[0]):
+        return cmd, "native"
+
+    # 2. Docker — mount the project dir as /workspace, run the tool there
+    image = os.environ.get("OPENFORGE_DOCKER_IMAGE", "openforge-eda")
+    if _has_docker(image):
+        mount = (project_dir or Path(cwd or ".")).resolve()
+        wrapped = [
+            "docker", "run", "--rm",
+            "-v", f"{mount}:/workspace",
+            "-w", "/workspace",
+            "--entrypoint", cmd[0],
+            image,
+            *cmd[1:],
+        ]
+        return wrapped, "docker"
+
+    # 3. WSL — last resort on Windows for Linux-only tools.
+    # Translate Windows path args to /mnt/<drive>/... so the Linux tool
+    # can actually find the files.
+    if _has_wsl() and tool in _NATIVE_TOOL_NAMES:
+        # Verify the tool exists in WSL — if not, treat as missing so the
+        # engine fails fast with a clear message instead of "no such file".
+        try:
+            check = subprocess.run(
+                ["wsl", "-e", "bash", "-c", f"command -v {cmd[0]}"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if check.returncode != 0 or not check.stdout.strip():
+                return cmd, "missing"
+        except Exception:
+            return cmd, "missing"
+        translated = _translate_args_for_wsl(cmd[1:])
+        wrapped = ["wsl", "-e", cmd[0], *translated]
+        return wrapped, "wsl"
+
+    return cmd, "missing"
+
+
+def detect_tool_status() -> dict[str, str]:
+    """Report which mechanism is available for each known tool."""
+    status: dict[str, str] = {}
+    has_dock = _has_docker()
+    has_wsl_ = _has_wsl()
+    for t in sorted(_NATIVE_TOOL_NAMES):
+        if _has_native(t):
+            status[t] = "native"
+        elif has_dock:
+            status[t] = "docker"
+        elif has_wsl_:
+            status[t] = "wsl"
+        else:
+            status[t] = "missing"
+    return status
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -314,6 +488,9 @@ class FullFlowRunner:
             f"write_json {synth_dir}/netlist.json; "
             f"write_verilog -noattr {synth_dir}/netlist.v"
         )
+        # NOTE: synth is INTENTIONALLY not dependent on lint. Lint is an
+        # advisory check; if verible-verilog-lint isn't installed, the user
+        # should still be able to synthesize.
         g.add_stage(
             RunStage(
                 id="synth",
@@ -321,7 +498,7 @@ class FullFlowRunner:
                 tool="yosys",
                 command=["yosys", "-p", yosys_script],
                 cwd=str(self.work_dir),
-                depends_on=["lint"],
+                depends_on=[],
                 produces=["netlist.json", "netlist.v"],
             )
         )
@@ -498,8 +675,24 @@ class FullFlowRunner:
                 )
             )
 
+        # Wrap every stage's command through the tool resolver. If a tool
+        # is not available natively, route through Docker or WSL. If no
+        # backend can run a tool, mark the command so the engine reports
+        # a clear error (instead of WinError 2).
+        self._tool_mechanisms: dict[str, str] = {}
+        for stage in list(g._stages.values()):
+            wrapped, mechanism = resolve_command(
+                stage.command, cwd=stage.cwd, project_dir=self.work_dir,
+            )
+            stage.command = wrapped
+            self._tool_mechanisms[stage.id] = mechanism
+
         self._graph = g
         return g
+
+    def tool_status(self) -> dict[str, str]:
+        """Return per-stage tool resolution mechanism after build_graph()."""
+        return dict(getattr(self, "_tool_mechanisms", {}))
 
     # ── Execution ─────────────────────────────────────────────────────
 
@@ -515,6 +708,23 @@ class FullFlowRunner:
         if self._graph is None:
             self.build_graph()
         assert self._graph is not None
+
+        # Pre-flight: report any "missing" tools clearly before launching.
+        # The engine will still attempt them and fail fast, but we annotate
+        # the result so the user knows what to install.
+        missing = [sid for sid, m in self._tool_mechanisms.items() if m == "missing"]
+        if missing:
+            tools_needed = sorted({
+                Path(self._graph._stages[sid].command[0]).name
+                for sid in missing
+                if self._graph._stages[sid].command
+            })
+            print(
+                f"[full_flow] WARNING: {len(missing)} stage(s) have no available "
+                f"tool backend. Install one of: {', '.join(tools_needed)} natively, "
+                f"or build the Docker image (cd installer && docker build -t openforge-eda .), "
+                f"or enable WSL on Windows."
+            )
 
         start_time = time.monotonic()
 

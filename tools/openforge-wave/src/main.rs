@@ -108,7 +108,9 @@ fn cmd_dump(file: &PathBuf, signal_name: &str, start: u64, end: Option<u64>) -> 
         start, end, waveform.timescale.magnitude, waveform.timescale.unit
     );
     println!();
-    println!("{:>12}  {}", "Time", "Value");
+    let time_hdr = "Time";
+    let val_hdr = "Value";
+    println!("{time_hdr:>12}  {val_hdr}");
     println!("{}", "-".repeat(40));
 
     for vc in &signal.values {
