@@ -304,11 +304,25 @@ class ActivityBar(QToolBar):
             return
         wanted = set(group.dock_names)
 
+        from PySide6.QtCore import Qt as _Qt
+
         for dock in self._main.findChildren(QDockWidget):
             name = dock.objectName()
             if not name or name.startswith("__"):
                 continue  # skip internal infrastructure docks (e.g. __activity_bar_dock__)
             if name in wanted:
+                # Force the dock back into the main window if it's floating
+                # or has been removed (otherwise setVisible(True) leaves it as
+                # a separate top-level window, which users hate).
+                with contextlib.suppress(Exception):
+                    if dock.isFloating():
+                        dock.setFloating(False)
+                    # If it was hidden via close(), re-attach to its remembered
+                    # area or the right area as a sensible default.
+                    if self._main.dockWidgetArea(dock) == _Qt.DockWidgetArea.NoDockWidgetArea:
+                        # Pick a sensible area based on the group/dock context
+                        target_area = self._dock_home_area(name)
+                        self._main.addDockWidget(target_area, dock)
                 dock.setVisible(True)
                 with contextlib.suppress(Exception):
                     dock.raise_()
@@ -320,6 +334,32 @@ class ActivityBar(QToolBar):
         if act is not None and not act.isChecked():
             act.setChecked(True)
         self.group_activated.emit(group_id)
+
+    def _dock_home_area(self, name: str):
+        """Pick a sensible default dock area for a dock that has lost its area
+        (e.g. user closed it, then re-activated via a group)."""
+        from PySide6.QtCore import Qt as _Qt
+
+        # Left side: navigation, project, hierarchy, IP catalog, libraries
+        left = {
+            "project_explorer_dock", "hierarchy_dock", "flow_navigator_dock",
+            "ip_catalog_dock", "library_manager_dock", "cell_library_dock",
+            "pdk_manager_dock", "fpga_target_dock", "pin_planner_dock",
+        }
+        # Right side: properties, dashboards, summaries, AI
+        right = {
+            "properties_dock", "signoff_dashboard_dock", "ai_assistant_dock",
+            "block_design_dock", "axi_checker_dock", "constraint_editor_dock",
+            "physical_design_dock", "floorplan_editor_dock", "pdn_synthesizer_dock",
+            "hierarchical_pnr_dock", "multi_vt_dock", "eco_browser_dock",
+            "collaboration_dock",
+        }
+        # Bottom: console, logs, reports, results tables
+        if name in left:
+            return _Qt.DockWidgetArea.LeftDockWidgetArea
+        if name in right:
+            return _Qt.DockWidgetArea.RightDockWidgetArea
+        return _Qt.DockWidgetArea.BottomDockWidgetArea
 
     def activate_default(self) -> None:
         default = next(
