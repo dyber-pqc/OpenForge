@@ -90,6 +90,13 @@ class LvsDebuggerPanel(QDockWidget):
         self.runBtn.setObjectName("LvsRunBtn")
         self.runBtn.clicked.connect(self._on_run)
 
+        self.runNativeBtn = QPushButton("Run Native LVS (Rust)")
+        self.runNativeBtn.setToolTip(
+            "Run OpenForge's native Rust LVS engine (openforge-lvs).\n"
+            "Faster than Netgen, with VF2 graph isomorphism."
+        )
+        self.runNativeBtn.clicked.connect(self._on_run_native)
+
         pickers.addWidget(QLabel("Layout:"), 0, 0)
         pickers.addWidget(self.layoutEdit, 0, 1)
         pickers.addWidget(self.layoutBtn, 0, 2)
@@ -99,6 +106,7 @@ class LvsDebuggerPanel(QDockWidget):
         pickers.addWidget(QLabel("Top:"), 2, 0)
         pickers.addWidget(self.topEdit, 2, 1)
         pickers.addWidget(self.runBtn, 2, 2)
+        pickers.addWidget(self.runNativeBtn, 3, 1, 1, 2)
         layout.addLayout(pickers)
 
         # ----- Big status banner -----
@@ -193,6 +201,110 @@ class LvsDebuggerPanel(QDockWidget):
             self.layoutEdit.text(),
             self.schemEdit.text(),
             self.topEdit.text(),
+        )
+
+    def _on_run_native(self) -> None:
+        """Run the native Rust LVS engine (openforge-lvs) and show results."""
+        import json
+        import shutil
+        import subprocess
+        import tempfile
+        from pathlib import Path as _Path
+        from PySide6.QtWidgets import QMessageBox
+
+        layout = self.layoutEdit.text().strip()
+        schem = self.schemEdit.text().strip()
+        top = self.topEdit.text().strip() or "top"
+        if not layout or not schem:
+            QMessageBox.warning(
+                self, "Run Native LVS",
+                "Please pick both a layout netlist and a schematic netlist first."
+            )
+            return
+
+        # Locate the openforge-lvs binary
+        bin_path = shutil.which("openforge-lvs")
+        if bin_path is None:
+            here = _Path(__file__).resolve()
+            for parent in here.parents:
+                for sub in ("target/release", "target/debug"):
+                    for ext in ("", ".exe"):
+                        cand = parent / sub / f"openforge-lvs{ext}"
+                        if cand.exists():
+                            bin_path = str(cand)
+                            break
+                    if bin_path:
+                        break
+                if bin_path:
+                    break
+        if bin_path is None:
+            QMessageBox.warning(
+                self, "Native LVS not found",
+                "openforge-lvs binary not found. Build it with:\n\n"
+                "  cargo build --release -p openforge-lvs"
+            )
+            return
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False, encoding="utf-8"
+        ) as tf:
+            out_path = tf.name
+
+        try:
+            proc = subprocess.run(
+                [
+                    str(bin_path), "check",
+                    "--layout", layout,
+                    "--schematic", schem,
+                    "--top", top,
+                    "--output", out_path,
+                ],
+                capture_output=True, text=True, timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            QMessageBox.warning(self, "LVS", "LVS run timed out (120s).")
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, "LVS error", str(exc))
+            return
+
+        # Exit codes: 0 = MATCH, 1 = MISMATCH, 2 = error
+        if proc.returncode == 2:
+            QMessageBox.critical(
+                self, "LVS error",
+                f"openforge-lvs error:\n\n{proc.stderr[:500] or proc.stdout[:500]}"
+            )
+            return
+
+        # Render results from the JSON report
+        try:
+            with open(out_path, encoding="utf-8") as f:
+                report = json.load(f)
+        except Exception as exc:
+            QMessageBox.warning(self, "LVS", f"Could not read report: {exc}")
+            return
+
+        # Map the openforge-lvs JSON schema onto LvsDebugResult-shaped fields
+        class _Wrap:
+            pass
+        r = _Wrap()
+        r.matched = bool(report.get("matched", False))
+        r.layout_devices = int(report.get("device_count_layout", 0))
+        r.layout_nets = int(report.get("net_count_layout", 0))
+        r.schematic_devices = int(report.get("device_count_schem", 0))
+        r.schematic_nets = int(report.get("net_count_schem", 0))
+        r.mismatches = []
+        r.matched_nets = []
+        r.unmatched_nets = []
+        r.matched_devices = []
+        r.unmatched_devices = []
+        r.log = proc.stdout
+
+        self.show_result(r)
+        QMessageBox.information(
+            self, "Native LVS complete",
+            f"openforge-lvs exit code: {proc.returncode} "
+            f"({'MATCH' if r.matched else 'MISMATCH'})\n\n{proc.stdout[-400:]}"
         )
 
     # ------------------------------------------------------------------

@@ -82,6 +82,14 @@ class ParasiticHeatmapPanel(QWidget):
         self._auto_btn.clicked.connect(self._on_auto_load)
         bar.addWidget(self._auto_btn)
 
+        self._extract_btn = QPushButton("Run Native xRC (Rust)…")
+        self._extract_btn.setToolTip(
+            "Run OpenForge's native Rust parasitic extractor (openforge-xrc).\n"
+            "Pick a routed DEF + LEF, get a fresh SPEF auto-loaded into this panel."
+        )
+        self._extract_btn.clicked.connect(self._on_run_native_xrc)
+        bar.addWidget(self._extract_btn)
+
         bar.addStretch(1)
 
         self._metric_box = QComboBox()
@@ -184,6 +192,85 @@ class ParasiticHeatmapPanel(QWidget):
             QMessageBox.information(self, "Auto-load", "No .spef files found under cwd.")
             return
         self.load_spef(candidates[0])
+
+    def _on_run_native_xrc(self) -> None:
+        """Pick DEF + LEF, run openforge-xrc, auto-load the resulting SPEF."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        # Locate the Rust binary
+        bin_path = shutil.which("openforge-xrc")
+        if bin_path is None:
+            here = Path(__file__).resolve()
+            for parent in here.parents:
+                for sub in ("target/release", "target/debug"):
+                    for ext in ("", ".exe"):
+                        cand = parent / sub / f"openforge-xrc{ext}"
+                        if cand.exists():
+                            bin_path = str(cand)
+                            break
+                    if bin_path:
+                        break
+                if bin_path:
+                    break
+        if bin_path is None:
+            QMessageBox.warning(
+                self, "Native xRC not found",
+                "openforge-xrc binary not found. Build it with:\n\n"
+                "  cargo build --release -p openforge-xrc"
+            )
+            return
+
+        def_path, _ = QFileDialog.getOpenFileName(
+            self, "Select routed DEF", "", "DEF (*.def);;All (*)"
+        )
+        if not def_path:
+            return
+        lef_path, _ = QFileDialog.getOpenFileName(
+            self, "Select LEF (cells.lef)", "", "LEF (*.lef);;All (*)"
+        )
+        if not lef_path:
+            return
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".spef", delete=False, encoding="utf-8"
+        ) as tf:
+            spef_out = tf.name
+
+        try:
+            proc = subprocess.run(
+                [
+                    str(bin_path), "extract",
+                    "--def", def_path,
+                    "--lef", lef_path,
+                    "--tech", "sky130A",
+                    "--output", spef_out,
+                ],
+                capture_output=True, text=True, timeout=300,
+            )
+        except subprocess.TimeoutExpired:
+            QMessageBox.warning(self, "xRC", "Extraction timed out (5 min).")
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, "xRC error", str(exc))
+            return
+
+        if proc.returncode != 0:
+            QMessageBox.critical(
+                self, "xRC failed",
+                f"openforge-xrc exited with {proc.returncode}.\n\n"
+                f"stderr:\n{proc.stderr[:500] or proc.stdout[-500:]}"
+            )
+            return
+
+        # Show summary, load the SPEF, also load the DEF for spatial mapping
+        QMessageBox.information(
+            self, "xRC complete",
+            f"openforge-xrc finished.\n\n{proc.stdout[-400:]}"
+        )
+        self.load_def(Path(def_path))
+        self.load_spef(Path(spef_out))
 
     def _on_export_csv(self) -> None:
         if not self._spef:
