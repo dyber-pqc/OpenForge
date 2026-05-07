@@ -783,7 +783,7 @@ import subprocess as _subprocess
 from typing import Optional
 
 
-def _find_rust_bin(name: str) -> Optional[Path]:
+def _find_rust_bin(name: str) -> Path | None:
     """Locate a bundled Rust binary, searching in this priority order:
     1. PATH (if user has installed it system-wide)
     2. <repo>/target/release/<name>[.exe]
@@ -824,9 +824,17 @@ def drc_rust(
         )
         raise typer.Exit(code=1)
     cmd = [
-        str(binary), "check", gds,
-        "--rules", rules, "--tech", tech,
-        "--output", output, "--format", fmt,
+        str(binary),
+        "check",
+        gds,
+        "--rules",
+        rules,
+        "--tech",
+        tech,
+        "--output",
+        output,
+        "--format",
+        fmt,
     ]
     console.print(f"[cyan]{' '.join(cmd)}[/]")
     rc = _subprocess.call(cmd)
@@ -853,9 +861,16 @@ def lvs_rust(
         )
         raise typer.Exit(code=1)
     cmd = [
-        str(binary), "check",
-        "--layout", layout, "--schematic", schematic,
-        "--top", top, "--output", output,
+        str(binary),
+        "check",
+        "--layout",
+        layout,
+        "--schematic",
+        schematic,
+        "--top",
+        top,
+        "--output",
+        output,
     ]
     console.print(f"[cyan]{' '.join(cmd)}[/]")
     rc = _subprocess.call(cmd)
@@ -882,9 +897,16 @@ def xrc_rust(
         )
         raise typer.Exit(code=1)
     cmd = [
-        str(binary), "extract",
-        "--def", def_path, "--lef", lef,
-        "--tech", tech, "--output", output,
+        str(binary),
+        "extract",
+        "--def",
+        def_path,
+        "--lef",
+        lef,
+        "--tech",
+        tech,
+        "--output",
+        output,
     ]
     console.print(f"[cyan]{' '.join(cmd)}[/]")
     rc = _subprocess.call(cmd)

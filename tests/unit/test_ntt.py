@@ -37,7 +37,7 @@ def test_butterfly_cooley_tukey() -> None:
 
     # Verify reversibility (GS butterfly is the inverse)
     a_inv = (a_out + b_out) % q
-    wb_inv = (a_out - b_out) % q
+    (a_out - b_out) % q
 
     # a_inv should equal 2a mod q (since a' + b' = 2a)
     assert a_inv == (2 * a) % q

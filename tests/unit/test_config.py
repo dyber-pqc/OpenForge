@@ -10,7 +10,6 @@ import pytest
 from openforge.config.loader import load_config
 from openforge.config.schema import OpenForgeConfig
 
-
 MINIMAL_YAML = """\
 project:
   name: test-project
@@ -73,10 +72,12 @@ analysis:
 
 
 def test_minimal_config_parses() -> None:
-    config = OpenForgeConfig.model_validate({
-        "project": {"name": "test", "top_module": "top", "target_pdk": "sky130"},
-        "design": {"sources": ["src/*.v"]},
-    })
+    config = OpenForgeConfig.model_validate(
+        {
+            "project": {"name": "test", "top_module": "top", "target_pdk": "sky130"},
+            "design": {"sources": ["src/*.v"]},
+        }
+    )
     assert config.project.name == "test"
     assert config.project.top_module == "top"
     assert config.design.sources == ["src/*.v"]
@@ -111,16 +112,17 @@ def test_load_config_from_file() -> None:
 
 
 def test_load_config_missing_file() -> None:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with pytest.raises(FileNotFoundError):
-            load_config(Path(tmpdir))
+    with tempfile.TemporaryDirectory() as tmpdir, pytest.raises(FileNotFoundError):
+        load_config(Path(tmpdir))
 
 
 def test_defaults_applied() -> None:
-    config = OpenForgeConfig.model_validate({
-        "project": {"name": "test", "top_module": "top"},
-        "design": {"sources": ["*.v"]},
-    })
+    config = OpenForgeConfig.model_validate(
+        {
+            "project": {"name": "test", "top_module": "top"},
+            "design": {"sources": ["*.v"]},
+        }
+    )
     # Defaults
     assert config.design.includes == []
     assert config.design.constraints == []

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from openforge_crypto.side_channel import SideChannelSimulator, PowerTrace
+from openforge_crypto.side_channel import PowerTrace, SideChannelSimulator
 
 
 def test_hamming_weight() -> None:

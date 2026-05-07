@@ -8,6 +8,7 @@ to have OpenROAD + WSL set up before they can run pytest.
 
 Run with:  pytest tests/e2e/test_signoff_tools.py -v
 """
+
 from __future__ import annotations
 
 import os
@@ -81,11 +82,21 @@ def test_drc_on_counter_gds(drc_bin: Path, tmp_path: Path) -> None:
 
     r = subprocess.run(
         [
-            str(drc_bin), "check", str(gds),
-            "--rules", str(rules), "--tech", "sky130A",
-            "--output", str(out), "--format", "text",
+            str(drc_bin),
+            "check",
+            str(gds),
+            "--rules",
+            str(rules),
+            "--tech",
+            "sky130A",
+            "--output",
+            str(out),
+            "--format",
+            "text",
         ],
-        capture_output=True, text=True, timeout=120,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     # Exit code 0 = no violations, 2 = violations found, both are valid runs
     assert r.returncode in (0, 2), (
@@ -113,14 +124,23 @@ def test_lvs_inverter_match(lvs_bin: Path, tmp_path: Path) -> None:
         pytest.skip("LVS fixtures missing")
     r = subprocess.run(
         [
-            str(lvs_bin), "check",
-            "--layout", str(fix / "inv_lay.spice"),
-            "--schematic", str(fix / "inv_sch.spice"),
-            "--top", "inverter",
+            str(lvs_bin),
+            "check",
+            "--layout",
+            str(fix / "inv_lay.spice"),
+            "--schematic",
+            str(fix / "inv_sch.spice"),
+            "--top",
+            "inverter",
         ],
-        capture_output=True, text=True, timeout=30, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=tmp_path,
     )
-    assert r.returncode == 0, f"Expected MATCH (exit 0), got {r.returncode}:\n{r.stdout}\n{r.stderr}"
+    assert r.returncode == 0, (
+        f"Expected MATCH (exit 0), got {r.returncode}:\n{r.stdout}\n{r.stderr}"
+    )
     assert "MATCH" in r.stdout
 
 
@@ -131,14 +151,23 @@ def test_lvs_inverter_mismatch(lvs_bin: Path, tmp_path: Path) -> None:
         pytest.skip("LVS fixtures missing")
     r = subprocess.run(
         [
-            str(lvs_bin), "check",
-            "--layout", str(fix / "inv_bad.spice"),
-            "--schematic", str(fix / "inv_sch.spice"),
-            "--top", "inverter",
+            str(lvs_bin),
+            "check",
+            "--layout",
+            str(fix / "inv_bad.spice"),
+            "--schematic",
+            str(fix / "inv_sch.spice"),
+            "--top",
+            "inverter",
         ],
-        capture_output=True, text=True, timeout=30, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=tmp_path,
     )
-    assert r.returncode == 1, f"Expected MISMATCH (exit 1), got {r.returncode}:\n{r.stdout}\n{r.stderr}"
+    assert r.returncode == 1, (
+        f"Expected MISMATCH (exit 1), got {r.returncode}:\n{r.stdout}\n{r.stderr}"
+    )
     assert "MISMATCH" in r.stdout
 
 
@@ -162,13 +191,20 @@ def test_xrc_on_routed_def(xrc_bin: Path, tmp_path: Path) -> None:
 
     r = subprocess.run(
         [
-            str(xrc_bin), "extract",
-            "--def", str(routed),
-            "--lef", str(lef),
-            "--tech", "sky130A",
-            "--output", str(out),
+            str(xrc_bin),
+            "extract",
+            "--def",
+            str(routed),
+            "--lef",
+            str(lef),
+            "--tech",
+            "sky130A",
+            "--output",
+            str(out),
         ],
-        capture_output=True, text=True, timeout=120,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     assert r.returncode == 0, f"xRC failed:\n{r.stderr}\n{r.stdout}"
     assert out.exists(), "SPEF not written"

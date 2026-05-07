@@ -5906,6 +5906,7 @@ exit
                 if yaml_path.exists():
                     try:
                         from openforge.project.model import Project as NewProject
+
                         p = NewProject.load(yaml_path)
                         top = p.top_module or top
                         rtl = list(p.rtl_sources)
@@ -6098,20 +6099,23 @@ exit
         # vs core chip-producing stages (synth, floorplan, ...gds_export).
         OPTIONAL = {"lint", "drc", "lvs"}
         CORE = {"synth", "floorplan", "placement", "cts", "routing", "fill", "gds_export", "sta"}
-        failed_core = [s for s in stages
-                       if getattr(s, "status", "") == "failed"
-                       and getattr(s, "stage", "") in CORE]
-        failed_optional = [s for s in stages
-                           if getattr(s, "status", "") == "failed"
-                           and getattr(s, "stage", "") in OPTIONAL]
+        failed_core = [
+            s
+            for s in stages
+            if getattr(s, "status", "") == "failed" and getattr(s, "stage", "") in CORE
+        ]
+        failed_optional = [
+            s
+            for s in stages
+            if getattr(s, "status", "") == "failed" and getattr(s, "stage", "") in OPTIONAL
+        ]
 
         if overall == "success" and not failed_core:
             self.statusBar().showMessage("Full flow completed successfully!")
             QMessageBox.information(
                 self,
                 "Full Flow Complete",
-                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\n"
-                f"GDS: {gds or 'N/A'}",
+                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\nGDS: {gds or 'N/A'}",
             )
         elif gds and not failed_core:
             # Core flow succeeded, only advisory checks failed.

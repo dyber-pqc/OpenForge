@@ -342,16 +342,30 @@ class ActivityBar(QToolBar):
 
         # Left side: navigation, project, hierarchy, IP catalog, libraries
         left = {
-            "project_explorer_dock", "hierarchy_dock", "flow_navigator_dock",
-            "ip_catalog_dock", "library_manager_dock", "cell_library_dock",
-            "pdk_manager_dock", "fpga_target_dock", "pin_planner_dock",
+            "project_explorer_dock",
+            "hierarchy_dock",
+            "flow_navigator_dock",
+            "ip_catalog_dock",
+            "library_manager_dock",
+            "cell_library_dock",
+            "pdk_manager_dock",
+            "fpga_target_dock",
+            "pin_planner_dock",
         }
         # Right side: properties, dashboards, summaries, AI
         right = {
-            "properties_dock", "signoff_dashboard_dock", "ai_assistant_dock",
-            "block_design_dock", "axi_checker_dock", "constraint_editor_dock",
-            "physical_design_dock", "floorplan_editor_dock", "pdn_synthesizer_dock",
-            "hierarchical_pnr_dock", "multi_vt_dock", "eco_browser_dock",
+            "properties_dock",
+            "signoff_dashboard_dock",
+            "ai_assistant_dock",
+            "block_design_dock",
+            "axi_checker_dock",
+            "constraint_editor_dock",
+            "physical_design_dock",
+            "floorplan_editor_dock",
+            "pdn_synthesizer_dock",
+            "hierarchical_pnr_dock",
+            "multi_vt_dock",
+            "eco_browser_dock",
             "collaboration_dock",
         }
         # Bottom: console, logs, reports, results tables

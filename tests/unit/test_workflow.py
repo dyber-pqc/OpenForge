@@ -45,12 +45,12 @@ def test_exception_becomes_failure() -> None:
 def test_dependency_chain() -> None:
     engine = FlowEngine()
     engine.add_step(FlowStep(name="lint", description="Lint", execute_fn=_pass_step))
-    engine.add_step(FlowStep(
-        name="sim", description="Sim", execute_fn=_pass_step, dependencies=["lint"]
-    ))
-    engine.add_step(FlowStep(
-        name="synth", description="Synth", execute_fn=_pass_step, dependencies=["lint"]
-    ))
+    engine.add_step(
+        FlowStep(name="sim", description="Sim", execute_fn=_pass_step, dependencies=["lint"])
+    )
+    engine.add_step(
+        FlowStep(name="synth", description="Synth", execute_fn=_pass_step, dependencies=["lint"])
+    )
 
     results = engine.run()
     assert all(r.status == StepStatus.PASSED for r in results.values())
@@ -59,9 +59,9 @@ def test_dependency_chain() -> None:
 def test_dependency_failure_skips_downstream() -> None:
     engine = FlowEngine()
     engine.add_step(FlowStep(name="lint", description="Lint", execute_fn=_fail_step))
-    engine.add_step(FlowStep(
-        name="sim", description="Sim", execute_fn=_pass_step, dependencies=["lint"]
-    ))
+    engine.add_step(
+        FlowStep(name="sim", description="Sim", execute_fn=_pass_step, dependencies=["lint"])
+    )
 
     results = engine.run()
     assert results["lint"].status == StepStatus.FAILED

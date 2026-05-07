@@ -210,6 +210,7 @@ class LvsDebuggerPanel(QDockWidget):
         import subprocess
         import tempfile
         from pathlib import Path as _Path
+
         from PySide6.QtWidgets import QMessageBox
 
         layout = self.layoutEdit.text().strip()
@@ -217,8 +218,9 @@ class LvsDebuggerPanel(QDockWidget):
         top = self.topEdit.text().strip() or "top"
         if not layout or not schem:
             QMessageBox.warning(
-                self, "Run Native LVS",
-                "Please pick both a layout netlist and a schematic netlist first."
+                self,
+                "Run Native LVS",
+                "Please pick both a layout netlist and a schematic netlist first.",
             )
             return
 
@@ -239,9 +241,10 @@ class LvsDebuggerPanel(QDockWidget):
                     break
         if bin_path is None:
             QMessageBox.warning(
-                self, "Native LVS not found",
+                self,
+                "Native LVS not found",
                 "openforge-lvs binary not found. Build it with:\n\n"
-                "  cargo build --release -p openforge-lvs"
+                "  cargo build --release -p openforge-lvs",
             )
             return
 
@@ -253,13 +256,20 @@ class LvsDebuggerPanel(QDockWidget):
         try:
             proc = subprocess.run(
                 [
-                    str(bin_path), "check",
-                    "--layout", layout,
-                    "--schematic", schem,
-                    "--top", top,
-                    "--output", out_path,
+                    str(bin_path),
+                    "check",
+                    "--layout",
+                    layout,
+                    "--schematic",
+                    schem,
+                    "--top",
+                    top,
+                    "--output",
+                    out_path,
                 ],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
         except subprocess.TimeoutExpired:
             QMessageBox.warning(self, "LVS", "LVS run timed out (120s).")
@@ -271,8 +281,9 @@ class LvsDebuggerPanel(QDockWidget):
         # Exit codes: 0 = MATCH, 1 = MISMATCH, 2 = error
         if proc.returncode == 2:
             QMessageBox.critical(
-                self, "LVS error",
-                f"openforge-lvs error:\n\n{proc.stderr[:500] or proc.stdout[:500]}"
+                self,
+                "LVS error",
+                f"openforge-lvs error:\n\n{proc.stderr[:500] or proc.stdout[:500]}",
             )
             return
 
@@ -287,6 +298,7 @@ class LvsDebuggerPanel(QDockWidget):
         # Map the openforge-lvs JSON schema onto LvsDebugResult-shaped fields
         class _Wrap:
             pass
+
         r = _Wrap()
         r.matched = bool(report.get("matched", False))
         r.layout_devices = int(report.get("device_count_layout", 0))
@@ -302,9 +314,10 @@ class LvsDebuggerPanel(QDockWidget):
 
         self.show_result(r)
         QMessageBox.information(
-            self, "Native LVS complete",
+            self,
+            "Native LVS complete",
             f"openforge-lvs exit code: {proc.returncode} "
-            f"({'MATCH' if r.matched else 'MISMATCH'})\n\n{proc.stdout[-400:]}"
+            f"({'MATCH' if r.matched else 'MISMATCH'})\n\n{proc.stdout[-400:]}",
         )
 
     # ------------------------------------------------------------------

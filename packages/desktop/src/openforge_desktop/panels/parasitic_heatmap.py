@@ -216,9 +216,10 @@ class ParasiticHeatmapPanel(QWidget):
                     break
         if bin_path is None:
             QMessageBox.warning(
-                self, "Native xRC not found",
+                self,
+                "Native xRC not found",
                 "openforge-xrc binary not found. Build it with:\n\n"
-                "  cargo build --release -p openforge-xrc"
+                "  cargo build --release -p openforge-xrc",
             )
             return
 
@@ -241,13 +242,20 @@ class ParasiticHeatmapPanel(QWidget):
         try:
             proc = subprocess.run(
                 [
-                    str(bin_path), "extract",
-                    "--def", def_path,
-                    "--lef", lef_path,
-                    "--tech", "sky130A",
-                    "--output", spef_out,
+                    str(bin_path),
+                    "extract",
+                    "--def",
+                    def_path,
+                    "--lef",
+                    lef_path,
+                    "--tech",
+                    "sky130A",
+                    "--output",
+                    spef_out,
                 ],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
         except subprocess.TimeoutExpired:
             QMessageBox.warning(self, "xRC", "Extraction timed out (5 min).")
@@ -258,16 +266,16 @@ class ParasiticHeatmapPanel(QWidget):
 
         if proc.returncode != 0:
             QMessageBox.critical(
-                self, "xRC failed",
+                self,
+                "xRC failed",
                 f"openforge-xrc exited with {proc.returncode}.\n\n"
-                f"stderr:\n{proc.stderr[:500] or proc.stdout[-500:]}"
+                f"stderr:\n{proc.stderr[:500] or proc.stdout[-500:]}",
             )
             return
 
         # Show summary, load the SPEF, also load the DEF for spatial mapping
         QMessageBox.information(
-            self, "xRC complete",
-            f"openforge-xrc finished.\n\n{proc.stdout[-400:]}"
+            self, "xRC complete", f"openforge-xrc finished.\n\n{proc.stdout[-400:]}"
         )
         self.load_def(Path(def_path))
         self.load_spef(Path(spef_out))

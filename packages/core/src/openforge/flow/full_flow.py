@@ -33,9 +33,21 @@ from openforge.runner.engine import RunEngine, RunGraph, RunStage, RunStatus
 # Set OPENFORGE_PREFER_DOCKER=1 to skip native PATH and go straight to Docker.
 
 _NATIVE_TOOL_NAMES = {
-    "yosys", "verible-verilog-lint", "openroad", "magic", "netgen",
-    "ngspice", "verilator", "iverilog", "klayout", "openfpgaloader",
-    "icepack", "iceprog", "nextpnr-ice40", "nextpnr-ecp5", "sta",
+    "yosys",
+    "verible-verilog-lint",
+    "openroad",
+    "magic",
+    "netgen",
+    "ngspice",
+    "verilator",
+    "iverilog",
+    "klayout",
+    "openfpgaloader",
+    "icepack",
+    "iceprog",
+    "nextpnr-ice40",
+    "nextpnr-ecp5",
+    "sta",
 }
 
 # Per-platform Windows binary fallbacks (e.g. yosys.exe)
@@ -62,7 +74,9 @@ def _has_docker(image: str | None = None) -> bool:
     try:
         out = subprocess.run(
             ["docker", "images", "-q", img],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return bool(out.stdout.strip())
     except Exception:
@@ -106,7 +120,7 @@ def _translate_args_for_wsl(args: list[str]) -> list[str]:
         # Match a Windows path: drive letter, colon, then path chars (no spaces)
         _WIN_PATH_RE = re.compile(r"([A-Za-z]):([\\/][^\s'\"]+)")
 
-    def _replace(m: "re.Match[str]") -> str:
+    def _replace(m: re.Match[str]) -> str:
         drive = m.group(1).lower()
         rest = m.group(2).replace("\\", "/")
         return f"/mnt/{drive}{rest}"
@@ -142,10 +156,15 @@ def resolve_command(
     if _has_docker(image):
         mount = (project_dir or Path(cwd or ".")).resolve()
         wrapped = [
-            "docker", "run", "--rm",
-            "-v", f"{mount}:/workspace",
-            "-w", "/workspace",
-            "--entrypoint", cmd[0],
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{mount}:/workspace",
+            "-w",
+            "/workspace",
+            "--entrypoint",
+            cmd[0],
             image,
             *cmd[1:],
         ]
@@ -161,7 +180,9 @@ def resolve_command(
         try:
             check = subprocess.run(
                 ["wsl", "-e", "bash", "-c", f"command -v {cmd[0]}"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if check.returncode != 0 or not check.stdout.strip():
                 return cmd, "missing"
@@ -176,7 +197,9 @@ def resolve_command(
         try:
             home_proc = subprocess.run(
                 ["wsl", "-e", "bash", "-c", "echo $HOME"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             wsl_home = home_proc.stdout.strip() or "/root"
         except Exception:
@@ -219,6 +242,7 @@ def detect_tool_status() -> dict[str, str]:
         else:
             status[t] = "missing"
     return status
+
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -503,9 +527,7 @@ def _write_gds_export_tcl(out: Path, cfg: FullFlowConfig) -> str:
     # Build relative-to-PDK_ROOT paths; resolve at runtime via os.environ.
     rel_cell_gds = f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/gds/{cfg.std_cell_lib}.gds"
     rel_cell_lef = f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/lef/{cfg.std_cell_lib}.lef"
-    rel_tech_lef = (
-        f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/techlef/{cfg.std_cell_lib}__nom.tlef"
-    )
+    rel_tech_lef = f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/techlef/{cfg.std_cell_lib}__nom.tlef"
     py = f"""\
 # KLayout DEF -> GDS export (auto-generated)
 import os, sys
@@ -737,8 +759,9 @@ class FullFlowRunner:
                 tool="klayout",
                 command=[
                     "klayout",
-                    "-zz",            # batch mode, no GUI
-                    "-r", gds_tcl,    # run python script
+                    "-zz",  # batch mode, no GUI
+                    "-r",
+                    gds_tcl,  # run python script
                 ],
                 cwd=str(gds_dir),
                 depends_on=["fill"],
@@ -821,7 +844,9 @@ class FullFlowRunner:
         self._tool_mechanisms: dict[str, str] = {}
         for stage in list(g._stages.values()):
             wrapped, mechanism = resolve_command(
-                stage.command, cwd=stage.cwd, project_dir=self.work_dir,
+                stage.command,
+                cwd=stage.cwd,
+                project_dir=self.work_dir,
             )
             stage.command = wrapped
             self._tool_mechanisms[stage.id] = mechanism
@@ -853,11 +878,13 @@ class FullFlowRunner:
         # the result so the user knows what to install.
         missing = [sid for sid, m in self._tool_mechanisms.items() if m == "missing"]
         if missing:
-            tools_needed = sorted({
-                Path(self._graph._stages[sid].command[0]).name
-                for sid in missing
-                if self._graph._stages[sid].command
-            })
+            tools_needed = sorted(
+                {
+                    Path(self._graph._stages[sid].command[0]).name
+                    for sid in missing
+                    if self._graph._stages[sid].command
+                }
+            )
             print(
                 f"[full_flow] WARNING: {len(missing)} stage(s) have no available "
                 f"tool backend. Install one of: {', '.join(tools_needed)} natively, "

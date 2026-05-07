@@ -2,26 +2,42 @@
 
 from __future__ import annotations
 
-
 NIST_APPROVED_SYMMETRIC = {
-    "AES-128", "AES-192", "AES-256",
-    "AES-128-GCM", "AES-256-GCM",
-    "AES-128-CCM", "AES-256-CCM",
+    "AES-128",
+    "AES-192",
+    "AES-256",
+    "AES-128-GCM",
+    "AES-256-GCM",
+    "AES-128-CCM",
+    "AES-256-CCM",
 }
 
 NIST_APPROVED_HASH = {
-    "SHA-256", "SHA-384", "SHA-512",
-    "SHA3-256", "SHA3-384", "SHA3-512",
-    "SHAKE128", "SHAKE256",
+    "SHA-256",
+    "SHA-384",
+    "SHA-512",
+    "SHA3-256",
+    "SHA3-384",
+    "SHA3-512",
+    "SHAKE128",
+    "SHAKE256",
 }
 
 NIST_APPROVED_PQC = {
-    "ML-KEM-512", "ML-KEM-768", "ML-KEM-1024",
-    "ML-DSA-44", "ML-DSA-65", "ML-DSA-87",
-    "SLH-DSA-SHA2-128s", "SLH-DSA-SHA2-128f",
-    "SLH-DSA-SHA2-192s", "SLH-DSA-SHA2-192f",
-    "SLH-DSA-SHA2-256s", "SLH-DSA-SHA2-256f",
-    "SLH-DSA-SHAKE-128s", "SLH-DSA-SHAKE-128f",
+    "ML-KEM-512",
+    "ML-KEM-768",
+    "ML-KEM-1024",
+    "ML-DSA-44",
+    "ML-DSA-65",
+    "ML-DSA-87",
+    "SLH-DSA-SHA2-128s",
+    "SLH-DSA-SHA2-128f",
+    "SLH-DSA-SHA2-192s",
+    "SLH-DSA-SHA2-192f",
+    "SLH-DSA-SHA2-256s",
+    "SLH-DSA-SHA2-256f",
+    "SLH-DSA-SHAKE-128s",
+    "SLH-DSA-SHAKE-128f",
 }
 
 ALL_APPROVED = NIST_APPROVED_SYMMETRIC | NIST_APPROVED_HASH | NIST_APPROVED_PQC

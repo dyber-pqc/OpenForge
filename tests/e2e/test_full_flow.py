@@ -15,14 +15,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from openforge.flow.full_flow import (
+    STAGE_IDS,
+    STAGE_NAMES,
     FullFlowConfig,
     FullFlowResult,
     FullFlowRunner,
-    STAGE_IDS,
-    STAGE_NAMES,
 )
 from openforge.runner.engine import RunGraph, RunStage, RunStatus
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -61,34 +60,26 @@ def work_dir(tmp_path: Path) -> Path:
 class TestFullFlowGraphBuilds:
     """Verify the DAG builds without errors."""
 
-    def test_graph_has_all_stages(
-        self, flow_config: FullFlowConfig, work_dir: Path
-    ) -> None:
+    def test_graph_has_all_stages(self, flow_config: FullFlowConfig, work_dir: Path) -> None:
         runner = FullFlowRunner(flow_config, work_dir)
         graph = runner.build_graph()
         ids = {s.id for s in graph.stages()}
         for sid in STAGE_IDS:
             assert sid in ids, f"Missing stage: {sid}"
 
-    def test_graph_topological_order(
-        self, flow_config: FullFlowConfig, work_dir: Path
-    ) -> None:
+    def test_graph_topological_order(self, flow_config: FullFlowConfig, work_dir: Path) -> None:
         runner = FullFlowRunner(flow_config, work_dir)
         graph = runner.build_graph()
         order = graph.topological_order()
         assert len(order) == len(graph.stages())
 
-    def test_graph_lint_has_no_deps(
-        self, flow_config: FullFlowConfig, work_dir: Path
-    ) -> None:
+    def test_graph_lint_has_no_deps(self, flow_config: FullFlowConfig, work_dir: Path) -> None:
         runner = FullFlowRunner(flow_config, work_dir)
         graph = runner.build_graph()
         lint = graph.get("lint")
         assert lint.depends_on == []
 
-    def test_graph_synth_depends_on_lint(
-        self, flow_config: FullFlowConfig, work_dir: Path
-    ) -> None:
+    def test_graph_synth_depends_on_lint(self, flow_config: FullFlowConfig, work_dir: Path) -> None:
         runner = FullFlowRunner(flow_config, work_dir)
         graph = runner.build_graph()
         synth = graph.get("synth")
@@ -149,27 +140,17 @@ class TestFullFlowWithMockTools:
             cmd_str = " ".join(cmd)
             if "yosys" in cmd_str:
                 (cwd_path / "netlist.json").write_text("{}", encoding="utf-8")
-                (cwd_path / "netlist.v").write_text(
-                    "// netlist\n", encoding="utf-8"
-                )
+                (cwd_path / "netlist.v").write_text("// netlist\n", encoding="utf-8")
             elif "openroad" in cmd_str:
-                (cwd_path / "out.def").write_text(
-                    "VERSION 5.8\nEND DESIGN\n", encoding="utf-8"
-                )
+                (cwd_path / "out.def").write_text("VERSION 5.8\nEND DESIGN\n", encoding="utf-8")
             elif "magic" in cmd_str and "drc" in cmd_str.lower():
-                (cwd_path / "drc.rpt").write_text(
-                    "DRC errors: 0\n", encoding="utf-8"
-                )
+                (cwd_path / "drc.rpt").write_text("DRC errors: 0\n", encoding="utf-8")
             elif "magic" in cmd_str:
                 (cwd_path / "counter.gds").write_bytes(b"\x00GDS")
             elif "sta" in cmd_str:
-                (cwd_path / "timing.rpt").write_text(
-                    "WNS 0.500\nTNS 0.000\n", encoding="utf-8"
-                )
+                (cwd_path / "timing.rpt").write_text("WNS 0.500\nTNS 0.000\n", encoding="utf-8")
             elif "netgen" in cmd_str:
-                (cwd_path / "lvs.rpt").write_text(
-                    "Circuits match.\n", encoding="utf-8"
-                )
+                (cwd_path / "lvs.rpt").write_text("Circuits match.\n", encoding="utf-8")
             elif "verible" in cmd_str:
                 pass  # lint produces no files on success
 
@@ -209,9 +190,7 @@ class TestFullFlowWithMockTools:
     ) -> None:
         call_count = 0
 
-        def _fail_on_synth(
-            cmd: list[str], **kwargs: Any
-        ) -> MagicMock:
+        def _fail_on_synth(cmd: list[str], **kwargs: Any) -> MagicMock:
             nonlocal call_count
             call_count += 1
             proc = MagicMock()
@@ -260,57 +239,35 @@ class TestFullFlowArtifacts:
                 if "yosys" in cmd_str:
                     synth_dir = work_dir / "build" / "synth"
                     synth_dir.mkdir(parents=True, exist_ok=True)
-                    (synth_dir / "netlist.json").write_text(
-                        "{}", encoding="utf-8"
-                    )
-                    (synth_dir / "netlist.v").write_text(
-                        "// netlist\n", encoding="utf-8"
-                    )
+                    (synth_dir / "netlist.json").write_text("{}", encoding="utf-8")
+                    (synth_dir / "netlist.v").write_text("// netlist\n", encoding="utf-8")
                 elif "openroad" in cmd_str and "floorplan" in cmd_str:
-                    (cwd_path / "floorplan.def").write_text(
-                        "VERSION 5.8\n", encoding="utf-8"
-                    )
+                    (cwd_path / "floorplan.def").write_text("VERSION 5.8\n", encoding="utf-8")
                 elif "openroad" in cmd_str and "placement" in cmd_str:
-                    (cwd_path / "placed.def").write_text(
-                        "VERSION 5.8\n", encoding="utf-8"
-                    )
+                    (cwd_path / "placed.def").write_text("VERSION 5.8\n", encoding="utf-8")
                 elif "openroad" in cmd_str and "cts" in cmd_str:
-                    (cwd_path / "cts.def").write_text(
-                        "VERSION 5.8\n", encoding="utf-8"
-                    )
+                    (cwd_path / "cts.def").write_text("VERSION 5.8\n", encoding="utf-8")
                 elif "openroad" in cmd_str and "route" in cmd_str:
-                    (cwd_path / "routed.def").write_text(
-                        "VERSION 5.8\n", encoding="utf-8"
-                    )
-                    (cwd_path / "routed.spef").write_text(
-                        "", encoding="utf-8"
-                    )
+                    (cwd_path / "routed.def").write_text("VERSION 5.8\n", encoding="utf-8")
+                    (cwd_path / "routed.spef").write_text("", encoding="utf-8")
                 elif "openroad" in cmd_str and "fill" in cmd_str:
-                    (cwd_path / "filled.def").write_text(
-                        "VERSION 5.8\n", encoding="utf-8"
-                    )
+                    (cwd_path / "filled.def").write_text("VERSION 5.8\n", encoding="utf-8")
                 elif "sta" in cmd_str:
-                    (cwd_path / "timing.rpt").write_text(
-                        "WNS 0.5\n", encoding="utf-8"
-                    )
+                    (cwd_path / "timing.rpt").write_text("WNS 0.5\n", encoding="utf-8")
                 elif "magic" in cmd_str and "drc" in cmd_str.lower():
-                    (cwd_path / "drc.rpt").write_text(
-                        "DRC errors: 0\n", encoding="utf-8"
-                    )
+                    (cwd_path / "drc.rpt").write_text("DRC errors: 0\n", encoding="utf-8")
                 elif "magic" in cmd_str:
                     gds_dir = work_dir / "build" / "gds_export"
                     gds_dir.mkdir(parents=True, exist_ok=True)
                     (gds_dir / "counter.gds").write_bytes(b"\x00GDS")
                 elif "netgen" in cmd_str:
-                    (cwd_path / "lvs.rpt").write_text(
-                        "Circuits match.\n", encoding="utf-8"
-                    )
+                    (cwd_path / "lvs.rpt").write_text("Circuits match.\n", encoding="utf-8")
             return proc
 
         mock_popen.side_effect = _fake
 
         runner = FullFlowRunner(flow_config, work_dir)
-        result = runner.run()
+        runner.run()
 
         build_dir = work_dir / "build"
         # Verify key directories were created

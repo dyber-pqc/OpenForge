@@ -20,7 +20,16 @@ app = typer.Typer(no_args_is_help=True, help="Environment setup — install PDKs
 # Tool detection
 # ---------------------------------------------------------------------------
 
-_REQUIRED_TOOLS = ["yosys", "openroad", "magic", "netgen", "klayout", "verilator", "iverilog", "ngspice"]
+_REQUIRED_TOOLS = [
+    "yosys",
+    "openroad",
+    "magic",
+    "netgen",
+    "klayout",
+    "verilator",
+    "iverilog",
+    "ngspice",
+]
 _FPGA_TOOLS = ["nextpnr-ice40", "nextpnr-ecp5", "icepack", "iceprog"]
 
 
@@ -40,7 +49,9 @@ def _has_wsl_tool(tool: str) -> bool:
     try:
         r = subprocess.run(
             ["wsl", "-e", "bash", "-c", f"command -v {tool}"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return r.returncode == 0 and bool(r.stdout.strip())
     except Exception:
@@ -70,7 +81,9 @@ def doctor() -> None:
 
     # Backends
     typer.secho("Execution backends:", bold=True)
-    typer.echo(f"  native (PATH)  {'OK' if any(_has_native(t) for t in _REQUIRED_TOOLS) else 'no tools found'}")
+    typer.echo(
+        f"  native (PATH)  {'OK' if any(_has_native(t) for t in _REQUIRED_TOOLS) else 'no tools found'}"
+    )
     typer.echo(f"  WSL            {'OK' if shutil.which('wsl') else 'missing'}")
     typer.echo(f"  Docker         {'OK' if _has_docker() else 'missing'}")
     typer.echo()
@@ -115,7 +128,10 @@ def doctor() -> None:
             typer.secho(f"  sky130A             OK ({found})", fg=typer.colors.GREEN)
             typer.echo(f"      hint: export PDK_ROOT={found.parent}")
         else:
-            typer.secho("  sky130A             MISSING — run `openforge setup pdk sky130A`", fg=typer.colors.RED)
+            typer.secho(
+                "  sky130A             MISSING — run `openforge setup pdk sky130A`",
+                fg=typer.colors.RED,
+            )
 
 
 @app.command()
@@ -156,8 +172,8 @@ def pdk(
     typer.secho(f"Set PDK_ROOT for future sessions: export PDK_ROOT={target}", fg=typer.colors.CYAN)
 
 
-@app.command()
-def all() -> None:
+@app.command(name="all")
+def setup_all() -> None:
     """Run the full setup: install PDK + verify tools."""
     typer.secho("Running full OpenForge setup…", bold=True, fg=typer.colors.CYAN)
     pdk("sky130A")

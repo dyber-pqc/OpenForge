@@ -236,11 +236,21 @@ class DrcBrowserPanel(QWidget):
         try:
             proc = subprocess.run(
                 [
-                    str(bin_path), "check", gds,
-                    "--rules", rules, "--tech", "sky130A",
-                    "--output", out_path, "--format", "text",
+                    str(bin_path),
+                    "check",
+                    gds,
+                    "--rules",
+                    rules,
+                    "--tech",
+                    "sky130A",
+                    "--output",
+                    out_path,
+                    "--format",
+                    "text",
                 ],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
         except subprocess.TimeoutExpired:
             QMessageBox.warning(self, "DRC", "DRC run timed out (120s).")
@@ -253,16 +263,15 @@ class DrcBrowserPanel(QWidget):
             QMessageBox.critical(
                 self,
                 "DRC failed",
-                f"openforge-drc exited with {proc.returncode}.\n\n"
-                f"stderr:\n{proc.stderr[:500]}",
+                f"openforge-drc exited with {proc.returncode}.\n\nstderr:\n{proc.stderr[:500]}",
             )
             return
 
         # Show stdout summary in a dialog and load the report
         QMessageBox.information(
-            self, "DRC complete",
-            f"Native DRC finished with exit code {proc.returncode}.\n\n"
-            f"{proc.stdout[-500:]}",
+            self,
+            "DRC complete",
+            f"Native DRC finished with exit code {proc.returncode}.\n\n{proc.stdout[-500:]}",
         )
         self.load_report(Path(out_path))
 
