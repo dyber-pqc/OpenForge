@@ -100,9 +100,37 @@ impl Rule {
     }
 }
 
+/// A boolean operation between two layers (primitive or already-derived).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum BoolOp {
+    /// Polygons of A that lie entirely inside any polygon of B.
+    Inside,
+    /// Polygons of A that have any part outside every polygon of B.
+    Outside,
+    /// A minus B (set subtraction; bbox-approximated in v0.3).
+    Not,
+    /// A intersect B.
+    And,
+    /// A union B.
+    Or,
+}
+
+/// A derived layer produced by a boolean op on already-named layers.
+/// Materialised once before the check phase.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DerivedLayer {
+    pub name: String,
+    pub op: BoolOp,
+    pub a: String,
+    pub b: String,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RuleDeck {
     pub name: String,
     pub layers: HashMap<String, LayerSpec>,
+    /// Derived layers in declaration order. Each entry's inputs must already
+    /// be defined either as primitive layers or as earlier derived layers.
+    pub derived: Vec<DerivedLayer>,
     pub rules: Vec<Rule>,
 }

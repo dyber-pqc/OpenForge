@@ -1,6 +1,7 @@
 //! Check engine: dispatches a `Rule` to its concrete checker.
 
 pub mod density;
+pub mod derived;
 pub mod enclosure;
 pub mod space;
 pub mod width;

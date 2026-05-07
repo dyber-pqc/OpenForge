@@ -1,0 +1,27 @@
+# Tiny sky130A-flavoured DRX fixture: covers input(), method chains,
+# boolean ops and density. Used by tests/drx_parser.rs.
+
+report("sky130A subset DRC")
+
+li1     = input(67, 20)
+licon   = input(66, 44)
+met1    = input(68, 20)
+mcon    = input(67, 44)
+nwell   = input(64, 20)
+diff    = input(65, 20)
+
+# Width / spacing rules.
+li1.width(0.17).output("li.1", "Min width 0.17")
+li1.space(0.17).output("li.2", "Min spacing 0.17")
+met1.width(0.14).output("met1.1", "Min width 0.14")
+met1.space(0.14).output("met1.2", "Min spacing 0.14")
+
+# Enclosure: li1 must enclose licon by 0.08.
+li1.enclosing(licon, 0.08).output("li.4", "Min li enclosure of licon 0.08")
+
+# Boolean op then width.
+diff_outside_well = diff.outside(nwell)
+diff_outside_well.width(0.15).output("diff.1", "Min diff width outside nwell")
+
+# Density.
+met1.density(100).range(0.20, 0.80).output("met1.D", "Met1 density")

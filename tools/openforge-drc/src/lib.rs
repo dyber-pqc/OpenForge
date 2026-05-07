@@ -37,9 +37,10 @@ pub type Result<T> = std::result::Result<T, DrcError>;
 
 /// Run a full DRC check pass.
 ///
-/// Loads the GDS, parses the rule deck, executes all rules in the deck and
-/// returns the collected violations.
+/// Loads the GDS, materialises any DRX-derived layers, then executes all
+/// rules in the deck and returns the collected violations.
 pub fn run(gds_path: &std::path::Path, deck: &rules::ast::RuleDeck) -> Result<Vec<Violation>> {
-    let layout = gds::reader::read_gds(gds_path)?;
+    let mut layout = gds::reader::read_gds_with_layers(gds_path, &deck.layers)?;
+    checks::derived::materialize_derived(&mut layout, &deck.derived);
     checks::run_rules(&deck.rules, &layout, &deck.layers)
 }
