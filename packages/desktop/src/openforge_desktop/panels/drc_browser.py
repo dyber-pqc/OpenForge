@@ -90,6 +90,15 @@ class DrcBrowserPanel(QWidget):
         self._load_btn.clicked.connect(self._on_load)
         bar.addWidget(self._load_btn)
 
+        # Run native DRC engine (Rust)
+        self._run_native_btn = QPushButton("Run Native DRC…")
+        self._run_native_btn.setToolTip(
+            "Run OpenForge's native Rust DRC engine on a GDS file using a "
+            ".drc rule deck. Faster than KLayout and runs in-process."
+        )
+        self._run_native_btn.clicked.connect(self._on_run_native_drc)
+        bar.addWidget(self._run_native_btn)
+
         bar.addWidget(QLabel("Rule filter:"))
         self._rule_filter = QLineEdit()
         self._rule_filter.setPlaceholderText("substring…")
@@ -173,6 +182,89 @@ class DrcBrowserPanel(QWidget):
         )
         if path:
             self.load_report(Path(path))
+
+    def _on_run_native_drc(self) -> None:
+        """Run the OpenForge Rust DRC engine on a GDS + rule deck."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        # Locate the openforge-drc binary (PATH or bundled in target/)
+        bin_path = None
+        on_path = shutil.which("openforge-drc")
+        if on_path:
+            bin_path = Path(on_path)
+        else:
+            # Walk up from this file looking for target/release/openforge-drc[.exe]
+            here = Path(__file__).resolve()
+            for parent in here.parents:
+                for sub in ("target/release", "target/debug"):
+                    for ext in ("", ".exe"):
+                        cand = parent / sub / f"openforge-drc{ext}"
+                        if cand.exists():
+                            bin_path = cand
+                            break
+                    if bin_path:
+                        break
+                if bin_path:
+                    break
+        if bin_path is None:
+            QMessageBox.warning(
+                self,
+                "Native DRC not found",
+                "openforge-drc binary not found. Build it with:\n\n"
+                "  cargo build --release -p openforge-drc",
+            )
+            return
+
+        gds, _ = QFileDialog.getOpenFileName(
+            self, "Select GDS layout", "", "GDS (*.gds *.gds.gz);;All (*)"
+        )
+        if not gds:
+            return
+        rules, _ = QFileDialog.getOpenFileName(
+            self, "Select DRC rule deck", "", "DRC rules (*.drc);;All (*)"
+        )
+        if not rules:
+            return
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".rpt", delete=False, encoding="utf-8"
+        ) as tf:
+            out_path = tf.name
+
+        try:
+            proc = subprocess.run(
+                [
+                    str(bin_path), "check", gds,
+                    "--rules", rules, "--tech", "sky130A",
+                    "--output", out_path, "--format", "text",
+                ],
+                capture_output=True, text=True, timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            QMessageBox.warning(self, "DRC", "DRC run timed out (120s).")
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, "DRC error", str(exc))
+            return
+
+        if proc.returncode != 0 and proc.returncode != 2:
+            QMessageBox.critical(
+                self,
+                "DRC failed",
+                f"openforge-drc exited with {proc.returncode}.\n\n"
+                f"stderr:\n{proc.stderr[:500]}",
+            )
+            return
+
+        # Show stdout summary in a dialog and load the report
+        QMessageBox.information(
+            self, "DRC complete",
+            f"Native DRC finished with exit code {proc.returncode}.\n\n"
+            f"{proc.stdout[-500:]}",
+        )
+        self.load_report(Path(out_path))
 
     def load_report(self, path: Path) -> None:
         if DrcReport is None:

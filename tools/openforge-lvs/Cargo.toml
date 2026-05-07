@@ -1,0 +1,28 @@
+[package]
+name = "openforge-lvs"
+description = "OpenForge LVS — Rust-based layout vs schematic checker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+nom = "8"
+petgraph = "0.7"
+
+[lib]
+name = "openforge_lvs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "openforge-lvs"
+path = "src/main.rs"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,4 @@
+.subckt inverter in out vdd vss
+Mp_1 out in vdd vdd pmos_rvt w=0.84 l=0.15
+Mn_1 out in vss vss nmos_rvt w=0.42 l=0.15
+.ends inverter

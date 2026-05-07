@@ -6,6 +6,9 @@ members = [
     "tools/openforge-entropy",
     "tools/openforge-lint",
     "tools/openforge-wave",
+    "tools/openforge-drc",
+    "tools/openforge-lvs",
+    "tools/openforge-xrc",
 ]
 
 [workspace.package]

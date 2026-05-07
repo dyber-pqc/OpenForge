@@ -1,0 +1,12 @@
+{
+  "matched": false,
+  "top": "inverter",
+  "net_count_layout": 4,
+  "net_count_schem": 4,
+  "device_count_layout": 2,
+  "device_count_schem": 2,
+  "mismatched_nets": [],
+  "mismatched_devices": [],
+  "matched_pairs": [],
+  "reason": "device-model histogram mismatch:\n  layout:    {\"mosfet:nmos_rvt\": 2}\n  schematic: {\"mosfet:nmos_rvt\": 1, \"mosfet:pmos_rvt\": 1}"
+}

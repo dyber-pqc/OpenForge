@@ -1,0 +1,7 @@
+# Simple DRC deck - tests width and space
+LAYER met1 = 68
+LAYER li1 = 67
+
+RULE met1.W.1 : met1.width < 0.14 = "M1 minimum width violation"
+RULE met1.S.1 : met1.space < 0.14 = "M1 minimum spacing violation"
+RULE li1.W.1 : li1.width < 0.17 = "LI minimum width violation"

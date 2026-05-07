@@ -771,3 +771,121 @@ def signoff_report(
     """
     # Delegate to the `all` command for now
     signoff_all(path=path, json_output=json_output)
+
+
+# ---------------------------------------------------------------------------
+# Native Rust signoff tools — openforge-drc, openforge-lvs, openforge-xrc.
+# These call into the bundled Rust binaries built from `tools/openforge-{drc,lvs,xrc}/`.
+# ---------------------------------------------------------------------------
+
+import shutil as _shutil
+import subprocess as _subprocess
+from typing import Optional
+
+
+def _find_rust_bin(name: str) -> Optional[Path]:
+    """Locate a bundled Rust binary, searching in this priority order:
+    1. PATH (if user has installed it system-wide)
+    2. <repo>/target/release/<name>[.exe]
+    3. <repo>/target/debug/<name>[.exe]
+    Returns None if not found.
+    """
+    on_path = _shutil.which(name)
+    if on_path:
+        return Path(on_path)
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        for sub in ("target/release", "target/debug"):
+            for ext in ("", ".exe"):
+                cand = parent / sub / f"{name}{ext}"
+                if cand.exists():
+                    return cand
+    return None
+
+
+@app.command("drc-rs")
+def drc_rust(
+    gds: str = typer.Argument(..., help="Path to GDSII layout file."),
+    rules: str = typer.Option(..., "--rules", "-r", help="DRC rule deck (.drc)."),
+    tech: str = typer.Option("sky130A", "--tech", "-t", help="Tech name."),
+    output: str = typer.Option("drc.rdb", "--output", "-o", help="Output report path."),
+    fmt: str = typer.Option("text", "--format", "-f", help="Output format: rdb|text|json."),
+) -> None:
+    """Run DRC using the OpenForge native Rust engine.
+
+    Example:
+        openforge signoff drc-rs counter.gds --rules sky130.drc --tech sky130A
+    """
+    binary = _find_rust_bin("openforge-drc")
+    if binary is None:
+        console.print(
+            "[red]openforge-drc binary not found.[/] Build it first:\n"
+            "  [cyan]cargo build --release -p openforge-drc[/]"
+        )
+        raise typer.Exit(code=1)
+    cmd = [
+        str(binary), "check", gds,
+        "--rules", rules, "--tech", tech,
+        "--output", output, "--format", fmt,
+    ]
+    console.print(f"[cyan]{' '.join(cmd)}[/]")
+    rc = _subprocess.call(cmd)
+    raise typer.Exit(code=rc)
+
+
+@app.command("lvs-rs")
+def lvs_rust(
+    layout: str = typer.Option(..., "--layout", "-l", help="Layout-extracted SPICE."),
+    schematic: str = typer.Option(..., "--schematic", "-s", help="Schematic SPICE."),
+    top: str = typer.Option(..., "--top", help="Top subcircuit name."),
+    output: str = typer.Option("lvs.json", "--output", "-o", help="Report JSON path."),
+) -> None:
+    """Run LVS using the OpenForge native Rust engine.
+
+    Example:
+        openforge signoff lvs-rs --layout lay.sp --schematic sch.sp --top counter
+    """
+    binary = _find_rust_bin("openforge-lvs")
+    if binary is None:
+        console.print(
+            "[red]openforge-lvs binary not found.[/] Build it first:\n"
+            "  [cyan]cargo build --release -p openforge-lvs[/]"
+        )
+        raise typer.Exit(code=1)
+    cmd = [
+        str(binary), "check",
+        "--layout", layout, "--schematic", schematic,
+        "--top", top, "--output", output,
+    ]
+    console.print(f"[cyan]{' '.join(cmd)}[/]")
+    rc = _subprocess.call(cmd)
+    raise typer.Exit(code=rc)
+
+
+@app.command("xrc-rs")
+def xrc_rust(
+    def_path: str = typer.Option(..., "--def", "-d", help="Routed DEF file."),
+    lef: str = typer.Option(..., "--lef", "-l", help="LEF file."),
+    tech: str = typer.Option("sky130A", "--tech", "-t", help="Tech name."),
+    output: str = typer.Option("design.spef", "--output", "-o", help="Output SPEF path."),
+) -> None:
+    """Run parasitic extraction using the OpenForge native Rust engine.
+
+    Example:
+        openforge signoff xrc-rs --def routed.def --lef cells.lef --tech sky130A
+    """
+    binary = _find_rust_bin("openforge-xrc")
+    if binary is None:
+        console.print(
+            "[red]openforge-xrc binary not found.[/] Build it first:\n"
+            "  [cyan]cargo build --release -p openforge-xrc[/]"
+        )
+        raise typer.Exit(code=1)
+    cmd = [
+        str(binary), "extract",
+        "--def", def_path, "--lef", lef,
+        "--tech", tech, "--output", output,
+    ]
+    console.print(f"[cyan]{' '.join(cmd)}[/]")
+    rc = _subprocess.call(cmd)
+    raise typer.Exit(code=rc)

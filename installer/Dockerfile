@@ -28,6 +28,10 @@ RUN apt-get update \
     done \
  && rm -rf /var/lib/apt/lists/*
 
+# -- Rust toolchain (for native sign-off binaries) ----------------------------
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
 # -- Python deps --------------------------------------------------------------
 RUN pip install --no-cache-dir --break-system-packages \
     pydantic pyyaml numpy typer rich networkx
@@ -38,6 +42,15 @@ COPY packages ./packages
 COPY share ./share
 COPY pyproject.toml README.md LICENSE ./
 COPY examples ./examples
+COPY tools ./tools
+COPY Cargo.toml ./
+
+# -- Build native Rust sign-off binaries (DRC, LVS, xRC) ----------------------
+RUN cargo build --release -p openforge-drc -p openforge-lvs -p openforge-xrc \
+ && install -m 0755 target/release/openforge-drc /usr/local/bin/openforge-drc \
+ && install -m 0755 target/release/openforge-lvs /usr/local/bin/openforge-lvs \
+ && install -m 0755 target/release/openforge-xrc /usr/local/bin/openforge-xrc \
+ && rm -rf target ~/.cargo/registry ~/.cargo/git
 
 ENV PYTHONPATH="/opt/openforge/packages/core/src:/opt/openforge/packages/cli/src:/opt/openforge/packages/desktop/src:/opt/openforge/packages/api/src" \
     OPENFORGE_SHARE="/opt/openforge/share"

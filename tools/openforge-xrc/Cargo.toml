@@ -1,0 +1,27 @@
+[package]
+name = "openforge-xrc"
+description = "OpenForge xRC — Rust-based parasitic extraction (R+C) for VLSI"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+rstar = "0.12"
+
+[lib]
+name = "openforge_xrc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "openforge-xrc"
+path = "src/main.rs"
+
+[dev-dependencies]
+tempfile = "3"

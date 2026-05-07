@@ -1,0 +1,5 @@
+.subckt rdiv in out gnd
+R_a in n_1 1k
+R_b n_1 out 1k
+R_c out gnd 1k
+.ends rdiv
