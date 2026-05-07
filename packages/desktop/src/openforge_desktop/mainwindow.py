@@ -5886,26 +5886,56 @@ exit
         """Launch the full RTL-to-GDS flow."""
         from openforge.flow.full_flow import STAGE_IDS, FullFlowConfig
 
-        proj = self._project_manager
-        top = getattr(proj, "top_module", None) or "top"
+        # Project resolution priority:
+        # 1. New Project model loaded from <root_dir>/openforge.yaml
+        # 2. Legacy DesktopProjectManager
+        # 3. Interactive file dialog
+        top = "top"
         rtl: list[str] = []
         sdc = ""
         pdk = "sky130A"
+        work_dir: Path | None = None
 
-        # Try to get info from project config
-        cfg = getattr(proj, "config", None)
-        if cfg is not None:
-            pcfg = getattr(cfg, "project", None)
-            if pcfg is not None:
-                top = getattr(pcfg, "top_module", top) or top
-                pdk_raw = getattr(pcfg, "target_pdk", None) or "sky130A"
-                pdk = "sky130A" if "sky130" in pdk_raw.lower() else pdk_raw
-            dcfg = getattr(cfg, "design", None)
-            if dcfg is not None:
-                rtl = list(getattr(dcfg, "sources", []))
-                constraints = list(getattr(dcfg, "constraints", []))
-                if constraints:
-                    sdc = str(constraints[0])
+        # Try the new Project model first (used by examples/*.yaml)
+        proj_mgr = getattr(self, "_project_mgr", None)
+        if proj_mgr is not None and hasattr(proj_mgr, "project_path"):
+            root = proj_mgr.project_path
+            if root is not None:
+                work_dir = Path(root)
+                yaml_path = Path(root) / "openforge.yaml"
+                if yaml_path.exists():
+                    try:
+                        from openforge.project.model import Project as NewProject
+                        p = NewProject.load(yaml_path)
+                        top = p.top_module or top
+                        rtl = list(p.rtl_sources)
+                        if p.constraint_files:
+                            sdc = p.constraint_files[0]
+                        if p.pdk and p.pdk.name:
+                            pdk = "sky130A" if "sky130" in p.pdk.name.lower() else p.pdk.name
+                    except Exception as exc:
+                        self._console.append_warning(
+                            f"Could not load openforge.yaml as new Project: {exc}"
+                        )
+
+        # Fall back to legacy DesktopProjectManager fields
+        if not rtl and proj_mgr is not None:
+            try:
+                src = proj_mgr.source_files()
+                if src:
+                    rtl = [str(f) for f in src]
+                cstr = proj_mgr.constraint_files()
+                if cstr and not sdc:
+                    sdc = str(cstr[0])
+                cfg = getattr(proj_mgr, "config", None)
+                if cfg is not None:
+                    pcfg = getattr(cfg, "project", None)
+                    if pcfg is not None:
+                        top = getattr(pcfg, "top_module", top) or top
+                        pdk_raw = getattr(pcfg, "target_pdk", None) or pdk
+                        pdk = "sky130A" if "sky130" in str(pdk_raw).lower() else pdk_raw
+            except Exception:
+                pass
 
         # Fallback: ask user
         if not rtl:
@@ -5942,11 +5972,31 @@ exit
         if not sdc:
             self._console.append_warning("No SDC file specified; STA stage may fail.")
 
-        work_dir = getattr(proj, "root_dir", None) or Path.cwd()
+        # work_dir was resolved earlier from project_path; if still None,
+        # fall back to the parent of the first RTL file or CWD.
+        if work_dir is None:
+            if rtl:
+                work_dir = Path(rtl[0]).resolve().parent
+                # Walk up to find a directory containing openforge.yaml
+                for parent in [work_dir, *work_dir.parents]:
+                    if (parent / "openforge.yaml").exists():
+                        work_dir = parent
+                        break
+            else:
+                work_dir = Path.cwd()
+
+        # Strip work_dir prefix from RTL/SDC paths so they're relative
+        # (matches FullFlowConfig + WSL path-translation expectations)
+        def _rel(p: str) -> str:
+            try:
+                return str(Path(p).resolve().relative_to(work_dir)).replace("\\", "/")
+            except ValueError:
+                return p
+
         flow_cfg = FullFlowConfig(
             top_module=top,
-            rtl_files=[str(f) for f in rtl],
-            sdc_file=sdc,
+            rtl_files=[_rel(f) for f in rtl],
+            sdc_file=_rel(sdc) if sdc else "",
             pdk=pdk,
             output_dir="build",
         )
