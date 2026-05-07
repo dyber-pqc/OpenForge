@@ -90,10 +90,10 @@ pub fn compute(
                 continue; // same-layer handled by coupling::compute
             }
             // Only adjacent layers count: a is above b, or b is above a.
-            let (lower, upper) = if is_directly_above(tech, &b.layer, &a.layer) {
-                (b, a)
+            let lower = if is_directly_above(tech, &b.layer, &a.layer) {
+                b
             } else if is_directly_above(tech, &a.layer, &b.layer) {
-                (a, b)
+                a
             } else {
                 continue;
             };

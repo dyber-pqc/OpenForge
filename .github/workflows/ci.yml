@@ -183,6 +183,50 @@ jobs:
           " || echo "::warning::MainWindow construction failed (expected on some headless runners)"
 
   # ========================================================================
+  # OpenForge native sign-off tools (DRC, LVS, xRC) — Rust crates
+  # Runs cargo build/test/clippy specifically on the new tools so a
+  # regression in one of them is reported separately from the legacy Rust
+  # tools (which still have sv-parser version issues).
+  # ========================================================================
+  signoff-tools:
+    name: Signoff Tools (DRC + LVS + xRC)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy, rustfmt }
+      - uses: Swatinem/rust-cache@v2
+        with: { key: signoff-tools }
+
+      - name: Build (release)
+        run: cargo build --release -p openforge-drc -p openforge-lvs -p openforge-xrc
+
+      - name: Test
+        run: cargo test --release -p openforge-drc -p openforge-lvs -p openforge-xrc
+
+      - name: Clippy (-D warnings)
+        run: cargo clippy --release -p openforge-drc -p openforge-lvs -p openforge-xrc -- -D warnings
+
+      - name: Format check
+        run: cargo fmt --check -p openforge-drc -p openforge-lvs -p openforge-xrc
+
+      - name: E2E sign-off tests (Python wrapper)
+        run: |
+          pip install pydantic pyyaml numpy pytest typer rich
+          PYTHONPATH=packages/core/src:packages/cli/src \
+            pytest tests/e2e/test_signoff_tools.py -v
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: signoff-tools-linux
+          path: |
+            target/release/openforge-drc
+            target/release/openforge-lvs
+            target/release/openforge-xrc
+          retention-days: 7
+
+  # ========================================================================
   # Rust: fmt + clippy + test
   # ========================================================================
   rust-check:

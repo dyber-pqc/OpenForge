@@ -92,6 +92,13 @@ pub fn sky130a_tech() -> TechFile {
                 between: ("met1".into(), "met2".into()),
                 cut_count: 1,
             },
+            // Multi-cut variant: 2×2 array of cuts (parallel resistance ÷4).
+            ViaProps {
+                name: "M1M2_PR_4CUT".into(),
+                resistance_ohm: 4.0,
+                between: ("met1".into(), "met2".into()),
+                cut_count: 4,
+            },
             ViaProps {
                 name: "M2M3_PR".into(),
                 resistance_ohm: 4.0,

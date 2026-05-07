@@ -4,15 +4,19 @@
 
 pub mod error;
 pub mod graph;
+pub mod layout_extract;
 pub mod matcher;
 pub mod report;
 pub mod spice;
+pub mod verilog;
 
 use crate::error::{LvsError, Result};
 use crate::graph::{build_graph, ConnGraph, Node};
+use crate::layout_extract::{parse_def_str, parse_lef_str, LefLibrary};
 use crate::matcher::{run_isomorphism, MatchOutcome};
 use crate::report::LvsReport;
 use crate::spice::{parse_netlist, Subckt};
+use crate::verilog::parse_verilog_str;
 
 /// Parse + extract the named subckt from a SPICE source string.
 pub fn load_subckt(src: &str, top: &str) -> Result<Subckt> {
@@ -34,6 +38,63 @@ pub fn run_lvs(layout_src: &str, schem_src: &str, top: &str) -> Result<LvsReport
     Ok(build_report(&lay_g, &sch_g, top))
 }
 
+/// Run LVS where the layout is supplied as DEF + LEF and the schematic is
+/// supplied as a (gate-level) Verilog source string. Both inputs reference
+/// standard cells declared in the LEF library; the cells are treated as
+/// opaque primitives.
+pub fn run_lvs_def_verilog(
+    def_src: &str,
+    lef_src: &str,
+    verilog_src: &str,
+    top: &str,
+) -> Result<LvsReport> {
+    let def = parse_def_str(def_src)?;
+    let lef = parse_lef_str(lef_src)?;
+    let lay = layout_extract::extract_subckt(&def, &lef, top)?;
+
+    let v = parse_verilog_str(verilog_src)?;
+    if v.name != top {
+        return Err(LvsError::UnknownTop(format!(
+            "verilog top '{}' does not match requested '{}'",
+            v.name, top
+        )));
+    }
+    let sch = verilog::to_subckt(&v, &lef)?;
+
+    let lay_g = build_graph(&lay)?;
+    let sch_g = build_graph(&sch)?;
+    Ok(build_report(&lay_g, &sch_g, top))
+}
+
+/// Run LVS where the layout is DEF + LEF and the schematic is SPICE
+/// (X-style subckt instantiations of the same cells).
+pub fn run_lvs_def_spice(
+    def_src: &str,
+    lef_src: &str,
+    spice_src: &str,
+    top: &str,
+) -> Result<LvsReport> {
+    let def = parse_def_str(def_src)?;
+    let lef = parse_lef_str(lef_src)?;
+    let lay = layout_extract::extract_subckt(&def, &lef, top)?;
+    let sch = load_subckt(spice_src, top)?;
+
+    let lay_g = build_graph(&lay)?;
+    let sch_g = build_graph(&sch)?;
+    Ok(build_report(&lay_g, &sch_g, top))
+}
+
+/// Read the supplied LEF sources (one or many) and combine them.
+pub fn load_lef_files<P: AsRef<std::path::Path>>(paths: &[P]) -> Result<LefLibrary> {
+    let mut lib = LefLibrary::default();
+    for p in paths {
+        let s = std::fs::read_to_string(p.as_ref())?;
+        let other = parse_lef_str(&s)?;
+        lib.merge(other);
+    }
+    Ok(lib)
+}
+
 fn build_report(layout: &ConnGraph, schem: &ConnGraph, top: &str) -> LvsReport {
     let net_count_layout = layout.graph.node_weights().filter(|n| n.is_net()).count();
     let net_count_schem = schem.graph.node_weights().filter(|n| n.is_net()).count();
@@ -50,8 +111,6 @@ fn build_report(layout: &ConnGraph, schem: &ConnGraph, top: &str) -> LvsReport {
         MatchOutcome::Mismatch { reason } => (false, Some(reason)),
     };
 
-    // Build matched_pairs for the simple equal-count, equal-name case;
-    // the proper VF2 mapping recovery would require running VF2 ourselves.
     let matched_pairs = if matched {
         pair_devices_by_model_order(layout, schem)
     } else {

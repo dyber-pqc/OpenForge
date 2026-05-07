@@ -1,0 +1,14 @@
+VERSION 5.8 ;
+DESIGN multicut ;
+UNITS DISTANCE MICRONS 1000 ;
+DIEAREA ( 0 0 ) ( 10000 10000 ) ;
+COMPONENTS 2 ;
+- a sky130_fd_sc_hd__inv_1 + PLACED ( 1000 1000 ) N ;
+- b sky130_fd_sc_hd__inv_1 + PLACED ( 5000 1000 ) N ;
+END COMPONENTS
+NETS 1 ;
+- net1 ( a Y ) ( b A )
+  + ROUTED met1 ( 1500 1500 ) ( 3000 1500 ) M1M2_PR_4CUT
+  + NEW met2 ( 3000 1500 ) ( 4500 1500 ) ;
+END NETS
+END DESIGN

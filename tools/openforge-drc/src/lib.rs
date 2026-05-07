@@ -41,10 +41,5 @@ pub type Result<T> = std::result::Result<T, DrcError>;
 /// returns the collected violations.
 pub fn run(gds_path: &std::path::Path, deck: &rules::ast::RuleDeck) -> Result<Vec<Violation>> {
     let layout = gds::reader::read_gds(gds_path)?;
-    let mut violations = Vec::new();
-    for rule in &deck.rules {
-        let mut v = checks::run_rule(rule, &layout, &deck.layers)?;
-        violations.append(&mut v);
-    }
-    Ok(violations)
+    checks::run_rules(&deck.rules, &layout, &deck.layers)
 }

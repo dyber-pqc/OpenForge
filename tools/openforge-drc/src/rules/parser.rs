@@ -13,7 +13,7 @@
 //! Parsed by hand — `nom` is in the dep tree for future extensions but the
 //! grammar is small enough that a hand-rolled scan is clearer here.
 
-use crate::rules::ast::{LayerSpec, Rule, RuleDeck};
+use crate::rules::ast::{DensityDirection, LayerSpec, Rule, RuleDeck};
 use crate::{DrcError, Result};
 
 pub fn parse_deck(input: &str) -> Result<RuleDeck> {
@@ -91,6 +91,57 @@ fn parse_rule(s: &str) -> std::result::Result<Rule, String> {
         }
         None => (rest.trim(), String::new()),
     };
+
+    // density:  <layer>.density window <um> [<|>] <pct>
+    if let Some((layer, tail)) = body.split_once(".density") {
+        let layer = layer.trim().to_string();
+        let tail = tail.trim();
+        // Expect: "window <num>" then operator then number.
+        let rest = tail
+            .strip_prefix("window")
+            .ok_or_else(|| "expected 'window' after .density".to_string())?
+            .trim();
+        // Find operator '<' or '>'. We can't reuse parse_lt_value because
+        // we also need to support '>'.
+        let (window_str, op_idx, op) = {
+            let mut idx = None;
+            let mut op_ch = '<';
+            for (i, c) in rest.char_indices() {
+                if c == '<' || c == '>' {
+                    idx = Some(i);
+                    op_ch = c;
+                    break;
+                }
+            }
+            let i = idx.ok_or_else(|| "expected '<' or '>' in density rule".to_string())?;
+            (rest[..i].trim().to_string(), i, op_ch)
+        };
+        let window_um: f64 = window_str
+            .parse()
+            .map_err(|_| format!("invalid density window: {window_str}"))?;
+        let pct_str = rest[op_idx + 1..].trim();
+        let pct: f64 = pct_str
+            .parse()
+            .map_err(|_| format!("invalid density threshold: {pct_str}"))?;
+        let direction = if op == '<' {
+            DensityDirection::Below
+        } else {
+            DensityDirection::Above
+        };
+        let msg = if message.is_empty() {
+            format!("{layer} density violation")
+        } else {
+            message
+        };
+        return Ok(Rule::Density {
+            layer,
+            window_um,
+            pct,
+            direction,
+            name,
+            message: msg,
+        });
+    }
 
     // width / space:   <layer>.width < <um>     (or .space)
     if let Some((layer, tail)) = body.split_once(".width") {

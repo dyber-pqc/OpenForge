@@ -3,9 +3,10 @@
 //! Reads a routed DEF + LEF + tech file, walks routing geometry, computes
 //! per-segment R and C using pattern-based formulas, and emits SPEF.
 //!
-//! v0.1 scope: parallel-plate capacitance + length-based resistance + simple
-//! same-layer coupling. 3D field solver and foundry calibration are out of
-//! scope for this milestone.
+//! v0.2 scope: Sakurai–Tamaru self-cap, multi-cut via R, same-layer
+//! coupling, cross-layer (vertical) coupling, IEEE-1481 SPEF with `*PORTS`
+//! and hierarchical names. 3D field solver and foundry calibration remain
+//! out of scope.
 
 pub mod def;
 pub mod error;

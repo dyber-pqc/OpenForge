@@ -1,4 +1,7 @@
 //! Per-segment resistance: R = sheet_R * length / width, plus via R.
+//!
+//! v0.2: multi-cut via support — total via array R is the single-cut R
+//! divided by the number of cuts (parallel resistors).
 
 use crate::tech::TechFile;
 
@@ -13,7 +16,16 @@ pub fn wire_resistance(tech: &TechFile, layer: &str, length_um: f64, width_um: f
     }
 }
 
-/// Resistance contribution of a via cut between two layers.
+/// Resistance contribution of a via array between two layers.
+///
+/// `tech.via(name).resistance_ohm` is the *per-cut* resistance; for a
+/// multi-cut array we divide by the cut count (parallel combination).
 pub fn via_resistance(tech: &TechFile, via_name: &str) -> f64 {
-    tech.via(via_name).map(|v| v.resistance_ohm).unwrap_or(0.0)
+    match tech.via(via_name) {
+        Some(v) => {
+            let n = v.cut_count.max(1) as f64;
+            v.resistance_ohm / n
+        }
+        None => 0.0,
+    }
 }

@@ -3,9 +3,9 @@
 OpenForge DRC engine — a fast Rust-based design rule checker, intended as a
 drop-in replacement for KLayout DRC on common width/space/enclosure rules.
 
-This is **v0.1**: the foundation. It reads GDSII, parses a small subset of
-KLayout's DRX rule language, runs `width` and `space` checks, and emits
-violations as KLayout-compatible RDB XML.
+**v0.2** (this checkout) builds on v0.1 with: an R-tree spatial index for
+spacing (10x+ speedup on large designs), a real `enclosure` checker, a
+windowed `density` operator, and parallel rule execution via rayon.
 
 ## CLI
 
@@ -40,21 +40,27 @@ RULE met1.W.1 : met1.width  < 0.14 = "M1 minimum width"
 RULE met1.S.1 : met1.space  < 0.14 = "M1 minimum spacing"
 RULE met1.E.1 : licon.enclosed_by(li1) < 0.06 = "li enclosure of licon"
 RULE my.NOT.1 : nwell.not(diff) -> nwell_only
+RULE met1.D.min : met1.density window 100 < 0.20 = "min met1 density"
+RULE met1.D.max : met1.density window 100 > 0.80 = "max met1 density"
 ```
 
-## Supported in v0.1
+## Supported
 
-- `width`  — minimum interior width per polygon
-- `space`  — minimum edge-to-edge spacing between polygons on the same layer
-- RDB XML output (KLayout compatible)
-- text + JSON output
+- `width`     — minimum interior width per polygon
+- `space`     — minimum edge-to-edge spacing on the same layer
+                (R-tree accelerated; near-linear on sparse layouts)
+- `enclosure` — every `inner` polygon must be enclosed by some `outer`
+                polygon with at least `min_um` margin on every side
+- `density`   — windowed area density, with `<` for min and `>` for max,
+                tile size in microns; parallel over windows via rayon
+- Parallel rule execution (rayon) - independent rules run concurrently
+- RDB XML output (KLayout compatible) plus text + JSON
 
 ## Planned
 
-- `enclosure` and `not` (parsed today, but no checks emitted)
+- `not` (parsed today, but no checks emitted)
 - Boolean ops (`and`, `or`, `xor`) over derived layer sets
-- Spatial index (`rstar`) replacing the O(N^2) pre-filter in `space`
-- Density and antenna checks
+- Antenna checks
 - Hierarchical layout flattening with cell instance arrays
 
 ## Tests

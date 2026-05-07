@@ -117,12 +117,13 @@ fn parse_macro(t: &mut Tokens<'_>, name: &str) -> Result<LefMacro> {
         let tok = t.next_tok().ok_or_else(|| t.err("EOF in MACRO"))?;
         match tok {
             "PIN" => {
-                let pname = t
-                    .next_tok()
-                    .ok_or_else(|| t.err("PIN name"))?
-                    .to_string();
+                let pname = t.next_tok().ok_or_else(|| t.err("PIN name"))?.to_string();
                 let pin = parse_pin(t, &pname)?;
                 pins.push(pin);
+            }
+            "OBS" => {
+                // OBS body terminated by a bare "END" (no label).
+                skip_unlabeled_end_block(t)?;
             }
             "END" => {
                 let lbl = t.next_tok().ok_or_else(|| t.err("END label"))?;
@@ -132,6 +133,7 @@ fn parse_macro(t: &mut Tokens<'_>, name: &str) -> Result<LefMacro> {
                         pins,
                     });
                 }
+                // Some other END/label combo we didn't consume — keep going.
             }
             _ => {}
         }
@@ -156,6 +158,10 @@ fn parse_pin(t: &mut Tokens<'_>, pname: &str) -> Result<LefPin> {
                     }
                 }
             }
+            "PORT" => {
+                // PORT body terminated by a bare "END".
+                skip_unlabeled_end_block(t)?;
+            }
             "END" => {
                 let lbl = t.next_tok().ok_or_else(|| t.err("END pin label"))?;
                 if lbl == pname {
@@ -166,6 +172,18 @@ fn parse_pin(t: &mut Tokens<'_>, pname: &str) -> Result<LefPin> {
                 }
             }
             _ => {}
+        }
+    }
+}
+
+/// Skip a block whose terminator is a bare `END` (no label). Used for
+/// PORT and OBS bodies, which contain LAYER directives and RECT/POLYGON
+/// statements but no nested PIN/PORT/OBS.
+fn skip_unlabeled_end_block(t: &mut Tokens<'_>) -> Result<()> {
+    loop {
+        let tok = t.next_tok().ok_or_else(|| t.err("EOF in PORT/OBS"))?;
+        if tok == "END" {
+            return Ok(());
         }
     }
 }

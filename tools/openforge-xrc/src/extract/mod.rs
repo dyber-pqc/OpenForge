@@ -2,6 +2,7 @@
 
 pub mod capacitance;
 pub mod coupling;
+pub mod cross_layer;
 pub mod resistance;
 
 use crate::def::{Def, RouteSeg};
@@ -123,12 +124,14 @@ pub fn extract(def: &Def, _lef: &LefLibrary, tech: &TechFile) -> ExtractionResul
         net_paras.push(np);
     }
 
-    // Coupling pass.
+    // Same-layer coupling pass.
     let cresult = coupling::compute(tech, &net_names, &all_geoms);
+    // Cross-layer (vertical) coupling pass.
+    let xresult = cross_layer::compute(tech, &net_names, &all_geoms);
     // Distribute coupling caps to nets and add to total cap.
     use std::collections::HashMap;
     let mut by_net: HashMap<String, Vec<CouplingCap>> = HashMap::new();
-    for ((a, b), c) in &cresult.pairs {
+    for ((a, b), c) in cresult.pairs.iter().chain(xresult.pairs.iter()) {
         by_net.entry(a.clone()).or_default().push(CouplingCap {
             neighbor_net: b.clone(),
             c_ff: *c,

@@ -91,33 +91,12 @@ fn run_check(
 
     let layout = read_gds_with_layers(&gds, &deck.layers).context("reading GDS")?;
 
-    let mut all = Vec::<Violation>::new();
+    // Run all rules in parallel. Per-rule progress logging would require a
+    // serialised pre-pass; for now we just summarise totals after the fact.
     for rule in &deck.rules {
-        let v = checks::run_rule(rule, &layout, &deck.layers)?;
-        let label = match rule {
-            openforge_drc::rules::ast::Rule::Width {
-                name,
-                min_um,
-                layer,
-                ..
-            } => format!("{name} (min width {min_um} um on {layer})"),
-            openforge_drc::rules::ast::Rule::Space {
-                name,
-                min_um,
-                layer,
-                ..
-            } => format!("{name} (min space {min_um} um on {layer})"),
-            openforge_drc::rules::ast::Rule::Enclosure { name, .. }
-            | openforge_drc::rules::ast::Rule::Not { name, .. } => name.clone(),
-        };
-        println!(
-            "Checking {}... {} violation{}",
-            label,
-            v.len(),
-            if v.len() == 1 { "" } else { "s" }
-        );
-        all.extend(v);
+        println!("  - {}: {}", rule.name(), rule.description());
     }
+    let all: Vec<Violation> = checks::run_rules(&deck.rules, &layout, &deck.layers)?;
 
     println!();
     println!(

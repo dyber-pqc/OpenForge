@@ -1,0 +1,5 @@
+# Enclosure rule fixture - inner layer must sit inside outer with margin.
+LAYER inner = 70
+LAYER outer = 71
+
+RULE enc.E.1 : inner.enclosed_by(outer) < 0.10 = "inner must be enclosed by outer with 0.10 um margin"

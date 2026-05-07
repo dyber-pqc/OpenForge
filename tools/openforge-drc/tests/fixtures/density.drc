@@ -1,0 +1,5 @@
+# Density rule fixture - 100x100 um windows.
+LAYER met1 = 68
+
+RULE met1.D.min : met1.density window 100 < 0.20 = "Min met1 density"
+RULE met1.D.max : met1.density window 100 > 0.80 = "Max met1 density"

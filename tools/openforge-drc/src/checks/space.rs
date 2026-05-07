@@ -56,10 +56,7 @@ pub fn check_space(
         .enumerate()
         .map(|(idx, p)| IndexedBbox {
             idx,
-            aabb: AABB::from_corners(
-                [p.bbox.x_min, p.bbox.y_min],
-                [p.bbox.x_max, p.bbox.y_max],
-            ),
+            aabb: AABB::from_corners([p.bbox.x_min, p.bbox.y_min], [p.bbox.x_max, p.bbox.y_max]),
         })
         .collect();
     let tree = RTree::bulk_load(items);
@@ -118,8 +115,8 @@ pub fn check_space(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geom::Polygon;
     use crate::gds::Layout;
+    use crate::geom::Polygon;
 
     fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Polygon {
         Polygon::new("met1", vec![(x0, y0), (x1, y0), (x1, y1), (x0, y1)], "TOP")

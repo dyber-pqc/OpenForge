@@ -39,6 +39,22 @@ pub enum Rule {
         name: String,
         message: String,
     },
+    Density {
+        layer: String,
+        window_um: f64,
+        pct: f64,
+        /// `Below` => violation when density < pct (min-density rule).
+        /// `Above` => violation when density > pct (max-density rule).
+        direction: DensityDirection,
+        name: String,
+        message: String,
+    },
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DensityDirection {
+    Below,
+    Above,
 }
 
 impl Rule {
@@ -47,7 +63,8 @@ impl Rule {
             Rule::Width { name, .. }
             | Rule::Space { name, .. }
             | Rule::Enclosure { name, .. }
-            | Rule::Not { name, .. } => name,
+            | Rule::Not { name, .. }
+            | Rule::Density { name, .. } => name,
         }
     }
 
@@ -66,6 +83,19 @@ impl Rule {
                 ..
             } => format!("Minimum enclosure of {inner} by {outer} ({min_um} um)"),
             Rule::Not { a, b, .. } => format!("{a} not {b}"),
+            Rule::Density {
+                layer,
+                window_um,
+                pct,
+                direction,
+                ..
+            } => {
+                let cmp = match direction {
+                    DensityDirection::Below => "min",
+                    DensityDirection::Above => "max",
+                };
+                format!("{cmp} density on {layer} window {window_um} um pct {pct}")
+            }
         }
     }
 }
