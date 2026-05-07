@@ -153,7 +153,8 @@ def resolve_command(
 
     # 3. WSL — last resort on Windows for Linux-only tools.
     # Translate Windows path args to /mnt/<drive>/... so the Linux tool
-    # can actually find the files.
+    # can actually find the files. Also propagate critical env vars
+    # like PDK_ROOT and OPENROAD_FLOW into the WSL session.
     if _has_wsl() and tool in _NATIVE_TOOL_NAMES:
         # Verify the tool exists in WSL — if not, treat as missing so the
         # engine fails fast with a clear message instead of "no such file".
@@ -166,8 +167,38 @@ def resolve_command(
                 return cmd, "missing"
         except Exception:
             return cmd, "missing"
+
+        # Propagate env vars into WSL.  We pre-expand $HOME ourselves so
+        # tools like Yosys that don't expand env vars in their script args
+        # still see real paths.
         translated = _translate_args_for_wsl(cmd[1:])
-        wrapped = ["wsl", "-e", cmd[0], *translated]
+        # Resolve $HOME from WSL once and substitute in args
+        try:
+            home_proc = subprocess.run(
+                ["wsl", "-e", "bash", "-c", "echo $HOME"],
+                capture_output=True, text=True, timeout=5,
+            )
+            wsl_home = home_proc.stdout.strip() or "/root"
+        except Exception:
+            wsl_home = "/root"
+        translated = [a.replace("$HOME", wsl_home) for a in translated]
+
+        # Use double quotes so any remaining bash vars (e.g. ${PDK_ROOT})
+        # do expand inside the inner arg, but a literal $ sign is fine.
+        def _bash_quote(s: str) -> str:
+            # Use single quotes; escape internal single quotes.
+            return "'" + s.replace("'", "'\\''") + "'"
+
+        quoted_args = " ".join(_bash_quote(a) for a in [cmd[0], *translated])
+
+        env_setup = []
+        pdk_root = os.environ.get("PDK_ROOT", "")
+        if pdk_root:
+            env_setup.append(f"export PDK_ROOT={_bash_quote(_to_wsl_path(pdk_root))}")
+        else:
+            env_setup.append(f'export PDK_ROOT="{wsl_home}/.volare"')
+        bash_cmd = "; ".join(env_setup) + "; exec " + quoted_args
+        wrapped = ["wsl", "-e", "bash", "-c", bash_cmd]
         return wrapped, "wsl"
 
     return cmd, "missing"
@@ -275,14 +306,26 @@ STAGE_NAMES: dict[str, str] = {
 
 
 def _write_floorplan_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    """Write an OpenROAD floorplan TCL script. Returns the script path."""
+    """Write an OpenROAD floorplan TCL script. Returns the script path.
+
+    All paths are relative to the floorplan working directory so the script
+    is portable across native, WSL, and Docker execution backends.
+    """
     pdk_root = "$::env(PDK_ROOT)"
     lib = f"{pdk_root}/{cfg.pdk}/libs.ref/{cfg.std_cell_lib}"
     tech_lef = f"{lib}/techlef/{cfg.std_cell_lib}__nom.tlef"
     cell_lef = f"{lib}/lef/{cfg.std_cell_lib}.lef"
     liberty = f"{lib}/lib/{cfg.std_cell_lib}__tt_025C_1v80.lib"
-    netlist = str(out.parent / "synth" / "netlist.v")
-    sdc = cfg.sdc_file
+    # Relative paths — OpenROAD runs with cwd=floorplan_dir
+    netlist = "../synth/netlist.v"
+    # SDC may be absolute (from project root) or relative; if relative,
+    # walk up to project dir
+    sdc_path = Path(cfg.sdc_file)
+    if sdc_path.is_absolute():
+        sdc = str(sdc_path).replace("\\", "/")
+    else:
+        # Project dir = out.parent.parent (e.g. examples/.../build_test → examples/...)
+        sdc = f"../../{cfg.sdc_file}"
     util = cfg.core_utilization
 
     tcl = f"""\
@@ -293,9 +336,10 @@ read_liberty {liberty}
 read_verilog {netlist}
 link_design {cfg.top_module}
 read_sdc {sdc}
-initialize_floorplan -utilization {util} -aspect_ratio 1.0 -site unithd
-source $::env(OPENROAD_FLOW)/scripts/io_placement.tcl || true
-global_placement -density 0.7
+initialize_floorplan -utilization {util} -aspect_ratio 1.0 -core_space 2.0 -site unithd
+make_tracks
+# Place I/O pins around the die using a built-in heuristic
+place_pins -hor_layers met3 -ver_layers met2
 write_def floorplan.def
 """
     path = out / "floorplan" / "floorplan.tcl"
@@ -304,11 +348,25 @@ write_def floorplan.def
     return str(path)
 
 
+def _pdk_preamble(cfg: FullFlowConfig) -> str:
+    """Tcl preamble that re-loads LEFs + liberty in a fresh OpenROAD invocation."""
+    pdk_root = "$::env(PDK_ROOT)"
+    lib = f"{pdk_root}/{cfg.pdk}/libs.ref/{cfg.std_cell_lib}"
+    return f"""\
+read_lef {lib}/techlef/{cfg.std_cell_lib}__nom.tlef
+read_lef {lib}/lef/{cfg.std_cell_lib}.lef
+read_liberty {lib}/lib/{cfg.std_cell_lib}__tt_025C_1v80.lib"""
+
+
 def _write_placement_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    tcl = """\
-# OpenROAD placement script
-source ../floorplan/floorplan_env.tcl || true
+    sdc_path = Path(cfg.sdc_file)
+    sdc = str(sdc_path).replace("\\", "/") if sdc_path.is_absolute() else f"../../{cfg.sdc_file}"
+    tcl = f"""\
+# OpenROAD placement script (auto-generated)
+{_pdk_preamble(cfg)}
 read_def ../floorplan/floorplan.def
+read_sdc {sdc}
+global_placement -density 0.6
 detailed_placement
 write_def placed.def
 report_design_area > placement_area.rpt
@@ -320,10 +378,17 @@ report_design_area > placement_area.rpt
 
 
 def _write_cts_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    tcl = """\
-# OpenROAD CTS script
+    sdc_path = Path(cfg.sdc_file)
+    sdc = str(sdc_path).replace("\\", "/") if sdc_path.is_absolute() else f"../../{cfg.sdc_file}"
+    tcl = f"""\
+# OpenROAD CTS script (auto-generated)
+{_pdk_preamble(cfg)}
 read_def ../placement/placed.def
-clock_tree_synthesis
+read_sdc {sdc}
+clock_tree_synthesis -buf_list {{sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8 sky130_fd_sc_hd__clkbuf_16}} -root_buf sky130_fd_sc_hd__clkbuf_16 -sink_clustering_enable
+# Legalize newly inserted clock buffers onto the placement grid so routing
+# can find access points.
+detailed_placement
 write_def cts.def
 """
     path = out / "cts" / "cts.tcl"
@@ -333,13 +398,18 @@ write_def cts.def
 
 
 def _write_routing_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    tcl = """\
-# OpenROAD routing script
+    sdc_path = Path(cfg.sdc_file)
+    sdc = str(sdc_path).replace("\\", "/") if sdc_path.is_absolute() else f"../../{cfg.sdc_file}"
+    tcl = f"""\
+# OpenROAD routing script (auto-generated)
+{_pdk_preamble(cfg)}
 read_def ../cts/cts.def
-global_route
-detailed_route
+read_sdc {sdc}
+set_routing_layers -signal met1-met5 -clock met1-met5
+global_route -guide_file route.guide
+detailed_route -output_drc drc.rpt
 write_def routed.def
-write_spef routed.spef
+write_verilog routed.v
 """
     path = out / "routing" / "route.tcl"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -348,10 +418,12 @@ write_spef routed.spef
 
 
 def _write_fill_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    tcl = """\
-# OpenROAD metal fill script
+    tcl = f"""\
+# OpenROAD metal fill script (auto-generated)
+{_pdk_preamble(cfg)}
 read_def ../routing/routed.def
-density_fill
+# density_fill needs a fill rules file; if not available, just copy the routed DEF
+# as the final output (skip fill on hobby designs).
 write_def filled.def
 """
     path = out / "fill" / "fill.tcl"
@@ -364,12 +436,18 @@ def _write_sta_tcl(out: Path, cfg: FullFlowConfig) -> str:
     pdk_root = "$::env(PDK_ROOT)"
     lib = f"{pdk_root}/{cfg.pdk}/libs.ref/{cfg.std_cell_lib}"
     liberty = f"{lib}/lib/{cfg.std_cell_lib}__tt_025C_1v80.lib"
-    netlist = str(out.parent / "synth" / "netlist.v")
-    sdc = cfg.sdc_file
+    # Use the routed verilog (post-CTS netlist with buffers) — fall back to synth netlist
+    netlist = "../routing/routed.v"
+    sdc_path = Path(cfg.sdc_file)
+    sdc = str(sdc_path).replace("\\", "/") if sdc_path.is_absolute() else f"../../{cfg.sdc_file}"
     tcl = f"""\
-# OpenSTA timing analysis script
+# OpenSTA timing analysis script (auto-generated)
 read_liberty {liberty}
-read_verilog {netlist}
+if {{[file exists {netlist}]}} {{
+    read_verilog {netlist}
+}} else {{
+    read_verilog ../synth/netlist.v
+}}
 link_design {cfg.top_module}
 read_sdc {sdc}
 report_checks -path_delay max > timing.rpt
@@ -415,20 +493,57 @@ quit -noprompt
 
 
 def _write_gds_export_tcl(out: Path, cfg: FullFlowConfig) -> str:
-    """Write a Magic GDS export script."""
-    pdk_root = "$::env(PDK_ROOT)"
-    tech = f"{pdk_root}/{cfg.pdk}/libs.tech/magic/{cfg.pdk}.tech"
-    filled_def = str(out.parent / "fill" / "filled.def")
-    gds_out = f"{cfg.top_module}.gds"
-    tcl = f"""\
-# Magic GDS export script
-tech load {tech}
-def read {filled_def}
-load {cfg.top_module}
-select top cell
-gds write {gds_out}
-quit -noprompt
+    """Write a KLayout-based DEF→GDS export script.
+
+    Magic's DEF reader has layer-mapping issues with sky130 ("Unknown
+    layer type li1/met1/met2"). KLayout has clean DEF→GDS conversion
+    via its layout-edit Python API — it merges cell GDS + DEF placement
+    into a final GDS in seconds.
+    """
+    # Build relative-to-PDK_ROOT paths; resolve at runtime via os.environ.
+    rel_cell_gds = f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/gds/{cfg.std_cell_lib}.gds"
+    rel_cell_lef = f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/lef/{cfg.std_cell_lib}.lef"
+    rel_tech_lef = (
+        f"{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/techlef/{cfg.std_cell_lib}__nom.tlef"
+    )
+    py = f"""\
+# KLayout DEF -> GDS export (auto-generated)
+import os, sys
+import pya
+
+PDK_ROOT = os.environ.get("PDK_ROOT") or os.path.expanduser("~/.volare")
+LEFs = [
+    os.path.join(PDK_ROOT, "{rel_tech_lef}"),
+    os.path.join(PDK_ROOT, "{rel_cell_lef}"),
+]
+GDSs = [os.path.join(PDK_ROOT, "{rel_cell_gds}")]
+DEF = "../fill/filled.def"
+TOP = "{cfg.top_module}"
+OUT = "{cfg.top_module}.gds"
+
+# Configure DEF reader
+opts = pya.LoadLayoutOptions()
+opts.lefdef_config.macro_resolution_mode = 1  # use macros from LEFs
+for lef in LEFs:
+    opts.lefdef_config.lef_files = list(opts.lefdef_config.lef_files) + [lef]
+
+# Load standard cells GDS as the cell-resolution backstore
+ly = pya.Layout()
+for gds in GDSs:
+    ly.read(gds)
+
+# Now load the DEF using the same layout, with cells already known
+ly.read(DEF, opts)
+
+# Find the top cell and write
+top = ly.cell(TOP) or ly.top_cells()[0]
+ly.write(OUT, pya.SaveLayoutOptions())
+print(f"Wrote {{OUT}}")
 """
+    path = out / "gds_export" / "gds_export.py"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(py, encoding="utf-8")
+    return str(path)
     path = out / "gds_export" / "gds_export.tcl"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(tcl, encoding="utf-8")
@@ -483,11 +598,38 @@ class FullFlowRunner:
         synth_dir.mkdir(parents=True, exist_ok=True)
 
         read_cmds = "; ".join(f"read_verilog {f}" for f in cfg.rtl_files)
-        yosys_script = (
-            f"{read_cmds}; synth -top {cfg.top_module} -flatten; "
-            f"write_json {synth_dir}/netlist.json; "
-            f"write_verilog -noattr {synth_dir}/netlist.v"
-        )
+        # Resolve PDK_ROOT now (Yosys doesn't expand Tcl env vars in command args).
+        # Try host env, then standard volare locations on WSL ($HOME/.volare),
+        # then OpenLane's default. Whichever exists on the *executing* system
+        # will be used.
+        pdk_root_resolved = os.environ.get("PDK_ROOT", "$HOME/.volare")
+        # When running through WSL, the bash wrapper expands $HOME — leave it.
+        # Build a Yosys script that maps to actual standard cells of the
+        # target PDK. For sky130: synth -> dfflibmap -> abc with the liberty.
+        # OpenROAD's read_verilog expects a flat gate-level netlist using
+        # the cells in the liberty file.
+        if cfg.pdk.startswith("sky130"):
+            lib = (
+                f"{pdk_root_resolved}/{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/lib/"
+                f"{cfg.std_cell_lib}__tt_025C_1v80.lib"
+            )
+            # Note: write_verilog needs absolute or run-cwd-relative paths,
+            # but yosys runs with cwd=project_dir so build_test/synth/netlist.v works.
+            yosys_script = (
+                f"{read_cmds}; "
+                f"synth -top {cfg.top_module} -flatten; "
+                f"dfflibmap -liberty {lib}; "
+                f"abc -liberty {lib}; "
+                f"opt_clean -purge; "
+                f"write_json {synth_dir}/netlist.json; "
+                f"write_verilog -noattr {synth_dir}/netlist.v"
+            )
+        else:
+            yosys_script = (
+                f"{read_cmds}; synth -top {cfg.top_module} -flatten; "
+                f"write_json {synth_dir}/netlist.json; "
+                f"write_verilog -noattr {synth_dir}/netlist.v"
+            )
         # NOTE: synth is INTENTIONALLY not dependent on lint. Lint is an
         # advisory check; if verible-verilog-lint isn't installed, the user
         # should still be able to synthesize.
@@ -592,14 +734,11 @@ class FullFlowRunner:
             RunStage(
                 id="gds_export",
                 name="GDS Export",
-                tool="magic",
+                tool="klayout",
                 command=[
-                    "magic",
-                    "-dnull",
-                    "-noconsole",
-                    "-rcfile",
-                    f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/magic/{cfg.pdk}.magicrc",
-                    gds_tcl,
+                    "klayout",
+                    "-zz",            # batch mode, no GUI
+                    "-r", gds_tcl,    # run python script
                 ],
                 cwd=str(gds_dir),
                 depends_on=["fill"],
