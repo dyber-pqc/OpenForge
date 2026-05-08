@@ -12,8 +12,14 @@ set_clock_uncertainty 0.50 [get_clocks clk]
 set_clock_transition 0.20 [get_clocks clk]
 
 # Conservative I/O delays: 30% of period in / 30% of period out
-set_input_delay  -clock clk -max 6.0 [remove_from_collection [all_inputs] [get_ports clk]]
-set_input_delay  -clock clk -min 1.0 [remove_from_collection [all_inputs] [get_ports clk]]
+# Note: OpenROAD's SDC parser does not support remove_from_collection; iterate
+# explicitly so we don't constrain the clock port itself.
+foreach port [all_inputs] {
+    if {[get_property $port full_name] ne "clk"} {
+        set_input_delay -clock clk -max 6.0 $port
+        set_input_delay -clock clk -min 1.0 $port
+    }
+}
 set_output_delay -clock clk -max 6.0 [all_outputs]
 set_output_delay -clock clk -min 1.0 [all_outputs]
 
