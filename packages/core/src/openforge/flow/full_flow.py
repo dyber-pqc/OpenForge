@@ -401,6 +401,27 @@ report_design_area > placement_area.rpt
     return str(path)
 
 
+def _select_lvs_netlist(out: Path) -> Path:
+    """Pick the most-faithful Verilog netlist for LVS comparison.
+
+    LVS compares the *layout* (post-route GDS) against a reference *schematic*
+    (Verilog). The closer the netlist matches the layout's actual cell
+    population, the smaller the false-positive mismatch. Preference order:
+
+    1. ``routing/routed.v`` — fully placed/routed netlist (best).
+    2. ``cts/cts.v`` — post-CTS netlist with clock-tree buffers inserted.
+    3. ``synth/netlist.v`` — pre-CTS synth output (fallback; will report a
+       device-count mismatch equal to the inserted clock-buffer count).
+    """
+    routed = out / "routing" / "routed.v"
+    if routed.exists():
+        return routed
+    cts_v = out / "cts" / "cts.v"
+    if cts_v.exists():
+        return cts_v
+    return out / "synth" / "netlist.v"
+
+
 def _write_cts_tcl(out: Path, cfg: FullFlowConfig) -> str:
     sdc_path = Path(cfg.sdc_file)
     sdc = str(sdc_path).replace("\\", "/") if sdc_path.is_absolute() else f"../../{cfg.sdc_file}"
@@ -414,6 +435,11 @@ clock_tree_synthesis -buf_list {{sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkb
 # can find access points.
 detailed_placement
 write_def cts.def
+# Emit a Verilog netlist matching the post-CTS in-memory database. This gives
+# LVS an apples-to-apples comparison target (post-CTS DEF <-> post-CTS V) so
+# the inserted clock buffers do not show up as a forced device-count mismatch
+# against the pre-CTS synth netlist.
+write_verilog cts.v
 """
     path = out / "cts" / "cts.tcl"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -429,6 +455,15 @@ def _write_routing_tcl(out: Path, cfg: FullFlowConfig) -> str:
 {_pdk_preamble(cfg)}
 read_def ../cts/cts.def
 read_sdc {sdc}
+# Mark any nets tagged with POWER/GROUND signal type as special so TritonRoute
+# skips them (they belong to the PDN, not the signal router). PicoRV32-style
+# RTL with `assign zero = 1'b0;` typically picks up GROUND tagging from Yosys.
+foreach net [[ord::get_db_block] getNets] {{
+    set sig_type [$net getSigType]
+    if {{$sig_type eq "POWER" || $sig_type eq "GROUND"}} {{
+        $net setSpecial
+    }}
+}}
 set_routing_layers -signal met1-met5 -clock met1-met5
 global_route -guide_file route.guide
 detailed_route -output_drc drc.rpt
@@ -711,7 +746,7 @@ class FullFlowRunner:
                 command=["openroad", "-no_init", "-exit", cts_tcl],
                 cwd=str(cts_dir),
                 depends_on=["placement"],
-                produces=["*.def", "*.rpt"],
+                produces=["*.def", "*.v", "*.rpt"],
             )
         )
 
@@ -814,7 +849,7 @@ class FullFlowRunner:
             lvs_dir = out / "lvs"
             lvs_dir.mkdir(parents=True, exist_ok=True)
             layout = str(out / "gds_export" / f"{cfg.top_module}.gds")
-            netlist_v = str(out / "synth" / "netlist.v")
+            netlist_v = str(_select_lvs_netlist(out))
             setup_file = f"${{PDK_ROOT}}/{cfg.pdk}/libs.tech/netgen/{cfg.pdk}_setup.tcl"
             report = str(lvs_dir / "lvs.rpt")
             g.add_stage(
