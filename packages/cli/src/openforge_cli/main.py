@@ -13,6 +13,7 @@ from openforge_cli import __version__
 from openforge_cli.commands.analog import app as spice_app
 from openforge_cli.commands.flow import app as flow_app
 from openforge_cli.commands.fpga import app as fpga_app
+from openforge_cli.commands.openlane import app as openlane_app
 from openforge_cli.commands.pcb import app as pcb_app
 from openforge_cli.commands.pdk import app as pdk_app
 from openforge_cli.commands.pnr import app as pnr_app
@@ -105,6 +106,13 @@ app.add_typer(pdk_app, name="pdk", help="PDK management.")
 
 # Setup: openforge setup {doctor, pdk, all}
 app.add_typer(setup_app, name="setup", help="One-shot environment bootstrapping.")
+
+# OpenLane interop: openforge openlane {import, export}
+app.add_typer(
+    openlane_app,
+    name="openlane",
+    help="OpenLane interop -- import OpenLane projects, export OpenLane reports.",
+)
 
 # Serve: openforge serve [OPTIONS]
 app.command(name="serve")(serve)
