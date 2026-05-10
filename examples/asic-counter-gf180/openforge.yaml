@@ -1,0 +1,146 @@
+name: asic-counter-gf180
+version: "1"
+kind: asic
+top_module: counter
+
+rtl_sources:
+  - rtl/counter.v
+constraint_files:
+  - constraints/counter.sdc
+tb_sources:
+  - tb/counter_tb.v
+
+pdk:
+  name: gf180mcuC
+  std_cell_lib: gf180mcu_fd_sc_mcu7t5v0
+  variant: gf180mcu_fd_sc_mcu7t5v0
+
+target:
+  kind: asic
+  vendor: globalfoundries
+
+corners:
+  - name: tt_025C_5v00
+    process: tt
+    voltage: 5.00
+    temperature: 25.0
+    lib_files:
+      - $PDK_ROOT/gf180mcuC/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_5v00.lib
+
+  - name: ss_n40C_4v50
+    process: ss
+    voltage: 4.50
+    temperature: -40.0
+    lib_files:
+      - $PDK_ROOT/gf180mcuC/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ss_n40C_4v50.lib
+
+  - name: ff_125C_5v50
+    process: ff
+    voltage: 5.50
+    temperature: 125.0
+    lib_files:
+      - $PDK_ROOT/gf180mcuC/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ff_125C_5v50.lib
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: synth
+    tool: yosys
+    options:
+      target: gf180mcu
+      liberty: $PDK_ROOT/gf180mcuC/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_5v00.lib
+      abc_script: strash; ifraig; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf {D}; &put
+    depends_on:
+      - lint
+
+  - stage: floorplan
+    tool: openroad
+    options:
+      step: floorplan
+      die_area: [0, 0, 200, 200]
+      core_area: [20, 20, 180, 180]
+      site: GF18T
+    depends_on:
+      - synth
+
+  - stage: place
+    tool: openroad
+    options:
+      step: global_place
+      density: 0.55
+    depends_on:
+      - floorplan
+
+  - stage: cts
+    tool: openroad
+    options:
+      step: clock_tree_synthesis
+      buf_cell: gf180mcu_fd_sc_mcu7t5v0__clkbuf_4
+      root_buf: gf180mcu_fd_sc_mcu7t5v0__clkbuf_16
+    depends_on:
+      - place
+
+  - stage: route
+    tool: openroad
+    options:
+      step: global_route
+    depends_on:
+      - cts
+
+  - stage: detail_route
+    tool: openroad
+    options:
+      step: detail_route
+    depends_on:
+      - route
+
+  - stage: sta
+    tool: opensta
+    options:
+      corner: tt_025C_5v00
+      sdc: constraints/counter.sdc
+    depends_on:
+      - detail_route
+
+  # OpenForge-native signoff: the Rust DRC / xRC / LVS engines accept
+  # `gf180mcuC` as a built-in tech name (no external Magic / Netgen needed
+  # for the smoke check).
+  - stage: drc
+    tool: openforge-drc
+    options:
+      tech: gf180mcuC
+      rules: $PDK_ROOT/gf180mcuC/libs.tech/klayout/drc/gf180mcuC_mr.drc
+    depends_on:
+      - detail_route
+
+  - stage: xrc
+    tool: openforge-xrc
+    options:
+      tech: gf180mcuC
+      corner: typ
+    depends_on:
+      - detail_route
+
+  - stage: lvs
+    tool: openforge-lvs
+    options:
+      tech: gf180mcuC
+    depends_on:
+      - drc
+
+  - stage: gds
+    tool: magic
+    options:
+      step: gds_export
+      tech_file: $PDK_ROOT/gf180mcuC/libs.tech/magic/gf180mcuC.tech
+    depends_on:
+      - lvs
+
+metadata:
+  description: 8-bit synchronous counter - full ASIC RTL-to-GDS flow on GlobalFoundries gf180mcuC (180 nm, 5 V)
+  author: OpenForge Examples
+  license: Apache-2.0
+  target_freq_mhz: 50

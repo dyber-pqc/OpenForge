@@ -75,7 +75,7 @@ fn run_extract(
 ) -> Result<()> {
     println!(
         "[1/5] Parsing tech: {tech_name}{}",
-        if tech_name == "sky130A" {
+        if tech_name == "sky130A" || tech_name == "gf180mcuC" {
             " (built-in)"
         } else {
             ""

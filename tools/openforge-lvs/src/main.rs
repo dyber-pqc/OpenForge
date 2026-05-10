@@ -1,7 +1,7 @@
 //! `openforge-lvs` CLI.
 
 use clap::{Parser, Subcommand};
-use openforge_lvs::layout_extract::PhysicalFilter;
+use openforge_lvs::layout_extract::{default_physical_only_for, PhysicalFilter};
 use openforge_lvs::{
     error::LvsError, run_lvs, run_lvs_def_spice_filtered, run_lvs_def_verilog_filtered,
 };
@@ -51,13 +51,18 @@ enum Cmd {
         report: PathBuf,
         /// Regex matching layout cells to drop as physical-only (tap,
         /// decap, fill, antenna diodes). Defaults to the sky130 standard
-        /// cell library pattern.
+        /// cell library pattern, or the gf180mcuC pattern when
+        /// `--tech gf180mcuC` is set.
         #[arg(long = "physical-only-filter", conflicts_with = "no_physical_filter")]
         physical_only_filter: Option<String>,
         /// Disable the physical-only cell filter entirely (keep every DEF
         /// component, including tap / decap / fill).
         #[arg(long = "no-physical-filter", default_value_t = false)]
         no_physical_filter: bool,
+        /// PDK / technology name. Currently used only to pick the default
+        /// physical-only filter regex (`sky130A`, `gf180mcuC`).
+        #[arg(long, default_value = "sky130A")]
+        tech: String,
     },
 }
 
@@ -73,11 +78,19 @@ fn main() -> ExitCode {
             report,
             physical_only_filter,
             no_physical_filter,
+            tech,
         } => {
             let filter = if no_physical_filter {
                 PhysicalFilter::disabled()
             } else {
-                match PhysicalFilter::new(physical_only_filter.as_deref()) {
+                // Effective regex precedence:
+                //   1. explicit --physical-only-filter
+                //   2. PDK-default for --tech (if recognised)
+                //   3. sky130 fallback inside PhysicalFilter::new
+                let effective = physical_only_filter
+                    .clone()
+                    .or_else(|| default_physical_only_for(&tech).map(|s| s.to_string()));
+                match PhysicalFilter::new(effective.as_deref()) {
                     Ok(f) => f,
                     Err(e) => {
                         eprintln!("error: {e}");

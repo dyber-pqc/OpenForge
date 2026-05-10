@@ -1,0 +1,60 @@
+# Tiny gf180mcuC-flavoured DRX fixture: covers input(), method chains,
+# boolean ops and density. Mirrors sky130_subset.drc but uses the
+# GlobalFoundries 180nm MCU layer numbers and design-rule values.
+#
+# Layer GDS numbers (from gf180mcu-pdk):
+#   Comp(diff)        22/0
+#   Nwell             21/0
+#   Poly2 (poly)      30/0
+#   Contact           33/0
+#   Metal1            34/0
+#   Via1              35/0
+#   Metal2            36/0
+#   Via2              38/0
+#   Metal3            42/0
+#   Metal4            46/0
+#   Metal5            81/0   (top metal in 5LM stack)
+#
+# Width / spacing values come from the 5V (gf180mcuC) DRM:
+#   Metal1   width 0.23 / space 0.23
+#   Metal2-4 width 0.28 / space 0.28
+#   Metal5   width 0.44 / space 0.46  (thick top metal)
+#   Poly     width 0.18 / space 0.24
+#   Comp     width 0.22 / space 0.28
+
+report("gf180mcuC subset DRC")
+
+comp     = input(22, 0)
+nwell    = input(21, 0)
+poly     = input(30, 0)
+contact  = input(33, 0)
+metal1   = input(34, 0)
+via1     = input(35, 0)
+metal2   = input(36, 0)
+metal3   = input(42, 0)
+metal4   = input(46, 0)
+metal5   = input(81, 0)
+
+# Width / spacing rules.
+poly.width(0.18).output("PL.1",   "Min poly width 0.18")
+poly.space(0.24).output("PL.2",   "Min poly spacing 0.24")
+metal1.width(0.23).output("M1.1", "Min Metal1 width 0.23")
+metal1.space(0.23).output("M1.2", "Min Metal1 spacing 0.23")
+metal2.width(0.28).output("M2.1", "Min Metal2 width 0.28")
+metal2.space(0.28).output("M2.2", "Min Metal2 spacing 0.28")
+metal3.width(0.28).output("M3.1", "Min Metal3 width 0.28")
+metal4.width(0.28).output("M4.1", "Min Metal4 width 0.28")
+metal5.width(0.44).output("M5.1", "Min Metal5 (top) width 0.44")
+metal5.space(0.46).output("M5.2", "Min Metal5 (top) spacing 0.46")
+
+# Enclosure: Metal1 must enclose Contact by 0.06.
+metal1.enclosing(contact, 0.06).output("M1.4", "Min Metal1 enclosure of Contact 0.06")
+# Metal2 must enclose Via1 by 0.05.
+metal2.enclosing(via1, 0.05).output("M2.4", "Min Metal2 enclosure of Via1 0.05")
+
+# Boolean op then width: comp outside nwell -> NMOS-active, min width 0.22.
+comp_outside_nwell = comp.outside(nwell)
+comp_outside_nwell.width(0.22).output("DF.1", "Min Comp width outside Nwell")
+
+# Density window check on Metal1.
+metal1.density(100).range(0.30, 0.70).output("M1.D", "Metal1 density 30-70%")

@@ -24,6 +24,23 @@ use regex::Regex;
 /// from the layout before LVS device-count comparison.
 pub const DEFAULT_SKY130_PHYSICAL_ONLY: &str = r"^sky130_fd_sc_hd__(tap|decap|fill|diode).*";
 
+/// Default regex matching gf180mcuC physical-only cells. The standard cell
+/// library is `gf180mcu_fd_sc_mcu7t5v0` (7-track, 5 V variant); physical-only
+/// cells in that library are named `filltie`, `filldecap`, `filler`,
+/// `endcap`, `antenna`, and `diode`.
+pub const DEFAULT_GF180MCU_PHYSICAL_ONLY: &str =
+    r"^gf180mcu_fd_sc_mcu7t5v0__(filltie|filldecap|filler|endcap|antenna|diode|fill).*";
+
+/// Resolve the built-in physical-only regex for a known PDK name. Returns
+/// `None` for unknown PDKs (caller should pass an explicit regex).
+pub fn default_physical_only_for(pdk: &str) -> Option<&'static str> {
+    match pdk {
+        "sky130A" => Some(DEFAULT_SKY130_PHYSICAL_ONLY),
+        "gf180mcuC" => Some(DEFAULT_GF180MCU_PHYSICAL_ONLY),
+        _ => None,
+    }
+}
+
 /// Filter selecting physical-only cells to drop from layout extraction.
 #[derive(Debug, Clone)]
 pub struct PhysicalFilter {
@@ -39,6 +56,13 @@ impl PhysicalFilter {
             LvsError::Graph(format!("invalid --physical-only-filter regex '{pat}': {e}"))
         })?;
         Ok(Self { re: Some(re) })
+    }
+
+    /// Build a filter for the named PDK (`sky130A`, `gf180mcuC`, ...).
+    /// Falls back to the sky130 default if the PDK name is unknown.
+    pub fn for_pdk(pdk: &str) -> Result<Self> {
+        let pat = default_physical_only_for(pdk).unwrap_or(DEFAULT_SKY130_PHYSICAL_ONLY);
+        Self::new(Some(pat))
     }
 
     /// A disabled filter: matches nothing.
