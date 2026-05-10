@@ -262,6 +262,15 @@ class FullFlowConfig(BaseModel):
     output_dir: str = "build"
     skip_lvs: bool = False
     skip_drc: bool = False
+    # When True (default), the orchestrator schedules the native Rust signoff
+    # binaries (openforge-drc / openforge-lvs / openforge-xrc) as additional
+    # advisory stages alongside the existing Magic/Netgen/OpenSTA flow. They
+    # gracefully self-skip when the binary isn't installed.
+    signoff_native: bool = True
+    # Optional path to a DRC rule deck consumed by openforge-drc. If unset,
+    # the bundled tools/openforge-drc/tests/fixtures/sky130_subset.drc deck
+    # is auto-located relative to the repo.
+    native_drc_rules: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -280,6 +289,19 @@ class FlowStageStatus(BaseModel):
     errors: list[str] = Field(default_factory=list)
 
 
+class NativeSignoffSummary(BaseModel):
+    """One-line summary of a native signoff stage's result.
+
+    Populated by :meth:`FullFlowRunner._build_result` from the artifacts
+    written by openforge-{drc,lvs,xrc}. Consumers (e.g. the desktop GUI)
+    use these to render lines like "Native DRC: 0 violations".
+    """
+
+    drc_violations: int | None = None
+    lvs_matched: bool | None = None
+    xrc_total_capacitance_pf: float | None = None
+
+
 class FullFlowResult(BaseModel):
     """Result of a complete flow run."""
 
@@ -288,6 +310,7 @@ class FullFlowResult(BaseModel):
     overall_status: str = "pending"
     gds_path: str | None = None
     total_runtime_s: float = 0.0
+    native_signoff: NativeSignoffSummary = Field(default_factory=NativeSignoffSummary)
 
 
 # ---------------------------------------------------------------------------
@@ -306,6 +329,9 @@ STAGE_IDS: list[str] = [
     "drc",
     "lvs",
     "gds_export",
+    "drc_native",
+    "lvs_native",
+    "xrc_native",
 ]
 
 # Map stage IDs to human names
@@ -321,7 +347,17 @@ STAGE_NAMES: dict[str, str] = {
     "drc": "DRC (Magic)",
     "lvs": "LVS (Netgen)",
     "gds_export": "GDS Export",
+    "drc_native": "DRC (Native Rust)",
+    "lvs_native": "LVS (Native Rust)",
+    "xrc_native": "Parasitic Extraction (Native Rust)",
 }
+
+# Stage IDs that are advisory rather than chip-blocking. Failures in these
+# stages should not invalidate a "Chip Built" verdict — the desktop GUI uses
+# this set to decide whether to show a green or yellow finish dialog.
+ADVISORY_STAGE_IDS: frozenset[str] = frozenset(
+    {"lint", "drc", "lvs", "drc_native", "lvs_native", "xrc_native"}
+)
 
 
 # ---------------------------------------------------------------------------
@@ -399,6 +435,41 @@ report_design_area > placement_area.rpt
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(tcl, encoding="utf-8")
     return str(path)
+
+
+def _find_native_signoff_binary(name: str) -> str | None:
+    """Locate one of the native Rust signoff binaries.
+
+    Search order:
+      1. ``shutil.which(name)`` — binary on PATH.
+      2. Walk up from this file looking for ``target/{release,debug}/<name>[.exe]``.
+
+    Returns the absolute path, or ``None`` if the binary cannot be found —
+    in which case the corresponding stage is omitted from the DAG so the
+    flow runs cleanly on machines without the native Rust workspace built.
+    """
+    on_path = shutil.which(name)
+    if on_path:
+        return on_path
+    here = Path(__file__).resolve()
+    exts = ("", ".exe") if os.name == "nt" else ("",)
+    for parent in here.parents:
+        for sub in ("target/release", "target/debug"):
+            for ext in exts:
+                cand = parent / sub / f"{name}{ext}"
+                if cand.exists():
+                    return str(cand)
+    return None
+
+
+def _find_native_drc_rules() -> str | None:
+    """Locate the bundled sky130_subset.drc rule deck shipped with the repo."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        cand = parent / "tools" / "openforge-drc" / "tests" / "fixtures" / "sky130_subset.drc"
+        if cand.exists():
+            return str(cand)
+    return None
 
 
 def _select_lvs_netlist(out: Path) -> Path:
@@ -612,6 +683,66 @@ print(f"Wrote {{OUT}}")
 # ---------------------------------------------------------------------------
 
 ProgressCallback = Callable[[str, str], None]  # (stage_name, status)
+
+
+def _collect_native_signoff(out: Path) -> NativeSignoffSummary:
+    """Best-effort parse of native signoff artifacts.
+
+    Each parser is wrapped in a broad try/except — missing files, partial
+    runs, or schema drift all degrade gracefully to ``None`` so an unrelated
+    flow run never crashes here.
+    """
+    summary = NativeSignoffSummary()
+
+    # DRC: text report — count "violation" lines.
+    drc_rpt = out / "drc_native" / "drc.rpt"
+    if drc_rpt.exists():
+        try:
+            text = drc_rpt.read_text(encoding="utf-8", errors="replace")
+            # Prefer an explicit "Total: N" / "violations: N" if present.
+            import re as _re
+
+            m = _re.search(r"(?:total|violations?)\s*[:=]\s*(\d+)", text, _re.IGNORECASE)
+            if m:
+                summary.drc_violations = int(m.group(1))
+            else:
+                summary.drc_violations = sum(
+                    1 for ln in text.splitlines() if "violation" in ln.lower()
+                )
+        except Exception:
+            pass
+
+    # LVS: JSON report.
+    lvs_json = out / "lvs_native" / "lvs.json"
+    if lvs_json.exists():
+        try:
+            import json as _json
+
+            data = _json.loads(lvs_json.read_text(encoding="utf-8"))
+            summary.lvs_matched = bool(data.get("matched", False))
+        except Exception:
+            pass
+
+    # xRC: SPEF — sum *_c capacitor values (rough total capacitance).
+    xrc_dir = out / "xrc"
+    if xrc_dir.exists():
+        try:
+            spefs = list(xrc_dir.glob("*.spef"))
+            if spefs:
+                total = 0.0
+                for ln in spefs[0].read_text(encoding="utf-8", errors="replace").splitlines():
+                    parts = ln.strip().split()
+                    # SPEF capacitance entries look like: "1 net_a 0.0042"
+                    if len(parts) == 3:
+                        try:
+                            total += float(parts[2])
+                        except ValueError:
+                            continue
+                summary.xrc_total_capacitance_pf = round(total, 4)
+        except Exception:
+            pass
+
+    return summary
 
 
 class FullFlowRunner:
@@ -872,6 +1003,112 @@ class FullFlowRunner:
                 )
             )
 
+        # ── Native signoff (Rust) ────────────────────────────────────
+        # Three advisory stages running the native openforge-{drc,lvs,xrc}
+        # binaries. They are skipped silently if the binary isn't installed
+        # so a fresh machine without `cargo build --release` doesn't see a
+        # spurious "missing tool" warning.
+        if cfg.signoff_native:
+            drc_bin = _find_native_signoff_binary("openforge-drc")
+            lvs_bin = _find_native_signoff_binary("openforge-lvs")
+            xrc_bin = _find_native_signoff_binary("openforge-xrc")
+
+            if drc_bin is not None:
+                drc_n_dir = out / "drc_native"
+                drc_n_dir.mkdir(parents=True, exist_ok=True)
+                gds_layout = str(out / "gds_export" / f"{cfg.top_module}.gds")
+                rules = cfg.native_drc_rules or _find_native_drc_rules()
+                # Use sky130A as the native tech tag for any sky130 PDK variant.
+                native_tech = "sky130A" if cfg.pdk.startswith("sky130") else cfg.pdk
+                drc_cmd = [
+                    drc_bin,
+                    "check",
+                    gds_layout,
+                    "--tech",
+                    native_tech,
+                    "--output",
+                    str(drc_n_dir / "drc.rpt"),
+                    "--format",
+                    "text",
+                ]
+                if rules:
+                    drc_cmd[3:3] = ["--rules", rules]
+                g.add_stage(
+                    RunStage(
+                        id="drc_native",
+                        name=STAGE_NAMES["drc_native"],
+                        tool="openforge-drc",
+                        command=drc_cmd,
+                        cwd=str(drc_n_dir),
+                        depends_on=["gds_export"],
+                        produces=["*.rpt"],
+                    )
+                )
+
+            if lvs_bin is not None:
+                lvs_n_dir = out / "lvs_native"
+                lvs_n_dir.mkdir(parents=True, exist_ok=True)
+                layout = str(out / "gds_export" / f"{cfg.top_module}.gds")
+                schem = str(_select_lvs_netlist(out))
+                g.add_stage(
+                    RunStage(
+                        id="lvs_native",
+                        name=STAGE_NAMES["lvs_native"],
+                        tool="openforge-lvs",
+                        command=[
+                            lvs_bin,
+                            "check",
+                            "--layout",
+                            layout,
+                            "--schematic",
+                            schem,
+                            "--top",
+                            cfg.top_module,
+                            "--output",
+                            str(lvs_n_dir / "lvs.json"),
+                        ],
+                        cwd=str(lvs_n_dir),
+                        depends_on=["gds_export"],
+                        produces=["*.json"],
+                    )
+                )
+
+            if xrc_bin is not None:
+                xrc_dir = out / "xrc"
+                xrc_dir.mkdir(parents=True, exist_ok=True)
+                routed_def = str(out / "routing" / "routed.def")
+                # Best-effort LEF: use the std-cell LEF from the PDK. Resolved
+                # at runtime by the shell via $PDK_ROOT — the binary will fail
+                # gracefully if PDK_ROOT isn't set.
+                pdk_root_env = os.environ.get("PDK_ROOT", "$PDK_ROOT")
+                lef_path = (
+                    f"{pdk_root_env}/{cfg.pdk}/libs.ref/{cfg.std_cell_lib}/"
+                    f"lef/{cfg.std_cell_lib}.lef"
+                )
+                native_tech = "sky130A" if cfg.pdk.startswith("sky130") else cfg.pdk
+                g.add_stage(
+                    RunStage(
+                        id="xrc_native",
+                        name=STAGE_NAMES["xrc_native"],
+                        tool="openforge-xrc",
+                        command=[
+                            xrc_bin,
+                            "extract",
+                            "--def",
+                            routed_def,
+                            "--lef",
+                            lef_path,
+                            "--tech",
+                            native_tech,
+                            "--output",
+                            str(xrc_dir / f"{cfg.top_module}.spef"),
+                        ],
+                        cwd=str(xrc_dir),
+                        depends_on=["routing"],
+                        produces=["*.spef"],
+                    )
+                )
+
         # Wrap every stage's command through the tool resolver. If a tool
         # is not available natively, route through Docker or WSL. If no
         # backend can run a tool, mark the command so the engine reports
@@ -1025,6 +1262,7 @@ class FullFlowRunner:
             overall_status=overall,
             gds_path=gds_path,
             total_runtime_s=round(elapsed, 2),
+            native_signoff=_collect_native_signoff(self._out),
         )
 
     @property
@@ -1044,10 +1282,12 @@ class FullFlowRunner:
 
 
 __all__ = [
+    "ADVISORY_STAGE_IDS",
+    "FlowStageStatus",
     "FullFlowConfig",
     "FullFlowResult",
     "FullFlowRunner",
-    "FlowStageStatus",
+    "NativeSignoffSummary",
     "STAGE_IDS",
     "STAGE_NAMES",
 ]

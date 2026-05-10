@@ -6095,10 +6095,32 @@ exit
         summary = "\n".join(lines)
         self._console.append_info(summary)
 
-        # Classify failures: optional/advisory stages (lint, drc, lvs)
-        # vs core chip-producing stages (synth, floorplan, ...gds_export).
-        OPTIONAL = {"lint", "drc", "lvs"}
+        # Classify failures: optional/advisory stages (lint, magic-DRC,
+        # netgen-LVS, and the native Rust signoff binaries) vs core
+        # chip-producing stages (synth, floorplan, ...gds_export).
+        # Native signoff failures never block the "Chip Built" verdict —
+        # they show up as a yellow banner instead.
+        try:
+            from openforge.flow.full_flow import ADVISORY_STAGE_IDS as _ADVISORY
+        except Exception:
+            _ADVISORY = frozenset({"lint", "drc", "lvs", "drc_native", "lvs_native", "xrc_native"})
+        OPTIONAL = set(_ADVISORY)
         CORE = {"synth", "floorplan", "placement", "cts", "routing", "fill", "gds_export", "sta"}
+
+        # Build a one-line native signoff banner if the runner produced one.
+        native = getattr(result, "native_signoff", None)
+        native_lines: list[str] = []
+        if native is not None:
+            drc_v = getattr(native, "drc_violations", None)
+            if drc_v is not None:
+                native_lines.append(f"Native DRC: {drc_v} violations")
+            lvs_m = getattr(native, "lvs_matched", None)
+            if lvs_m is not None:
+                native_lines.append(f"Native LVS: {'MATCH' if lvs_m else 'MISMATCH'}")
+            xrc_c = getattr(native, "xrc_total_capacitance_pf", None)
+            if xrc_c is not None:
+                native_lines.append(f"Native xRC: {xrc_c} pF total")
+        native_banner = ("\n\n" + " / ".join(native_lines)) if native_lines else ""
         failed_core = [
             s
             for s in stages
@@ -6115,7 +6137,8 @@ exit
             QMessageBox.information(
                 self,
                 "Full Flow Complete",
-                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\nGDS: {gds or 'N/A'}",
+                f"RTL-to-GDS flow completed successfully in {total_s:.1f}s.\n\n"
+                f"GDS: {gds or 'N/A'}{native_banner}",
             )
         elif gds and not failed_core:
             # Core flow succeeded, only advisory checks failed.
@@ -6131,7 +6154,9 @@ exit
                 f"To enable them, install:\n"
                 f"  • verible-verilog-lint (for lint)\n"
                 f"  • magic with a matching tech file (for DRC)\n"
-                f"  • netgen (for LVS)\n",
+                f"  • netgen (for LVS)\n"
+                f"  • cargo build --release (for native Rust signoff)"
+                f"{native_banner}",
             )
         else:
             self.statusBar().showMessage("Full flow completed with errors.")
