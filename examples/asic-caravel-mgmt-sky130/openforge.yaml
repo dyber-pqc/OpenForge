@@ -1,0 +1,144 @@
+name: asic-caravel-mgmt-sky130
+version: "1"
+kind: asic
+top_module: mgmt_core
+
+# Caravel management SoC core (VexRiscv + DFFRAM banks + housekeeping/SPI/UART/
+# WB intercon). The full caravel.v top is mostly pad ring + analog IP (LDO,
+# bandgap, POR) which we cannot synthesize; mgmt_core is the digital heart.
+# See README.md for the rationale and how to switch tops.
+rtl_sources:
+  - rtl/defines.v
+  - rtl/picorv32.v          # not instantiated by mgmt_core but kept for ref
+  - rtl/VexRiscv_MinDebugCache.v
+  - rtl/RAM_blackbox.v       # DFFRAM macros modelled as blackboxes (see file)
+  - rtl/mgmt_core.v
+constraint_files:
+  - constraints/mgmt_core.sdc
+
+pdk:
+  name: sky130A
+  std_cell_lib: sky130_fd_sc_hd
+  variant: sky130_fd_sc_hd
+
+target:
+  kind: asic
+  vendor: skywater
+
+# ── Stage-level overrides for the full RTL→GDS flow.
+# mgmt_core synthesises to ~12-20k mapped sky130_fd_sc_hd cells (the actual
+# RAM bits are inside the DFFRAM macros — those bring another ~12k cells of
+# their own). Start big and loose: 1500x1500 µm die at 0.25 utilization so
+# the router has plenty of headroom on the first try. Shrink once we know
+# the real area.
+floorplan:
+  utilization: 0.25
+  die_area: [0, 0, 1500, 1500]
+  core_area: [40, 40, 1460, 1460]
+  site: unithd
+placement:
+  target_density: 0.35
+routing:
+  droute_end_iter: 6
+
+corners:
+  - name: tt_025C_1v80
+    process: tt
+    voltage: 1.80
+    temperature: 25.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: synth
+    tool: yosys
+    options:
+      target: sky130
+      liberty: $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+      abc_script: strash; ifraig; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf {D}; &put
+    depends_on:
+      - lint
+
+  - stage: floorplan
+    tool: openroad
+    options:
+      step: floorplan
+      die_area: [0, 0, 1500, 1500]
+      core_area: [40, 40, 1460, 1460]
+      site: unithd
+      utilization: 0.25
+    depends_on:
+      - synth
+
+  - stage: place
+    tool: openroad
+    options:
+      step: global_place
+      density: 0.35
+    depends_on:
+      - floorplan
+
+  - stage: cts
+    tool: openroad
+    options:
+      step: clock_tree_synthesis
+      buf_cell: sky130_fd_sc_hd__clkbuf_4
+      root_buf: sky130_fd_sc_hd__clkbuf_16
+    depends_on:
+      - place
+
+  - stage: route
+    tool: openroad
+    options:
+      step: global_route
+    depends_on:
+      - cts
+
+  - stage: detail_route
+    tool: openroad
+    options:
+      step: detail_route
+      droute_end_iter: 6
+    depends_on:
+      - route
+
+  - stage: sta
+    tool: opensta
+    options:
+      corner: tt_025C_1v80
+      sdc: constraints/mgmt_core.sdc
+    depends_on:
+      - detail_route
+
+  - stage: drc
+    tool: magic
+    options:
+      tech_file: $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech
+    depends_on:
+      - detail_route
+
+  - stage: lvs
+    tool: netgen
+    options:
+      setup_file: $PDK_ROOT/sky130A/libs.tech/netgen/sky130A_setup.tcl
+    depends_on:
+      - drc
+
+  - stage: gds
+    tool: magic
+    options:
+      step: gds_export
+      tech_file: $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech
+    depends_on:
+      - lvs
+
+metadata:
+  description: Caravel management SoC (mgmt_core) - full ASIC RTL-to-GDS flow on SkyWater sky130
+  author: OpenForge Examples
+  license: Apache-2.0 (Caravel is Apache-2.0; see RTL file headers)
+  target_freq_mhz: 50
