@@ -272,6 +272,60 @@ class FullFlowConfig(BaseModel):
     # is auto-located relative to the repo.
     native_drc_rules: str | None = None
 
+    # ── Stage-level overrides (mirror openforge.yaml ``floorplan:`` / ``routing:``
+    # / ``placement:`` / ``cts:`` keys). When a field is None, the legacy default
+    # behaviour (e.g. ``core_utilization``, density 0.6, droute defaults) applies.
+    # When set, the corresponding TCL generator emits the user-supplied value.
+    floorplan_utilization: float | None = None
+    floorplan_die_area: list[float] | None = None
+    floorplan_core_area: list[float] | None = None
+    floorplan_aspect_ratio: float | None = None
+    floorplan_core_margin: float | None = None
+    floorplan_site: str | None = None
+    placement_target_density: float | None = None
+    cts_target_skew: float | None = None
+    routing_droute_end_iter: int | None = None
+    routing_global_route_iters: int | None = None
+
+    @classmethod
+    def from_openforge_config(cls, oc: object, **kwargs: object) -> FullFlowConfig:
+        """Construct a FullFlowConfig from an OpenForgeConfig instance.
+
+        Stage-override blocks (``floorplan:`` / ``placement:`` / ``cts:`` /
+        ``routing:``) on the OpenForgeConfig are translated into the
+        ``floorplan_*`` / ``placement_*`` / ``cts_*`` / ``routing_*`` fields
+        on FullFlowConfig. Caller supplies the remaining required fields
+        (``top_module`` / ``rtl_files`` / ``sdc_file``) via ``**kwargs``.
+        """
+        overrides: dict[str, object] = {}
+        fp = getattr(oc, "floorplan", None)
+        if fp is not None:
+            for src, dst in (
+                ("utilization", "floorplan_utilization"),
+                ("die_area", "floorplan_die_area"),
+                ("core_area", "floorplan_core_area"),
+                ("aspect_ratio", "floorplan_aspect_ratio"),
+                ("core_margin", "floorplan_core_margin"),
+                ("site", "floorplan_site"),
+            ):
+                v = getattr(fp, src, None)
+                if v is not None:
+                    overrides[dst] = v
+        pl = getattr(oc, "placement", None)
+        if pl is not None and getattr(pl, "target_density", None) is not None:
+            overrides["placement_target_density"] = pl.target_density
+        cts = getattr(oc, "cts", None)
+        if cts is not None and getattr(cts, "target_skew", None) is not None:
+            overrides["cts_target_skew"] = cts.target_skew
+        rt = getattr(oc, "routing", None)
+        if rt is not None:
+            if getattr(rt, "droute_end_iter", None) is not None:
+                overrides["routing_droute_end_iter"] = rt.droute_end_iter
+            if getattr(rt, "global_route_iters", None) is not None:
+                overrides["routing_global_route_iters"] = rt.global_route_iters
+        overrides.update(kwargs)
+        return cls(**overrides)  # type: ignore[arg-type]
+
 
 # ---------------------------------------------------------------------------
 # Stage / result models
@@ -386,7 +440,42 @@ def _write_floorplan_tcl(out: Path, cfg: FullFlowConfig) -> str:
     else:
         # Project dir = out.parent.parent (e.g. examples/.../build_test → examples/...)
         sdc = f"../../{cfg.sdc_file}"
-    util = cfg.core_utilization
+    # Resolve utilization: yaml override wins, then FullFlowConfig.core_utilization.
+    # OpenROAD's initialize_floorplan -utilization expects a PERCENT (e.g. 30 = 30%),
+    # so accept either ratios (<=1.0) or percents and normalise to percent.
+    raw_util = (
+        cfg.floorplan_utilization if cfg.floorplan_utilization is not None else cfg.core_utilization
+    )
+    util_f = raw_util * 100.0 if raw_util is not None and raw_util <= 1.0 else raw_util
+    util = str(int(util_f)) if isinstance(util_f, float) and util_f.is_integer() else str(util_f)
+    aspect = cfg.floorplan_aspect_ratio if cfg.floorplan_aspect_ratio is not None else 1.0
+    core_space = cfg.floorplan_core_margin if cfg.floorplan_core_margin is not None else 2.0
+    site = cfg.floorplan_site or "unithd"
+
+    # If die_area is provided, OpenROAD needs an explicit core_area too. Default
+    # to a small inset so make_tracks / place_pins have a sane core region.
+    fp_args = ""
+
+    def _fmt(v: float) -> str:
+        # Render whole-number floats as ints so users get "0 0 506 506"
+        # instead of "0.0 0.0 506.0 506.0" (cleaner Tcl + matches OpenLane).
+        return str(int(v)) if isinstance(v, float) and v.is_integer() else str(v)
+
+    if cfg.floorplan_die_area is not None:
+        die = " ".join(_fmt(v) for v in cfg.floorplan_die_area)
+        if cfg.floorplan_core_area is not None:
+            core = " ".join(_fmt(v) for v in cfg.floorplan_core_area)
+        else:
+            d = cfg.floorplan_die_area
+            margin = core_space if core_space else 10.0
+            core = " ".join(
+                _fmt(x) for x in (d[0] + margin, d[1] + margin, d[2] - margin, d[3] - margin)
+            )
+        fp_args = f'-die_area "{die}" -core_area "{core}" -site {site}'
+    else:
+        fp_args = (
+            f"-utilization {util} -aspect_ratio {aspect} -core_space {core_space} -site {site}"
+        )
 
     tcl = f"""\
 # OpenROAD floorplan script (auto-generated by OpenForge)
@@ -396,7 +485,7 @@ read_liberty {liberty}
 read_verilog {netlist}
 link_design {cfg.top_module}
 read_sdc {sdc}
-initialize_floorplan -utilization {util} -aspect_ratio 1.0 -core_space 2.0 -site unithd
+initialize_floorplan {fp_args}
 make_tracks
 # Place I/O pins around the die using a built-in heuristic
 place_pins -hor_layers met3 -ver_layers met2
@@ -426,7 +515,7 @@ def _write_placement_tcl(out: Path, cfg: FullFlowConfig) -> str:
 {_pdk_preamble(cfg)}
 read_def ../floorplan/floorplan.def
 read_sdc {sdc}
-global_placement -density 0.6
+global_placement -density {cfg.placement_target_density if cfg.placement_target_density is not None else 0.6}
 detailed_placement
 write_def placed.def
 report_design_area > placement_area.rpt
@@ -496,12 +585,13 @@ def _select_lvs_netlist(out: Path) -> Path:
 def _write_cts_tcl(out: Path, cfg: FullFlowConfig) -> str:
     sdc_path = Path(cfg.sdc_file)
     sdc = str(sdc_path).replace("\\", "/") if sdc_path.is_absolute() else f"../../{cfg.sdc_file}"
+    skew_arg = f" -target_skew {cfg.cts_target_skew}" if cfg.cts_target_skew is not None else ""
     tcl = f"""\
 # OpenROAD CTS script (auto-generated)
 {_pdk_preamble(cfg)}
 read_def ../placement/placed.def
 read_sdc {sdc}
-clock_tree_synthesis -buf_list {{sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8 sky130_fd_sc_hd__clkbuf_16}} -root_buf sky130_fd_sc_hd__clkbuf_16 -sink_clustering_enable
+clock_tree_synthesis -buf_list {{sky130_fd_sc_hd__clkbuf_4 sky130_fd_sc_hd__clkbuf_8 sky130_fd_sc_hd__clkbuf_16}} -root_buf sky130_fd_sc_hd__clkbuf_16 -sink_clustering_enable{skew_arg}
 # Legalize newly inserted clock buffers onto the placement grid so routing
 # can find access points.
 detailed_placement
@@ -536,8 +626,8 @@ foreach net [[ord::get_db_block] getNets] {{
     }}
 }}
 set_routing_layers -signal met1-met5 -clock met1-met5
-global_route -guide_file route.guide
-detailed_route -output_drc drc.rpt
+global_route -guide_file route.guide{f" -congestion_iterations {cfg.routing_global_route_iters}" if cfg.routing_global_route_iters is not None else ""}
+detailed_route -output_drc drc.rpt{f" -droute_end_iter {cfg.routing_droute_end_iter}" if cfg.routing_droute_end_iter is not None else ""}
 write_def routed.def
 write_verilog routed.v
 """

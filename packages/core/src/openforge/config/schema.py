@@ -203,6 +203,72 @@ class PowerConfig(BaseModel):
     corner: str = "typical"
 
 
+class FloorplanConfig(BaseModel):
+    """Floorplan stage overrides (consumed by full_flow TCL generator).
+
+    Any field left as ``None`` falls back to the corresponding
+    :class:`openforge.flow.full_flow.FullFlowConfig` default so existing
+    behaviour is preserved when overrides are omitted.
+    """
+
+    utilization: float | None = Field(
+        default=None,
+        description=(
+            "Core utilization. Accepted as a ratio (0.30) or percent (30.0); "
+            "values <=1 are interpreted as ratios. Overrides "
+            "FullFlowConfig.core_utilization when set."
+        ),
+    )
+    die_area: list[float] | None = Field(
+        default=None,
+        description="Die bounding box [llx, lly, urx, ury] in microns.",
+    )
+    core_area: list[float] | None = Field(
+        default=None,
+        description="Core bounding box [llx, lly, urx, ury] in microns.",
+    )
+    aspect_ratio: float | None = Field(
+        default=None,
+        description="Floorplan aspect ratio (height/width).",
+    )
+    core_margin: float | None = Field(
+        default=None,
+        description="Core-to-die margin in microns (passed as -core_space).",
+    )
+    site: str | None = Field(default=None, description="Site name (e.g. unithd).")
+
+
+class PlacementConfig(BaseModel):
+    """Placement stage overrides."""
+
+    target_density: float | None = Field(
+        default=None,
+        description="Global placement target density (0.0 – 1.0).",
+    )
+
+
+class CtsConfig(BaseModel):
+    """Clock tree synthesis stage overrides."""
+
+    target_skew: float | None = Field(
+        default=None,
+        description="CTS target skew in nanoseconds.",
+    )
+
+
+class RoutingConfig(BaseModel):
+    """Routing stage overrides."""
+
+    droute_end_iter: int | None = Field(
+        default=None,
+        description="Cap on TritonRoute detailed-route end iteration count.",
+    )
+    global_route_iters: int | None = Field(
+        default=None,
+        description="Number of global-router congestion iterations.",
+    )
+
+
 class CIConfig(BaseModel):
     """Continuous integration settings."""
 
@@ -255,3 +321,10 @@ class OpenForgeConfig(BaseModel):
     timing: TimingConfig | None = None
     power: PowerConfig | None = None
     ci: CIConfig | None = None
+
+    # Physical-flow stage overrides — consumed by FullFlowRunner / TCL gens.
+    # When a field is None the corresponding FullFlowConfig default applies.
+    floorplan: FloorplanConfig | None = None
+    placement: PlacementConfig | None = None
+    cts: CtsConfig | None = None
+    routing: RoutingConfig | None = None

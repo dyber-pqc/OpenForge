@@ -19,6 +19,21 @@ target:
   kind: asic
   vendor: skywater
 
+# ── Stage-level overrides for the full RTL→GDS flow (consumed by
+# packages/core/src/openforge/flow/full_flow.py via OpenForgeConfig). These
+# values are what landed a clean routed.def for picorv32 on sky130_fd_sc_hd
+# and are now plumbed through to the auto-generated OpenROAD TCL scripts
+# instead of requiring hand edits to build/floorplan/floorplan.tcl.
+floorplan:
+  utilization: 0.30
+  die_area: [0, 0, 506, 506]
+  core_area: [20, 20, 486, 486]
+  site: unithd
+placement:
+  target_density: 0.40
+routing:
+  droute_end_iter: 6
+
 corners:
   - name: tt_025C_1v80
     process: tt
