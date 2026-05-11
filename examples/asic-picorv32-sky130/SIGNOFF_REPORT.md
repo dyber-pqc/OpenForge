@@ -4,7 +4,7 @@
 **Phase 3 binaries under test:** `openforge-drc`, `openforge-lvs`, `openforge-xrc`
 **Bug fixes since first smoke:** xRC LEF parser EOF-in-PIN (`5e70a83`),
 LVS physical-only cell filter (`b0c7a6d`), SDC `remove_from_collection` parser
-fix (`5be03d1`).
+fix (`5be03d1`), xRC capacitance unit/scaling explosion at scale (`d8b8ccb`).
 
 ---
 
@@ -57,14 +57,23 @@ the parser fix (`5e70a83`).
 
 | Metric | Value |
 | ---: | ---: |
-| Total wirelength | 1,887,929.9 µm (~1.89 m) |
-| Total R | 1,676,813.7 Ω |
-| Total C (typ) | varies by corner |
-| Worst-case net | `_05808_` (R=12,998.8 Ω) |
-| Coupling pairs | 298,660 (48.8 M skipped — adjacency below threshold) |
+| Total wirelength | 1,887,929.9 µm (~1.89 mm) |
+| Total R | 1,676,813.7 Ω (1.68 MΩ) |
+| Total C (min) | **13,045,746.7 fF** (13.05 nF) |
+| Total C (typ) | **14,495,274.1 fF** (14.50 nF) |
+| Total C (max) | **15,944,801.5 fF** (15.94 nF) |
+| Worst-case net (typ) | `_00006_[1]` (R=40,205.2 Ω, C=379,988 fF ≈ 0.38 nF) |
+| Coupling pairs | 299,267 (48.8 M skipped — adjacency below threshold) |
 
 SPEF written for `min`, `typ`, `max` corners
-(`build/xrc/picorv32.{min,typ,max}.spef`, ~33 MB each).
+(`build/xrc/picorv32.{min,typ,max}.spef`). Min/typ/max ratio 0.90 : 1.00 : 1.10
+matches the configured ±10% k_eff derate.
+
+**Note:** an earlier run reported total C = 4.78×10¹⁴ fF (478 petafarads).
+That was an xRC bug — divide-by-near-zero on overlapping segment stubs and
+a 2D-bbox-as-conductor-area inflation for non-Manhattan wires. Both fixed
+in `d8b8ccb` along with a sanity-check regression test that bounds total C
+to [10⁵, 10⁸] fF for picorv32-scale designs.
 
 ### DRC — PicoRV32 (final.gds, generic sky130_subset deck)
 
@@ -109,9 +118,13 @@ Kept from the first smoke pass for regression comparison.
 
 | Corner | Total R (Ω) | Total C (fF) | Coupling pairs |
 | ---: | ---: | ---: | ---: |
-| min | 2,084.9 | 1,565.7 | 209 |
-| typ | 2,084.9 | 1,739.6 | 209 |
-| max | 2,084.9 | 1,913.6 | 209 |
+| min | 2,084.9 | 458.6 | 209 |
+| typ | 2,084.9 | 509.6 | 209 |
+| max | 2,084.9 | 560.6 | 209 |
+
+(Counter baseline corrected after the `d8b8ccb` xRC fix — the earlier 1,739.6 fF
+was bug-inflated. New value is physically consistent with ~0.075 fF/µm self-cap
+on 2,250 µm of routing plus modest coupling.)
 
 ---
 
@@ -123,7 +136,8 @@ Kept from the first smoke pass for regression comparison.
 | LVS doesn't filter physical-only cells | **Fixed** | `b0c7a6d` |
 | OpenROAD SDC `remove_from_collection` unsupported | **Fixed (worked around)** | `5be03d1` |
 | PicoRV32 routing fails on 0.55 util / 600×600 µm | **Fixed (tuning)** | this commit |
-| OpenForge `flow run` ignores yaml `utilization` / `die_area` | **Open — flow gap** | — |
+| OpenForge `flow run` ignores yaml `utilization` / `die_area` | **Fixed** | `6c9eaef` |
+| xRC capacitance unit explosion at scale (478 PF on PicoRV32) | **Fixed** | `d8b8ccb` |
 
 The flow gap above is real: `packages/core/src/openforge/flow/full_flow.py`
 hard-codes `core_utilization=50.0` from `FullFlowConfig` defaults, and the
