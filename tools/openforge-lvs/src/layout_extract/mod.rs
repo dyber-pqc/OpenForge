@@ -31,12 +31,21 @@ pub const DEFAULT_SKY130_PHYSICAL_ONLY: &str = r"^sky130_fd_sc_hd__(tap|decap|fi
 pub const DEFAULT_GF180MCU_PHYSICAL_ONLY: &str =
     r"^gf180mcu_fd_sc_mcu7t5v0__(filltie|filldecap|filler|endcap|antenna|diode|fill).*";
 
+/// Default regex matching IHP sg13g2 (130 nm SiGe BiCMOS) physical-only
+/// cells. The standard cell library is `sg13g2_stdcell`; physical-only
+/// cells in that library are named `decap`, `fill`, `tap`, `tielo`,
+/// `tiehi`, `cdummy` (corner / boundary dummy), and `antennanp` /
+/// `antennap` (antenna diodes).
+pub const DEFAULT_IHP_SG13G2_PHYSICAL_ONLY: &str =
+    r"^sg13g2_(decap|fill|tap|tielo|tiehi|cdummy|antenna|endcap|filltie).*";
+
 /// Resolve the built-in physical-only regex for a known PDK name. Returns
 /// `None` for unknown PDKs (caller should pass an explicit regex).
 pub fn default_physical_only_for(pdk: &str) -> Option<&'static str> {
     match pdk {
         "sky130A" => Some(DEFAULT_SKY130_PHYSICAL_ONLY),
         "gf180mcuC" => Some(DEFAULT_GF180MCU_PHYSICAL_ONLY),
+        "ihp_sg13g2" | "IHPSG13G2" | "ihp-sg13g2" => Some(DEFAULT_IHP_SG13G2_PHYSICAL_ONLY),
         _ => None,
     }
 }

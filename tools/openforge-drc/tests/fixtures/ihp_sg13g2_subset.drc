@@ -1,0 +1,70 @@
+# Tiny IHP sg13g2-flavoured DRX fixture: covers input(), method chains,
+# boolean ops and density. Mirrors gf180mcu_subset.drc but uses the IHP
+# Open-PDK 130nm SiGe BiCMOS layer numbers and design-rule values.
+#
+# Layer GDS numbers (from IHP-Open-PDK / sg13g2):
+#   Activ            1/0
+#   NWell            31/0
+#   GatPoly          5/0
+#   Cont             6/0
+#   Metal1           8/0
+#   Via1             19/0
+#   Metal2           10/0
+#   Via2             29/0
+#   Metal3           30/0
+#   Via3             49/0
+#   Metal4           50/0
+#   Via4             66/0
+#   Metal5           67/0
+#   TopVia1          125/0
+#   TopMetal1        126/0
+#   TopVia2          133/0
+#   TopMetal2        134/0
+#
+# Width / spacing values come from the public sg13g2 design rules:
+#   Metal1            width 0.16 / space 0.18
+#   Metal2..Metal5    width 0.20 / space 0.21
+#   TopMetal1/2       width 1.64 / space 1.80   (thick Al, RF inductors)
+#   GatPoly           width 0.13 / space 0.18
+#   Activ             width 0.15 / space 0.21
+
+report("ihp sg13g2 subset DRC")
+
+activ    = input(1, 0)
+nwell    = input(31, 0)
+gatpoly  = input(5, 0)
+cont     = input(6, 0)
+metal1   = input(8, 0)
+via1     = input(19, 0)
+metal2   = input(10, 0)
+metal3   = input(30, 0)
+metal4   = input(50, 0)
+metal5   = input(67, 0)
+topmetal1 = input(126, 0)
+topmetal2 = input(134, 0)
+
+# Width / spacing rules.
+gatpoly.width(0.13).output("GatPoly.W", "Min GatPoly width 0.13")
+gatpoly.space(0.18).output("GatPoly.S", "Min GatPoly spacing 0.18")
+metal1.width(0.16).output("M1.W", "Min Metal1 width 0.16")
+metal1.space(0.18).output("M1.S", "Min Metal1 spacing 0.18")
+metal2.width(0.20).output("M2.W", "Min Metal2 width 0.20")
+metal2.space(0.21).output("M2.S", "Min Metal2 spacing 0.21")
+metal3.width(0.20).output("M3.W", "Min Metal3 width 0.20")
+metal4.width(0.20).output("M4.W", "Min Metal4 width 0.20")
+metal5.width(0.20).output("M5.W", "Min Metal5 width 0.20")
+topmetal1.width(1.64).output("TM1.W", "Min TopMetal1 width 1.64")
+topmetal1.space(1.80).output("TM1.S", "Min TopMetal1 spacing 1.80")
+topmetal2.width(1.64).output("TM2.W", "Min TopMetal2 width 1.64")
+
+# Enclosure: Metal1 must enclose Cont by 0.04.
+metal1.enclosing(cont, 0.04).output("M1.E", "Min Metal1 enclosure of Cont 0.04")
+# Metal2 must enclose Via1 by 0.05.
+metal2.enclosing(via1, 0.05).output("M2.E", "Min Metal2 enclosure of Via1 0.05")
+
+# Boolean op then width: activ outside nwell -> NMOS-active, min width 0.15.
+activ_outside_nwell = activ.outside(nwell)
+activ_outside_nwell.width(0.15).output("Activ.NMOS.W", "Min Activ width outside NWell")
+
+# Density window check on Metal1.
+metal1.density(100).range(0.30, 0.70).output("M1.D", "Metal1 density 30-70%")

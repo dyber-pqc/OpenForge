@@ -1,0 +1,146 @@
+name: asic-counter-ihp-sg13g2
+version: "1"
+kind: asic
+top_module: counter
+
+rtl_sources:
+  - rtl/counter.v
+constraint_files:
+  - constraints/counter.sdc
+tb_sources:
+  - tb/counter_tb.v
+
+pdk:
+  name: ihp_sg13g2
+  std_cell_lib: sg13g2_stdcell
+  variant: sg13g2_stdcell
+
+target:
+  kind: asic
+  vendor: ihp
+
+corners:
+  - name: typ_1p20V_25C
+    process: tt
+    voltage: 1.20
+    temperature: 25.0
+    lib_files:
+      - $PDK_ROOT/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+
+  - name: slow_1p08V_125C
+    process: ss
+    voltage: 1.08
+    temperature: 125.0
+    lib_files:
+      - $PDK_ROOT/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+
+  - name: fast_1p32V_m40C
+    process: ff
+    voltage: 1.32
+    temperature: -40.0
+    lib_files:
+      - $PDK_ROOT/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: synth
+    tool: yosys
+    options:
+      target: sg13g2
+      liberty: $PDK_ROOT/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+      abc_script: strash; ifraig; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf {D}; &put
+    depends_on:
+      - lint
+
+  - stage: floorplan
+    tool: openroad
+    options:
+      step: floorplan
+      die_area: [0, 0, 150, 150]
+      core_area: [15, 15, 135, 135]
+      site: CoreSite
+    depends_on:
+      - synth
+
+  - stage: place
+    tool: openroad
+    options:
+      step: global_place
+      density: 0.55
+    depends_on:
+      - floorplan
+
+  - stage: cts
+    tool: openroad
+    options:
+      step: clock_tree_synthesis
+      buf_cell: sg13g2_buf_4
+      root_buf: sg13g2_buf_16
+    depends_on:
+      - place
+
+  - stage: route
+    tool: openroad
+    options:
+      step: global_route
+    depends_on:
+      - cts
+
+  - stage: detail_route
+    tool: openroad
+    options:
+      step: detail_route
+    depends_on:
+      - route
+
+  - stage: sta
+    tool: opensta
+    options:
+      corner: typ_1p20V_25C
+      sdc: constraints/counter.sdc
+    depends_on:
+      - detail_route
+
+  # OpenForge-native signoff: the Rust DRC / xRC / LVS engines accept
+  # `ihp_sg13g2` as a built-in tech name (no external Magic / Netgen needed
+  # for the smoke check).
+  - stage: drc
+    tool: openforge-drc
+    options:
+      tech: ihp_sg13g2
+      rules: $PDK_ROOT/ihp-sg13g2/libs.tech/klayout/tech/drc/sg13g2_minimal.drc
+    depends_on:
+      - detail_route
+
+  - stage: xrc
+    tool: openforge-xrc
+    options:
+      tech: ihp_sg13g2
+      corner: typ
+    depends_on:
+      - detail_route
+
+  - stage: lvs
+    tool: openforge-lvs
+    options:
+      tech: ihp_sg13g2
+    depends_on:
+      - drc
+
+  - stage: gds
+    tool: magic
+    options:
+      step: gds_export
+      tech_file: $PDK_ROOT/ihp-sg13g2/libs.tech/magic/sg13g2.tech
+    depends_on:
+      - lvs
+
+metadata:
+  description: 8-bit synchronous counter - full ASIC RTL-to-GDS flow on IHP sg13g2 (130 nm SiGe BiCMOS, open PDK)
+  author: OpenForge Examples
+  license: Apache-2.0
+  target_freq_mhz: 75

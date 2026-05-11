@@ -2,6 +2,7 @@
 
 pub mod ast;
 pub mod gf180mcu;
+pub mod ihp_sg13g2;
 pub mod sky130;
 
 use crate::error::{Result, XrcError};
@@ -10,13 +11,15 @@ use std::path::Path;
 pub use ast::{Corner, CornerSetting, LayerProps, TechFile, ViaProps};
 
 /// Load a tech file. Recognised values:
-///   * "sky130A"   → built-in SkyWater 130 nm constants
-///   * "gf180mcuC" → built-in GlobalFoundries 180 nm MCU (5 V) constants
+///   * "sky130A"    → built-in SkyWater 130 nm constants
+///   * "gf180mcuC"  → built-in GlobalFoundries 180 nm MCU (5 V) constants
+///   * "ihp_sg13g2" → built-in IHP 130 nm SiGe BiCMOS constants
 ///   * any other value: treated as a path to a JSON tech file
 pub fn load(name_or_path: &str) -> Result<TechFile> {
     match name_or_path {
         "sky130A" => return Ok(sky130::sky130a_tech()),
         "gf180mcuC" => return Ok(gf180mcu::gf180mcu_c_tech()),
+        "ihp_sg13g2" | "IHPSG13G2" | "ihp-sg13g2" => return Ok(ihp_sg13g2::ihp_sg13g2_tech()),
         _ => {}
     }
     let p = Path::new(name_or_path);
