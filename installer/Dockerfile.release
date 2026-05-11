@@ -1,0 +1,75 @@
+# OpenForge slim release image
+#
+# Multi-stage build: stage 1 compiles the three native sign-off binaries
+# with a full Rust toolchain; stage 2 is a minimal runtime image that
+# carries only the stripped binaries plus a small Python CLI surface.
+#
+# Build:
+#   docker build -f installer/Dockerfile.release -t openforge:release .
+# Run:
+#   docker run --rm openforge:release openforge-drc --version
+
+# ---------------------------------------------------------------------------
+# Stage 1: build sign-off binaries
+# ---------------------------------------------------------------------------
+FROM rust:1.82-slim AS builder
+
+WORKDIR /build
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Copy only what's needed for the workspace build
+COPY Cargo.toml Cargo.lock ./
+COPY tools ./tools
+
+RUN cargo build --release \
+        -p openforge-drc \
+        -p openforge-lvs \
+        -p openforge-xrc \
+ && strip target/release/openforge-drc \
+ && strip target/release/openforge-lvs \
+ && strip target/release/openforge-xrc
+
+# ---------------------------------------------------------------------------
+# Stage 2: slim runtime
+# ---------------------------------------------------------------------------
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        python3 python3-pip \
+        ca-certificates libgcc-s1 \
+ && rm -rf /var/lib/apt/lists/* \
+ && apt-get clean
+
+# Sign-off binaries
+COPY --from=builder /build/target/release/openforge-drc /usr/local/bin/
+COPY --from=builder /build/target/release/openforge-lvs /usr/local/bin/
+COPY --from=builder /build/target/release/openforge-xrc /usr/local/bin/
+
+# OpenForge Python CLI (lean install: core + cli, no GUI / API)
+WORKDIR /opt/openforge
+COPY packages/core ./packages/core
+COPY packages/cli ./packages/cli
+COPY share ./share
+COPY pyproject.toml README.md LICENSE ./
+
+RUN pip install --no-cache-dir --break-system-packages \
+        pydantic pyyaml numpy typer rich networkx
+
+ENV PYTHONPATH="/opt/openforge/packages/core/src:/opt/openforge/packages/cli/src" \
+    OPENFORGE_SHARE="/opt/openforge/share" \
+    PATH="/usr/local/bin:${PATH}"
+
+# Sanity check at build time
+RUN openforge-drc --version \
+ && openforge-lvs --version \
+ && openforge-xrc --version
+
+ENTRYPOINT []
+CMD ["bash"]

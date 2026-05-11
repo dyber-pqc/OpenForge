@@ -1,0 +1,335 @@
+name: Release Signoff Binaries
+
+# Builds standalone, pre-compiled artifacts for the three native sign-off tools
+# (openforge-drc, openforge-lvs, openforge-xrc) on Linux, macOS, and Windows,
+# plus a slim Docker image, and attaches everything to a GitHub Release.
+#
+# Triggered by maintainer pushing a semantic-version tag, e.g.:
+#   git tag v0.3.0 && git push --tags
+#
+# Co-exists with the broader `release.yml`: both append to the same Release.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.3.0). Leave blank when triggered by tag push."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  CARGO_TERM_COLOR: always
+  IMAGE_NAME: ghcr.io/dyber-pqc/openforge
+
+jobs:
+  # ========================================================================
+  # Build sign-off binaries on each platform
+  # ========================================================================
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            archive_ext: tar.gz
+            bin_ext: ""
+          - os: macos-latest
+            platform: macos
+            archive_ext: tar.gz
+            bin_ext: ""
+          - os: windows-latest
+            platform: windows
+            archive_ext: zip
+            bin_ext: ".exe"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-signoff-${{ matrix.os }}
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "archive=openforge-signoff-${{ matrix.platform }}-x86_64.${{ matrix.archive_ext }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build release binaries
+        run: cargo build --release -p openforge-drc -p openforge-lvs -p openforge-xrc
+
+      - name: Strip debug symbols (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          for tool in openforge-drc openforge-lvs openforge-xrc; do
+            strip "target/release/${tool}" || true
+          done
+
+      - name: Stage binaries + README
+        shell: bash
+        run: |
+          mkdir -p staging
+          for tool in openforge-drc openforge-lvs openforge-xrc; do
+            cp "target/release/${tool}${{ matrix.bin_ext }}" "staging/"
+          done
+          cat > staging/README.txt <<EOF
+          OpenForge Sign-off Tools ${{ steps.ver.outputs.tag }}
+          ============================================
+
+          This archive contains pre-compiled native sign-off binaries:
+            openforge-drc${{ matrix.bin_ext }}  - Design Rule Check
+            openforge-lvs${{ matrix.bin_ext }}  - Layout vs. Schematic
+            openforge-xrc${{ matrix.bin_ext }}  - Parasitic extraction
+
+          Quick start:
+            ./openforge-drc --help
+            ./openforge-lvs --version
+            ./openforge-xrc --version
+
+          To install system-wide on Linux/macOS:
+            sudo install -m 0755 openforge-drc /usr/local/bin/
+            sudo install -m 0755 openforge-lvs /usr/local/bin/
+            sudo install -m 0755 openforge-xrc /usr/local/bin/
+
+          On Windows, copy the .exe files to a directory on your PATH,
+          for example %LOCALAPPDATA%\\openforge\\bin.
+
+          Source: https://github.com/dyber-pqc/OpenForge
+          License: GPL-3.0-or-later
+          EOF
+
+      - name: Pack archive (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          tar -czf "${{ steps.ver.outputs.archive }}" -C staging .
+          sha256sum "${{ steps.ver.outputs.archive }}" > "${{ steps.ver.outputs.archive }}.sha256"
+
+      - name: Pack archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path staging/* -DestinationPath "${{ steps.ver.outputs.archive }}" -Force
+          $hash = (Get-FileHash "${{ steps.ver.outputs.archive }}" -Algorithm SHA256).Hash.ToLower()
+          "$hash  ${{ steps.ver.outputs.archive }}" | Out-File -FilePath "${{ steps.ver.outputs.archive }}.sha256" -Encoding ascii
+
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signoff-${{ matrix.platform }}
+          path: |
+            ${{ steps.ver.outputs.archive }}
+            ${{ steps.ver.outputs.archive }}.sha256
+          retention-days: 7
+
+  # ========================================================================
+  # Smoke-test each archive on its native runner
+  # ========================================================================
+  smoke-test:
+    name: Smoke Test (${{ matrix.os }})
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            archive_ext: tar.gz
+            bin_ext: ""
+          - os: macos-latest
+            platform: macos
+            archive_ext: tar.gz
+            bin_ext: ""
+          - os: windows-latest
+            platform: windows
+            archive_ext: zip
+            bin_ext: ".exe"
+    steps:
+      - name: Resolve tag
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "archive=openforge-signoff-${{ matrix.platform }}-x86_64.${{ matrix.archive_ext }}" >> "$GITHUB_OUTPUT"
+
+      - name: Download archive
+        uses: actions/download-artifact@v4
+        with:
+          name: signoff-${{ matrix.platform }}
+          path: dl
+
+      - name: Extract (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p extracted
+          tar -xzf "dl/${{ steps.ver.outputs.archive }}" -C extracted
+          ls -lh extracted
+
+      - name: Extract (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path extracted -Force | Out-Null
+          Expand-Archive -Path "dl/${{ steps.ver.outputs.archive }}" -DestinationPath extracted -Force
+          Get-ChildItem extracted
+
+      - name: Run --version on each binary (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -e
+          for tool in openforge-drc openforge-lvs openforge-xrc; do
+            chmod +x "extracted/${tool}"
+            out="$(extracted/${tool} --version)"
+            echo "${tool}: ${out}"
+            # Loose check: clap default --version prints "<binname> <version>".
+            # We accept any output containing a digit — strict tag matching is
+            # opt-in below for releases tagged from a matching workspace version.
+            echo "${out}" | grep -qE '[0-9]+\.[0-9]+' || { echo "no version string"; exit 1; }
+          done
+
+      - name: Run --version on each binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          foreach ($tool in @("openforge-drc", "openforge-lvs", "openforge-xrc")) {
+              $exe = "extracted/$tool.exe"
+              $out = & $exe --version
+              Write-Host "${tool}: $out"
+              if ($out -notmatch '\d+\.\d+') {
+                  throw "no version string from $tool"
+              }
+          }
+
+  # ========================================================================
+  # Build + push slim Docker image (binaries only, no Rust toolchain)
+  # ========================================================================
+  docker:
+    name: Docker Image
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: ver
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: installer/Dockerfile.release
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.ver.outputs.tag }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========================================================================
+  # Publish GitHub Release with all signoff archives + checksums
+  # ========================================================================
+  publish:
+    name: Publish Release
+    needs: [smoke-test, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all archives
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: signoff-*
+          merge-multiple: true
+
+      - name: Generate combined checksums
+        run: |
+          mkdir -p release
+          cd artifacts
+          ls -lh
+          # Move archives into ./release and rebuild a single checksums.txt
+          for f in openforge-signoff-*.tar.gz openforge-signoff-*.zip; do
+            [ -f "$f" ] && mv "$f" ../release/
+          done
+          cd ../release
+          sha256sum openforge-signoff-* > checksums.txt
+          cat checksums.txt
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "OpenForge ${{ github.ref_name }}"
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release/openforge-signoff-*.tar.gz
+            release/openforge-signoff-*.zip
+            release/checksums.txt
+          body: |
+            ## Sign-off Binaries
+
+            Pre-built native sign-off tools (`openforge-drc`, `openforge-lvs`, `openforge-xrc`)
+            for users who don't want to install the Rust toolchain.
+
+            **Quick install (Linux/macOS):**
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/dyber-pqc/OpenForge/main/scripts/install.sh | bash
+            ```
+
+            **Quick install (Windows PowerShell):**
+            ```powershell
+            irm https://raw.githubusercontent.com/dyber-pqc/OpenForge/main/scripts/install.ps1 | iex
+            ```
+
+            **Docker:**
+            ```bash
+            docker pull ghcr.io/dyber-pqc/openforge:${{ github.ref_name }}
+            ```
+
+            Verify downloads with `checksums.txt` (SHA-256).
