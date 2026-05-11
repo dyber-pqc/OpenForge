@@ -49,6 +49,42 @@ pub enum Rule {
         name: String,
         message: String,
     },
+    /// Inter-layer minimum spacing: every polygon on `layer_a` must be at
+    /// least `min_um` away from every polygon on `layer_b`. Touching shapes
+    /// (distance 0) are reported as violations because the two layers are
+    /// distinct nets.
+    Separation {
+        layer_a: String,
+        layer_b: String,
+        min_um: f64,
+        name: String,
+        message: String,
+    },
+    /// Minimum polygon area on `layer` (um^2).
+    Area {
+        layer: String,
+        min_um2: f64,
+        name: String,
+        message: String,
+    },
+    /// `outer` must extend beyond `inner` by at least `min_um` on every edge.
+    /// Equivalent to "inner enclosed by outer with margin" — kept separate
+    /// from `Enclosure` so the translator preserves the Magic terminology
+    /// and the violation reports name the right reference layer.
+    Overhang {
+        outer: String,
+        inner: String,
+        min_um: f64,
+        name: String,
+        message: String,
+    },
+    /// Internal-edge spacing within a single polygon (notch width).
+    Notch {
+        layer: String,
+        min_um: f64,
+        name: String,
+        message: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -64,7 +100,11 @@ impl Rule {
             | Rule::Space { name, .. }
             | Rule::Enclosure { name, .. }
             | Rule::Not { name, .. }
-            | Rule::Density { name, .. } => name,
+            | Rule::Density { name, .. }
+            | Rule::Separation { name, .. }
+            | Rule::Area { name, .. }
+            | Rule::Overhang { name, .. }
+            | Rule::Notch { name, .. } => name,
         }
     }
 
@@ -95,6 +135,24 @@ impl Rule {
                     DensityDirection::Above => "max",
                 };
                 format!("{cmp} density on {layer} window {window_um} um pct {pct}")
+            }
+            Rule::Separation {
+                layer_a,
+                layer_b,
+                min_um,
+                ..
+            } => format!("Minimum separation between {layer_a} and {layer_b} ({min_um} um)"),
+            Rule::Area { layer, min_um2, .. } => {
+                format!("Minimum polygon area on {layer} ({min_um2} um^2)")
+            }
+            Rule::Overhang {
+                outer,
+                inner,
+                min_um,
+                ..
+            } => format!("Minimum overhang of {outer} over {inner} ({min_um} um)"),
+            Rule::Notch { layer, min_um, .. } => {
+                format!("Minimum notch on {layer} ({min_um} um)")
             }
         }
     }

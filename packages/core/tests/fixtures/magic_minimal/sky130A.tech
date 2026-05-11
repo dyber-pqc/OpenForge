@@ -31,9 +31,18 @@ drc
     # Inter-layer spacing.
     spacing nwell diff 0.34 touching_illegal "Min nwell-diff spacing 0.34um"
 
-    # Area rule (DRX has no .area() yet -- emitted as TODO).
+    # Area rule (-> DRX .area()).
     area met1 0.083 0.0 "Min met1 area 0.083um^2"
 
-    # Unsupported construct (should land in unsupported list).
+    # Surround rule (-> DRX .surround() == .enclosing).
+    surround nwell diff 0.18 absence_illegal "nwell must surround diff by 0.18"
+
+    # Overhang rule (-> DRX .overhang()).
+    overhang met1 licon 0.06 "met1 overhang licon by 0.06"
+
+    # Single-layer edge4way (notch) (-> DRX .notch()).
+    edge4way met1 0.14 "met1 notch 0.14"
+
+    # Truly unsupported construct (should still land in unsupported list).
     edge poly diff 0.13 poly diff 0.13 "Min poly endcap"
 end

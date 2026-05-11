@@ -52,6 +52,22 @@ enum Pending {
         min: f64,
         max: f64,
     },
+    /// `<layerA>.separation(layerB, min)` - inter-layer min spacing.
+    Separation {
+        layer_a: String,
+        layer_b: String,
+        min_um: f64,
+    },
+    /// `<layer>.area(min_um2)` - minimum polygon area.
+    Area { layer: String, min_um2: f64 },
+    /// `<outer>.overhang(<inner>, min)` - outer must overhang inner.
+    Overhang {
+        outer: String,
+        inner: String,
+        min_um: f64,
+    },
+    /// `<layer>.notch(min)` - minimum notch width within a single polygon.
+    Notch { layer: String, min_um: f64 },
     /// A bare layer (no rule yet). Used as the value of a layer expression.
     Layer(LayerHandle),
 }
@@ -109,7 +125,13 @@ impl Interp {
                         // Bare layer expression with no output - silently ignore.
                     }
                     Ok(
-                        Pending::Width { .. } | Pending::Space { .. } | Pending::Enclosing { .. },
+                        Pending::Width { .. }
+                        | Pending::Space { .. }
+                        | Pending::Enclosing { .. }
+                        | Pending::Separation { .. }
+                        | Pending::Area { .. }
+                        | Pending::Overhang { .. }
+                        | Pending::Notch { .. },
                     ) => {
                         // A measurement chain that was never `.output()`-ed.
                         // Real decks always terminate with `.output(...)` -
@@ -231,6 +253,56 @@ impl Interp {
                     min_um: min,
                 })
             }
+            // `surround` is the Magic-flavoured alias of `enclosing`:
+            // `outer.surround(inner, min)` -> outer must surround inner.
+            // Same geometric semantics as `.enclosing`.
+            (Pending::Layer(l), "surround") => {
+                let inner = self.layer_arg(args, 0)?;
+                let min = num_arg(args, 1)?;
+                Ok(Pending::Enclosing {
+                    outer: l.name,
+                    inner,
+                    min_um: min,
+                })
+            }
+            // Inter-layer spacing: `a.separation(b, min)`.
+            (Pending::Layer(l), "separation") => {
+                let other = self.layer_arg(args, 0)?;
+                let min = num_arg(args, 1)?;
+                Ok(Pending::Separation {
+                    layer_a: l.name,
+                    layer_b: other,
+                    min_um: min,
+                })
+            }
+            // Minimum polygon area: `layer.area(min_um2)`.
+            (Pending::Layer(l), "area") => {
+                let min = first_num(args)?;
+                Ok(Pending::Area {
+                    layer: l.name,
+                    min_um2: min,
+                })
+            }
+            // Overhang: `outer.overhang(inner, min)`. Geometric inverse of
+            // `.enclosing` from the inner's perspective; we keep it as a
+            // distinct rule so reports name the outer (offending) layer.
+            (Pending::Layer(l), "overhang") => {
+                let inner = self.layer_arg(args, 0)?;
+                let min = num_arg(args, 1)?;
+                Ok(Pending::Overhang {
+                    outer: l.name,
+                    inner,
+                    min_um: min,
+                })
+            }
+            // Same-layer notch (intra-polygon internal-edge spacing).
+            (Pending::Layer(l), "notch") => {
+                let min = first_num(args)?;
+                Ok(Pending::Notch {
+                    layer: l.name,
+                    min_um: min,
+                })
+            }
             // ---- Boolean ops yielding a derived layer ----
             (Pending::Layer(l), op @ ("inside" | "outside" | "not" | "and" | "or")) => {
                 let other_name = self.layer_arg(args, 0)?;
@@ -321,6 +393,71 @@ impl Interp {
                 self.deck.rules.push(Rule::Enclosure {
                     inner,
                     outer,
+                    min_um,
+                    name,
+                    message: msg,
+                });
+                Ok(Pending::Layer(LayerHandle {
+                    name: "__sink__".into(),
+                }))
+            }
+            (
+                Pending::Separation {
+                    layer_a,
+                    layer_b,
+                    min_um,
+                },
+                "output",
+            ) => {
+                let dual = format!("{layer_a}-{layer_b}");
+                let (name, msg) = output_args(args, &dual, "separation");
+                self.deck.rules.push(Rule::Separation {
+                    layer_a,
+                    layer_b,
+                    min_um,
+                    name,
+                    message: msg,
+                });
+                Ok(Pending::Layer(LayerHandle {
+                    name: "__sink__".into(),
+                }))
+            }
+            (Pending::Area { layer, min_um2 }, "output") => {
+                let (name, msg) = output_args(args, &layer, "area");
+                self.deck.rules.push(Rule::Area {
+                    layer,
+                    min_um2,
+                    name,
+                    message: msg,
+                });
+                Ok(Pending::Layer(LayerHandle {
+                    name: "__sink__".into(),
+                }))
+            }
+            (
+                Pending::Overhang {
+                    outer,
+                    inner,
+                    min_um,
+                },
+                "output",
+            ) => {
+                let (name, msg) = output_args(args, &outer, "overhang");
+                self.deck.rules.push(Rule::Overhang {
+                    outer,
+                    inner,
+                    min_um,
+                    name,
+                    message: msg,
+                });
+                Ok(Pending::Layer(LayerHandle {
+                    name: "__sink__".into(),
+                }))
+            }
+            (Pending::Notch { layer, min_um }, "output") => {
+                let (name, msg) = output_args(args, &layer, "notch");
+                self.deck.rules.push(Rule::Notch {
+                    layer,
                     min_um,
                     name,
                     message: msg,

@@ -1,8 +1,12 @@
 //! Check engine: dispatches a `Rule` to its concrete checker.
 
+pub mod area;
 pub mod density;
 pub mod derived;
 pub mod enclosure;
+pub mod notch;
+pub mod overhang;
+pub mod separation;
 pub mod space;
 pub mod width;
 
@@ -57,6 +61,36 @@ pub fn run_rule(
                 layout, layer, *window_um, *pct, dir, name, message,
             ))
         }
+        Rule::Separation {
+            layer_a,
+            layer_b,
+            min_um,
+            name,
+            message,
+        } => Ok(separation::check_separation(
+            layout, layer_a, layer_b, *min_um, name, message,
+        )),
+        Rule::Area {
+            layer,
+            min_um2,
+            name,
+            message,
+        } => Ok(area::check_area(layout, layer, *min_um2, name, message)),
+        Rule::Overhang {
+            outer,
+            inner,
+            min_um,
+            name,
+            message,
+        } => Ok(overhang::check_overhang(
+            layout, outer, inner, *min_um, name, message,
+        )),
+        Rule::Notch {
+            layer,
+            min_um,
+            name,
+            message,
+        } => Ok(notch::check_notch(layout, layer, *min_um, name, message)),
         // `not` is still stubbed - it produces a derived layer set with no
         // direct violations of its own.
         Rule::Not { .. } => Ok(Vec::new()),

@@ -10,16 +10,21 @@
 //!   - `report(name)`                              -> sets deck name
 //!
 //! Methods on a layer expression:
-//!   - `.width(min[, metric])`   -> rule (after `.output`)
-//!   - `.space(min[, metric])`   -> rule
-//!   - `.enclosing(other, min)`  -> rule
-//!   - `.inside(other)`          -> derived layer
-//!   - `.outside(other)`         -> derived layer
-//!   - `.not(other)`             -> derived layer
-//!   - `.and(other)`             -> derived layer
-//!   - `.or(other)`              -> derived layer
-//!   - `.density(window)`        -> intermediate (chain `.range(min,max)`)
-//!   - `.with_length`/`.angles`  -> parsed but not enforced
+//!   - `.width(min[, metric])`     -> rule (after `.output`)
+//!   - `.space(min[, metric])`     -> rule (same-layer min spacing)
+//!   - `.separation(other, min)`   -> rule (inter-layer min spacing)
+//!   - `.enclosing(other, min)`    -> rule (outer encloses inner)
+//!   - `.surround(inner, min)`     -> rule (alias of `.enclosing`, Magic-flavoured)
+//!   - `.overhang(inner, min)`     -> rule (outer must overhang inner; distinct report layer)
+//!   - `.area(min_um2)`            -> rule (minimum polygon area)
+//!   - `.notch(min)`               -> rule (intra-polygon internal-edge gap)
+//!   - `.inside(other)`            -> derived layer
+//!   - `.outside(other)`           -> derived layer
+//!   - `.not(other)`               -> derived layer
+//!   - `.and(other)`               -> derived layer
+//!   - `.or(other)`                -> derived layer
+//!   - `.density(window)`          -> intermediate (chain `.range(min,max)`)
+//!   - `.with_length`/`.angles`    -> parsed but not enforced
 //!
 //! Methods on a measurement chain:
 //!   - `.output(name, message)`  -> emits the rule
@@ -32,8 +37,13 @@
 pub const KNOWN_METHODS: &[&str] = &[
     "width",
     "space",
+    "separation",
     "enclosing",
     "enclose",
+    "surround",
+    "overhang",
+    "area",
+    "notch",
     "inside",
     "outside",
     "not",

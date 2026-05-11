@@ -1,0 +1,28 @@
+# DRX fixture exercising the v0.4 primitives:
+#   .separation, .area, .overhang, .surround, .notch
+# Used by tests/drx_extended.rs.
+
+report("drx extended primitives")
+
+nwell = input(64, 20)
+diff  = input(65, 20)
+met1  = input(68, 20)
+via   = input(68, 44)
+poly  = input(66, 20)
+
+# Inter-layer minimum spacing (Magic: spacing nwell diff 0.34 touching_illegal).
+nwell.separation(diff, 0.34).output("nw.S.diff", "nwell-diff min separation 0.34")
+
+# Minimum polygon area (Magic: area met1 0.083).
+met1.area(0.083).output("met1.A", "Min met1 area 0.083")
+
+# Overhang: met1 must overhang via by 0.06 on every edge
+# (Magic: overhang met1 via 0.06).
+met1.overhang(via, 0.06).output("met1.OH.via", "met1 must overhang via by 0.06")
+
+# Surround alias: poly must surround diff by 0.04
+# (Magic: surround poly diff 0.04).
+poly.surround(diff, 0.04).output("poly.SR.diff", "poly surrounds diff by 0.04")
+
+# Notch: same-layer intra-polygon minimum gap (Magic: edge4way met1 0.14).
+met1.notch(0.14).output("met1.N", "met1 notch 0.14")

@@ -4,11 +4,12 @@ Magic's ``.tech`` file is the de-facto source of truth for sky130/gf180mcu DRC
 rules. This module parses the ``drc`` section of a Magic tech file and
 translates it to the DRX rule-deck format consumed by ``openforge-drc``.
 
-The parser is intentionally non-exhaustive -- it covers the most common 80%
-of rules: ``width``, ``spacing``, ``area``. Less-common Magic constructs
-(``edge``, ``edge4way``, ``surround``, ``overhang``, ``cifmaxwidth``,
-``angles``) are recognised but emitted as commented-out TODOs in the DRX
-output so users can see what was skipped.
+The parser covers the constructs OpenForge's DRX engine has primitives for
+(as of v0.4): ``width``, ``spacing`` (intra- and inter-layer via
+``.separation``), ``area``, ``surround``, ``overhang``, and ``edge4way``
+(notch). Truly exotic constructs (``edge`` with multi-layer asymmetric
+distances, ``cifmaxwidth``, ``angles``) are still recognised but emitted as
+commented-out TODOs in the DRX output so users can see what was skipped.
 
 Magic tech file reference:
   http://opencircuitdesign.com/magic/tutorial/tut_magic_techfile.html
@@ -118,6 +119,47 @@ class AreaRule(BaseModel):
     rule_name: str = ""
 
 
+class SurroundRule(BaseModel):
+    """Magic ``surround <outer> <inner> <distance> [touching] "<msg>"``.
+
+    ``outer`` must surround ``inner`` by at least ``distance`` on every edge.
+    Translated to DRX ``outer.surround(inner, distance)`` (an alias of
+    ``.enclosing`` with the Magic-style argument order).
+    """
+
+    outer: str
+    inner: str
+    distance: float
+    message: str = ""
+    rule_name: str = ""
+
+
+class OverhangRule(BaseModel):
+    """Magic ``overhang <outer> <inner> <distance> "<msg>"``.
+
+    ``outer`` must extend beyond ``inner`` by at least ``distance``.
+    Translated to DRX ``outer.overhang(inner, distance)``.
+    """
+
+    outer: str
+    inner: str
+    distance: float
+    message: str = ""
+    rule_name: str = ""
+
+
+class NotchRule(BaseModel):
+    """Magic ``edge4way <layer> <distance> "<msg>"`` (single-layer notch).
+
+    Translated to DRX ``layer.notch(distance)``.
+    """
+
+    layer: str
+    distance: float
+    message: str = ""
+    rule_name: str = ""
+
+
 class UnsupportedRule(BaseModel):
     """A Magic ``drc`` rule we recognised but did not translate."""
 
@@ -134,6 +176,9 @@ class MagicTechFile(BaseModel):
     width_rules: list[WidthRule] = Field(default_factory=list)
     spacing_rules: list[SpacingRule] = Field(default_factory=list)
     area_rules: list[AreaRule] = Field(default_factory=list)
+    surround_rules: list[SurroundRule] = Field(default_factory=list)
+    overhang_rules: list[OverhangRule] = Field(default_factory=list)
+    notch_rules: list[NotchRule] = Field(default_factory=list)
     unsupported: list[UnsupportedRule] = Field(default_factory=list)
 
 
@@ -219,6 +264,9 @@ def parse_magic_tech(path: Path) -> MagicTechFile:
     width_rules: list[WidthRule] = []
     spacing_rules: list[SpacingRule] = []
     area_rules: list[AreaRule] = []
+    surround_rules: list[SurroundRule] = []
+    overhang_rules: list[OverhangRule] = []
+    notch_rules: list[NotchRule] = []
     unsupported: list[UnsupportedRule] = []
 
     # drc section
@@ -282,8 +330,61 @@ def parse_magic_tech(path: Path) -> MagicTechFile:
                         rule_name=f"{toks[1]}.A",
                     )
                 )
-            elif kind in ("edge", "edge4way", "surround", "overhang", "cifmaxwidth", "angles"):
-                # TODO: support these constructs once DRX has matching primitives.
+            elif kind == "surround" and len(toks) >= 4:
+                # surround <outer> <inner> <distance> [touching_*] "<msg>"
+                msg = ""
+                rest = toks[4:]
+                for r in rest:
+                    if r in ("touching_ok", "touching_illegal", "absence_illegal"):
+                        continue
+                    msg = r
+                surround_rules.append(
+                    SurroundRule(
+                        outer=toks[1],
+                        inner=toks[2],
+                        distance=float(toks[3]),
+                        message=msg,
+                        rule_name=f"{toks[1]}.SR.{toks[2]}",
+                    )
+                )
+            elif kind == "overhang" and len(toks) >= 4:
+                # overhang <outer> <inner> <distance> "<msg>"
+                msg = toks[4] if len(toks) > 4 else ""
+                overhang_rules.append(
+                    OverhangRule(
+                        outer=toks[1],
+                        inner=toks[2],
+                        distance=float(toks[3]),
+                        message=msg,
+                        rule_name=f"{toks[1]}.OH.{toks[2]}",
+                    )
+                )
+            elif kind == "edge4way" and len(toks) >= 3:
+                # edge4way <layer> <distance> "<msg>"  (notch form)
+                # NB: full Magic edge4way takes more tokens for asymmetric
+                # rules; we handle the common single-layer notch shape and
+                # punt anything more complex to `unsupported`.
+                try:
+                    dist = float(toks[2])
+                except ValueError:
+                    unsupported.append(
+                        UnsupportedRule(
+                            raw=clean,
+                            reason="complex edge4way (multi-layer) not translated",
+                        )
+                    )
+                else:
+                    msg = toks[3] if len(toks) > 3 else ""
+                    notch_rules.append(
+                        NotchRule(
+                            layer=toks[1],
+                            distance=dist,
+                            message=msg,
+                            rule_name=f"{toks[1]}.N",
+                        )
+                    )
+            elif kind in ("edge", "cifmaxwidth", "angles"):
+                # Still no first-class DRX primitive for these.
                 unsupported.append(
                     UnsupportedRule(raw=clean, reason=f"'{kind}' rule not yet translated")
                 )
@@ -299,6 +400,9 @@ def parse_magic_tech(path: Path) -> MagicTechFile:
         width_rules=width_rules,
         spacing_rules=spacing_rules,
         area_rules=area_rules,
+        surround_rules=surround_rules,
+        overhang_rules=overhang_rules,
+        notch_rules=notch_rules,
         unsupported=unsupported,
     )
 
@@ -345,6 +449,20 @@ def magic_to_drx(tech: MagicTechFile) -> str:
         if r.layer.lower() not in seen:
             seen.add(r.layer.lower())
             referenced.append(r.layer)
+    for r in tech.surround_rules:
+        for lyr in (r.outer, r.inner):
+            if lyr.lower() not in seen:
+                seen.add(lyr.lower())
+                referenced.append(lyr)
+    for r in tech.overhang_rules:
+        for lyr in (r.outer, r.inner):
+            if lyr.lower() not in seen:
+                seen.add(lyr.lower())
+                referenced.append(lyr)
+    for r in tech.notch_rules:
+        if r.layer.lower() not in seen:
+            seen.add(r.layer.lower())
+            referenced.append(r.layer)
 
     # Layer declarations
     for lyr in referenced:
@@ -371,23 +489,52 @@ def magic_to_drx(tech: MagicTechFile) -> str:
                     f'{r.layer_a.lower()}.space({r.distance}).output("{r.rule_name}", "{msg}")'
                 )
             else:
-                # TODO: DRX has no ``.separation()`` primitive yet for
-                # inter-layer spacing. Emit as a comment so the user can
-                # hand-port (or wait for the DRX std-lib to grow it).
+                # Inter-layer spacing -> DRX `.separation()` primitive (v0.4+).
                 lines.append(
-                    f"# TODO: inter-layer spacing not supported by DRX: "
-                    f"{r.layer_a.lower()}-{r.layer_b.lower()} >= {r.distance} "
-                    f'(rule "{r.rule_name}": {msg})'
+                    f"{r.layer_a.lower()}.separation({r.layer_b.lower()}, {r.distance})"
+                    f'.output("{r.rule_name}", "{msg}")'
                 )
         lines.append("")
 
-    # Area rules: DRX has no first-class .area() yet -- emit as TODO comments.
+    # Area rules -> DRX `.area()` (v0.4+).
     if tech.area_rules:
-        lines.append("# Area rules (TODO: DRX has no .area() primitive yet)")
+        lines.append("# Area rules")
         for r in tech.area_rules:
             msg = r.message or f"Min area {r.area}"
             lines.append(
-                f'# TODO: {r.layer.lower()}.area({r.area}).output("{r.rule_name}", "{msg}")'
+                f'{r.layer.lower()}.area({r.area}).output("{r.rule_name}", "{msg}")'
+            )
+        lines.append("")
+
+    # Surround rules -> DRX `.surround()` (alias of `.enclosing`).
+    if tech.surround_rules:
+        lines.append("# Surround rules")
+        for r in tech.surround_rules:
+            msg = r.message or f"{r.outer} surrounds {r.inner} by {r.distance}"
+            lines.append(
+                f"{r.outer.lower()}.surround({r.inner.lower()}, {r.distance})"
+                f'.output("{r.rule_name}", "{msg}")'
+            )
+        lines.append("")
+
+    # Overhang rules -> DRX `.overhang()`.
+    if tech.overhang_rules:
+        lines.append("# Overhang rules")
+        for r in tech.overhang_rules:
+            msg = r.message or f"{r.outer} overhang {r.inner} by {r.distance}"
+            lines.append(
+                f"{r.outer.lower()}.overhang({r.inner.lower()}, {r.distance})"
+                f'.output("{r.rule_name}", "{msg}")'
+            )
+        lines.append("")
+
+    # Notch rules (Magic edge4way single-layer) -> DRX `.notch()`.
+    if tech.notch_rules:
+        lines.append("# Notch rules")
+        for r in tech.notch_rules:
+            msg = r.message or f"Min notch {r.distance}"
+            lines.append(
+                f'{r.layer.lower()}.notch({r.distance}).output("{r.rule_name}", "{msg}")'
             )
         lines.append("")
 

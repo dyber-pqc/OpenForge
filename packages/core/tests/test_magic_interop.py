@@ -61,7 +61,18 @@ def test_parse_magic_tech_spacing_and_area() -> None:
     # Area + unsupported
     assert len(tech.area_rules) == 1
     assert tech.area_rules[0].area == pytest.approx(0.083)
-    assert any("edge" in u.raw for u in tech.unsupported)
+    # The fixture's `edge poly diff ...` is still unsupported (multi-arg edge),
+    # but `surround`, `overhang`, and `edge4way` are now first-class.
+    assert any(u.raw.startswith("edge ") for u in tech.unsupported)
+    assert len(tech.surround_rules) == 1
+    assert tech.surround_rules[0].outer == "nwell"
+    assert tech.surround_rules[0].inner == "diff"
+    assert tech.surround_rules[0].distance == pytest.approx(0.18)
+    assert len(tech.overhang_rules) == 1
+    assert tech.overhang_rules[0].distance == pytest.approx(0.06)
+    assert len(tech.notch_rules) == 1
+    assert tech.notch_rules[0].layer == "met1"
+    assert tech.notch_rules[0].distance == pytest.approx(0.14)
 
 
 def test_magic_to_drx_emits_expected_rules() -> None:
@@ -76,12 +87,48 @@ def test_magic_to_drx_emits_expected_rules() -> None:
     # Width + space DRX method calls
     assert "li1.width(0.17)" in drx
     assert "met1.space(0.14)" in drx
-    # Inter-layer spacing -> TODO comment (DRX lacks .separation() today)
-    assert "inter-layer spacing" in drx and "0.34" in drx
-    # Area emitted as TODO comment (DRX has no .area() yet)
-    assert "# TODO" in drx and "area" in drx.lower()
-    # Unsupported edge rule preserved as a TODO
+    # Inter-layer spacing -> .separation() primitive (v0.4+).
+    assert "nwell.separation(diff, 0.34)" in drx
+    # Area -> .area() primitive (v0.4+).
+    assert "met1.area(0.083)" in drx
+    # Surround -> .surround() primitive (v0.4+).
+    assert "nwell.surround(diff, 0.18)" in drx
+    # Overhang -> .overhang() primitive (v0.4+).
+    assert "met1.overhang(licon, 0.06)" in drx
+    # edge4way (notch) -> .notch() primitive (v0.4+).
+    assert "met1.notch(0.14)" in drx
+    # Truly-unsupported `edge` rule still preserved as a TODO comment.
     assert "edge poly diff" in drx
+
+
+def test_magic_to_drx_no_longer_emits_todo_for_now_supported_constructs() -> None:
+    """The constructs we just added DRX primitives for must NOT come out as TODOs."""
+    tech = parse_magic_tech(FIXTURE)
+    drx = magic_to_drx(tech)
+    # No TODO should mention these now-supported phrases.
+    forbidden = [
+        "inter-layer spacing not supported",
+        "DRX has no .area()",
+        "TODO: met1.area(",
+        "'surround' rule not yet translated",
+        "'overhang' rule not yet translated",
+        "'edge4way' rule not yet translated",
+    ]
+    for needle in forbidden:
+        assert needle not in drx, f"unexpected TODO in DRX output: {needle!r}\n{drx}"
+
+    # Sanity: each supported construct appears as an actual DRX call (not in
+    # a comment line).
+    drx_lines = [ln for ln in drx.splitlines() if not ln.lstrip().startswith("#")]
+    drx_active = "\n".join(drx_lines)
+    for needle in (
+        ".separation(",
+        ".area(",
+        ".surround(",
+        ".overhang(",
+        ".notch(",
+    ):
+        assert needle in drx_active, f"{needle} should be emitted as a real DRX call"
 
 
 def test_magic_to_drx_writes_temp_file_and_is_consumable_by_drc(
