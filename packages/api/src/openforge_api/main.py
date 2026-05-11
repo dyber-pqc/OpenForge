@@ -15,6 +15,7 @@ from openforge_api.routes import (
     crypto,
     files,
     projects,
+    signoff,
     synthesis,
     tools,
     verification,
@@ -43,6 +44,7 @@ app.add_middleware(
 app.include_router(projects.router, prefix="/projects", tags=["projects"])
 app.include_router(verification.router, prefix="/verify", tags=["verification"])
 app.include_router(synthesis.router, prefix="/synth", tags=["synthesis"])
+app.include_router(signoff.router, prefix="/signoff", tags=["signoff"])
 app.include_router(analysis.router, prefix="/analyze", tags=["analysis"])
 app.include_router(waveforms.router, prefix="/waveforms", tags=["waveforms"])
 app.include_router(crypto.router, prefix="/crypto", tags=["crypto"])

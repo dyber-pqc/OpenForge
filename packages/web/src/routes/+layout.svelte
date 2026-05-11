@@ -22,6 +22,7 @@
 		{ label: 'Projects', href: '/projects', view: 'projects' as const },
 		{ label: 'Synthesis', href: '/synthesis', view: 'synthesis' as const },
 		{ label: 'Verification', href: '/verification', view: 'verification' as const },
+		{ label: 'Signoff', href: '/signoff', view: 'signoff' as const },
 	];
 
 	let showProjectSelector = $state(false);

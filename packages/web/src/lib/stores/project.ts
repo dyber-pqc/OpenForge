@@ -7,7 +7,7 @@ import type { Project, VerificationJob } from '$lib/api/client';
 export const currentProject = writable<Project | null>(null);
 
 // Navigation / routing state
-export const currentView = writable<'ide' | 'projects' | 'synthesis' | 'verification'>('ide');
+export const currentView = writable<'ide' | 'projects' | 'synthesis' | 'verification' | 'signoff'>('ide');
 
 // Project file tree
 export interface FileNode {
