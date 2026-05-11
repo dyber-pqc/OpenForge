@@ -10,6 +10,7 @@ Reference: https://openlane.readthedocs.io/en/latest/usage/configs.html
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import logging
 import shutil
@@ -17,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from openforge.config.schema import (
     DesignConfig,
@@ -59,10 +60,43 @@ class OpenLaneConfig(BaseModel):
     EXTRA_LEFS: list[str] = Field(default_factory=list)
     EXTRA_GDS_FILES: list[str] = Field(default_factory=list)
 
+    # External SDC overrides referenced by the OpenLane project
+    PNR_SDC_FILE: str | None = None
+    SIGNOFF_SDC_FILE: str | None = None
+    BASE_SDC_FILE: str | None = None
+
     # Clocking
     CLOCK_PORT: str | None = None
     CLOCK_NET: str | None = None
     CLOCK_PERIOD: float | None = None
+
+    @field_validator(
+        "VERILOG_FILES",
+        "VERILOG_INCLUDE_DIRS",
+        "EXTRA_LEFS",
+        "EXTRA_GDS_FILES",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_listlike(cls, v: Any) -> Any:
+        """OpenLane allows the file/dir variables to be either a list or a
+        single space-separated string. Normalise to a list of strings."""
+        if v is None:
+            return []
+        if isinstance(v, str):
+            # OpenLane splits on whitespace
+            return [tok for tok in v.split() if tok]
+        return v
+
+    @field_validator("CLOCK_PERIOD", mode="before")
+    @classmethod
+    def _coerce_period(cls, v: Any) -> Any:
+        if v is None or isinstance(v, (int, float)):
+            return v
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
 
     # Floorplanning
     DIE_AREA: str | None = None
@@ -80,11 +114,26 @@ class OpenLaneConfig(BaseModel):
     SYNTH_STRATEGY: str = "AREA 0"
 
     @classmethod
-    def from_path(cls, path: Path) -> OpenLaneConfig:
+    def from_path(
+        cls,
+        path: Path,
+        *,
+        pdk: str = "sky130A",
+        scl: str = "sky130_fd_sc_hd",
+    ) -> OpenLaneConfig:
         """Load an OpenLane config from ``config.json`` (or ``config.yaml``).
 
         ``path`` may point either at the file itself or at the project
         directory containing it.
+
+        Real OpenLane projects (e.g. The-OpenROAD-Project/OpenLane spm) use
+        conditional blocks keyed by ``pdk::<glob>`` and ``scl::<glob>`` to
+        override variables for a given technology. ``pdk`` and ``scl`` select
+        which conditional branches to flatten into the top-level dict.
+
+        Comment keys (the OpenLane-style ``"//"`` markers) are stripped.
+        ``config.tcl`` files are not supported — surface a clear error so the
+        caller can write a wrapper or convert the TCL.
         """
         p = Path(path)
         if p.is_dir():
@@ -93,6 +142,12 @@ class OpenLaneConfig(BaseModel):
                     p = p / candidate
                     break
             else:
+                if (p / "config.tcl").is_file():
+                    raise NotImplementedError(
+                        f"OpenLane config.tcl found at {p / 'config.tcl'}; "
+                        "TCL configs are not yet supported. Convert to "
+                        "config.json (OpenLane 2.x format) and retry."
+                    )
                 raise FileNotFoundError(f"No OpenLane config.json/yaml in {path}")
 
         text = p.read_text(encoding="utf-8")
@@ -102,7 +157,9 @@ class OpenLaneConfig(BaseModel):
             data = json.loads(text)
         if not isinstance(data, dict):
             raise ValueError(f"OpenLane config must be a dict, got {type(data).__name__}")
-        return cls.model_validate(data)
+
+        flat = _flatten_openlane_dict(data, pdk=pdk, scl=scl)
+        return cls.model_validate(flat)
 
     def parsed_die_area(self) -> tuple[float, float, float, float] | None:
         """Parse ``DIE_AREA`` (a space-separated 4-tuple in OpenLane) to floats."""
@@ -123,22 +180,61 @@ class OpenLaneConfig(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+def _flatten_openlane_dict(data: dict[str, Any], *, pdk: str, scl: str) -> dict[str, Any]:
+    """Resolve OpenLane conditional blocks (``pdk::<glob>``, ``scl::<glob>``)
+    and strip comment keys. Conditional values override base values.
+    """
+    out: dict[str, Any] = {}
+    pdk_overrides: dict[str, Any] = {}
+    scl_overrides: dict[str, Any] = {}
+
+    for k, v in data.items():
+        if k == "//" or k.startswith("//"):
+            continue
+        if k.startswith("pdk::") and isinstance(v, dict):
+            pattern = k[len("pdk::") :]
+            if fnmatch.fnmatchcase(pdk, pattern):
+                # Recurse so nested ``scl::`` blocks under a matched pdk are
+                # also resolved.
+                nested = _flatten_openlane_dict(v, pdk=pdk, scl=scl)
+                pdk_overrides.update(nested)
+            continue
+        if k.startswith("scl::") and isinstance(v, dict):
+            pattern = k[len("scl::") :]
+            if fnmatch.fnmatchcase(scl, pattern):
+                nested = _flatten_openlane_dict(v, pdk=pdk, scl=scl)
+                scl_overrides.update(nested)
+            continue
+        out[k] = v
+
+    out.update(pdk_overrides)
+    out.update(scl_overrides)
+    return out
+
+
+def _strip_dir_prefix(s: str) -> str:
+    """Strip OpenLane's ``dir::`` (or ``refg::``) anchor prefix from a path-
+    like string. The prefix means "relative to the design directory" -- which
+    is the same root we already use, so we can drop it.
+    """
+    for prefix in ("dir::", "refg::", "design::"):
+        if s.startswith(prefix):
+            return s[len(prefix) :]
+    return s
+
+
 def _expand_globs(patterns: list[str], root: Path) -> list[str]:
     """Expand globs relative to ``root``. Falls back to the literal pattern.
 
     Returns POSIX-style relative paths so the resulting yaml is portable.
+    Handles OpenLane's ``dir::`` anchor prefix.
     """
     expanded: list[str] = []
     for pat in patterns:
-        # OpenLane allows ``dir::pattern`` syntax to anchor at a sub-dir.
-        if "::" in pat:
-            sub, glob = pat.split("::", 1)
-            base = (root / sub).resolve()
-        else:
-            base = root.resolve()
-            glob = pat
+        glob = _strip_dir_prefix(pat)
         # Strip a leading "./"
         glob = glob.removeprefix("./")
+        base = root.resolve()
         matches = sorted(base.glob(glob))
         if matches:
             for m in matches:
@@ -148,7 +244,7 @@ def _expand_globs(patterns: list[str], root: Path) -> list[str]:
                 except ValueError:
                     expanded.append(m.as_posix())
         else:
-            expanded.append(pat)
+            expanded.append(glob)
     return expanded
 
 
@@ -172,6 +268,8 @@ def import_openlane(
     *,
     write_yaml: bool = True,
     write_sdc: bool = True,
+    pdk: str = "sky130A",
+    scl: str = "sky130_fd_sc_hd",
 ) -> OpenForgeConfig:
     """Import an OpenLane project at ``path`` and return an ``OpenForgeConfig``.
 
@@ -185,7 +283,7 @@ def import_openlane(
     """
     p = Path(path)
     project_dir = p if p.is_dir() else p.parent
-    ol = OpenLaneConfig.from_path(p)
+    ol = OpenLaneConfig.from_path(p, pdk=pdk, scl=scl)
 
     sources = _expand_globs(ol.VERILOG_FILES, project_dir)
     includes = (
@@ -193,8 +291,23 @@ def import_openlane(
     )
 
     constraints: list[str] = []
+    # Prefer an explicit external SDC file when the OpenLane project references
+    # one. ``PNR_SDC_FILE`` is what the place-and-route flow consumes; fall
+    # back to the signoff SDC, then to the base SDC.
+    for ext in (ol.PNR_SDC_FILE, ol.SIGNOFF_SDC_FILE, ol.BASE_SDC_FILE):
+        if not ext:
+            continue
+        rel = _strip_dir_prefix(ext)
+        if (project_dir / rel).is_file() and rel not in constraints:
+            constraints.append(rel)
+
     sdc_rel = "constraints/openlane.sdc"
-    if write_sdc and ol.CLOCK_PERIOD is not None and (ol.CLOCK_PORT or ol.CLOCK_NET):
+    if (
+        not constraints
+        and write_sdc
+        and ol.CLOCK_PERIOD is not None
+        and (ol.CLOCK_PORT or ol.CLOCK_NET)
+    ):
         sdc_abs = project_dir / sdc_rel
         sdc_abs.parent.mkdir(parents=True, exist_ok=True)
         _synthesize_sdc(ol, sdc_abs)
