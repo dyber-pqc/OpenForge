@@ -37,6 +37,10 @@ struct SegBox {
     net_idx: usize,
     layer: String,
     bbox: (f64, f64, f64, f64), // xlo, ylo, xhi, yhi
+    /// True footprint area of the wire (length × width), used to clamp
+    /// the projected-overlap area: a diagonal segment's bounding box
+    /// can be orders of magnitude larger than the actual conductor area.
+    footprint_area_um2: f64,
 }
 
 impl rstar::RTreeObject for SegBox {
@@ -68,11 +72,16 @@ pub fn compute(
         let bbox = seg_bbox(seg);
         let lo = [bbox.0, bbox.1];
         let hi = [bbox.2, bbox.3];
+        let dx = seg.end.0 - seg.start.0;
+        let dy = seg.end.1 - seg.start.1;
+        let length = (dx * dx + dy * dy).sqrt();
+        let footprint_area_um2 = length * seg.width_um;
         entries.push(SegBox {
             rect: Rectangle::from_corners(lo, hi),
             net_idx: *idx,
             layer: seg.layer.clone(),
             bbox,
+            footprint_area_um2,
         });
     }
     let tree = RTree::bulk_load(entries.clone());
@@ -105,13 +114,19 @@ pub fn compute(
                 Some(v) if v > 0.0 => v,
                 _ => continue,
             };
-            // Projected overlap area in (x,y).
+            // Projected overlap area in (x,y) of the two bounding boxes.
+            // For Manhattan wires this is exactly the conductor overlap; for
+            // diagonal segments the bbox can be orders of magnitude larger
+            // than the actual wire footprint, so clamp by the smaller of the
+            // two true wire areas (length × width).
             let ox = (a.bbox.2.min(b.bbox.2) - a.bbox.0.max(b.bbox.0)).max(0.0);
             let oy = (a.bbox.3.min(b.bbox.3) - a.bbox.1.max(b.bbox.1)).max(0.0);
-            let area = ox * oy;
-            if area <= 0.0 {
+            let bbox_area = ox * oy;
+            if bbox_area <= 0.0 {
                 continue;
             }
+            let max_real = a.footprint_area_um2.min(b.footprint_area_um2);
+            let area = bbox_area.min(max_real);
             // C = eps0 * eps_r * A / d
             let c = EPS0_FF_PER_UM * EPS_R_ILD * area / d;
             *acc.entry((a.net_idx, b.net_idx)).or_default() += c;

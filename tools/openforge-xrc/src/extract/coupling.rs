@@ -19,6 +19,13 @@ use crate::tech::TechFile;
 const K_COUP: f64 = 0.035; // fF/um · (thickness/spacing dimensionless ratio)
 /// Spacing threshold (um) beyond which we ignore coupling.
 pub const SPACING_THRESHOLD_UM: f64 = 2.0;
+/// Minimum effective edge-to-edge spacing (um) used in the 1/s coupling
+/// kernel. Floors the divisor so that floating-point noise (or DEF data
+/// where two segments touch / overlap with sub-DRC spacing) cannot blow
+/// up the coupling cap. Set to a typical sky130 minimum-pitch spacing —
+/// any real wires closer than this are touching or shorted and the cap
+/// should be modeled as a parallel-plate area term instead.
+pub const MIN_SPACING_UM: f64 = 0.07;
 
 /// Adjacent-net coupling capacitance result.
 #[derive(Debug, Clone)]
@@ -88,6 +95,9 @@ pub fn compute(
                 skipped += 1;
                 continue;
             }
+            if c > 1e5 {
+                eprintln!("DBG c={} a={:?} b={:?}", c, a.seg, b.seg);
+            }
             *acc.entry((a.net_idx, b.net_idx)).or_default() += c;
         }
     }
@@ -137,8 +147,12 @@ fn pair_coupling(tech: &TechFile, a: &SegmentGeom, b: &SegmentGeom) -> f64 {
         return 0.0;
     };
 
-    if overlap <= 0.0 || spacing <= 0.0 || spacing > SPACING_THRESHOLD_UM {
+    if overlap <= 0.0 || spacing > SPACING_THRESHOLD_UM {
         return 0.0;
     }
-    K_COUP * overlap * lp.thickness_um / spacing
+    // Floor the divisor: wires reported with sub-DRC or near-zero spacing
+    // (often a DEF artifact for stub or overlapping segments) would
+    // otherwise produce arbitrarily large 1/s contributions.
+    let s_eff = spacing.max(MIN_SPACING_UM);
+    K_COUP * overlap * lp.thickness_um / s_eff
 }
