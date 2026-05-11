@@ -1,0 +1,157 @@
+name: asic-caravel-sky130
+version: "1"
+kind: asic
+top_module: user_proj_example
+
+# We synth/PnR the user_proj_example module directly (not the
+# user_project_wrapper, which is a thin pass-through to the harness).
+# user_project_wrapper.v is included as a source for completeness — Yosys
+# elaborates from `top_module` so the wrapper is harmless.
+rtl_sources:
+  - src/defines.v
+  - src/user_proj_example.v
+  - src/user_project_wrapper.v
+constraint_files:
+  - constraints/caravel.sdc
+
+pdk:
+  name: sky130A
+  std_cell_lib: sky130_fd_sc_hd
+  variant: sky130_fd_sc_hd
+
+target:
+  kind: asic
+  vendor: skywater
+
+# ── Stage-level overrides for the full RTL→GDS flow.
+# user_proj_example is a Wishbone-attached counter (~1k cells synthesised on
+# sky130_fd_sc_hd). The real Caravel user area is 2920×3520 µm; we use a much
+# smaller 600×600 µm die since the example design is tiny relative to the
+# harness slot. Full caravel_mgmt would need ~3000×3000 µm and ~50k cells —
+# see README for the upgrade path.
+floorplan:
+  utilization: 0.30
+  die_area: [0, 0, 600, 600]
+  core_area: [20, 20, 580, 580]
+  site: unithd
+placement:
+  target_density: 0.40
+routing:
+  droute_end_iter: 6
+
+corners:
+  - name: tt_025C_1v80
+    process: tt
+    voltage: 1.80
+    temperature: 25.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+  - name: ss_n40C_1v60
+    process: ss
+    voltage: 1.60
+    temperature: -40.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_n40C_1v60.lib
+
+  - name: ff_125C_1v95
+    process: ff
+    voltage: 1.95
+    temperature: 125.0
+    lib_files:
+      - $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_100C_1v95.lib
+
+runs:
+  - stage: lint
+    tool: verilator
+    options:
+      mode: lint-only
+
+  - stage: synth
+    tool: yosys
+    options:
+      target: sky130
+      liberty: $PDK_ROOT/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+      abc_script: strash; ifraig; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf {D}; &put
+    depends_on:
+      - lint
+
+  - stage: floorplan
+    tool: openroad
+    options:
+      step: floorplan
+      die_area: [0, 0, 600, 600]
+      core_area: [20, 20, 580, 580]
+      site: unithd
+      utilization: 0.30
+    depends_on:
+      - synth
+
+  - stage: place
+    tool: openroad
+    options:
+      step: global_place
+      density: 0.40
+    depends_on:
+      - floorplan
+
+  - stage: cts
+    tool: openroad
+    options:
+      step: clock_tree_synthesis
+      buf_cell: sky130_fd_sc_hd__clkbuf_4
+      root_buf: sky130_fd_sc_hd__clkbuf_16
+    depends_on:
+      - place
+
+  - stage: route
+    tool: openroad
+    options:
+      step: global_route
+    depends_on:
+      - cts
+
+  - stage: detail_route
+    tool: openroad
+    options:
+      step: detail_route
+      droute_end_iter: 6
+    depends_on:
+      - route
+
+  - stage: sta
+    tool: opensta
+    options:
+      corner: tt_025C_1v80
+      sdc: constraints/caravel.sdc
+    depends_on:
+      - detail_route
+
+  - stage: drc
+    tool: magic
+    options:
+      tech_file: $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech
+    depends_on:
+      - detail_route
+
+  - stage: lvs
+    tool: netgen
+    options:
+      setup_file: $PDK_ROOT/sky130A/libs.tech/netgen/sky130A_setup.tcl
+    depends_on:
+      - drc
+
+  - stage: gds
+    tool: magic
+    options:
+      step: gds_export
+      tech_file: $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech
+    depends_on:
+      - lvs
+
+metadata:
+  description: Caravel user_proj_example - Wishbone counter on SkyWater sky130
+  author: OpenForge Examples
+  license: Apache-2.0 (Caravel user_proj_example, Efabless Corp.)
+  target_freq_mhz: 40
+  upstream: https://github.com/efabless/caravel_user_project
