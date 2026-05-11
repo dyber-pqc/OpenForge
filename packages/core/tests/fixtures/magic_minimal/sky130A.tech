@@ -1,0 +1,39 @@
+# Minimal sky130A-flavoured Magic tech file (DRC subset only).
+# Real sky130A.tech is ~6000 lines; this fixture extracts the rules our
+# magic_to_drx translator needs for round-trip testing.
+
+tech
+    format 30
+    name sky130A
+end
+
+# CIF/GDS layer mapping (subset). Magic syntax: layer <name> <gds> <datatype>.
+layer li1 67 20
+layer licon 66 44
+layer met1 68 20
+layer met2 69 20
+layer poly 66 20
+layer diff 65 20
+layer nwell 64 20
+
+drc
+    # Width rules (sky130 minimums).
+    width  li1   0.17 "Min li1 width 0.17um"
+    width  met1  0.14 "Min met1 width 0.14um"
+    width  met2  0.14 "Min met2 width 0.14um"
+    width  poly  0.15 "Min poly width 0.15um"
+
+    # Spacing rules (same-layer).
+    spacing li1  li1  0.17 touching_illegal "Min li1 spacing 0.17um"
+    spacing met1 met1 0.14 touching_illegal "Min met1 spacing 0.14um"
+    spacing met2 met2 0.14 touching_illegal "Min met2 spacing 0.14um"
+
+    # Inter-layer spacing.
+    spacing nwell diff 0.34 touching_illegal "Min nwell-diff spacing 0.34um"
+
+    # Area rule (DRX has no .area() yet -- emitted as TODO).
+    area met1 0.083 0.0 "Min met1 area 0.083um^2"
+
+    # Unsupported construct (should land in unsupported list).
+    edge poly diff 0.13 poly diff 0.13 "Min poly endcap"
+end

@@ -1,0 +1,20 @@
+Netgen 1.5.250 LVS report
+Run on Tue Apr 21 10:00:00 2026
+
+Top level cell: spm
+
+Subcircuit: spm
+Subcircuit summary:
+Circuit 1: spm                          |Circuit 2: spm
+------------------------------------------|------------------------------------------
+Number of devices: 1234                   |Number of devices: 1234
+Number of nets: 567                       |Number of nets: 567
+
+Subcircuit: sky130_fd_sc_hd__inv_2
+Subcircuit summary:
+Circuit 1: sky130_fd_sc_hd__inv_2         |Circuit 2: sky130_fd_sc_hd__inv_2
+------------------------------------------|------------------------------------------
+Number of devices: 2                      |Number of devices: 2
+Number of nets: 4                         |Number of nets: 4
+
+Circuits match uniquely.

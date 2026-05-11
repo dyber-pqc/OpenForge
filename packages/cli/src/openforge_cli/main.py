@@ -13,6 +13,8 @@ from openforge_cli import __version__
 from openforge_cli.commands.analog import app as spice_app
 from openforge_cli.commands.flow import app as flow_app
 from openforge_cli.commands.fpga import app as fpga_app
+from openforge_cli.commands.magic import app as magic_app
+from openforge_cli.commands.netgen import app as netgen_app
 from openforge_cli.commands.openlane import app as openlane_app
 from openforge_cli.commands.pcb import app as pcb_app
 from openforge_cli.commands.pdk import app as pdk_app
@@ -112,6 +114,20 @@ app.add_typer(
     openlane_app,
     name="openlane",
     help="OpenLane interop -- import OpenLane projects, export OpenLane reports.",
+)
+
+# Magic interop: openforge magic {translate-rules}
+app.add_typer(
+    magic_app,
+    name="magic",
+    help="Magic VLSI interop -- translate Magic .tech files to OpenForge DRX.",
+)
+
+# Netgen interop: openforge netgen {import-setup, parse-report}
+app.add_typer(
+    netgen_app,
+    name="netgen",
+    help="Netgen LVS interop -- import setup files, parse lvs.report.",
 )
 
 # Serve: openforge serve [OPTIONS]
